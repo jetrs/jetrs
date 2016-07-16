@@ -44,7 +44,7 @@ import org.safris.xrs.xjb.xe.$xjb_property;
 import org.safris.xrs.xjb.xe.$xjb_ref;
 import org.safris.xrs.xjb.xe.$xjb_string;
 import org.safris.xrs.xjb.xe.xjb_json;
-import org.safris.xsb.generator.compiler.runtime.Bindings;
+import org.safris.xsb.compiler.runtime.Bindings;
 import org.xml.sax.InputSource;
 
 public class Generator {
