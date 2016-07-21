@@ -316,7 +316,7 @@ public class Generator {
       out += "\n" + pad + "     final " + className + " that = (" + className + ")obj;";
       for (final $xjb_property property : object._property()) {
         final String instanceName = getInstanceName(property);
-        out += "\n" + pad + "     if (that." + instanceName + " != null ? that." + instanceName + ".equals(" + instanceName + ") : " + instanceName + " == null)";
+        out += "\n" + pad + "     if (that." + instanceName + " != null ? !that." + instanceName + ".equals(" + instanceName + ") : " + instanceName + " != null)";
         out += "\n" + pad + "       return false;\n";
       }
     }

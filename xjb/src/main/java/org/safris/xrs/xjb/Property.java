@@ -126,4 +126,22 @@ public class Property<T> {
       this.value = decode(value, jsObject);
     }
   }
+
+  @Override
+  public int hashCode() {
+    final int hashCode = 1917841483;
+    return value == null ? hashCode : hashCode ^ 31 * value.hashCode();
+  }
+
+  @Override
+  public boolean equals(final Object obj) {
+    if (obj == this)
+      return true;
+
+    if (!(obj instanceof Property))
+      return false;
+
+    final Property<?> that = (Property<?>)obj;
+    return that.value != null ? that.value.equals(value) : value == null;
+  }
 }
