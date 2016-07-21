@@ -43,6 +43,9 @@ public class NumberDecoder extends Decoder<Number> {
     while ('0' <= (ch = JSObjectUtil.nextAny(reader)) && ch <= '9' || ch == '.' || ch == 'e' || ch == 'E' || ch == '+' || ch == '+');
 
     final String number = value.toString();
-    return number.contains(".") || number.contains("e") || number.contains("E") ? Double.parseDouble(number) : Long.parseLong(number);
+    if (number.contains(".") || number.contains("e") || number.contains("E"))
+      return Double.parseDouble(number);
+
+    return Long.parseLong(number);
   }
 }
