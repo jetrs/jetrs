@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import org.safris.commons.io.Readers;
+import org.safris.commons.lang.Numbers;
 import org.safris.commons.net.URIComponent;
 import org.safris.commons.util.StringBuilderReader;
 
@@ -142,6 +143,9 @@ public class Property<T> {
       return false;
 
     final Property<?> that = (Property<?>)obj;
+    if (that.value instanceof Number)
+      return Numbers.equivalent((Number)value, (Number)that.value);
+
     return that.value != null ? that.value.equals(value) : value == null;
   }
 }
