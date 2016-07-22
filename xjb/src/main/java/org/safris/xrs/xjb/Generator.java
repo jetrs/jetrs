@@ -193,6 +193,9 @@ public class Generator {
     if (property instanceof $xjb_string)
       return out + instanceName + " != null && get(" + instanceName + ") != null ? \"\\\"\" + encode(" + instanceName + ") + \"\\\"\" : \"null\");\n";
 
+    if (property instanceof $xjb_object)
+      return out + "encode(encode(" + instanceName + "), depth + 1));\n";
+
     return out + "encode(" + instanceName + "));\n";
   }
 
