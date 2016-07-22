@@ -21,13 +21,20 @@
   xmlns:xjb="http://xrs.safris.org/xjb.xsd"
   xmlns:xs="http://www.w3.org/2001/XMLSchema">
   
-  <xs:complexType name="property" abstract="true">
+  <xs:complexType name="element" abstract="true">
     <xs:sequence minOccurs="0">
       <xs:element name="description" type="xs:string"/>
     </xs:sequence>
-    <xs:attribute name="array" type="xs:boolean"/>
-    <xs:attribute name="required" type="xs:boolean" default="true"/>
-    <xs:attribute name="null" type="xs:boolean" default="true"/>
+  </xs:complexType>
+  
+  <xs:complexType name="property" abstract="true">
+    <xs:complexContent>
+      <xs:extension base="xjb:element">
+        <xs:attribute name="array" type="xs:boolean"/>
+        <xs:attribute name="required" type="xs:boolean" default="true"/>
+        <xs:attribute name="null" type="xs:boolean" default="true"/>
+      </xs:extension>
+    </xs:complexContent>
   </xs:complexType>
   
   <xs:complexType name="name" abstract="true">
@@ -85,7 +92,12 @@
         <xs:element name="object" minOccurs="1" maxOccurs="unbounded">
           <xs:complexType>
             <xs:complexContent>
-              <xs:extension base="xjb:object">
+              <xs:extension base="xjb:element">
+                <xs:sequence minOccurs="0" maxOccurs="unbounded">
+                  <xs:element name="property" type="xjb:property"/>
+                </xs:sequence>
+                <xs:attribute name="name" type="xs:NCName" use="required"/>
+                <xs:attribute name="extends" type="xs:string"/>
                 <xs:attribute name="abstract" type="xs:boolean" default="false"/>
               </xs:extension>
             </xs:complexContent>

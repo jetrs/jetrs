@@ -35,8 +35,8 @@ import org.safris.commons.xml.XMLText;
 import org.safris.commons.xml.dom.DOMStyle;
 import org.safris.commons.xml.dom.DOMs;
 import org.safris.maven.common.Log;
-import org.safris.xrs.xjb.validator.PatternValidator;
 import org.safris.xrs.xjb.xe.$xjb_boolean;
+import org.safris.xrs.xjb.xe.$xjb_element;
 import org.safris.xrs.xjb.xe.$xjb_name;
 import org.safris.xrs.xjb.xe.$xjb_number;
 import org.safris.xrs.xjb.xe.$xjb_object;
@@ -44,6 +44,8 @@ import org.safris.xrs.xjb.xe.$xjb_property;
 import org.safris.xrs.xjb.xe.$xjb_ref;
 import org.safris.xrs.xjb.xe.$xjb_string;
 import org.safris.xrs.xjb.xe.xjb_json;
+import org.safris.xrs.xjb.validator.PatternValidator;
+import org.safris.xsb.runtime.BindingList;
 import org.safris.xsb.runtime.Bindings;
 import org.xml.sax.InputSource;
 
@@ -194,26 +196,43 @@ public class Generator {
     return out + "encode(" + instanceName + "));\n";
   }
 
-  private static String writeJavaClass(final Stack<String> parent, final $xjb_object object, final int depth) throws GeneratorExecutionException {
-    final String objectName = object._name$().text();
+  private static String writeJavaClass(final Stack<String> parent, final $xjb_element object, final int depth) throws GeneratorExecutionException {
+    final $xjb_object object1;
+    final xjb_json._object object2;
+    if (object instanceof $xjb_object) {
+      object1 = ($xjb_object)object;
+      object2 = null;
+    }
+    else {
+      object1 = null;
+      object2 = (xjb_json._object)object;
+    }
+
+    final String objectName = (object1 != null ? object1._name$() : object2._name$()).text();
     String out = "";
 
     final boolean isAbstract = object instanceof xjb_json._object ? ((xjb_json._object)object)._abstract$().text() : false;
-    final String extendsPropertyName = !object._extends$().isNull() ? object._extends$().text() : null;
+    final String extendsPropertyName;
+    if (object1 != null)
+      extendsPropertyName = !object1._extends$().isNull() ? object1._extends$().text() : null;
+    else
+      extendsPropertyName = !object2._extends$().isNull() ? object2._extends$().text() : null;
 
     final String className = Strings.toClassCase(objectName);
     parent.add(className);
 
+    final BindingList<$xjb_property> properties = object1 != null ? object1._property() : object2._property();
+
     final String pad = Strings.padFixed("", depth * 2, false);
     out += "\n\n" + pad + " public static" + (isAbstract ? " abstract" : "") + " class " + className + " extends " + (extendsPropertyName != null ? parent.get(0) + "." + Strings.toClassCase(extendsPropertyName) : JSObject.class.getName()) + " {";
     out += "\n" + pad + "   private static final " + String.class.getName() + " _name = \"" + objectName + "\";\n";
-    out += "\n" + pad + "   private static final " + Map.class.getName() + "<" + String.class.getName() + "," + Binding.class.getName() + "<?>> bindings = new " + HashMap.class.getName() + "<" + String.class.getName() + "," + Binding.class.getName() + "<?>>(" + (object._property() != null ? object._property().size() : 0) + ");";
+    out += "\n" + pad + "   private static final " + Map.class.getName() + "<" + String.class.getName() + "," + Binding.class.getName() + "<?>> bindings = new " + HashMap.class.getName() + "<" + String.class.getName() + "," + Binding.class.getName() + "<?>>(" + (properties != null ? properties.size() : 0) + ");";
 
     out += "\n" + pad + "   static {";
     out += "\n" + pad + "     registerBinding(_name, " + className + ".class);";
-    if (object._property() != null) {
+    if (properties != null) {
       out += "\n" + pad + "     try {";
-      for (final $xjb_property property : object._property()) {
+      for (final $xjb_property property : properties) {
         final String valueName = getPropertyName(property);
         final String rawType = getType(parent, property);
         final boolean isArray = property._array$().text() != null && property._array$().text();
@@ -236,18 +255,18 @@ public class Generator {
     }
     out += "\n" + pad + "   }";
 
-    if (object._property() != null)
-      for (final $xjb_property property : object._property())
+    if (properties != null)
+      for (final $xjb_property property : properties)
         if (property instanceof $xjb_object)
-          out += writeJavaClass(parent, ($xjb_object)property, depth + 1);
+          out += writeJavaClass(parent, property, depth + 1);
 
     out += "\n\n" + pad + "   public " + className + "(final " + JSObject.class.getName() + " object) {";
     out += "\n" + pad + "     super(object);";
-    if (object._property() != null) {
+    if (properties != null) {
       out += "\n" + pad + "     if (!(object instanceof " + className + "))";
       out += "\n" + pad + "       return;";
       out += "\n\n" + pad + "     final " + className + " that = (" + className + ")object;";
-      for (final $xjb_property property : object._property()) {
+      for (final $xjb_property property : properties) {
         final String instanceName = getInstanceName(property);
         out += "\n" + pad + "     clone(this." + instanceName + ", that." + instanceName + ");";
       }
@@ -288,15 +307,15 @@ public class Generator {
     out += "\n" + pad + "   protected " + String.class.getName() + " _name() {";
     out += "\n" + pad + "     return _name;";
     out += "\n" + pad + "   }";
-    if (object._property() != null) {
-      for (final $xjb_property property : object._property())
+    if (properties != null) {
+      for (final $xjb_property property : properties)
         out += writeField(parent, property, depth);
 
       out += "\n\n" + pad + "   @" + Override.class.getName();
       out += "\n" + pad + "   protected " + String.class.getName() + " _encode(final int depth) {";
       out += "\n" + pad + "     final " + StringBuilder.class.getName() + " out = new " + StringBuilder.class.getName() + "(super._encode(depth));";
-      for (int i = 0; i < object._property().size(); i++)
-        out += writeEncode(object._property(i), depth);
+      for (int i = 0; i < properties.size(); i++)
+        out += writeEncode(properties.get(i), depth);
 
       out += "\n" + pad + "     return out." + (extendsPropertyName != null ? "toString()" : "substring(2)") + ";\n" + pad + "   }";
     }
@@ -312,9 +331,9 @@ public class Generator {
     out += "\n" + pad + "       return true;";
     out += "\n\n" + pad + "     if (!(obj instanceof " + className + ")" + (extendsPropertyName != null ? " || !super.equals(obj)" : "") + ")";
     out += "\n" + pad + "       return false;\n";
-    if (object._property() != null) {
+    if (properties != null) {
       out += "\n" + pad + "     final " + className + " that = (" + className + ")obj;";
-      for (final $xjb_property property : object._property()) {
+      for (final $xjb_property property : properties) {
         final String instanceName = getInstanceName(property);
         out += "\n" + pad + "     if (that." + instanceName + " != null ? !that." + instanceName + ".equals(" + instanceName + ") : " + instanceName + " != null)";
         out += "\n" + pad + "       return false;\n";
@@ -325,9 +344,9 @@ public class Generator {
 
     out += "\n\n" + pad + "   @" + Override.class.getName();
     out += "\n" + pad + "   public int hashCode() {";
-    if (object._property() != null) {
+    if (properties != null) {
       out += "\n" + pad + "     int hashCode = " + className.hashCode() + (extendsPropertyName != null ? " ^ 31 * super.hashCode()" : "") + ";";
-      for (final $xjb_property property : object._property()) {
+      for (final $xjb_property property : properties) {
         final String instanceName = getInstanceName(property);
         out += "\n" + pad + "     if (" + instanceName + " != null)";
         out += "\n" + pad + "       hashCode ^= 31 * " + instanceName + ".hashCode();\n";
