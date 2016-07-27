@@ -21,7 +21,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -160,7 +159,7 @@ public class Generator {
     out += "\n" + pad + "   }";
     if (isArray) {
       out += "\n\n" + pad + "   public final void " + instanceName + "(final " + rawType + " ... value) {";
-      out += "\n" + pad + "     set(" + instanceName + ", " + Arrays.class.getName() + ".asList(value));";
+      out += "\n" + pad + "     set(" + instanceName + ", " + Collections.class.getName() + ".asCollection(" + ArrayList.class.getName() + ".class, value));";
       out += "\n" + pad + "   }";
     }
     return out;
@@ -185,13 +184,13 @@ public class Generator {
     out += "\n" + pad + "     if (wasSet(" + instanceName + "))";
     out += "\n" + pad + "       out.append(\",\\n\").append(pad(depth)).append(\"\\\"" + valueName + "\\\": \").append(";
     if (!property._array$().isNull() && property._array$().text())
-      return out + "tokenize(encode(" + instanceName + "), depth + 1));\n";
+      return out + JSArray.class.getName() + ".toString(encode(" + instanceName + "), depth + 1));\n";
 
     if (property instanceof $xjb_ref)
-      return out + instanceName + " != null && get(" + instanceName + ") != null ? encode(encode(" + instanceName + "), depth + 1) : \"null\");\n";
+      return out + "get(" + instanceName + ") != null ? encode(encode(" + instanceName + "), depth + 1) : \"null\");\n";
 
     if (property instanceof $xjb_string)
-      return out + instanceName + " != null && get(" + instanceName + ") != null ? \"\\\"\" + encode(" + instanceName + ") + \"\\\"\" : \"null\");\n";
+      return out + "get(" + instanceName + ") != null ? \"\\\"\" + encode(" + instanceName + ") + \"\\\"\" : \"null\");\n";
 
     if (property instanceof $xjb_object)
       return out + "encode(encode(" + instanceName + "), depth + 1));\n";

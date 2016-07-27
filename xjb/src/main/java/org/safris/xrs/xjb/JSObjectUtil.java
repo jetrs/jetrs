@@ -18,8 +18,6 @@ package org.safris.xrs.xjb;
 
 import java.io.IOException;
 import java.io.Reader;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -112,30 +110,45 @@ public abstract class JSObjectUtil {
   }
 
   protected static String encode(final JSObject object, final int depth) {
-    final StringBuilder out = new StringBuilder("{\n");
-    out.append(object._encode(depth)).append("\n").append(pad(depth - 1)).append("}");
-    return out.toString();
+    if (object instanceof JSArray)
+      return object._encode(depth);
+
+    final StringBuilder string = new StringBuilder("{\n");
+    string.append(object._encode(depth)).append("\n").append(pad(depth - 1)).append("}");
+    return string.toString();
   }
 
-  protected static <T> String tokenize(final Collection<T> value, final int depth) {
-    if (value == null)
-      return "null";
+  protected static String toString(final Object part, final int depth) {
+    return part == null ? "null" : part instanceof JSObject ? encode((JSObject)part, depth) : part instanceof String ? "\"" + part + "\"" : String.valueOf(part);
+  }
 
-    if (value.size() == 0)
-      return "[]";
+  protected static Object decodeValue(final char ch, final StringBuilderReader reader, final Class<?> type) throws DecodeException, IOException {
+    final boolean isArray = ch == '[';
+    try {
+      if (JSObject.class.isAssignableFrom(type))
+        return isArray ? Collections.asCollection(JSArray.class, objectDecoder.recurse(reader, type, 0)) : decode(reader, ch, (JSObject)type.newInstance());
+    }
+    catch (final ReflectiveOperationException e) {
+      throw new UnsupportedOperationException(e);
+    }
 
-    final StringBuilder out = new StringBuilder();
-    for (final T part : value)
-      out.append(", ").append(part == null ? "null" : part instanceof JSObject ? encode((JSObject)part, depth) : "\"" + part + "\"");
+    if (type == String.class)
+      return isArray ? Collections.asCollection(JSArray.class, stringDecoder.recurse(reader, 0)) : stringDecoder.decode(reader, ch);
 
-    return "[" + out.substring(2) + "]";
+    if (type == Boolean.class)
+      return isArray ? Collections.asCollection(JSArray.class, booleanDecoder.recurse(reader, 0)) : booleanDecoder.decode(reader, ch);
+
+    if (type == Number.class)
+      return isArray ? Collections.asCollection(JSArray.class, numberDecoder.recurse(reader, 0)) : numberDecoder.decode(reader, ch);
+
+    throw new UnsupportedOperationException("Unexpected type: " + type);
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
   protected static JSObject decode(final StringBuilderReader reader, char ch, final JSObject jsObject) throws DecodeException, IOException {
     boolean hasOpenBrace = false;
     boolean hasStartQuote = false;
-    final StringBuilder out = new StringBuilder();
+    final StringBuilder string = new StringBuilder();
     while (true) {
       if (ch == '{') {
         if (hasOpenBrace) {
@@ -168,39 +181,16 @@ public abstract class JSObjectUtil {
               }
 
               // Special case for parsing the container object
-              final Binding<?> member = jsObject._getBinding(out.toString());
+              final Binding<?> member = jsObject._getBinding(string.toString());
               if (member == null) {
                 Readers.readFully(reader);
-                throw new DecodeException("Unknown object name: " + out, reader.getStringBuilder().toString(), jsObject._bundle());
+                throw new DecodeException("Unknown object name: " + string, reader.getStringBuilder().toString(), jsObject._bundle());
               }
 
-              out.setLength(0);
+              string.setLength(0);
               ch = next(reader);
-              final boolean isArray = ch == '[';
-              final Object value;
-              if (JSObject.class.isAssignableFrom(member.type)) {
-                if (member.isAbstract) {
-                  Readers.readFully(reader);
-                  throw new DecodeException("\"" + member.name + "\" is an abstract type", reader.getStringBuilder().toString(), jsObject._bundle());
-                }
 
-                value = isArray ? Collections.asCollection(ArrayList.class, objectDecoder.recurse(reader, member.type, 0)) : decode(reader, ch, (JSObject)member.type.newInstance());
-              }
-              else if (member.type == String.class) {
-                value = isArray ? Collections.asCollection(ArrayList.class, stringDecoder.recurse(reader, 0)) : stringDecoder.decode(reader, ch);
-                // final Pattern pattern = member.field.getAnnotation(Pattern.class);
-                // if (pattern != null && value != null && !((String)value).matches(pattern.value()))
-                // throw new DecodeException("\"" + member.name + "\" does not match pattern \"" + pattern.value() + "\": " + value + "\"", jsObject);
-              }
-              else if (member.type == Boolean.class) {
-                value = isArray ? Collections.asCollection(ArrayList.class, booleanDecoder.recurse(reader, 0)) : booleanDecoder.decode(reader, ch);
-              }
-              else if (member.type == Number.class) {
-                value = isArray ? Collections.asCollection(ArrayList.class, numberDecoder.recurse(reader, 0)) : numberDecoder.decode(reader, ch);
-              }
-              else {
-                throw new UnsupportedOperationException("Unexpected type: " + member.type);
-              }
+              final Object value = decodeValue(ch, reader, member.type);
 
               if (member.required && member.notNull && value == null) {
                 Readers.readFully(reader);
@@ -237,7 +227,7 @@ public abstract class JSObjectUtil {
             }
 
             if (ch != ',') {
-              out.append(ch);
+              string.append(ch);
             }
           }
         }

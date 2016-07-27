@@ -97,7 +97,7 @@ public class Property<T> {
 
     if (value instanceof Collection<?>) {
       final Collection<T> collection = (Collection<T>)value;
-      final Collection<T> encoded = new ArrayList<T>(collection.size());
+      final Collection<T> encoded = new JSArray<T>(collection.size());
       for (final T item : collection)
         encoded.add(encode(item, jsObject));
 
