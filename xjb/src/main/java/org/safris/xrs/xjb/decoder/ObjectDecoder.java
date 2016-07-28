@@ -19,13 +19,13 @@ package org.safris.xrs.xjb.decoder;
 import java.io.IOException;
 import java.lang.reflect.Array;
 
-import org.safris.commons.util.StringBuilderReader;
+import org.safris.commons.util.CachedReader;
 import org.safris.xrs.xjb.DecodeException;
 import org.safris.xrs.xjb.JSObject;
 import org.safris.xrs.xjb.JSObjectUtil;
 
 public class ObjectDecoder extends JSObjectUtil {
-  public JSObject decode(final StringBuilderReader reader, char ch, final Class<?> clazz) throws DecodeException, IOException {
+  public JSObject decode(final CachedReader reader, char ch, final Class<?> clazz) throws DecodeException, IOException {
     try {
       final JSObject value = (JSObject)clazz.newInstance();
       JSObjectUtil.decode(reader, ch, value);
@@ -36,7 +36,7 @@ public class ObjectDecoder extends JSObjectUtil {
     }
   }
 
-  public JSObject[] recurse(final StringBuilderReader reader, final Class<?> clazz, final int depth) throws DecodeException, IOException {
+  public JSObject[] recurse(final CachedReader reader, final Class<?> clazz, final int depth) throws DecodeException, IOException {
     char ch = JSObjectUtil.next(reader);
     final JSObject value;
     if (ch != '{') {

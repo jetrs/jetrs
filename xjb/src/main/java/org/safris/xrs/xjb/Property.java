@@ -21,10 +21,9 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import org.safris.commons.io.Readers;
 import org.safris.commons.lang.Numbers;
 import org.safris.commons.net.URIComponent;
-import org.safris.commons.util.StringBuilderReader;
+import org.safris.commons.util.CachedReader;
 
 public class Property<T> {
   @SuppressWarnings("unchecked")
@@ -108,12 +107,10 @@ public class Property<T> {
   }
 
   @SuppressWarnings("unchecked")
-  protected void decode(final StringBuilderReader reader) throws DecodeException, IOException {
+  protected void decode(final CachedReader reader) throws DecodeException, IOException {
     final String error = binding.validate(value);
-    if (error != null) {
-      Readers.readFully(reader);
-      throw new DecodeException(error, reader.getStringBuilder().toString(), jsObject._bundle());
-    }
+    if (error != null)
+      throw new DecodeException(error, reader.readFully(), jsObject._bundle());
 
     if (value instanceof Collection<?>) {
       final Collection<T> collection = (Collection<T>)value;

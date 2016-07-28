@@ -20,23 +20,20 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.Collection;
 
-import org.safris.commons.io.Readers;
-import org.safris.commons.util.StringBuilderReader;
+import org.safris.commons.util.CachedReader;
 
 public abstract class JSObject extends JSObjectUtil {
   @SuppressWarnings("unchecked")
   public static <T extends JSObject>T parse(final Class<?> type, final Reader reader) throws DecodeException, IOException {
     try {
-      final StringBuilderReader stringBuilderReader = reader instanceof StringBuilderReader ? (StringBuilderReader) reader : new StringBuilderReader(reader, new StringBuilder());
+      final CachedReader stringBuilderReader = reader instanceof CachedReader ? (CachedReader) reader : new CachedReader(reader, new StringBuilder());
       final char ch = next(stringBuilderReader);
 
       if (ch == '[')
         return (T)decodeValue(ch, stringBuilderReader, type);
 
-      if (!JSObject.class.isAssignableFrom(type)) {
-        Readers.readFully(stringBuilderReader);
-        throw new DecodeException("Expected a JSObject type " + type.getName(), stringBuilderReader.getStringBuilder().toString(), null);
-      }
+      if (!JSObject.class.isAssignableFrom(type))
+        throw new DecodeException("Expected a JSObject type " + type.getName(), stringBuilderReader.readFully(), null);
 
       return (T)decode(stringBuilderReader, ch, ((Class<T>)type).newInstance());
     }
