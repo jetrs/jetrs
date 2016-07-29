@@ -55,7 +55,7 @@ public class JSArray<E> extends JSObject implements List<E>, RandomAccess, Clone
   }
 
   @Override
-  protected JSBundle _bundle() {
+  protected JSBinding _bundle() {
     return null;
   }
 

@@ -55,5 +55,5 @@ public abstract class JSObject extends JSObjectUtil {
   protected abstract String _name();
   protected abstract Binding<?> _getBinding(final String name);
   protected abstract Collection<Binding<?>> _bindings();
-  protected abstract JSBundle _bundle();
+  protected abstract JSBinding _bundle();
 }
