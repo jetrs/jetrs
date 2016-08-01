@@ -73,15 +73,10 @@ public class Generator {
 
     out += "package json;";
     out += "\n\n@" + SuppressWarnings.class.getName() + "(\"all\")";
-    out += "\npublic class " + name + " extends " + JSBinding.class.getName() + " {";
+    out += "\npublic class " + name + " extends " + JSBundle.class.getName() + " {";
     out += "\n  private static " + name + " instance = null;";
     out += "\n\n  protected static " + name + " instance() {";
     out += "\n    return instance == null ? instance = new " + name + "() : instance;";
-    out += "\n  }";
-
-    out += "\n\n  @" + Override.class.getName();
-    out += "\n  public " + String.class.getName() + " getName() {";
-    out += "\n    return \"" + name + "\";";
     out += "\n  }";
 
     out += "\n\n  @" + Override.class.getName();
@@ -307,7 +302,7 @@ public class Generator {
     }
     out += "\n" + pad + "   }";
     out += "\n\n" + pad + "   @" + Override.class.getName();
-    out += "\n" + pad + "   protected " + JSBinding.class.getName() + " _bundle() {";
+    out += "\n" + pad + "   protected " + JSBundle.class.getName() + " _bundle() {";
     out += "\n" + pad + "     return " + parent.get(0) + ".instance();";
     out += "\n" + pad + "   }";
     out += "\n\n" + pad + "   @" + Override.class.getName();

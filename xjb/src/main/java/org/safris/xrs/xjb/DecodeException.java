@@ -20,21 +20,21 @@ public class DecodeException extends Exception {
   private static final long serialVersionUID = -1234230677110958751L;
 
   private final String json;
-  private final JSBinding jsBundle;
+  private final JSBundle jsBundle;
 
-  public DecodeException(final String json, final JSBinding jsBundle) {
+  public DecodeException(final String json, final JSBundle jsBundle) {
     this(null, json, jsBundle, null);
   }
 
-  public DecodeException(final String message, final String json, final JSBinding jsBundle) {
+  public DecodeException(final String message, final String json, final JSBundle jsBundle) {
     this(message, json, jsBundle, null);
   }
 
-  public DecodeException(final String json, final JSBinding jsBundle, final Throwable cause) {
+  public DecodeException(final String json, final JSBundle jsBundle, final Throwable cause) {
     this(null, json, jsBundle, cause);
   }
 
-  public DecodeException(final String message, final String json, final JSBinding jsBundle, final Throwable cause) {
+  public DecodeException(final String message, final String json, final JSBundle jsBundle, final Throwable cause) {
     super(message != null ? message + "\n" + json : json, cause);
     this.json = json;
     this.jsBundle = jsBundle;

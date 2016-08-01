@@ -177,7 +177,7 @@ public abstract class JSObjectUtil {
               // Special case for parsing the container object
               final Binding<?> member = jsObject._getBinding(string.toString());
               if (member == null)
-                throw new DecodeException("Unknown object name: " + string, reader.readFully(), jsObject._bundle());
+                throw new DecodeException("Unknown property name: " + string, reader.readFully(), jsObject._bundle());
 
               string.setLength(0);
               ch = next(reader);

@@ -16,7 +16,6 @@
 
 package org.safris.xrs.xjb;
 
-public abstract class JSBinding {
-  public abstract String getName();
+public abstract class JSBundle {
   protected abstract String getSpec();
 }
