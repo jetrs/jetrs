@@ -1,0 +1,94 @@
+<project name="Maven" xmlns="http://maven.apache.org/DECORATION/1.7.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/DECORATION/1.7.0 https://maven.apache.org/xsd/decoration-1.7.0.xsd">
+  <skin>
+    <groupId>lt.velykis.maven.skins</groupId>
+    <artifactId>reflow-maven-skin</artifactId>
+    <version>1.1.1</version>  
+  </skin>
+  <publishDate position="none"/>
+  <version position="none"/>
+  <body>
+    <links>
+      <item name="XRS 2.0.1" href="/download.html"/>
+      <item name="Getting Started" href="/getting-started.html"/>
+      <item name="API Javadoc" href="/apidocs/index.html"/>
+      <item name="Source" href="https://github.com/SevaSafris/java/tree/master/xws/xrs"/>
+    </links>
+    <menu name="Overview">
+      <item name="APT Format" href="format.html"/>
+      <item name="Xdoc Example" href="xdoc.html"/>
+      <item name="FAQ" href="faq.html"/>
+    </menu>
+    <menu ref="reports"/>
+  </body>
+  <custom>
+    <reflowSkin>
+      <theme>bootswatch-cerulean</theme>
+      <highlightJs>true</highlightJs>
+      <brand>
+        <name>XRS</name>
+        <href>http://xrs.safris.org/</href>
+      </brand>
+      <slogan>Super interesting project doing good things.</slogan>
+      <titleTemplate>%2$s | %1$s</titleTemplate>
+      <toc>top</toc>
+      <topNav>Download|reports</topNav>
+      <bottomNav>
+        <column>Main|Download</column>
+        <column>Documentation</column>
+        <column>reports|modules</column>
+      </bottomNav>
+      <bottomDescription>
+        XRS is a lightweight implementation of the JAX-RS v2.0 server specification that runs in a
+        servlet container. Designed with the "cohesion first" principle, XRS offers high
+        reliability and fast development of RESTful applications.
+      </bottomDescription>
+      <pages>
+        <index>
+          <shortTitle>Welcome</shortTitle>
+          <breadcrumbs>false</breadcrumbs>
+          <toc>false</toc>
+          <sections>
+            <carousel/>
+            <body/>
+            <sidebar/>
+            <thumbs>2</thumbs>
+            <columns>3</columns>
+          </sections>
+        </index>
+        <download>
+          <shortTitle>Welcome</shortTitle>
+          <breadcrumbs>false</breadcrumbs>
+          <toc>false</toc>
+          <sections>
+            <body/>
+          </sections>
+        </download>
+        <dependency-info>
+          <toc>false</toc>
+        </dependency-info>
+        <getting-started>
+          <toc>false</toc>
+        </getting-started>
+        <dependencies>
+          <toc>false</toc>
+        </dependencies>
+        <test>
+          <shortTitle>Welcome</shortTitle>
+          <breadcrumbs>false</breadcrumbs>
+          <toc>top</toc>
+          <sections>
+            <body/>
+            <sidebar/>
+            <thumbs>2</thumbs>
+            <columns>3</columns>
+          </sections>
+        </test>
+        <developer-info>
+          <toc>sidebar</toc>
+        </developer-info>
+      </pages>
+    </reflowSkin>
+  </custom>
+</project>
