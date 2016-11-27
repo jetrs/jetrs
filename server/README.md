@@ -58,14 +58,20 @@ XRS is a pure implementation of the JAX-RS 2.0 specification. More often than no
   </pluginRepositories>
   ```
 
-3. Add the `org.safris.cf`:`xrs` dependency to the POM.
+3. Add the `org.safris.xrs`:`xrs-server` dependency to the POM.
 
   ```xml
   <dependency>
-    <groupId>org.safris.cf</groupId>
-    <artifactId>xrs</artifactId>
+    <groupId>org.safris.xrs</groupId>
+    <artifactId>xrs-server</artifactId>
     <version>2.0.1</version>
   </dependency>
+  <!-- Optional dependency for MessageBodyReader and MessageBodyWriter classes of XJB module
+  <dependency> 
+    <groupId>org.safris.xjb</groupId>
+    <artifactId>xjb-rs</artifactId>
+    <version>1.0.1</version>
+  </dependency> -->
   ```
   
 4. Create a `javax.ws.rs.core.Application`.
@@ -76,18 +82,18 @@ XRS is a pure implementation of the JAX-RS 2.0 specification. More often than no
     @Override
     public java.util.Set<Object> getSingletons() {
       final java.util.Set<Object> singletons = new java.util.HashSet<Object>();
-      singletons.add(new org.safris.xws.xjb.rs.JSObjectBodyReader()); // Optional MessageBodyReader to parse JSON messages to beans.
-      singletons.add(new org.safris.xws.xjb.rs.JSObjectBodyWriter()); // Optional MessageBodyWriter to marshal beans to JSON messages.
+      singletons.add(new org.safris.xjb.rs.JSObjectBodyReader()); // Optional MessageBodyReader to parse JSON messages to beans.
+      singletons.add(new org.safris.xjb.rs.JSObjectBodyWriter()); // Optional MessageBodyWriter to marshal beans to JSON messages.
       return singletons;
     }
   }
   ```
 
-5. Extend `org.safris.cf.xrs.DefaultRESTServlet`, pointing to `Application`.
+5. Extend `org.safris.xrs.server.DefaultRESTServlet`, pointing to `Application`.
 
   ```java
   @WebServlet(initParams={@WebInitParam(name="javax.ws.rs.Application", value="Application")})
-  public class RESTServlet extends org.safris.cf.xrs.DefaultRESTServlet {
+  public class RESTServlet extends org.safris.xrs.server.DefaultRESTServlet {
   }
   ```
 
