@@ -1,39 +1,39 @@
-<img src="http://safris.org/logo.png" align="right" />
-# XRS [![CohesionFirst](http://safris.org/cf2.svg)](https://cohesionfirst.com/)
+<img src="http://safris.org/logo.png" align="right"/>
+## XRS<br>[![JavaCommons](https://img.shields.io/badge/java-enterprise-blue.svg)](https://cohesionfirst.com/) [![CohesionFirst](https://img.shields.io/badge/CohesionFirst%E2%84%A2--blue.svg)](https://cohesionfirst.com/)
 > jaX REST Server
 
-## Introduction
+### Introduction
 
-XRS is an implementation of the [JAX-RS v2.0 Specification][jax-rs-spec] that runs in a Servlet Container (such as [Jetty][jetty]. This project was inspired to create a better, simpler, easier to use, reliable, and debugable JAX-RS implementation using the CohesionFirst™ approach.
+**XRS** is an implementation of the [JAX-RS v2.0 Specification][jax-rs-spec] that runs in a [Servlet Container][web-container]. This project was inspired with the goal to create a better, simpler, easier to use, reliable, and debugable JAX-RS implementation using the CohesionFirst™ approach.
 
-## Why XRS?
+### Why **XRS**?
 
-### CohesionFirst™
+#### CohesionFirst™
 
-Developed with the CohesionFirst™ approach, XRS is reliable, consistent, and straightforward to use. Made possible by the rigorous conformance to design patterns and best practices in every line of its implementation, XRS is a pure JAX-RS 2.0 solution that is written with the developer in mind. The XRS solution differentiates itself from the rest with its ease of use and debugability of RESTful applications.
+Developed with the CohesionFirst™ approach, **XRS** is reliably designed, consistently implemented, and straightforward to use. Made possible by the rigorous conformance to design patterns and best practices in every line of its implementation, **XRS** is a pure [JAX-RS 2.0][jax-rs-spec] solution that is written with the developer in mind. The **XRS** solution differentiates itself from the rest with its ease of use and debugability of RESTful applications.
 
-### Simple and Lightweight
+#### Simple and Lightweight
 
-XRS was built to implement the [JAX-RS v2.0 Specification][jax-rs-spec] while keeping the internal complexity as low as feasable. Static state is used for but one use-case, so it is never a challenge to debug the path of a request or a response.
+**XRS** was built to implement the [JAX-RS v2.0 Specification][jax-rs-spec] while keeping the internal complexity as low as feasable. Static state is used in but one use-case, so it is never a challenge to debug a request or a response.
 
-Existing solutions such as [Jersey][jersey], [JBoss RESTEasy][RESTeasy], [Restlet][restlet], [Apache CXF][apache-cxf], [Apache Wink][apache-wink] and others are challenging to work with, because they are bloated, buggy, and are not pure to the JAX-RS specification. Many people experience unnecessary pains using existing JAX-RS implementations, specifically related to debugging. Debugging of JAX-RS servers is difficult because of the high internal complexity of the implementation.
+Existing solutions such as [Jersey][jersey], [JBoss RESTEasy][RESTeasy], [Restlet][restlet], [Apache CXF][apache-cxf], [Apache Wink][apache-wink] and others are challenging to work with, because they are buggy, difficult to debug, and are not pure to the JAX-RS specification. Many people experience unnecessary pains using existing JAX-RS implementations. Debugging of JAX-RS servers is especially difficult, because of the high internal complexities of the implementations.
 
-### Minimum Dynamic Invocation
+#### Minimum Dynamic Invocation
 
-A common pattern that is used in JAX-RS implementations is dynamic method invocation, which is mainly due to the nature of the specification itself. Dynamic method invocation is powerful, but it comes at a cost: debugability. Dynamic method invocation results in stack traces that lack information of the specific execution path that led to the exception. Instead of a clear trace methods and line numbers, a dynamically invoked method call is overwhelmed with multitudes of `Method.invoke()` in the trace. After much pain and suffering, the idea of a pure JAX-RS server emerged, one that minimizes dynamic invocation, providing clear execution paths, and conforming to the JAX-RS specification.
+A common pattern that is used in JAX-RS implementations is dynamic method invocation. Dynamic method invocation is powerful, but it comes at a cost: debugability. Dynamic method invocation results in stack-traces that lack information of the specific execution path that led to the exception. Instead of clear trace methods and line numbers, a dynamically invoked method call is cluttered with multitudes of `Method.invoke()` in the trace. After much pain and suffering, the idea of a pure JAX-RS server emerged, one that minimizes dynamic invocation, providing clear execution paths, and conforming to the [JAX-RS v2.0 Specification][jax-rs-spec] in its pure form.
 
-### Conforming to JAX-RS 2.0
+#### Conforming to JAX-RS 2.0
 
-XRS is a pure implementation of the JAX-RS 2.0 specification. More often than not, JAX-RS implementations introduce their own proprietary APIs, which thus couple you to the implementation, making it unnecessarily difficult to migrate to another provider in the future. XRS is designed to be clear, cohesive, and 100% conformant to the JAX-RS v2.0 specification.
+**XRS** is a pure implementation of the [JAX-RS v2.0 Specification][jax-rs-spec]. More often than not, JAX-RS implementations introduce their own proprietary APIs, which thus couple you to the implementation. **XRS** is designed to be clear, cohesive, and 100% conformant to the [JAX-RS v2.0 Specification][jax-rs-spec].
 
-## Getting Started
+### Getting Started
 
-### Prerequisites
+#### Prerequisites
 
-* [Maven][maven] - The dependency management system used to install XRS.
+* [Maven][maven] - The dependency management system.
 * [Servlet Container][web-container] - A Servlet Container is needed to provide the HTTP service functionality. We recommend [Jetty][jetty] as the ideal starting point for any project.
 
-### Example
+#### Example
 
 1. In your preferred development directory, create a [`maven-archetype-quickstart`](http://maven.apache.org/archetypes/maven-archetype-quickstart/) project.
 
@@ -58,7 +58,7 @@ XRS is a pure implementation of the JAX-RS 2.0 specification. More often than no
   </pluginRepositories>
   ```
 
-3. Add the `org.safris.xrs`:`xrs-server` dependency to the POM.
+3. Add the `org.safris.xrs:xrs-server` dependency to the POM.
 
   ```xml
   <dependency>
@@ -82,8 +82,8 @@ XRS is a pure implementation of the JAX-RS 2.0 specification. More often than no
     @Override
     public java.util.Set<Object> getSingletons() {
       final java.util.Set<Object> singletons = new java.util.HashSet<Object>();
-      singletons.add(new org.safris.xjb.rs.JSObjectBodyReader()); // Optional MessageBodyReader to parse JSON messages to beans.
-      singletons.add(new org.safris.xjb.rs.JSObjectBodyWriter()); // Optional MessageBodyWriter to marshal beans to JSON messages.
+      singletons.add(new org.safris.xjb.rs.JSObjectBodyReader()); // Optional MessageBodyReader to parse JSON messages to Java beans.
+      singletons.add(new org.safris.xjb.rs.JSObjectBodyWriter()); // Optional MessageBodyWriter to marshal Java beans to JSON messages.
       return singletons;
     }
   }
@@ -105,7 +105,7 @@ XRS is a pure implementation of the JAX-RS 2.0 specification. More often than no
 
   This will automatically add `RESTServlet` to the application.
   
-## License
+### License
 
 This project is licensed under the MIT License - see the [LICENSE.txt](LICENSE.txt) file for details.
 
