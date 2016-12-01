@@ -1,5 +1,5 @@
 <img src="http://safris.org/logo.png" align="right"/>
-## XRS<br>[![JavaCommons](https://img.shields.io/badge/java-enterprise-blue.svg)](https://cohesionfirst.com/) [![CohesionFirst](https://img.shields.io/badge/CohesionFirst%E2%84%A2--blue.svg)](https://cohesionfirst.com/)
+## XRS<br>![java-enterprise][java-enterprise] [![CohesionFirst™][cohesionfirst_badge]][cohesionfirst]
 > jaX REST Server
 
 ### Introduction
@@ -30,12 +30,13 @@ A common pattern that is used in JAX-RS implementations is dynamic method invoca
 
 #### Prerequisites
 
+* [Java 7][jdk7-download] - The minimum required JDK version.
 * [Maven][maven] - The dependency management system.
 * [Servlet Container][web-container] - A Servlet Container is needed to provide the HTTP service functionality. We recommend [Jetty][jetty] as the ideal starting point for any project.
 
 #### Example
 
-1. In your preferred development directory, create a [`maven-archetype-quickstart`](http://maven.apache.org/archetypes/maven-archetype-quickstart/) project.
+1. In your preferred development directory, create a [`maven-archetype-quickstart`][maven-archetype-quickstart] project.
 
   ```tcsh
   mvn archetype:generate -DgroupId=com.mycompany.app -DartifactId=my-app -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
@@ -97,7 +98,7 @@ A common pattern that is used in JAX-RS implementations is dynamic method invoca
   }
   ```
 
-6. Deploy the servlet to a Servlet Container. For an easy embedded servlet container solution, [see here](https://github.com/SevaSafris/java/tree/master/commons/jetty/) for a solution based on [Jetty][jetty]. In the arguments to `new Server(8080, ...)` add `RESTServlet.class` as such:
+6. Deploy the servlet to a Servlet Container. For an easy embedded servlet container solution, [see here][commons-jetty] for a solution based on [Jetty][jetty]. In the arguments to `new Server(8080, ...)` add `RESTServlet.class` as such:
 
   ```java
   new Server(8080, null, null, true, null, RESTServlet.class);
@@ -111,10 +112,16 @@ This project is licensed under the MIT License - see the [LICENSE.txt](LICENSE.t
 
 [apache-cxf]: http://cxf.apache.org/
 [apache-wink]: https://wink.apache.org/
+[cohesionfirst]: https://www.cohesionfirst.com/
+[cohesionfirst_badge]: https://img.shields.io/badge/CohesionFirst%E2%84%A2--blue.svg
+[commons-jetty]: https://github.com/SevaSafris/commons-jetty
+[java-enterprise]: https://img.shields.io/badge/java-enterprise-blue.svg
 [jax-rs-spec]: http://download.oracle.com/otn-pub/jcp/jaxrs-2_0_rev_A-mrel-eval-spec/jsr339-jaxrs-2.0-final-spec.pdf
+[jdk7-download]: http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html
 [jersey]: https://jersey.java.net/
 [jetty]: http://www.eclipse.org/jetty/
+[maven-archetype-quickstart]: http://maven.apache.org/archetypes/maven-archetype-quickstart/
+[maven]: https://maven.apache.org/
 [RESTeasy]: http://resteasy.jboss.org/
 [restlet]: https://restlet.com/
-[maven]: https://maven.apache.org/
 [web-container]: https://en.wikipedia.org/wiki/Web_container
