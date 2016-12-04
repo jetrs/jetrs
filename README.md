@@ -1,5 +1,5 @@
 <img src="https://www.cohesionfirst.org/logo.png" align="right"/>
-## XRS<br>![java-enterprise][java-enterprise] [![CohesionFirst™][cohesionfirst_badge]][cohesionfirst]
+## XRS<br>![java-enterprise][java-enterprise] <a href="https://www.cohesionfirst.org/"><img src="https://img.shields.io/badge/CohesionFirst%E2%84%A2--blue.svg"></a>
 > jaX REST Server
 
 ### Introduction
@@ -112,8 +112,6 @@ This project is licensed under the MIT License - see the [LICENSE.txt](LICENSE.t
 
 [apache-cxf]: http://cxf.apache.org/
 [apache-wink]: https://wink.apache.org/
-[cohesionfirst]: https://www.cohesionfirst.com/
-[cohesionfirst_badge]: https://img.shields.io/badge/CohesionFirst%E2%84%A2--blue.svg
 [commons-jetty]: https://github.com/SevaSafris/commons-jetty
 [java-enterprise]: https://img.shields.io/badge/java-enterprise-blue.svg
 [jax-rs-spec]: http://download.oracle.com/otn-pub/jcp/jaxrs-2_0_rev_A-mrel-eval-spec/jsr339-jaxrs-2.0-final-spec.pdf
