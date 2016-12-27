@@ -23,7 +23,7 @@ import java.util.Iterator;
 
 import org.safris.commons.util.Collections;
 
-public class ExceptionTrancator {
+public class ExceptionTruncator {
   private static final StackTraceElement[] reflectElements = new StackTraceElement[] {
     new StackTraceElement("sun.reflect.NativeMethodAccessorImpl", "invoke0", null, -1),
     new StackTraceElement("sun.reflect.NativeMethodAccessorImpl", "invoke", null, -1),
@@ -61,7 +61,7 @@ public class ExceptionTrancator {
   }
 
   public static void main(final String[] args) throws Throwable {
-    new ExceptionTrancator().testX();
+    new ExceptionTruncator().testX();
   }
 
   public static void x(final Throwable t) {
@@ -74,7 +74,7 @@ public class ExceptionTrancator {
 
   public void testX() throws Throwable {
     try {
-      ExceptionTrancator.class.getMethod("test0").invoke(this);
+      ExceptionTruncator.class.getMethod("test0").invoke(this);
     }
     catch (final Throwable e) {
       e.printStackTrace();
@@ -88,7 +88,7 @@ public class ExceptionTrancator {
   }
 
   public void test1() throws Exception {
-    Method method = ExceptionTrancator.class.getMethod("test2");
+    Method method = ExceptionTruncator.class.getMethod("test2");
     method.invoke(this);
   }
 
@@ -106,7 +106,7 @@ public class ExceptionTrancator {
   }
 
   public void test4() throws Throwable {
-    Method method = ExceptionTrancator.class.getMethod("test5");
+    Method method = ExceptionTruncator.class.getMethod("test5");
     method.invoke(this);
   }
 
