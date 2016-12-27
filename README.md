@@ -30,7 +30,7 @@ A common pattern that is used in JAX-RS implementations is dynamic method invoca
 
 #### Prerequisites
 
-* [Java 7][jdk7-download] - The minimum required JDK version.
+* [Java 8][jdk8-download] - The minimum required JDK version.
 * [Maven][maven] - The dependency management system.
 * [Servlet Container][web-container] - A Servlet Container is needed to provide the HTTP service functionality. We recommend [Jetty][jetty] as the ideal starting point for any project.
 
@@ -115,7 +115,7 @@ This project is licensed under the MIT License - see the [LICENSE.txt](LICENSE.t
 [commons-jetty]: https://github.com/SevaSafris/commons-jetty
 [java-enterprise]: https://img.shields.io/badge/java-enterprise-blue.svg
 [jax-rs-spec]: http://download.oracle.com/otn-pub/jcp/jaxrs-2_0_rev_A-mrel-eval-spec/jsr339-jaxrs-2.0-final-spec.pdf
-[jdk7-download]: http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html
+[jdk8-download]: http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html
 [jersey]: https://jersey.java.net/
 [jetty]: http://www.eclipse.org/jetty/
 [maven-archetype-quickstart]: http://maven.apache.org/archetypes/maven-archetype-quickstart/
