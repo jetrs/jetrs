@@ -148,20 +148,26 @@ public class DefaultRESTServlet extends StartupServlet {
         response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         throw (ServletException)t.getCause();
       }
-      else if (t instanceof ClientErrorException) {
-        final ClientErrorException e = (ClientErrorException)t;
-        response.sendError(e.getResponse().getStatus(), t.getMessage());
-        return;
-      }
-      else if (t instanceof WebApplicationException) {
-        final WebApplicationException e = (WebApplicationException)t;
-        response.sendError(e.getResponse().getStatus(), t.getMessage());
-        if (e.getResponse().getStatus() == HttpServletResponse.SC_INTERNAL_SERVER_ERROR)
-          throw t;
-      }
       else {
-        response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-        throw t;
+        final StringBuilder message = new StringBuilder(t.getMessage());
+        if (t.getCause() != null)
+          message.append(" ").append(t.getCause().getMessage());
+
+        if (t instanceof ClientErrorException) {
+          final ClientErrorException e = (ClientErrorException)t;
+          response.sendError(e.getResponse().getStatus(), message.toString());
+          return;
+        }
+        else if (t instanceof WebApplicationException) {
+          final WebApplicationException e = (WebApplicationException)t;
+          response.sendError(e.getResponse().getStatus(), message.toString());
+          if (e.getResponse().getStatus() == HttpServletResponse.SC_INTERNAL_SERVER_ERROR)
+            throw t;
+        }
+        else {
+          response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+          throw t;
+        }
       }
 
       return;
