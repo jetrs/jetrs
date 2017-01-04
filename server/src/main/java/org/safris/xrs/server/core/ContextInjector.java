@@ -29,6 +29,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
+import javax.ws.rs.ext.Providers;
 
 import org.safris.commons.lang.reflect.Classes;
 
@@ -38,16 +39,16 @@ import org.safris.commons.lang.reflect.Classes;
 public class ContextInjector {
   private static ContextInjector injectionContextPrototype = new ContextInjector(new Class<?>[] {
     // ResourceContext.class,
-    // Providers.class,
     // Application.class,
+    Providers.class,
     SecurityContext.class,
     UriInfo.class,
     Request.class,
     HttpHeaders.class
   });
 
-  public static ContextInjector createInjectionContext(final ContainerRequestContext containerRequestContext, final Request request, final HttpHeaders headers) {
-    return new ContextInjector(injectionContextPrototype.allowedClasses, containerRequestContext, request, headers);
+  public static ContextInjector createInjectionContext(final ContainerRequestContext containerRequestContext, final Request request, final HttpHeaders headers, final Providers providers) {
+    return new ContextInjector(injectionContextPrototype.allowedClasses, containerRequestContext, request, headers, providers);
   }
 
   public static boolean allowsInjectableClass(final Class<?> type, final Class<?> injectableClass) {
@@ -59,18 +60,20 @@ public class ContextInjector {
   private final ContainerRequestContext containerRequestContext;
   private final Request request;
   private final HttpHeaders httpHeaders;
+  private final Providers providers;
 
-  private ContextInjector(final Class<?>[] allowedClasses, final ContainerRequestContext containerRequestContext, final Request request, final HttpHeaders headers) {
+  private ContextInjector(final Class<?>[] allowedClasses, final ContainerRequestContext containerRequestContext, final Request request, final HttpHeaders httpHeaders, final Providers providers) {
     this.allowedClasses = allowedClasses;
     this.request = request;
-    this.httpHeaders = headers;
+    this.httpHeaders = httpHeaders;
+    this.providers = providers;
     for (final Class<?> allowedClass : allowedClasses)
       allowedInjectableClasses.add(allowedClass);
     this.containerRequestContext = containerRequestContext;
   }
 
   private ContextInjector(final Class<?>[] allowedClasses) {
-    this(allowedClasses, null, null, null);
+    this(allowedClasses, null, null, null, null);
   }
 
   private final Map<Class<?>,Object> injectableClassToObject = new HashMap<Class<?>,Object>();
@@ -104,6 +107,9 @@ public class ContextInjector {
 
     if (allowedInjectibleClass == SecurityContext.class)
       return (T)containerRequestContext.getSecurityContext();
+
+    if (allowedInjectibleClass == Providers.class)
+      return (T)providers;
 
     return (T)injectableClassToObject.get(allowedInjectibleClass);
   }

@@ -43,6 +43,7 @@ import org.safris.xrs.server.util.Responses;
 public class ResponseBuilderImpl extends Response.ResponseBuilder {
   private final HeaderMap headers;
   private Object entity;
+  private Annotation[] annotations;
 
   public ResponseBuilderImpl(final ResponseBuilderImpl copy) {
     headers = copy.headers.clone();
@@ -54,7 +55,7 @@ public class ResponseBuilderImpl extends Response.ResponseBuilder {
 
   @Override
   public Response build() {
-    return new ResponseImpl(Responses.fromStatusCode(status), headers, entity);
+    return new ResponseImpl(Responses.fromStatusCode(status), headers, entity, annotations);
   }
 
   @Override
@@ -78,7 +79,9 @@ public class ResponseBuilderImpl extends Response.ResponseBuilder {
 
   @Override
   public Response.ResponseBuilder entity(final Object entity, final Annotation[] annotations) {
-    throw new UnsupportedOperationException();
+    this.entity = entity;
+    this.annotations = annotations;
+    return this;
   }
 
   @Override
@@ -225,7 +228,7 @@ public class ResponseBuilderImpl extends Response.ResponseBuilder {
   }
 
   @Override
-  public ResponseBuilder entity(final NioWriterHandler writer, NioErrorHandler error) {
+  public ResponseBuilder entity(final NioWriterHandler writer, final NioErrorHandler error) {
     throw new UnsupportedOperationException();
   }
 }

@@ -35,18 +35,19 @@ import javax.ws.rs.core.Response;
 
 public class ResponseImpl extends Response {
   private final Response.Status status;
-  private final Object entity;
   private final HeaderMap headers;
+  private final Object entity;
   private boolean closed;
 
-  public ResponseImpl(final Response.Status status, final HeaderMap headers, final Object entity) {
+  // FIXME: annotations are not being used.. there's no API to get them out of this class
+  public ResponseImpl(final Response.Status status, final HeaderMap headers, final Object entity, final Annotation[] annotations) {
     this.status = status;
     this.headers = headers;
     this.entity = entity;
   }
 
   public ResponseImpl(final Response.Status status, final HeaderMap headers) {
-    this(status, headers, null);
+    this(status, headers, null, null);
   }
 
   @Override
@@ -73,17 +74,17 @@ public class ResponseImpl extends Response {
   }
 
   @Override
-  public <T> T readEntity(final GenericType<T> entityType) {
+  public <T>T readEntity(final GenericType<T> entityType) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public <T> T readEntity(final Class<T> entityType, final Annotation[] annotations) {
+  public <T>T readEntity(final Class<T> entityType, final Annotation[] annotations) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public <T> T readEntity(final GenericType<T> entityType, final Annotation[] annotations) {
+  public <T>T readEntity(final GenericType<T> entityType, final Annotation[] annotations) {
     throw new UnsupportedOperationException();
   }
 
@@ -137,7 +138,7 @@ public class ResponseImpl extends Response {
 
   @Override
   public Date getDate() {
-    return null;
+    throw new UnsupportedOperationException();
   }
 
   @Override

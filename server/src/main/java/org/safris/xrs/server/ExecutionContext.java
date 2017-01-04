@@ -18,20 +18,22 @@ package org.safris.xrs.server;
 
 import java.util.List;
 
-import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.ParamConverterProvider;
+import javax.ws.rs.ext.Providers;
+
+import org.safris.xrs.server.ext.ProvidersImpl;
 
 public class ExecutionContext {
   private final MultivaluedMap<String,ResourceManifest> resources;
   private final ContainerFilters containerFilters;
-  private final EntityProviders entityProviders;
+  private final Providers providers;
   private final List<ParamConverterProvider> paramConverterProviders;
 
-  public ExecutionContext(final MultivaluedMap<String,ResourceManifest> registry, final ContainerFilters containerFilters, final EntityProviders entityProviders, final List<ParamConverterProvider> paramConverterProviders) {
+  public ExecutionContext(final MultivaluedMap<String,ResourceManifest> registry, final ContainerFilters containerFilters, final ProvidersImpl providers, final List<ParamConverterProvider> paramConverterProviders) {
     this.resources = registry;
     this.containerFilters = containerFilters;
-    this.entityProviders = entityProviders;
+    this.providers = providers;
     this.paramConverterProviders = paramConverterProviders;
   }
 
@@ -39,8 +41,8 @@ public class ExecutionContext {
     return containerFilters;
   }
 
-  public EntityProviders getEntityProviders() {
-    return entityProviders;
+  public Providers getProviders() {
+    return providers;
   }
 
   public List<ParamConverterProvider> getParamConverterProviders() {

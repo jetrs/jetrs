@@ -50,6 +50,7 @@ import javax.ws.rs.ext.Provider;
 import org.safris.commons.lang.PackageLoader;
 import org.safris.commons.lang.PackageNotFoundException;
 import org.safris.xrs.server.core.ContextInjector;
+import org.safris.xrs.server.ext.ProvidersImpl;
 
 public abstract class StartupServlet extends HttpServlet {
   private static final long serialVersionUID = 6825431027711735886L;
@@ -201,6 +202,6 @@ public abstract class StartupServlet extends HttpServlet {
       }
     }
 
-    this.executionContext = new ExecutionContext(registry, new ContainerFilters(requestFilters, responseFilters), new EntityProviders(entityReaders, entityWriters), paramConverterProviders);
+    this.executionContext = new ExecutionContext(registry, new ContainerFilters(requestFilters, responseFilters), new ProvidersImpl(entityReaders, entityWriters), paramConverterProviders);
   }
 }

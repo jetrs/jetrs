@@ -43,6 +43,7 @@ public class ContainerResponseContextImpl extends ContainerContextImpl implement
 
   private OutputStream outputStream;
   private Object entity;
+  private Annotation[] annotations;
 
   public ContainerResponseContextImpl(final HttpServletResponse response) {
     super(response.getLocale());
@@ -153,13 +154,14 @@ public class ContainerResponseContextImpl extends ContainerContextImpl implement
   @Override
   public void setEntity(final Object entity, final Annotation[] annotations, final MediaType mediaType) {
     this.entity = entity;
+    this.annotations = annotations;
     if (mediaType != null)
       getHeaders().putSingle(HttpHeaders.CONTENT_TYPE, mediaType);
   }
 
   @Override
   public Annotation[] getEntityAnnotations() {
-    throw new UnsupportedOperationException();
+    return annotations;
   }
 
   @Override

@@ -18,6 +18,7 @@ package org.safris.xrs.server;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Map;
 
@@ -28,6 +29,9 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.MessageBodyWriter;
+import javax.ws.rs.ext.Providers;
+
+import org.safris.commons.lang.Arrays;
 
 public class ResponseContext {
   private final HttpHeaders httpHeaders;
@@ -78,19 +82,17 @@ public class ResponseContext {
   private ByteArrayOutputStream outputStream = null;
 
   private ByteArrayOutputStream getOutputStream() {
-    if (outputStream == null)
-      outputStream = new ByteArrayOutputStream();
-
-    return outputStream;
+    return outputStream == null ? outputStream = new ByteArrayOutputStream() : outputStream;
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
-  public void writeBody(final EntityProviders entityProviders) throws IOException {
+  public void writeBody(final Providers providers) throws IOException {
     final Object entity = containerResponseContext.getEntity();
     if (entity != null) {
-      final MessageBodyWriter messageBodyWriter = entityProviders.getWriter(containerResponseContext.getMediaType(), entity.getClass());
+      final Annotation[] annotations = containerResponseContext.getEntityAnnotations() != null ? Arrays.concat(containerResponseContext.getEntityAnnotations(), entity.getClass().getAnnotations()) : entity.getClass().getAnnotations();
+      final MessageBodyWriter messageBodyWriter = providers.getMessageBodyWriter(containerResponseContext.getEntityClass(), containerResponseContext.getEntityType(), annotations, containerResponseContext.getMediaType());
       if (messageBodyWriter != null) {
-        messageBodyWriter.writeTo(entity, entity.getClass(), entity.getClass().getGenericSuperclass(), entity.getClass().getAnnotations(), httpHeaders.getMediaType(), httpHeaders.getRequestHeaders(), getOutputStream());
+        messageBodyWriter.writeTo(entity, containerResponseContext.getEntityClass(), entity.getClass().getGenericSuperclass(), annotations, httpHeaders.getMediaType(), httpHeaders.getRequestHeaders(), getOutputStream());
       }
       else {
         throw new WebApplicationException("Could not find MessageBodyWriter for type: " + entity.getClass().getName());

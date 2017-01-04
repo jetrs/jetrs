@@ -97,7 +97,7 @@ public class DefaultRESTServlet extends StartupServlet {
       final ContainerRequestContext containerRequestContext; // NOTE: This weird construct is done this way to at least somehow make the two object cohesive
       request.setRequestContext(containerRequestContext = new ContainerRequestContextImpl(getExecutionContext(), request, responseContext));
 
-      final ContextInjector injectionContext = ContextInjector.createInjectionContext(containerRequestContext, new RequestImpl(request.getMethod()), httpHeaders);
+      final ContextInjector injectionContext = ContextInjector.createInjectionContext(containerRequestContext, new RequestImpl(request.getMethod()), httpHeaders, getExecutionContext().getProviders());
 
       try {
         getExecutionContext().getContainerFilters().filterPreMatchRequest(containerRequestContext, injectionContext);
@@ -105,7 +105,7 @@ public class DefaultRESTServlet extends StartupServlet {
 
         if (responseContext.getResponse() != null) {
           responseContext.writeHeader();
-          responseContext.writeBody(getExecutionContext().getEntityProviders());
+          responseContext.writeBody(getExecutionContext().getProviders());
           responseContext.commit();
           return;
         }
@@ -122,11 +122,11 @@ public class DefaultRESTServlet extends StartupServlet {
         if (produces != null)
           containerResponseContext.getStringHeaders().addAll(HttpHeaders.CONTENT_TYPE, produces.value());
 
-        final Object content = manifest.service(containerRequestContext, injectionContext, getExecutionContext().getEntityProviders(), getExecutionContext().getParamConverterProviders());
+        final Object content = manifest.service(containerRequestContext, injectionContext, getExecutionContext().getParamConverterProviders());
         if (content != null)
           containerResponseContext.setEntity(content);
 
-        responseContext.writeBody(getExecutionContext().getEntityProviders());
+        responseContext.writeBody(getExecutionContext().getProviders());
         getExecutionContext().getContainerFilters().filterPostMatchResponse(containerRequestContext, containerResponseContext, injectionContext);
       }
       catch (final Throwable t) {

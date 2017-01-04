@@ -14,21 +14,26 @@
  * program. If not, see <http://opensource.org/licenses/MIT/>.
  */
 
-package org.safris.xrs.server;
+package org.safris.xrs.server.ext;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.ext.ContextResolver;
+import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
+import javax.ws.rs.ext.Providers;
 
 import org.safris.commons.util.Collections;
 import org.safris.xrs.server.util.MediaTypes;
 
-public class EntityProviders {
+public class ProvidersImpl implements Providers {
   private static final Comparator<EntityProvider<?>> comparator = new Comparator<EntityProvider<?>>() {
     @Override
     public int compare(final EntityProvider<?> o1, final EntityProvider<?> o2) {
@@ -44,8 +49,8 @@ public class EntityProviders {
     }
 
     @Override
-    public boolean matches(final MediaType mediaType, final Class<?> type) {
-      return super.matches(mediaType, type) && getProvider().isReadable(type, type.getGenericSuperclass(), type.getAnnotations(), mediaType);
+    public boolean matches(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
+      return super.matches(type, genericType, annotations, mediaType) && getProvider().isReadable(type, genericType, annotations, mediaType);
     }
   }
 
@@ -55,8 +60,8 @@ public class EntityProviders {
     }
 
     @Override
-    public boolean matches(final MediaType mediaType, final Class<?> type) {
-      return super.matches(mediaType, type) && getProvider().isWriteable(type, type.getGenericSuperclass(), type.getAnnotations(), mediaType);
+    public boolean matches(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
+      return super.matches(type, genericType, annotations, mediaType) && getProvider().isWriteable(type, genericType, type.getAnnotations(), mediaType);
     }
   }
 
@@ -70,7 +75,7 @@ public class EntityProviders {
       this.allowedTypes = consumes == null ? new MediaType[] {MediaType.WILDCARD_TYPE} : MediaTypes.parse(consumes.value());
     }
 
-    public boolean matches(final MediaType mediaType, final Class<?> type) {
+    public boolean matches(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
       return MediaTypes.matches(mediaType, allowedTypes);
     }
 
@@ -82,7 +87,7 @@ public class EntityProviders {
   private final List<ReaderProvider> readerProviders = new ArrayList<ReaderProvider>();
   private final List<WriterProvider> writerProviders = new ArrayList<WriterProvider>();
 
-  public EntityProviders(final List<MessageBodyReader<?>> readerProviders, final List<MessageBodyWriter<?>> writerProviders) {
+  public ProvidersImpl(final List<MessageBodyReader<?>> readerProviders, final List<MessageBodyWriter<?>> writerProviders) {
     for (final MessageBodyReader<?> readerProvider : readerProviders)
       this.readerProviders.add(new ReaderProvider(readerProvider));
 
@@ -93,19 +98,33 @@ public class EntityProviders {
     Collections.sort(this.writerProviders, comparator);
   }
 
-  public MessageBodyWriter<?> getWriter(final MediaType mediaType, final Class<?> type) {
-    for (final WriterProvider provider : writerProviders)
-      if (provider.matches(mediaType, type))
-        return provider.getProvider();
+  @Override
+  @SuppressWarnings("unchecked")
+  public <T>MessageBodyReader<T> getMessageBodyReader(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
+    for (final ReaderProvider provider : readerProviders)
+      if (provider.matches(type, genericType, annotations, mediaType))
+        return (MessageBodyReader<T>)provider.getProvider();
 
     return null;
   }
 
-  public MessageBodyReader<?> getReader(final MediaType mediaType, final Class<?> type) {
-    for (final ReaderProvider provider : readerProviders)
-      if (provider.matches(mediaType, type))
-        return provider.getProvider();
+  @Override
+  @SuppressWarnings("unchecked")
+  public <T>MessageBodyWriter<T> getMessageBodyWriter(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
+    for (final WriterProvider provider : writerProviders)
+      if (provider.matches(type, genericType, annotations, mediaType))
+        return (MessageBodyWriter<T>)provider.getProvider();
 
+    return null;
+  }
+
+  @Override
+  public <T extends Throwable> ExceptionMapper<T> getExceptionMapper(final Class<T> type) {
+    return null;
+  }
+
+  @Override
+  public <T>ContextResolver<T> getContextResolver(final Class<T> contextType, final MediaType mediaType) {
     return null;
   }
 }
