@@ -21,12 +21,29 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringTokenizer;
 
 import javax.ws.rs.core.MediaType;
 
 public final class MediaTypes {
   // FIXME: Is this correct?
+  public static boolean matches(final MediaType[] required, final Set<MediaType> tests) {
+    for (final MediaType req : required)
+      if (matches(req, tests))
+        return true;
+
+    return false;
+  }
+
+  public static boolean matches(final MediaType required, final Set<MediaType> tests) {
+    for (final MediaType test : tests)
+      if (matches(required, test))
+        return true;
+
+    return false;
+  }
+
   public static boolean matches(final MediaType[] required, final MediaType[] tests) {
     for (final MediaType req : required)
       if (matches(req, tests))

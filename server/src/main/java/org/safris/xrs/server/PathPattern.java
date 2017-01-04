@@ -93,7 +93,7 @@ public class PathPattern {
 
     final MultivaluedMap<String,String> parameters = new MultivaluedHashMap<String,String>();
     for (final String groupName : groupNames) {
-      final String values[] = matcher.group(groupName).replace("%3B", ";").split(";");
+      final String[] values = matcher.group(groupName).replace("%3B", ";").split(";");
       for (final String value : values)
         parameters.add(groupName, value);
     }

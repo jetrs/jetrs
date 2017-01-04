@@ -18,6 +18,7 @@ package org.safris.xrs.server;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.Set;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
@@ -50,7 +51,7 @@ public class MediaTypeMatcher<T extends Annotation> {
   }
 
   // FIXME: http://stackoverflow.com/questions/29857643/how-are-jersey-consumes-endpoints-matched
-  public boolean matches(final MediaType[] mediaTypes) {
+  public boolean matches(final Set<MediaType> mediaTypes) {
     return this.mediaTypes == null ? mediaTypes == null || MediaTypes.matches(MediaType.WILDCARD_TYPE, mediaTypes) : mediaTypes == null || MediaTypes.matches(this.mediaTypes, mediaTypes);
   }
 

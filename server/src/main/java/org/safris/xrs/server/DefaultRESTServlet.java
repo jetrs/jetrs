@@ -111,7 +111,7 @@ public class DefaultRESTServlet extends StartupServlet {
         }
 
         final ResourceManifest manifest; // NOTE: This weird construct is done this way to at least somehow make the two object cohesive
-        request.setResourceManifest(manifest = getExecutionContext().filterAndMatch(containerRequestContext));
+        request.setResourceManifest(manifest = getExecutionContext().filterAndMatch(RequestMatchParams.forContext(containerRequestContext)));
 
         getExecutionContext().getContainerFilters().filterPostMatchRequest(containerRequestContext, injectionContext);
 

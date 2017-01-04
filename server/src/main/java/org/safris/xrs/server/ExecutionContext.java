@@ -55,13 +55,13 @@ public class ExecutionContext {
     return null;
   }
 
-  public ResourceManifest filterAndMatch(final ContainerRequestContext containerRequestContext) {
-    final List<ResourceManifest> manifests = resources.get(containerRequestContext.getMethod().toUpperCase());
+  public ResourceManifest filterAndMatch(final RequestMatchParams matchParams) {
+    final List<ResourceManifest> manifests = resources.get(matchParams.getMethod());
     if (manifests == null)
       return null;
 
     for (final ResourceManifest manifest : manifests)
-      if (manifest.matches(containerRequestContext))
+      if (manifest.matches(matchParams))
         return manifest;
 
     return null;

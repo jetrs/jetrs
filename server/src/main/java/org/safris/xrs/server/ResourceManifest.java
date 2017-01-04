@@ -22,6 +22,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import javax.annotation.security.DenyAll;
@@ -43,7 +44,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.ParamConverterProvider;
@@ -99,19 +99,19 @@ public class ResourceManifest {
     this.producesMatcher = new MediaTypeMatcher<Produces>(method, Produces.class);
   }
 
-  public boolean matches(final ContainerRequestContext requestContext) {
-    if (!httpMethod.value().toUpperCase().equals(requestContext.getMethod().toUpperCase()))
+  public boolean matches(final RequestMatchParams matchParams) {
+    if (!httpMethod.value().toUpperCase().equals(matchParams.getMethod()))
       return false;
 
-    final String path = requestContext.getUriInfo().getPath();
+    final String path = matchParams.getPath();
     if (!pathPattern.matches(path))
       return false;
 
-    final MediaType[] accept = MediaTypes.parse(requestContext.getHeaders().get(HttpHeaders.ACCEPT));
+    final Set<MediaType> accept = matchParams.getAccept();
     if (!producesMatcher.matches(accept))
       return false;
 
-    final MediaType[] contentType = MediaTypes.parse(requestContext.getHeaders().get(HttpHeaders.CONTENT_TYPE));
+    final Set<MediaType> contentType = matchParams.getContentType();
     if (!consumesMatcher.matches(contentType))
       return false;
 

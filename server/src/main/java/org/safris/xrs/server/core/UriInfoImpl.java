@@ -17,6 +17,7 @@
 package org.safris.xrs.server.core;
 
 import java.net.URI;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -30,8 +31,11 @@ import javax.ws.rs.core.UriInfo;
 
 import org.safris.commons.net.URIComponent;
 import org.safris.xrs.server.ExecutionContext;
+import org.safris.xrs.server.RequestMatchParams;
 
 public class UriInfoImpl implements UriInfo {
+  private final Map<RequestMatchParams,MultivaluedMap<String,String>> decodedParameters = new HashMap<RequestMatchParams,MultivaluedMap<String,String>>();
+  private final Map<RequestMatchParams,MultivaluedMap<String,String>> encodedParameters = new HashMap<RequestMatchParams,MultivaluedMap<String,String>>();
   private final ContainerRequestContext containerRequestContext;
   private final ExecutionContext executionContext;
   private final HttpServletRequest request;
@@ -99,9 +103,12 @@ public class UriInfoImpl implements UriInfo {
 
   @Override
   public MultivaluedMap<String,String> getPathParameters(final boolean decode) {
-    // TODO: Figure out what criteria decide which service gets selected and create a map to save filtration
-    // TODO: calls so that subsequent calls can just get from a map and not do the same work again and again
-    return executionContext.filterAndMatch(containerRequestContext).getPathPattern().getParameters(getPath(decode));
+    final RequestMatchParams pathParams = RequestMatchParams.forContext(containerRequestContext);
+    MultivaluedMap<String,String> parameters = (decode ? decodedParameters : encodedParameters).get(pathParams);
+    if (parameters == null)
+      (decode ? decodedParameters : encodedParameters).put(pathParams, parameters = executionContext.filterAndMatch(pathParams).getPathPattern().getParameters(getPath(decode)));
+
+    return parameters;
   }
 
   @Override
