@@ -30,13 +30,12 @@ import javax.ws.rs.core.EntityTag;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.Link.Builder;
-
-import org.safris.xrs.server.core.HeaderMap;
-
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
+
+import org.safris.xrs.server.core.HeaderMap;
 
 public class ContainerResponseContextImpl extends ContainerContextImpl implements ContainerResponseContext {
   private final HeaderMap headers;

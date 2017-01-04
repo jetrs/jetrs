@@ -41,6 +41,7 @@ import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 
 import org.safris.commons.util.Locales;
+import org.safris.xrs.server.ExecutionContext;
 import org.safris.xrs.server.ResponseContext;
 import org.safris.xrs.server.core.DefaultSecurityContext;
 import org.safris.xrs.server.core.UriInfoImpl;
@@ -57,7 +58,7 @@ public class ContainerRequestContextImpl extends ContainerContextImpl implements
   private final List<Locale> acceptLanguages;
   private InputStream entityStream;
 
-  public ContainerRequestContextImpl(final HttpServletRequest httpServletRequest, final ResponseContext response) {
+  public ContainerRequestContextImpl(final ExecutionContext executionContext, final HttpServletRequest httpServletRequest, final ResponseContext response) {
     super(httpServletRequest.getLocale());
     final Enumeration<String> attributes = httpServletRequest.getAttributeNames();
     String attribute;
@@ -69,7 +70,7 @@ public class ContainerRequestContextImpl extends ContainerContextImpl implements
     this.accept = Collections.unmodifiableList(Arrays.asList(MediaTypes.parse(httpServletRequest.getHeaders(HttpHeaders.ACCEPT))));
     this.acceptLanguages = Collections.unmodifiableList(Arrays.asList(Locales.parse(httpServletRequest.getHeaders(HttpHeaders.ACCEPT_LANGUAGE))));
     this.headers = response.getHttpHeaders();
-    this.uriInfo = new UriInfoImpl(httpServletRequest);
+    this.uriInfo = new UriInfoImpl(this, executionContext, httpServletRequest);
   }
 
   @Override

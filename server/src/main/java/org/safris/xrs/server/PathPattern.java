@@ -17,12 +17,12 @@
 package org.safris.xrs.server;
 
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.ws.rs.Path;
+import javax.ws.rs.core.MultivaluedHashMap;
+import javax.ws.rs.core.MultivaluedMap;
 
 import org.safris.commons.util.Patterns;
 
@@ -82,7 +82,7 @@ public class PathPattern {
     return matcher.matches();
   }
 
-  public Map<String,String> getParameters(final String path) {
+  public MultivaluedMap<String,String> getParameters(final String path) {
     final Matcher matcher = pattern.matcher(path);
     if (!matcher.find())
       return null;
@@ -91,9 +91,12 @@ public class PathPattern {
     if (groupNames == null)
       return null;
 
-    final Map<String,String> parameters = new HashMap<String,String>();
-    for (final String groupName : groupNames)
-      parameters.put(groupName, matcher.group(groupName));
+    final MultivaluedMap<String,String> parameters = new MultivaluedHashMap<String,String>();
+    for (final String groupName : groupNames) {
+      final String values[] = matcher.group(groupName).replace("%3B", ";").split(";");
+      for (final String value : values)
+        parameters.add(groupName, value);
+    }
 
     return parameters;
   }

@@ -21,27 +21,35 @@ import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
+import org.safris.commons.net.URIComponent;
+import org.safris.xrs.server.ExecutionContext;
+
 public class UriInfoImpl implements UriInfo {
+  private final ContainerRequestContext containerRequestContext;
+  private final ExecutionContext executionContext;
   private final HttpServletRequest request;
 
-  public UriInfoImpl(final HttpServletRequest request) {
+  public UriInfoImpl(final ContainerRequestContext containerRequestContext, final ExecutionContext executionContext, final HttpServletRequest request) {
+    this.containerRequestContext = containerRequestContext;
+    this.executionContext = executionContext;
     this.request = request;
   }
 
   @Override
   public String getPath() {
-    return request.getPathInfo();
+    return getPath(true);
   }
 
   @Override
   public String getPath(final boolean decode) {
-    throw new UnsupportedOperationException();
+    return decode ? URIComponent.decode(request.getPathInfo()) : request.getPathInfo();
   }
 
   @Override
@@ -86,26 +94,35 @@ public class UriInfoImpl implements UriInfo {
 
   @Override
   public MultivaluedMap<String,String> getPathParameters() {
-    throw new UnsupportedOperationException();
+    return getPathParameters(true);
   }
 
   @Override
   public MultivaluedMap<String,String> getPathParameters(final boolean decode) {
-    throw new UnsupportedOperationException();
+    // TODO: Figure out what criteria decide which service gets selected and create a map to save filtration
+    // TODO: calls so that subsequent calls can just get from a map and not do the same work again and again
+    return executionContext.filterAndMatch(containerRequestContext).getPathPattern().getParameters(getPath(decode));
   }
 
   @Override
   public MultivaluedMap<String,String> getQueryParameters() {
-    final MultivaluedMap<String,String> parameters = new MultivaluedHashMap<String,String>();
-    for (final Map.Entry<String,String[]> entry : request.getParameterMap().entrySet())
-      parameters.addAll(entry.getKey(), entry.getValue());
-
-    return parameters;
+    return getQueryParameters(true);
   }
 
   @Override
   public MultivaluedMap<String,String> getQueryParameters(final boolean decode) {
-    throw new UnsupportedOperationException();
+    final MultivaluedMap<String,String> parameters = new MultivaluedHashMap<String,String>();
+    if (decode) {
+      for (final Map.Entry<String,String[]> entry : request.getParameterMap().entrySet())
+        for (final String value : entry.getValue())
+          parameters.add(entry.getKey(), URIComponent.decode(value));
+    }
+    else {
+      for (final Map.Entry<String,String[]> entry : request.getParameterMap().entrySet())
+        parameters.addAll(entry.getKey(), entry.getValue());
+    }
+
+    return parameters;
   }
 
   @Override

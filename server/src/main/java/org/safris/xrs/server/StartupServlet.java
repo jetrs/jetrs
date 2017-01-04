@@ -44,6 +44,7 @@ import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
+import javax.ws.rs.ext.ParamConverterProvider;
 import javax.ws.rs.ext.Provider;
 
 import org.safris.commons.lang.PackageLoader;
@@ -56,7 +57,7 @@ public abstract class StartupServlet extends HttpServlet {
 
   private ExecutionContext executionContext;
 
-  private static void addProvider(final List<MessageBodyReader<?>> entityReaders, final List<MessageBodyWriter<?>> entityWriters, final List<Class<? extends ContainerRequestFilter>> requestFilters, final List<Class<? extends ContainerResponseFilter>> responseFilters, final Object singleton) {
+  private static void addProvider(final List<MessageBodyReader<?>> entityReaders, final List<MessageBodyWriter<?>> entityWriters, final List<Class<? extends ContainerRequestFilter>> requestFilters, final List<Class<? extends ContainerResponseFilter>> responseFilters, final List<ParamConverterProvider> paramConverterProviders, final Object singleton) {
     if (singleton instanceof MessageBodyReader) {
       final MessageBodyReader<?> entityReader = (MessageBodyReader<?>)singleton;
       entityReaders.add(entityReader);
@@ -65,13 +66,17 @@ public abstract class StartupServlet extends HttpServlet {
       final MessageBodyWriter<?> entityWriter = (MessageBodyWriter<?>)singleton;
       entityWriters.add(entityWriter);
     }
+    else if (singleton instanceof ParamConverterProvider) {
+      final ParamConverterProvider paramConverterProvider = (ParamConverterProvider)singleton;
+      paramConverterProviders.add(paramConverterProvider);
+    }
     else {
       throw new UnsupportedOperationException("Unexpected @Provider SINGLETON of type: " + singleton.getClass().getName());
     }
   }
 
   @SuppressWarnings("unchecked")
-  private static void addProvider(final List<MessageBodyReader<?>> entityReaders, final List<MessageBodyWriter<?>> entityWriters, final List<Class<? extends ContainerRequestFilter>> requestFilters, final List<Class<? extends ContainerResponseFilter>> responseFilters, final Class<?> cls) {
+  private static void addProvider(final List<MessageBodyReader<?>> entityReaders, final List<MessageBodyWriter<?>> entityWriters, final List<Class<? extends ContainerRequestFilter>> requestFilters, final List<Class<? extends ContainerResponseFilter>> responseFilters, final List<ParamConverterProvider> paramConverterProviders, final Class<?> cls) {
     if (ContainerRequestFilter.class.isAssignableFrom(cls)) {
       requestFilters.add((Class<? extends ContainerRequestFilter>)cls);
     }
@@ -122,7 +127,7 @@ public abstract class StartupServlet extends HttpServlet {
   public void init(final ServletConfig config) throws ServletException {
     super.init(config);
     final MultivaluedMap<String,ResourceManifest> registry = new MultivaluedHashMap<String,ResourceManifest>();
-
+    final List<ParamConverterProvider> paramConverterProviders = new ArrayList<ParamConverterProvider>();
     final List<MessageBodyReader<?>> entityReaders = new ArrayList<MessageBodyReader<?>>();
     final List<MessageBodyWriter<?>> entityWriters = new ArrayList<MessageBodyWriter<?>>();
     final List<Class<? extends ContainerRequestFilter>> requestFilters = new ArrayList<Class<? extends ContainerRequestFilter>>();
@@ -162,10 +167,8 @@ public abstract class StartupServlet extends HttpServlet {
             }
           }
           else if (cls.isAnnotationPresent(Provider.class)) {
-            if (MessageBodyReader.class.isAssignableFrom(cls) || MessageBodyWriter.class.isAssignableFrom(cls))
-              addProvider(entityReaders, entityWriters, requestFilters, responseFilters, cls.newInstance());
-            else
-              addProvider(entityReaders, entityWriters, requestFilters, responseFilters, cls);
+            // Provider(s) are singletons
+            addProvider(entityReaders, entityWriters, requestFilters, responseFilters, paramConverterProviders, cls.newInstance());
           }
         }
       }
@@ -181,18 +184,23 @@ public abstract class StartupServlet extends HttpServlet {
         final Set<?> singletons = application.getSingletons();
         if (singletons != null)
           for (final Object provider : singletons)
-            addProvider(entityReaders, entityWriters, requestFilters, responseFilters, provider);
+            addProvider(entityReaders, entityWriters, requestFilters, responseFilters, paramConverterProviders, provider);
 
         final Set<Class<?>> classes = application.getClasses();
-        if (classes != null)
-          for (final Class<?> cls : classes)
-            addProvider(entityReaders, entityWriters, requestFilters, responseFilters, cls);
+        if (classes != null) {
+          for (final Class<?> cls : classes) {
+            if (cls.isAnnotationPresent(Provider.class))
+              addProvider(entityReaders, entityWriters, requestFilters, responseFilters, paramConverterProviders, cls.newInstance());
+            else
+              addProvider(entityReaders, entityWriters, requestFilters, responseFilters, paramConverterProviders, cls);
+          }
+        }
       }
       catch (final InstantiationException | IllegalAccessException | ClassNotFoundException e) {
         throw new WebApplicationException(e);
       }
     }
 
-    this.executionContext = new ExecutionContext(registry, new ContainerFilters(requestFilters, responseFilters), new EntityProviders(entityReaders, entityWriters));
+    this.executionContext = new ExecutionContext(registry, new ContainerFilters(requestFilters, responseFilters), new EntityProviders(entityReaders, entityWriters), paramConverterProviders);
   }
 }

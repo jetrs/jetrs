@@ -20,14 +20,15 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.Map;
+import java.lang.reflect.Type;
+import java.util.List;
 import java.util.logging.Logger;
 
 import javax.annotation.security.DenyAll;
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.ServletException;
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.CookieParam;
 import javax.ws.rs.ForbiddenException;
@@ -35,6 +36,7 @@ import javax.ws.rs.HeaderParam;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.MatrixParam;
 import javax.ws.rs.NotAuthorizedException;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -44,10 +46,13 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.MessageBodyReader;
+import javax.ws.rs.ext.ParamConverterProvider;
 
+import org.safris.commons.lang.Arrays;
 import org.safris.commons.lang.Strings;
 import org.safris.xrs.server.core.ContextInjector;
 import org.safris.xrs.server.util.MediaTypes;
+import org.safris.xrs.server.util.ParameterUtil;
 
 public class ResourceManifest {
   private static final Logger logger = Logger.getLogger(ResourceManifest.class.getName());
@@ -114,41 +119,54 @@ public class ResourceManifest {
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
-  private Object[] getParameters(final Method method, final ContainerRequestContext containerRequestContext, final ContextInjector injectionContext, final EntityProviders entityProviders) throws IOException {
+  private static Object[] getParameters(final Method method, final ContainerRequestContext containerRequestContext, final ContextInjector injectionContext, final EntityProviders entityProviders, final List<ParamConverterProvider> paramConverterProviders) throws IOException {
     final Class<?>[] parameterTypes = method.getParameterTypes();
+    final Type[] genericParameterTypes = method.getGenericParameterTypes();
     final Annotation[][] parameterAnnotations = method.getParameterAnnotations();
     if (parameterTypes.length == 0)
       return null;
 
-    final Map<String,String> pathParameters = getPathPattern().getParameters(containerRequestContext.getUriInfo().getPath());
     final Object[] parameters = new Object[parameterTypes.length];
     for (int i = 0; i < parameterTypes.length; i++) {
       final Class<?> parameterType = parameterTypes[i];
+      final Type genericParameterType = genericParameterTypes[i];
       final Annotation[] annotations = parameterAnnotations[i];
       if (annotations.length > 0) {
-        for (final Annotation annotation : annotations) {
-          if (annotation.annotationType() == QueryParam.class) {
-            parameters[i] = containerRequestContext.getUriInfo().getQueryParameters().get(((QueryParam)annotation).value());
+        Annotation annotation = null;
+        try {
+          for (int j = 0; j < annotations.length; j++) {
+            annotation = annotations[j];
+            if (annotation.annotationType() == QueryParam.class) {
+              final boolean decode = ParameterUtil.decode(annotations);
+              parameters[i] = ParameterUtil.convertParameter(parameterType, genericParameterType, annotations, containerRequestContext.getUriInfo().getQueryParameters(decode).get(((QueryParam)annotation).value()), paramConverterProviders);
+            }
+            else if (annotation.annotationType() == PathParam.class) {
+              final boolean decode = ParameterUtil.decode(annotations);
+              final String pathParam = ((PathParam)annotation).value();
+              parameters[i] = ParameterUtil.convertParameter(parameterType, genericParameterType, annotations, containerRequestContext.getUriInfo().getPathParameters(decode).get(pathParam), paramConverterProviders);
+            }
+            else if (annotation.annotationType() == MatrixParam.class) {
+              throw new UnsupportedOperationException();
+            }
+            else if (annotation.annotationType() == CookieParam.class) {
+              throw new UnsupportedOperationException();
+            }
+            else if (annotation.annotationType() == HeaderParam.class) {
+              throw new UnsupportedOperationException();
+            }
+            else if (annotation.annotationType() == Context.class) {
+              parameters[i] = injectionContext.getInjectableObject(parameterType);
+            }
+            else {
+              throw new UnsupportedOperationException("Unexpected annotation type: " + annotation.annotationType().getName() + " on: " + method.getDeclaringClass().getName() + "." + method.getName() + "()");
+            }
           }
-          else if (annotation.annotationType() == PathParam.class) {
-            final String pathParam = ((PathParam)annotation).value();
-            parameters[i] = pathParameters.get(pathParam);
-          }
-          else if (annotation.annotationType() == MatrixParam.class) {
-            throw new UnsupportedOperationException();
-          }
-          else if (annotation.annotationType() == CookieParam.class) {
-            throw new UnsupportedOperationException();
-          }
-          else if (annotation.annotationType() == HeaderParam.class) {
-            throw new UnsupportedOperationException();
-          }
-          else if (annotation.annotationType() == Context.class) {
-            parameters[i] = injectionContext.getInjectableObject(parameterType);
-          }
-          else {
-            throw new UnsupportedOperationException("Unexpected annotation type: " + annotation.annotationType().getName() + " on: " + method.getDeclaringClass().getName() + "." + method.getName() + "()");
-          }
+        }
+        catch (final ReflectiveOperationException e) {
+          if (annotation.annotationType() == MatrixParam.class || annotation.annotationType() == QueryParam.class || annotation.annotationType() == PathParam.class)
+            throw new NotFoundException(e);
+
+          throw new BadRequestException(e);
         }
       }
       else {
@@ -205,14 +223,14 @@ public class ResourceManifest {
         if (containerRequestContext.getSecurityContext().isUserInRole(role))
           return;
 
-    throw new ForbiddenException("@RolesAllowed(" + Arrays.toString(((RolesAllowed)securityAnnotation).value()) + ")");
+    throw new ForbiddenException("@RolesAllowed(" + Arrays.toString(((RolesAllowed)securityAnnotation).value(), ",") + ")");
   }
 
-  public Object service(final ContainerRequestContext containerRequestContext, final ContextInjector injectionContext, final EntityProviders entityProviders) throws ServletException, IOException {
+  public Object service(final ContainerRequestContext containerRequestContext, final ContextInjector injectionContext, final EntityProviders entityProviders, final List<ParamConverterProvider> paramConverterProviders) throws ServletException, IOException {
     allow(securityAnnotation, containerRequestContext);
 
     try {
-      final Object[] parameters = getParameters(method, containerRequestContext, injectionContext, entityProviders);
+      final Object[] parameters = getParameters(method, containerRequestContext, injectionContext, entityProviders, paramConverterProviders);
 
       final Object object = serviceClass.newInstance();
       return parameters != null ? method.invoke(object, parameters) : method.invoke(object);

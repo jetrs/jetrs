@@ -95,7 +95,7 @@ public class DefaultRESTServlet extends StartupServlet {
 
     try {
       final ContainerRequestContext containerRequestContext; // NOTE: This weird construct is done this way to at least somehow make the two object cohesive
-      request.setRequestContext(containerRequestContext = new ContainerRequestContextImpl(request, responseContext));
+      request.setRequestContext(containerRequestContext = new ContainerRequestContextImpl(getExecutionContext(), request, responseContext));
 
       final ContextInjector injectionContext = ContextInjector.createInjectionContext(containerRequestContext, new RequestImpl(request.getMethod()), httpHeaders);
 
@@ -122,7 +122,7 @@ public class DefaultRESTServlet extends StartupServlet {
         if (produces != null)
           containerResponseContext.getStringHeaders().addAll(HttpHeaders.CONTENT_TYPE, produces.value());
 
-        final Object content = manifest.service(containerRequestContext, injectionContext, getExecutionContext().getEntityProviders());
+        final Object content = manifest.service(containerRequestContext, injectionContext, getExecutionContext().getEntityProviders(), getExecutionContext().getParamConverterProviders());
         if (content != null)
           containerResponseContext.setEntity(content);
 
@@ -149,9 +149,9 @@ public class DefaultRESTServlet extends StartupServlet {
         throw (ServletException)t.getCause();
       }
       else {
-        final StringBuilder message = new StringBuilder(t.getMessage());
+        final StringBuilder message = new StringBuilder(t.getMessage() != null ? t.getMessage() : "");
         if (t.getCause() != null)
-          message.append(" ").append(t.getCause().getMessage());
+          message.append(" ").append(t.getCause().getMessage() != null ? t.getCause().getMessage() : "");
 
         if (t instanceof ClientErrorException) {
           final ClientErrorException e = (ClientErrorException)t;
