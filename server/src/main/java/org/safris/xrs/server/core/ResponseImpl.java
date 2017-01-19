@@ -70,21 +70,25 @@ public class ResponseImpl extends Response {
 
   @Override
   public <T>T readEntity(final Class<T> entityType) {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 
   @Override
   public <T>T readEntity(final GenericType<T> entityType) {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 
   @Override
   public <T>T readEntity(final Class<T> entityType, final Annotation[] annotations) {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 
   @Override
   public <T>T readEntity(final GenericType<T> entityType, final Annotation[] annotations) {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 
@@ -98,6 +102,7 @@ public class ResponseImpl extends Response {
 
   @Override
   public boolean bufferEntity() {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 
@@ -128,16 +133,19 @@ public class ResponseImpl extends Response {
 
   @Override
   public Map<String,NewCookie> getCookies() {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 
   @Override
   public EntityTag getEntityTag() {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 
   @Override
   public Date getDate() {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 
@@ -153,21 +161,25 @@ public class ResponseImpl extends Response {
 
   @Override
   public Set<Link> getLinks() {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 
   @Override
   public boolean hasLink(final String relation) {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 
   @Override
   public Link getLink(final String relation) {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 
   @Override
   public Builder getLinkBuilder(final String relation) {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 

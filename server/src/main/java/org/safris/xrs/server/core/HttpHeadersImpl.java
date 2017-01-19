@@ -83,6 +83,7 @@ public class HttpHeadersImpl implements HttpHeaders {
 
   @Override
   public List<Locale> getAcceptableLanguages() {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 
@@ -93,16 +94,19 @@ public class HttpHeadersImpl implements HttpHeaders {
 
   @Override
   public Locale getLanguage() {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 
   @Override
   public Map<String,Cookie> getCookies() {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 
   @Override
   public Date getDate() {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 

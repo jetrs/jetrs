@@ -58,11 +58,13 @@ public class UriInfoImpl implements UriInfo {
 
   @Override
   public List<PathSegment> getPathSegments() {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 
   @Override
   public List<PathSegment> getPathSegments(final boolean decode) {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 
@@ -73,26 +75,31 @@ public class UriInfoImpl implements UriInfo {
 
   @Override
   public UriBuilder getRequestUriBuilder() {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 
   @Override
   public URI getAbsolutePath() {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 
   @Override
   public UriBuilder getAbsolutePathBuilder() {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 
   @Override
   public URI getBaseUri() {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 
   @Override
   public UriBuilder getBaseUriBuilder() {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 
@@ -134,26 +141,31 @@ public class UriInfoImpl implements UriInfo {
 
   @Override
   public List<String> getMatchedURIs() {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 
   @Override
   public List<String> getMatchedURIs(final boolean decode) {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 
   @Override
   public List<Object> getMatchedResources() {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 
   @Override
   public URI resolve(final URI uri) {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 
   @Override
   public URI relativize(final URI uri) {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 }

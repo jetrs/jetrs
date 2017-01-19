@@ -162,12 +162,15 @@ public class ResourceManifest {
             parameters[i] = ParameterUtil.convertParameter(parameterType, genericParameterType, annotations, containerRequestContext.getUriInfo().getPathParameters(decode).get(pathParam), paramConverterProviders);
           }
           else if (paramAnnotation.annotationType() == MatrixParam.class) {
+            // TODO:
             throw new UnsupportedOperationException();
           }
           else if (paramAnnotation.annotationType() == CookieParam.class) {
+            // TODO:
             throw new UnsupportedOperationException();
           }
           else if (paramAnnotation.annotationType() == HeaderParam.class) {
+            // TODO:
             throw new UnsupportedOperationException();
           }
           else if (paramAnnotation.annotationType() == Context.class) {

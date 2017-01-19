@@ -31,6 +31,7 @@ import org.safris.xrs.server.core.ResponseBuilderImpl;
 public class RuntimeDelegateImpl extends RuntimeDelegate {
   @Override
   public UriBuilder createUriBuilder() {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 
@@ -41,11 +42,13 @@ public class RuntimeDelegateImpl extends RuntimeDelegate {
 
   @Override
   public VariantListBuilder createVariantListBuilder() {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 
   @Override
   public <T>T createEndpoint(final Application application, final Class<T> endpointType) throws IllegalArgumentException, UnsupportedOperationException {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 
@@ -63,6 +66,7 @@ public class RuntimeDelegateImpl extends RuntimeDelegate {
 
   @Override
   public Builder createLinkBuilder() {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 }

@@ -105,16 +105,19 @@ public class ContainerRequestContextImpl extends ContainerContextImpl implements
 
   @Override
   public void setRequestUri(final URI requestUri) {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 
   @Override
   public void setRequestUri(final URI baseUri, final URI requestUri) {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 
   @Override
   public Request getRequest() {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 
@@ -125,6 +128,7 @@ public class ContainerRequestContextImpl extends ContainerContextImpl implements
 
   @Override
   public void setMethod(final String method) {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 

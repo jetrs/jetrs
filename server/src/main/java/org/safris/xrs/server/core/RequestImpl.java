@@ -41,46 +41,55 @@ public class RequestImpl implements Request {
 
   @Override
   public Variant selectVariant(final List<Variant> variants) {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 
   @Override
   public ResponseBuilder evaluatePreconditions(final EntityTag eTag) {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 
   @Override
   public ResponseBuilder evaluatePreconditions(final Date lastModified) {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 
   @Override
   public ResponseBuilder evaluatePreconditions(final Date lastModified, final EntityTag eTag) {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 
   @Override
   public ResponseBuilder evaluatePreconditions() {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 
   @Override
   public void entity(final NioReaderHandler reader) {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 
   @Override
   public void entity(final NioReaderHandler reader, final NioCompletionHandler completion) {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 
   @Override
   public void entity(final NioReaderHandler reader, final NioErrorHandler error) {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 
   @Override
   public void entity(final NioReaderHandler reader, final NioCompletionHandler completion, NioErrorHandler error) {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 }

@@ -155,6 +155,7 @@ public class ResponseBuilderImpl extends Response.ResponseBuilder {
 
   @Override
   public Response.ResponseBuilder variant(final Variant variant) {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 
@@ -166,6 +167,7 @@ public class ResponseBuilderImpl extends Response.ResponseBuilder {
 
   @Override
   public Response.ResponseBuilder cookie(final NewCookie ... cookies) {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 
@@ -189,46 +191,55 @@ public class ResponseBuilderImpl extends Response.ResponseBuilder {
 
   @Override
   public Response.ResponseBuilder tag(final EntityTag tag) {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 
   @Override
   public Response.ResponseBuilder tag(final String tag) {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 
   @Override
   public Response.ResponseBuilder variants(final Variant ... variants) {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 
   @Override
   public Response.ResponseBuilder variants(final List<Variant> variants) {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 
   @Override
   public Response.ResponseBuilder links(final Link ... links) {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 
   @Override
   public Response.ResponseBuilder link(final URI uri, final String rel) {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 
   @Override
   public Response.ResponseBuilder link(final String uri, final String rel) {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 
   @Override
   public ResponseBuilder entity(final NioWriterHandler writer) {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 
   @Override
   public ResponseBuilder entity(final NioWriterHandler writer, final NioErrorHandler error) {
+    // TODO:
     throw new UnsupportedOperationException();
   }
 }
