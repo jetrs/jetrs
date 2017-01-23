@@ -37,7 +37,7 @@ import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.ext.RuntimeDelegate;
 
-import org.safris.commons.lang.reflect.Classes;
+import org.safris.commons.lang.Classes;
 import org.safris.xrs.server.container.ContainerRequestContextImpl;
 import org.safris.xrs.server.container.ContainerResponseContextImpl;
 import org.safris.xrs.server.core.ContextInjector;
