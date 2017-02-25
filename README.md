@@ -67,11 +67,11 @@ A common pattern that is used in JAX-RS implementations is dynamic method invoca
     <artifactId>xrs-server</artifactId>
     <version>2.0.1</version>
   </dependency>
-  <!-- Optional dependency for MessageBodyReader and MessageBodyWriter classes of XJB module
+  <!-- Optional dependency for MessageBodyReader and MessageBodyWriter classes of JJB module
   <dependency> 
-    <groupId>org.safris.xjb</groupId>
-    <artifactId>xjb-rs</artifactId>
-    <version>1.0.1</version>
+    <groupId>org.safris.jjb</groupId>
+    <artifactId>jjb-rs</artifactId>
+    <version>0.9.6</version>
   </dependency> -->
   ```
   
@@ -83,8 +83,8 @@ A common pattern that is used in JAX-RS implementations is dynamic method invoca
     @Override
     public java.util.Set<Object> getSingletons() {
       final java.util.Set<Object> singletons = new java.util.HashSet<Object>();
-      singletons.add(new org.safris.xjb.rs.JSObjectBodyReader()); // Optional MessageBodyReader to parse JSON messages to Java beans.
-      singletons.add(new org.safris.xjb.rs.JSObjectBodyWriter()); // Optional MessageBodyWriter to marshal Java beans to JSON messages.
+      singletons.add(new org.safris.jjb.rs.JSObjectBodyReader()); // Optional MessageBodyReader to parse JSON messages to Java beans.
+      singletons.add(new org.safris.jjb.rs.JSObjectBodyWriter()); // Optional MessageBodyWriter to marshal Java beans to JSON messages.
       return singletons;
     }
   }
