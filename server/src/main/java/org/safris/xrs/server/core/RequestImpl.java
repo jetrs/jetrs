@@ -20,9 +20,6 @@ import java.util.Date;
 import java.util.List;
 
 import javax.ws.rs.core.EntityTag;
-import javax.ws.rs.core.NioCompletionHandler;
-import javax.ws.rs.core.NioErrorHandler;
-import javax.ws.rs.core.NioReaderHandler;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Variant;
@@ -65,30 +62,6 @@ public class RequestImpl implements Request {
 
   @Override
   public ResponseBuilder evaluatePreconditions() {
-    // TODO:
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public void entity(final NioReaderHandler reader) {
-    // TODO:
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public void entity(final NioReaderHandler reader, final NioCompletionHandler completion) {
-    // TODO:
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public void entity(final NioReaderHandler reader, final NioErrorHandler error) {
-    // TODO:
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public void entity(final NioReaderHandler reader, final NioCompletionHandler completion, NioErrorHandler error) {
     // TODO:
     throw new UnsupportedOperationException();
   }
