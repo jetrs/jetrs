@@ -22,7 +22,6 @@ import javax.ws.rs.core.MediaType;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.safris.xrs.server.util.MediaTypes;
 
 public class MetiaTypesTest {
   @Test

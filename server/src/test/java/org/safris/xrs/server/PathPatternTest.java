@@ -22,7 +22,6 @@ import javax.ws.rs.Path;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.safris.xrs.server.PathPattern;
 
 public class PathPatternTest {
   protected static class TestPath implements Path {

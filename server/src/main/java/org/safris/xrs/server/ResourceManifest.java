@@ -23,7 +23,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Logger;
 
 import javax.annotation.security.DenyAll;
 import javax.annotation.security.PermitAll;
@@ -54,12 +53,14 @@ import org.safris.commons.lang.Strings;
 import org.safris.xrs.server.core.ContextInjector;
 import org.safris.xrs.server.util.MediaTypes;
 import org.safris.xrs.server.util.ParameterUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ResourceManifest {
-  private static final Logger logger = Logger.getLogger(ResourceManifest.class.getName());
+  private static final Logger logger = LoggerFactory.getLogger(ResourceManifest.class);
 
   private static boolean logMissingHeaderWarning(final String headerName, final Class<?> type) {
-    logger.warning("Unmatched @" + type.getSimpleName() + " for " + headerName);
+    logger.warn("Unmatched @" + type.getSimpleName() + " for " + headerName);
     return false;
   }
 
@@ -196,7 +197,7 @@ public class ResourceManifest {
       if (annotationClass == Consumes.class)
         throw new RuntimeException(message);
 
-      logger.warning(message);
+      logger.warn(message);
       return true;
     }
 

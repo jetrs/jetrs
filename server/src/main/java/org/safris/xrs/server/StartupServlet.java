@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Logger;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -51,10 +50,12 @@ import org.safris.commons.lang.PackageLoader;
 import org.safris.commons.lang.PackageNotFoundException;
 import org.safris.xrs.server.core.ContextInjector;
 import org.safris.xrs.server.ext.ProvidersImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class StartupServlet extends HttpServlet {
   private static final long serialVersionUID = 6825431027711735886L;
-  private static final Logger logger = Logger.getLogger(DefaultRESTServlet.class.getName());
+  private static final Logger logger = LoggerFactory.getLogger(DefaultRESTServlet.class);
 
   private ExecutionContext executionContext;
 

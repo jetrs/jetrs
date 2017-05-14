@@ -40,6 +40,6 @@ public class BytesMessageBodyReader implements MessageBodyReader<byte[]> {
 
   @Override
   public byte[] readFrom(final Class<byte[]> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,String> httpHeaders, final InputStream entityStream) throws IOException, WebApplicationException {
-    return Streams.getBytes(entityStream);
+    return Streams.readBytes(entityStream);
   }
 }
