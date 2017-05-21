@@ -68,7 +68,7 @@ A common pattern that is used in JAX-RS implementations is dynamic method invoca
     <artifactId>xrs-server</artifactId>
     <version>2.0.1</version>
   </dependency>
-  <!-- Optional dependency for MessageBodyReader and MessageBodyWriter classes of JJB module
+  <!-- Optional dependency for MessageBodyReader and MessageBodyWriter classes of jJB module
   <dependency> 
     <groupId>org.safris.jjb</groupId>
     <artifactId>jjb-rs</artifactId>
