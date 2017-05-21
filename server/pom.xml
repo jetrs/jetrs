@@ -89,8 +89,8 @@
       <artifactId>javax.ws.rs-api</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.safris.commons</groupId>
-      <artifactId>commons-net</artifactId>
+      <groupId>org.safris</groupId>
+      <artifactId>safris-net</artifactId>
     </dependency>
   </dependencies>
 </project>
