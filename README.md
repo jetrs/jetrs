@@ -43,34 +43,34 @@ A common pattern that is used in JAX-RS implementations is dynamic method invoca
   mvn archetype:generate -DgroupId=com.mycompany.app -DartifactId=my-app -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
   ```
 
-2. Add the `mvn.repo.safris.org` Maven repositories to the POM.
+2. Add the `mvn.repo.lib4j.org` Maven repositories to the POM.
 
   ```xml
   <repositories>
     <repository>
-      <id>mvn.repo.safris.org</id>
-      <url>http://mvn.repo.safris.org/m2</url>
+      <id>mvn.repo.lib4j.org</id>
+      <url>http://mvn.repo.lib4j.org/m2</url>
     </repository>
   </repositories>
   <pluginRepositories>
     <pluginRepository>
-      <id>mvn.repo.safris.org</id>
-      <url>http://mvn.repo.safris.org/m2</url>
+      <id>mvn.repo.lib4j.org</id>
+      <url>http://mvn.repo.lib4j.org/m2</url>
     </pluginRepository>
   </pluginRepositories>
   ```
 
-3. Add the `org.safris.xrs:xrs-server` dependency to the POM.
+3. Add the `org.lib4jx.xrs:xrs-server` dependency to the POM.
 
   ```xml
   <dependency>
-    <groupId>org.safris.xrs</groupId>
+    <groupId>org.lib4jx.xrs</groupId>
     <artifactId>xrs-server</artifactId>
     <version>2.0.1</version>
   </dependency>
   <!-- Optional dependency for MessageBodyReader and MessageBodyWriter classes of jJB module
   <dependency> 
-    <groupId>org.safris.jjb</groupId>
+    <groupId>org.lib4jx.jjb</groupId>
     <artifactId>jjb-rs</artifactId>
     <version>0.9.6</version>
   </dependency> -->
@@ -84,22 +84,22 @@ A common pattern that is used in JAX-RS implementations is dynamic method invoca
     @Override
     public java.util.Set<Object> getSingletons() {
       final java.util.Set<Object> singletons = new java.util.HashSet<Object>();
-      singletons.add(new org.safris.jjb.rs.JSObjectBodyReader()); // Optional MessageBodyReader to parse JSON messages to Java beans.
-      singletons.add(new org.safris.jjb.rs.JSObjectBodyWriter()); // Optional MessageBodyWriter to marshal Java beans to JSON messages.
+      singletons.add(new org.lib4jx.jjb.rs.JSObjectBodyReader()); // Optional MessageBodyReader to parse JSON messages to Java beans.
+      singletons.add(new org.lib4jx.jjb.rs.JSObjectBodyWriter()); // Optional MessageBodyWriter to marshal Java beans to JSON messages.
       return singletons;
     }
   }
   ```
 
-5. Extend `org.safris.xrs.server.DefaultRESTServlet`, pointing to `Application`.
+5. Extend `org.lib4jx.xrs.server.DefaultRESTServlet`, pointing to `Application`.
 
   ```java
   @WebServlet(initParams={@WebInitParam(name="javax.ws.rs.Application", value="Application")})
-  public class RESTServlet extends org.safris.xrs.server.DefaultRESTServlet {
+  public class RESTServlet extends org.lib4jx.xrs.server.DefaultRESTServlet {
   }
   ```
 
-6. Deploy the servlet to a Servlet Container. For an easy embedded servlet container solution, [see here][commons-jetty] for a solution based on [Jetty][jetty]. In the arguments to `new Server(8080, ...)` add `RESTServlet.class` as such:
+6. Deploy the servlet to a Servlet Container. For an easy embedded servlet container solution, [see here][lib4j-jetty] for a solution based on [Jetty][jetty]. In the arguments to `new Server(8080, ...)` add `RESTServlet.class` as such:
 
   ```java
   new Server(8080, null, null, true, null, RESTServlet.class);
@@ -113,7 +113,7 @@ This project is licensed under the MIT License - see the [LICENSE.txt](LICENSE.t
 
 [apache-cxf]: http://cxf.apache.org/
 [apache-wink]: https://wink.apache.org/
-[commons-jetty]: https://github.com/SevaSafris/commons-jetty
+[lib4j-jetty]: https://github.com/lib4jx/lib4jx-jetty
 [java-enterprise]: https://img.shields.io/badge/java-enterprise-blue.svg
 [jax-rs-spec]: http://download.oracle.com/otn-pub/jcp/jaxrs-2_0_rev_A-mrel-eval-spec/jsr339-jaxrs-2.0-final-spec.pdf
 [jdk8-download]: http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html

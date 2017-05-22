@@ -1,5 +1,5 @@
 <!--
-  Copyright (c) 2016 Seva Safris
+  Copyright (c) 2016 lib4j
   
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -20,11 +20,11 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>org.safris</groupId>
+    <groupId>org.lib4jx</groupId>
     <artifactId>xrs</artifactId>
     <version>1.1.1</version>
   </parent>
-  <groupId>org.safris.xrs</groupId>
+  <groupId>org.lib4jx.xrs</groupId>
   <artifactId>xrs-server</artifactId>
   <version>2.0.1</version>
   <name>${project.groupId}:${project.artifactId}</name>
@@ -89,8 +89,8 @@
       <artifactId>javax.ws.rs-api</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.safris</groupId>
-      <artifactId>safris-net</artifactId>
+      <groupId>org.lib4j</groupId>
+      <artifactId>lib4j-net</artifactId>
     </dependency>
   </dependencies>
 </project>
