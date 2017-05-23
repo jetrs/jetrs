@@ -29,7 +29,7 @@ import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
-import org.safris.commons.net.URIComponent;
+import org.lib4j.net.URIComponent;
 import org.safris.xrs.server.ExecutionContext;
 import org.safris.xrs.server.RequestMatchParams;
 
