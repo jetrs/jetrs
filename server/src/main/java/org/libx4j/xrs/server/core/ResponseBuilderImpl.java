@@ -34,8 +34,8 @@ import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Variant;
 
+import org.lib4j.util.Locales;
 import org.libx4j.xrs.server.util.Responses;
-import org.safris.commons.util.Locales;
 
 public class ResponseBuilderImpl extends Response.ResponseBuilder {
   private final HeaderMap headers;

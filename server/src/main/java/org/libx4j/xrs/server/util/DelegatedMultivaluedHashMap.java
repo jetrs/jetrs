@@ -22,8 +22,8 @@ import java.util.Map;
 
 import javax.ws.rs.core.MultivaluedMap;
 
-import org.safris.commons.util.DelegatedList;
-import org.safris.commons.util.DelegatedMap;
+import org.lib4j.util.DelegatedList;
+import org.lib4j.util.DelegatedMap;
 
 public class DelegatedMultivaluedHashMap<K,V> extends DelegatedMap<K,List<V>> implements MultivaluedMap<K,V> {
   private static final long serialVersionUID = 2648516310407246308L;

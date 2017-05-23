@@ -23,8 +23,8 @@ import java.util.Map;
 
 import javax.ws.rs.core.MultivaluedMap;
 
-import org.safris.commons.util.DelegatedList;
-import org.safris.commons.util.MirroredDelegatedList;
+import org.lib4j.util.DelegatedList;
+import org.lib4j.util.MirroredDelegatedList;
 
 public class MirroredDelegatedMultivaluedHashMap<K,V,M> extends DelegatedMultivaluedHashMap<K,V> implements Cloneable, MultivaluedMap<K,V> {
   private static final long serialVersionUID = 2648516310407246308L;

@@ -23,8 +23,8 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 
+import org.lib4j.util.Collections;
 import org.libx4j.xrs.server.util.MediaTypes;
-import org.safris.commons.util.Collections;
 
 public class RequestMatchParams {
   public static RequestMatchParams forContext(final ContainerRequestContext containerRequestContext) {

@@ -22,8 +22,8 @@ import java.util.Map;
 
 import javax.ws.rs.core.MultivaluedMap;
 
-import org.safris.commons.util.MirroredList;
-import org.safris.commons.util.PartialMap;
+import org.lib4j.util.MirroredList;
+import org.lib4j.util.PartialMap;
 
 public class MirroredMultivaluedHashMap<K,V,M> extends PartialMap<K,List<V>> implements MultivaluedMap<K,V> {
   private static final long serialVersionUID = 2648516310407246308L;

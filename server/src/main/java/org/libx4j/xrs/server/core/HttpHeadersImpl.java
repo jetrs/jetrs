@@ -30,9 +30,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 
+import org.lib4j.lang.Numbers;
+import org.lib4j.util.Collections;
 import org.libx4j.xrs.server.util.MediaTypes;
-import org.safris.commons.lang.Numbers;
-import org.safris.commons.util.Collections;
 
 public class HttpHeadersImpl implements HttpHeaders {
   private final MultivaluedMap<String,String> headers;

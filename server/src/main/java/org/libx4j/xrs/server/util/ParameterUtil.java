@@ -29,7 +29,7 @@ import javax.ws.rs.Encoded;
 import javax.ws.rs.ext.ParamConverter;
 import javax.ws.rs.ext.ParamConverterProvider;
 
-import org.safris.commons.util.Collections;
+import org.lib4j.util.Collections;
 
 public final class ParameterUtil {
   private static final String[] forEnums = new String[] {"fromString", "valueOf"};

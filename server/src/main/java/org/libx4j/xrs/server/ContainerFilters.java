@@ -28,8 +28,8 @@ import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.container.PreMatching;
 
+import org.lib4j.util.Collections;
 import org.libx4j.xrs.server.core.ContextInjector;
-import org.safris.commons.util.Collections;
 
 public class ContainerFilters {
   private final List<Class<? extends ContainerResponseFilter>> preMatchResponseFilters = new ArrayList<Class<? extends ContainerResponseFilter>>();

@@ -31,7 +31,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Providers;
 
-import org.safris.commons.lang.Arrays;
+import org.lib4j.lang.Arrays;
 
 public class ResponseContext {
   private final HttpHeaders httpHeaders;

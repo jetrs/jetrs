@@ -23,7 +23,7 @@ import java.util.Locale;
 
 import javax.ws.rs.ext.RuntimeDelegate;
 
-import org.safris.commons.util.Formats;
+import org.lib4j.util.Formats;
 
 public class DateHeaderDelegate implements RuntimeDelegate.HeaderDelegate<Date> {
   private static final ThreadLocal<SimpleDateFormat> dateFormat = Formats.createSimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.US);

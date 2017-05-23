@@ -30,8 +30,8 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Providers;
 
+import org.lib4j.util.Collections;
 import org.libx4j.xrs.server.util.MediaTypes;
-import org.safris.commons.util.Collections;
 
 public class ProvidersImpl implements Providers {
   private static final Comparator<EntityProvider<?>> comparator = new Comparator<EntityProvider<?>>() {

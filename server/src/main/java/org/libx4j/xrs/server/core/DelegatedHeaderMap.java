@@ -25,10 +25,10 @@ import java.util.List;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
 
+import org.lib4j.util.MirroredDelegatedList;
 import org.libx4j.xrs.server.util.DelegatedMultivaluedHashMap;
 import org.libx4j.xrs.server.util.MediaTypes;
 import org.libx4j.xrs.server.util.MirroredDelegatedMultivaluedHashMap;
-import org.safris.commons.util.MirroredDelegatedList;
 
 public class DelegatedHeaderMap extends MirroredDelegatedMultivaluedHashMap<String,String,Object> implements Cloneable {
   private static final long serialVersionUID = -424669813370868690L;

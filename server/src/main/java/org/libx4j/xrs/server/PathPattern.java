@@ -24,7 +24,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 
-import org.safris.commons.util.Patterns;
+import org.lib4j.util.Patterns;
 
 public class PathPattern {
   private static final Pattern pathExpressionPattern = Pattern.compile("(\\w+)\\s*(:\\s*\\(([^\\)]+)\\))?");

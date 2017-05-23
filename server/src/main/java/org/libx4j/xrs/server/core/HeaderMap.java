@@ -31,12 +31,12 @@ import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 
+import org.lib4j.lang.Numbers;
+import org.lib4j.util.Locales;
+import org.lib4j.util.MirroredList;
 import org.libx4j.xrs.server.ext.DateHeaderDelegate;
 import org.libx4j.xrs.server.util.MediaTypes;
 import org.libx4j.xrs.server.util.MirroredMultivaluedHashMap;
-import org.safris.commons.lang.Numbers;
-import org.safris.commons.util.Locales;
-import org.safris.commons.util.MirroredList;
 
 public class HeaderMap extends MirroredMultivaluedHashMap<String,String,Object> implements Cloneable {
   private static final long serialVersionUID = -424669813370868690L;
