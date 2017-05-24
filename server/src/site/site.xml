@@ -28,7 +28,7 @@
       <highlightJs>true</highlightJs>
       <brand>
         <name>XRS</name>
-        <href>http://xrs.safris.org/</href>
+        <href>http://xrs.libx4j.org/</href>
       </brand>
       <slogan>Super interesting project doing good things.</slogan>
       <titleTemplate>%2$s | %1$s</titleTemplate>
