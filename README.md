@@ -60,17 +60,17 @@ A common pattern that is used in JAX-RS implementations is dynamic method invoca
   </pluginRepositories>
   ```
 
-3. Add the `org.lib4jx.xrs:xrs-server` dependency to the POM.
+3. Add the `org.libx4j.xrs:xrs-server` dependency to the POM.
 
   ```xml
   <dependency>
-    <groupId>org.lib4jx.xrs</groupId>
+    <groupId>org.libx4j.xrs</groupId>
     <artifactId>xrs-server</artifactId>
     <version>2.0.1</version>
   </dependency>
   <!-- Optional dependency for MessageBodyReader and MessageBodyWriter classes of jJB module
   <dependency> 
-    <groupId>org.lib4jx.jjb</groupId>
+    <groupId>org.libx4j.jjb</groupId>
     <artifactId>jjb-rs</artifactId>
     <version>0.9.6</version>
   </dependency> -->
@@ -84,18 +84,18 @@ A common pattern that is used in JAX-RS implementations is dynamic method invoca
     @Override
     public java.util.Set<Object> getSingletons() {
       final java.util.Set<Object> singletons = new java.util.HashSet<Object>();
-      singletons.add(new org.lib4jx.jjb.rs.JSObjectBodyReader()); // Optional MessageBodyReader to parse JSON messages to Java beans.
-      singletons.add(new org.lib4jx.jjb.rs.JSObjectBodyWriter()); // Optional MessageBodyWriter to marshal Java beans to JSON messages.
+      singletons.add(new org.libx4j.jjb.rs.JSObjectBodyReader()); // Optional MessageBodyReader to parse JSON messages to Java beans.
+      singletons.add(new org.libx4j.jjb.rs.JSObjectBodyWriter()); // Optional MessageBodyWriter to marshal Java beans to JSON messages.
       return singletons;
     }
   }
   ```
 
-5. Extend `org.lib4jx.xrs.server.DefaultRESTServlet`, pointing to `Application`.
+5. Extend `org.libx4j.xrs.server.DefaultRESTServlet`, pointing to `Application`.
 
   ```java
   @WebServlet(initParams={@WebInitParam(name="javax.ws.rs.Application", value="Application")})
-  public class RESTServlet extends org.lib4jx.xrs.server.DefaultRESTServlet {
+  public class RESTServlet extends org.libx4j.xrs.server.DefaultRESTServlet {
   }
   ```
 
@@ -113,7 +113,7 @@ This project is licensed under the MIT License - see the [LICENSE.txt](LICENSE.t
 
 [apache-cxf]: http://cxf.apache.org/
 [apache-wink]: https://wink.apache.org/
-[lib4j-jetty]: https://github.com/lib4jx/lib4jx-jetty
+[lib4j-jetty]: https://github.com/libx4j/libx4j-jetty
 [java-enterprise]: https://img.shields.io/badge/java-enterprise-blue.svg
 [jax-rs-spec]: http://download.oracle.com/otn-pub/jcp/jaxrs-2_0_rev_A-mrel-eval-spec/jsr339-jaxrs-2.0-final-spec.pdf
 [jdk8-download]: http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html
