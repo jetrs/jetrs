@@ -175,7 +175,7 @@ public abstract class StartupServlet extends HttpServlet {
         }
       }
     }
-    catch (final SecurityException | InstantiationException | IllegalAccessException e1) {
+    catch (final IllegalAccessException | InstantiationException | SecurityException e1) {
       throw new WebApplicationException(e1);
     }
 
