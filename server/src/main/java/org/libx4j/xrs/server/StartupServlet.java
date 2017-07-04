@@ -59,7 +59,7 @@ public abstract class StartupServlet extends HttpServlet {
 
   private ExecutionContext executionContext;
 
-  private static void addProvider(final List<MessageBodyReader<?>> entityReaders, final List<MessageBodyWriter<?>> entityWriters, final List<Class<? extends ContainerRequestFilter>> requestFilters, final List<Class<? extends ContainerResponseFilter>> responseFilters, final List<ParamConverterProvider> paramConverterProviders, final Object singleton) {
+  private static void addProvider(final List<MessageBodyReader<?>> entityReaders, final List<MessageBodyWriter<?>> entityWriters, final List<ContainerRequestFilter> requestFilters, final List<ContainerResponseFilter> responseFilters, final List<ParamConverterProvider> paramConverterProviders, final Object singleton) {
     if (singleton instanceof MessageBodyReader) {
       final MessageBodyReader<?> entityReader = (MessageBodyReader<?>)singleton;
       entityReaders.add(entityReader);
@@ -72,21 +72,14 @@ public abstract class StartupServlet extends HttpServlet {
       final ParamConverterProvider paramConverterProvider = (ParamConverterProvider)singleton;
       paramConverterProviders.add(paramConverterProvider);
     }
-    else {
-      throw new UnsupportedOperationException("Unexpected @Provider SINGLETON of type: " + singleton.getClass().getName());
+    else if (singleton instanceof ContainerRequestFilter) {
+      requestFilters.add((ContainerRequestFilter)singleton);
     }
-  }
-
-  @SuppressWarnings("unchecked")
-  private static void addProvider(final List<MessageBodyReader<?>> entityReaders, final List<MessageBodyWriter<?>> entityWriters, final List<Class<? extends ContainerRequestFilter>> requestFilters, final List<Class<? extends ContainerResponseFilter>> responseFilters, final List<ParamConverterProvider> paramConverterProviders, final Class<?> cls) {
-    if (ContainerRequestFilter.class.isAssignableFrom(cls)) {
-      requestFilters.add((Class<? extends ContainerRequestFilter>)cls);
-    }
-    else if (ContainerResponseFilter.class.isAssignableFrom(cls)) {
-      responseFilters.add((Class<? extends ContainerResponseFilter>)cls);
+    else if (singleton instanceof ContainerResponseFilter) {
+      responseFilters.add((ContainerResponseFilter)singleton);
     }
     else {
-      throw new UnsupportedOperationException("Unexpected @Provider CLASS of type: " + cls.getName());
+      throw new UnsupportedOperationException("Unexpected @Provider of type: " + singleton.getClass().getName());
     }
   }
 
@@ -132,8 +125,8 @@ public abstract class StartupServlet extends HttpServlet {
     final List<ParamConverterProvider> paramConverterProviders = new ArrayList<ParamConverterProvider>();
     final List<MessageBodyReader<?>> entityReaders = new ArrayList<MessageBodyReader<?>>();
     final List<MessageBodyWriter<?>> entityWriters = new ArrayList<MessageBodyWriter<?>>();
-    final List<Class<? extends ContainerRequestFilter>> requestFilters = new ArrayList<Class<? extends ContainerRequestFilter>>();
-    final List<Class<? extends ContainerResponseFilter>> responseFilters = new ArrayList<Class<? extends ContainerResponseFilter>>();
+    final List<ContainerRequestFilter> requestFilters = new ArrayList<ContainerRequestFilter>();
+    final List<ContainerResponseFilter> responseFilters = new ArrayList<ContainerResponseFilter>();
 
     try {
       for (final Package pkg : Package.getPackages()) {
@@ -169,7 +162,7 @@ public abstract class StartupServlet extends HttpServlet {
             }
           }
           else if (cls.isAnnotationPresent(Provider.class)) {
-            // Provider(s) are singletons
+            // Automatically discovered @Provider(s) are singletons
             addProvider(entityReaders, entityWriters, requestFilters, responseFilters, paramConverterProviders, cls.newInstance());
           }
         }
@@ -189,14 +182,9 @@ public abstract class StartupServlet extends HttpServlet {
             addProvider(entityReaders, entityWriters, requestFilters, responseFilters, paramConverterProviders, provider);
 
         final Set<Class<?>> classes = application.getClasses();
-        if (classes != null) {
-          for (final Class<?> cls : classes) {
-            if (cls.isAnnotationPresent(Provider.class))
-              addProvider(entityReaders, entityWriters, requestFilters, responseFilters, paramConverterProviders, cls.newInstance());
-            else
-              addProvider(entityReaders, entityWriters, requestFilters, responseFilters, paramConverterProviders, cls);
-          }
-        }
+        if (classes != null)
+          for (final Class<?> cls : classes)
+            addProvider(entityReaders, entityWriters, requestFilters, responseFilters, paramConverterProviders, cls);
       }
       catch (final InstantiationException | IllegalAccessException | ClassNotFoundException e) {
         throw new WebApplicationException(e);
