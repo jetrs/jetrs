@@ -132,7 +132,7 @@ public abstract class StartupServlet extends HttpServlet {
       for (final Package pkg : Package.getPackages()) {
         final Set<Class<?>> classes;
         try {
-          classes = PackageLoader.getSystemPackageLoader().loadPackage(pkg, false);
+          classes = PackageLoader.getSystemContextPackageLoader().loadPackage(pkg, false);
         }
         catch (final PackageNotFoundException | SecurityException e) {
           continue;
