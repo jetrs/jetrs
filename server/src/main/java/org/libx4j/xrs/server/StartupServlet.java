@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -55,7 +56,8 @@ import org.slf4j.LoggerFactory;
 
 public abstract class StartupServlet extends HttpServlet {
   private static final long serialVersionUID = 6825431027711735886L;
-  private static final Logger logger = LoggerFactory.getLogger(DefaultRESTServlet.class);
+
+  private static final Logger logger = LoggerFactory.getLogger(StartupServlet.class);
 
   private ExecutionContext executionContext;
 
@@ -128,22 +130,15 @@ public abstract class StartupServlet extends HttpServlet {
     final List<ContainerRequestFilter> requestFilters = new ArrayList<ContainerRequestFilter>();
     final List<ContainerResponseFilter> responseFilters = new ArrayList<ContainerResponseFilter>();
 
-    try {
-      for (final Package pkg : Package.getPackages()) {
-        final Set<Class<?>> classes;
+    final Predicate<Class<?>> initialize = new Predicate<Class<?>>() {
+      @Override
+      public boolean test(final Class<?> t) {
         try {
-          classes = PackageLoader.getSystemContextPackageLoader().loadPackage(pkg, false);
-        }
-        catch (final PackageNotFoundException | SecurityException e) {
-          continue;
-        }
+          if (Modifier.isAbstract(t.getModifiers()))
+            return false;
 
-        for (final Class<?> cls : classes) {
-          if (Modifier.isAbstract(cls.getModifiers()))
-            continue;
-
-          if (isRootResource(cls)) {
-            final Method[] methods = cls.getMethods();
+          if (isRootResource(t)) {
+            final Method[] methods = t.getMethods();
             for (final Method method : methods) {
               final Set<HttpMethod> httpMethodAnnotations = new HashSet<HttpMethod>(); // FIXME: Can this be done without a Collection?
               final Annotation[] annotations = method.getAnnotations();
@@ -154,22 +149,31 @@ public abstract class StartupServlet extends HttpServlet {
               }
 
               for (final HttpMethod httpMethodAnnotation : httpMethodAnnotations) {
-                ContextInjector.allowsInjectableClass(Field.class, cls);
+                ContextInjector.allowsInjectableClass(Field.class, t);
                 final ResourceManifest manifest = new ResourceManifest(httpMethodAnnotation, method);
-                logger.info("[XRS] " + httpMethodAnnotation.value() + " " + manifest.getPathPattern().getPattern().toString() + " -> " + cls.getSimpleName() + "." + method.getName() + "()");
+                logger.info("[XRS] " + httpMethodAnnotation.value() + " " + manifest.getPathPattern().getPattern().toString() + " -> " + t.getSimpleName() + "." + method.getName() + "()");
                 registry.add(manifest.getHttpMethod().value().toUpperCase(), manifest);
               }
             }
           }
-          else if (cls.isAnnotationPresent(Provider.class)) {
+          else if (t.isAnnotationPresent(Provider.class)) {
             // Automatically discovered @Provider(s) are singletons
-            addProvider(entityReaders, entityWriters, requestFilters, responseFilters, paramConverterProviders, cls.newInstance());
+            addProvider(entityReaders, entityWriters, requestFilters, responseFilters, paramConverterProviders, t.newInstance());
           }
         }
+        catch (final IllegalAccessException | InstantiationException e) {
+          throw new WebApplicationException(e);
+        }
+
+        return false;
       }
+    };
+
+    try {
+      for (final Package pkg : Package.getPackages())
+        PackageLoader.getSystemContextPackageLoader().loadPackage(pkg, initialize);
     }
-    catch (final IllegalAccessException | InstantiationException | SecurityException e1) {
-      throw new WebApplicationException(e1);
+    catch (final PackageNotFoundException | SecurityException e) {
     }
 
     final String applicationSpec = getInitParameter("javax.ws.rs.Application");
