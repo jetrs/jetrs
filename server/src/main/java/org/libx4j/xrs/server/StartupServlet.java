@@ -81,7 +81,7 @@ public abstract class StartupServlet extends HttpServlet {
       responseFilters.add((ContainerResponseFilter)singleton);
     }
     else {
-      throw new UnsupportedOperationException("Unexpected @Provider of type: " + singleton.getClass().getName());
+      throw new UnsupportedOperationException("Unsupported @Provider of type: " + singleton.getClass().getName());
     }
   }
 

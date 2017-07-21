@@ -16,29 +16,22 @@
 
 package org.libx4j.xrs.server.ext;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
-import java.util.Locale;
 
 import javax.ws.rs.ext.RuntimeDelegate;
 
-import org.lib4j.util.Formats;
-
 public class DateHeaderDelegate implements RuntimeDelegate.HeaderDelegate<Date> {
-  private static final ThreadLocal<SimpleDateFormat> dateFormat = Formats.createSimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
+  private static final DateTimeFormatter formatter = DateTimeFormatter.RFC_1123_DATE_TIME;
 
   public static Date parse(final String value) {
-    try {
-      return dateFormat.get().parse(value);
-    }
-    catch (final ParseException e) {
-      return null;
-    }
+    return Date.from(LocalDateTime.parse(value, formatter).atZone(ZoneId.systemDefault()).toInstant());
   }
 
   public static String format(final Date value) {
-    return dateFormat.get().format(value);
+    return formatter.format(value.toInstant());
   }
 
   @Override

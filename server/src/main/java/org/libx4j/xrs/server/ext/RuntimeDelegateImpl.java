@@ -61,7 +61,7 @@ public class RuntimeDelegateImpl extends RuntimeDelegate {
     if (type == Date.class)
       return (HeaderDelegate<T>)new DateHeaderDelegate();
 
-    throw new UnsupportedOperationException("Unexpected header object type: " + type.getName());
+    throw new UnsupportedOperationException("Unsupported header object type: " + type.getName());
   }
 
   @Override
