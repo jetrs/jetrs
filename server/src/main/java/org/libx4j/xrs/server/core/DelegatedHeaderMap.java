@@ -48,7 +48,7 @@ public class DelegatedHeaderMap extends MirroredDelegatedMultivaluedHashMap<Stri
         if (value instanceof MediaType)
           return ((MediaType)value).toString();
 
-        throw new IllegalArgumentException("Unexpected type: " + value.getClass());
+        throw new UnsupportedOperationException("Unsupported type: " + value.getClass());
       }
     }, new DelegatedMultivaluedHashMap.MultivaluedMapDelegate<String,String>() {
       @Override

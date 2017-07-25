@@ -71,7 +71,7 @@ public class HeaderMap extends MirroredMultivaluedHashMap<String,String,Object> 
         if (value instanceof CacheControl)
           return value.toString();
 
-        throw new IllegalArgumentException("Unexpected type: " + value.getClass());
+        throw new UnsupportedOperationException("Unsupported type: " + value.getClass());
       }
     });
 
