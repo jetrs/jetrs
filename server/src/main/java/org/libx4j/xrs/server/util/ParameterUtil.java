@@ -92,7 +92,7 @@ public final class ParameterUtil {
       return Byte.valueOf(values.get(0));
 
     if (parameterType == Set.class || parameterType == List.class || parameterType == SortedSet.class) {
-      final Collection collection = Collections.asCollection((Class<? extends Collection>)parameterType, values);
+      final Collection collection = Collections.concat(((Class<? extends Collection>)parameterType).newInstance(), values);
       final Class<?> type = (Class<?>)((ParameterizedType)parameterType.getGenericInterfaces()[0]).getActualTypeArguments()[0];
       if (type == String.class) {
         for (final String value : values) {

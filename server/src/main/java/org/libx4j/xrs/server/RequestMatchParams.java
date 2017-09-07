@@ -30,7 +30,7 @@ public class RequestMatchParams {
   public static RequestMatchParams forContext(final ContainerRequestContext containerRequestContext) {
     final MediaType[] accept = MediaTypes.parse(containerRequestContext.getHeaders().get(HttpHeaders.ACCEPT));
     final MediaType[] contentType = MediaTypes.parse(containerRequestContext.getHeaders().get(HttpHeaders.CONTENT_TYPE));
-    return new RequestMatchParams(containerRequestContext.getMethod(), containerRequestContext.getUriInfo().getPath(), accept == null ? null : Collections.asCollection(HashSet.class, accept), contentType == null ? null : Collections.asCollection(HashSet.class, contentType));
+    return new RequestMatchParams(containerRequestContext.getMethod(), containerRequestContext.getUriInfo().getPath(), accept == null ? null : Collections.asCollection(new HashSet<MediaType>(), accept), contentType == null ? null : Collections.asCollection(new HashSet<MediaType>(), contentType));
   }
 
   private final String method;

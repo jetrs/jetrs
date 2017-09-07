@@ -19,12 +19,12 @@ package org.libx4j.xrs.server.core;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.CacheControl;
@@ -33,23 +33,22 @@ import javax.ws.rs.core.MediaType;
 
 import org.lib4j.lang.Numbers;
 import org.lib4j.util.Locales;
-import org.lib4j.util.MirroredList;
 import org.libx4j.xrs.server.ext.DateHeaderDelegate;
 import org.libx4j.xrs.server.util.MediaTypes;
 import org.libx4j.xrs.server.util.MirroredMultivaluedHashMap;
 
-public class HeaderMap extends MirroredMultivaluedHashMap<String,String,Object> implements Cloneable {
+public class HeaderMap extends MirroredMultivaluedHashMap<String,String,Object> {
   private static final long serialVersionUID = -424669813370868690L;
 
   public HeaderMap(final HttpServletResponse response) {
-    super(HashMap.class, ArrayList.class, new MirroredList.Mirror<String,Object>() {
+    super(ArrayList.class, new Function<String,Object>() {
       @Override
-      public Object reflect(final String value) {
+      public Object apply(final String value) {
         return value == null ? null : MediaType.valueOf(value);
       }
-    }, new MirroredList.Mirror<Object,String>() {
+    }, new Function<Object,String>() {
       @Override
-      public String reflect(final Object value) {
+      public String apply(final Object value) {
         if (value == null)
           return null;
 
@@ -86,7 +85,7 @@ public class HeaderMap extends MirroredMultivaluedHashMap<String,String,Object> 
 
   @SuppressWarnings("unchecked")
   public HeaderMap(final HeaderMap copy) {
-    super(HashMap.class, ArrayList.class, copy.getMirror(), ((MirroredMultivaluedHashMap<String,Object,String>)copy.getMirroredMap()).getMirror());
+    super(ArrayList.class, copy.getMirror(), ((MirroredMultivaluedHashMap<String,Object,String>)copy.getMirroredMap()).getMirror());
     for (final Map.Entry<String,List<String>> entry : entrySet())
       for (final String value : entry.getValue())
         add(entry.getKey(), value);
@@ -137,6 +136,6 @@ public class HeaderMap extends MirroredMultivaluedHashMap<String,String,Object> 
 
   @Override
   public HeaderMap clone() {
-    return new HeaderMap(this);
+    return (HeaderMap)super.clone();
   }
 }

@@ -51,7 +51,7 @@ public class ExceptionTruncator {
 
   public static Throwable unwind(final Throwable t) {
     if (!isInvoked(t.getCause())) {
-      final Collection<StackTraceElement> elements = Collections.asCollection(ArrayList.class, t.getCause().getStackTrace());
+      final Collection<StackTraceElement> elements = Collections.asCollection(new ArrayList<StackTraceElement>(), t.getCause().getStackTrace());
       removeInvokeElements(elements);
       t.getCause().setStackTrace(elements.toArray(new StackTraceElement[elements.size()]));
       return t.getCause();
