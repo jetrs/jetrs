@@ -115,7 +115,7 @@ public abstract class StartupServlet extends HttpServlet {
 
       return false;
     }
-    catch (final NoClassDefFoundError | SecurityException e) {
+    catch (final NoClassDefFoundError e) {
       return false;
     }
   }
@@ -173,7 +173,7 @@ public abstract class StartupServlet extends HttpServlet {
       for (final Package pkg : Package.getPackages())
         PackageLoader.getSystemContextPackageLoader().loadPackage(pkg, initialize);
     }
-    catch (final PackageNotFoundException | SecurityException e) {
+    catch (final PackageNotFoundException e) {
     }
 
     final String applicationSpec = getInitParameter("javax.ws.rs.Application");
