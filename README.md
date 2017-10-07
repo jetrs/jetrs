@@ -66,13 +66,13 @@ A common pattern that is used in JAX-RS implementations is dynamic method invoca
   <dependency>
     <groupId>org.libx4j.xrs</groupId>
     <artifactId>xrs-server</artifactId>
-    <version>2.0.1</version>
+    <version>2.0.2-SNAPSHOT</version>
   </dependency>
   <!-- Optional dependency for MessageBodyReader and MessageBodyWriter classes of jJB module
   <dependency> 
     <groupId>org.libx4j.jjb</groupId>
     <artifactId>jjb-rs</artifactId>
-    <version>0.9.6</version>
+    <version>0.9.7-SNAPSHOT</version>
   </dependency> -->
   ```
   
