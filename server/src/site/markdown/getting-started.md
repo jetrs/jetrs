@@ -9,9 +9,9 @@
 2. Add the EmbeddedServletContainer dependency:
 
         <dependency>
-          <groupId>org.safris.jetty</groupId>
+          <groupId>org.libx4j.jetty</groupId>
           <artifactId>servlet</artifactId>
-          <version>1.1.2</version>
+          <version>1.1.3-SNAPSHOT</version>
         </dependency>
 
 3. Create Server.java as the executable entrypoint:

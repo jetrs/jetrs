@@ -6,21 +6,21 @@ release of **XRS**.
 Maven is the preferred installation mechanism for **XRS**. For other dependency managers, please
 see [dependency information](/dependency-info.html).
 
-To install **XRS** in a maven project, please add the safris.org repository and **XRS** dependency:
+To install **XRS** in a maven project, please add the lib4j.org repository and **XRS** dependency:
 
-1. Add safris.org repository.
+1. Add lib4j.org repository.
 
         <repository>
-          <id>mvn.repo.safris.org</id>
-          <url>http://mvn.repo.safris.org/m2</url>
+          <id>mvn.repo.lib4j.org</id>
+          <url>http://mvn.repo.lib4j.org/m2</url>
         </repository>
 
 2. Add XRS dependency.
 
         <dependency>
-          <groupId>org.safris.xws</groupId>
-          <artifactId>xrs</artifactId>
-          <version>2.0.1</version>
+          <groupId>org.libx4j.xrs</groupId>
+          <artifactId>server</artifactId>
+          <version>2.0.2-SNAPSHOT</version>
         </dependency>
 
 For dependency and license infomation, please see [dependencies](/dependencies.html). 
