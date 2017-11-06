@@ -50,6 +50,7 @@ import javax.ws.rs.ext.Providers;
 
 import org.lib4j.lang.Arrays;
 import org.lib4j.lang.Strings;
+import org.lib4j.util.JavaIdentifiers;
 import org.libx4j.xrs.server.core.ContextInjector;
 import org.libx4j.xrs.server.util.MediaTypes;
 import org.libx4j.xrs.server.util.ParameterUtil;
@@ -193,7 +194,7 @@ public class ResourceManifest {
   protected boolean checkHeader(final String headerName, final Class<? extends Annotation> annotationClass, final ContainerRequestContext containerRequestContext) {
     final Annotation annotation = getMatcher(annotationClass).getAnnotation();
     if (annotation == null) {
-      final String message = "@" + annotationClass.getSimpleName() + " annotation missing for " + method.getDeclaringClass().getName() + "." + Strings.toTitleCase(containerRequestContext.getMethod().toLowerCase()) + "()";
+      final String message = "@" + annotationClass.getSimpleName() + " annotation missing for " + method.getDeclaringClass().getName() + "." + JavaIdentifiers.toClassCase(containerRequestContext.getMethod().toLowerCase()) + "()";
       if (annotationClass == Consumes.class)
         throw new RuntimeException(message);
 
