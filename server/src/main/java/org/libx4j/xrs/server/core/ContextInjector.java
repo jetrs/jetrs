@@ -116,7 +116,7 @@ public class ContextInjector {
 
   private <T>T testOrInject(final Class<T> targetClass, final boolean inject) {
     try {
-      final T object = targetClass.newInstance();
+      final T object = targetClass.getDeclaredConstructor().newInstance();
       final Field[] fields = Classes.getDeclaredFieldsDeep(targetClass);
       for (final Field field : fields) {
         if (field.isAnnotationPresent(Context.class)) {

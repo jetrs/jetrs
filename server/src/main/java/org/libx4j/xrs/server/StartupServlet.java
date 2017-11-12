@@ -18,6 +18,7 @@ package org.libx4j.xrs.server;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -158,10 +159,10 @@ public abstract class StartupServlet extends HttpServlet {
           }
           else if (t.isAnnotationPresent(Provider.class)) {
             // Automatically discovered @Provider(s) are singletons
-            addProvider(entityReaders, entityWriters, requestFilters, responseFilters, paramConverterProviders, t.newInstance());
+            addProvider(entityReaders, entityWriters, requestFilters, responseFilters, paramConverterProviders, t.getDeclaredConstructor().newInstance());
           }
         }
-        catch (final IllegalAccessException | InstantiationException e) {
+        catch (final IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException e) {
           throw new WebApplicationException(e);
         }
 
@@ -179,7 +180,7 @@ public abstract class StartupServlet extends HttpServlet {
     final String applicationSpec = getInitParameter("javax.ws.rs.Application");
     if (applicationSpec != null) {
       try {
-        final Application application = (Application)Class.forName(applicationSpec).newInstance();
+        final Application application = (Application)Class.forName(applicationSpec).getDeclaredConstructor().newInstance();
         final Set<?> singletons = application.getSingletons();
         if (singletons != null)
           for (final Object provider : singletons)
@@ -190,7 +191,7 @@ public abstract class StartupServlet extends HttpServlet {
           for (final Class<?> cls : classes)
             addProvider(entityReaders, entityWriters, requestFilters, responseFilters, paramConverterProviders, cls);
       }
-      catch (final InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+      catch (final ClassNotFoundException | IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException e) {
         throw new WebApplicationException(e);
       }
     }

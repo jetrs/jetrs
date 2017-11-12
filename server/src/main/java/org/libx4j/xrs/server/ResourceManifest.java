@@ -49,7 +49,6 @@ import javax.ws.rs.ext.ParamConverterProvider;
 import javax.ws.rs.ext.Providers;
 
 import org.lib4j.lang.Arrays;
-import org.lib4j.lang.Strings;
 import org.lib4j.util.JavaIdentifiers;
 import org.libx4j.xrs.server.core.ContextInjector;
 import org.libx4j.xrs.server.util.MediaTypes;
@@ -242,10 +241,10 @@ public class ResourceManifest {
     try {
       final Object[] parameters = getParameters(method, containerRequestContext, injectionContext, paramConverterProviders);
 
-      final Object object = serviceClass.newInstance();
+      final Object object = serviceClass.getDeclaredConstructor().newInstance();
       return parameters != null ? method.invoke(object, parameters) : method.invoke(object);
     }
-    catch (final IllegalAccessException | InstantiationException e) {
+    catch (final IllegalAccessException | InstantiationException | NoSuchMethodException e) {
       throw new WebApplicationException(e);
     }
     catch (final InvocationTargetException e) {
