@@ -261,7 +261,7 @@ public class ResourceManifest {
       throw new WebApplicationException(e);
     }
     catch (final IllegalArgumentException | IOException e) {
-      throw new WebApplicationException(e);
+      throw new BadRequestException(e);
     }
   }
 

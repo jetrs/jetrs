@@ -132,10 +132,11 @@ public abstract class StartupServlet extends HttpServlet {
     final List<ContainerResponseFilter> responseFilters = new ArrayList<ContainerResponseFilter>();
 
     final Predicate<Class<?>> initialize = new Predicate<Class<?>>() {
+      private final Set<Class<?>> loadedClasses = new HashSet<Class<?>>();
       @Override
       public boolean test(final Class<?> t) {
         try {
-          if (Modifier.isAbstract(t.getModifiers()))
+          if (Modifier.isAbstract(t.getModifiers()) || loadedClasses.contains(t))
             return false;
 
           if (isRootResource(t)) {
@@ -166,6 +167,7 @@ public abstract class StartupServlet extends HttpServlet {
           throw new WebApplicationException(e);
         }
 
+        loadedClasses.add(t);
         return false;
       }
     };

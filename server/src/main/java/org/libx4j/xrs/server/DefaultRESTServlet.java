@@ -140,34 +140,29 @@ public class DefaultRESTServlet extends StartupServlet {
       throw e;
     }
     catch (final Throwable t) {
-      if (t.getCause() instanceof IOException) {
-        response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-        throw (IOException)t.getCause();
-      }
-      else if (t.getCause() instanceof ServletException) {
+      if (t.getCause() instanceof ServletException) {
         response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         throw (ServletException)t.getCause();
       }
-      else {
-        final StringBuilder message = new StringBuilder(t.getMessage() != null ? t.getMessage() : "");
-        if (t.getCause() != null)
-          message.append(" ").append(t.getCause().getMessage() != null ? t.getCause().getMessage() : "");
 
-        if (t instanceof ClientErrorException) {
-          final ClientErrorException e = (ClientErrorException)t;
-          response.sendError(e.getResponse().getStatus(), message.toString());
-          return;
-        }
-        else if (t instanceof WebApplicationException) {
-          final WebApplicationException e = (WebApplicationException)t;
-          response.sendError(e.getResponse().getStatus(), message.toString());
-          if (e.getResponse().getStatus() == HttpServletResponse.SC_INTERNAL_SERVER_ERROR)
-            throw t;
-        }
-        else {
-          response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+      final StringBuilder builder = new StringBuilder(t.getMessage() != null ? t.getMessage() : "");
+      if (t.getCause() != null)
+        builder.append(" ").append(t.getCause().getMessage() != null ? t.getCause().getMessage() : "");
+
+      if (t instanceof ClientErrorException) {
+        final ClientErrorException e = (ClientErrorException)t;
+        response.sendError(e.getResponse().getStatus(), builder.toString());
+        return;
+      }
+      else if (t instanceof WebApplicationException) {
+        final WebApplicationException e = (WebApplicationException)t;
+        response.sendError(e.getResponse().getStatus(), builder.toString());
+        if (e.getResponse().getStatus() == HttpServletResponse.SC_INTERNAL_SERVER_ERROR)
           throw t;
-        }
+      }
+      else {
+        response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        throw t;
       }
 
       return;
