@@ -129,14 +129,12 @@ public class DefaultRESTServlet extends StartupServlet {
         responseContext.writeBody(getExecutionContext().getProviders());
         getExecutionContext().getContainerFilters().filterPostMatchResponse(containerRequestContext, containerResponseContext, injectionContext);
       }
-      catch (final Throwable t) {
-        throw t;
-      }
       finally {
         responseContext.writeHeader();
       }
     }
     catch (final IOException | ServletException e) {
+      response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
       throw e;
     }
     catch (final Throwable t) {
@@ -146,26 +144,26 @@ public class DefaultRESTServlet extends StartupServlet {
       }
 
       final StringBuilder builder = new StringBuilder(t.getMessage() != null ? t.getMessage() : "");
-      if (t.getCause() != null)
-        builder.append(" ").append(t.getCause().getMessage() != null ? t.getCause().getMessage() : "");
+      if (t.getCause() != null) {
+        if (builder.length() > 0)
+          builder.append(" ");
+
+        builder.append(t.getCause().getMessage() != null ? t.getCause().getMessage() : "");
+      }
 
       if (t instanceof ClientErrorException) {
         final ClientErrorException e = (ClientErrorException)t;
         response.sendError(e.getResponse().getStatus(), builder.toString());
-        return;
       }
       else if (t instanceof WebApplicationException) {
         final WebApplicationException e = (WebApplicationException)t;
         response.sendError(e.getResponse().getStatus(), builder.toString());
-        if (e.getResponse().getStatus() == HttpServletResponse.SC_INTERNAL_SERVER_ERROR)
-          throw t;
       }
       else {
         response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-        throw t;
       }
 
-      return;
+      throw t;
     }
 
     responseContext.commit();
