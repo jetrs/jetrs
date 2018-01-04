@@ -64,10 +64,10 @@ public final class MediaTypes {
     if (required == null || test == null)
       return true;
 
-    if (!required.isWildcardType() && !test.isWildcardType() && !matches(required.getType(), test.getType()))
+    if (!required.isWildcardType() && !test.isWildcardType() && !matchesType(required, test))
       return false;
 
-    if (!required.isWildcardSubtype() && !test.isWildcardSubtype() && !matches(required.getSubtype(), test.getSubtype()))
+    if (!required.isWildcardSubtype() && !test.isWildcardSubtype() && !matchesSubtype(required, test))
       return false;
 
     for (final Map.Entry<String,String> entry : required.getParameters().entrySet()) {
@@ -77,6 +77,23 @@ public final class MediaTypes {
     }
 
     return true;
+  }
+
+  private static boolean matchesType(final MediaType required, final MediaType test) {
+    return matches(required.getType(), test.getType());
+  }
+
+  private static boolean matchesSubtype(final MediaType required, final MediaType test) {
+    final int r = required.getSubtype().indexOf('+');
+    final int t = test.getSubtype().indexOf('+');
+    if (r != -1) {
+      if (t != -1)
+        return matches(required.getSubtype().substring(r + 1), test.getSubtype().substring(t + 1)) || matches(required.getSubtype().substring(r + 1), test.getSubtype()) || matches(required.getSubtype(), test.getSubtype().substring(t + 1)) || matches(required.getSubtype(), test.getSubtype());
+
+      return matches(required.getSubtype().substring(r + 1), test.getSubtype()) || matches(required.getSubtype(), test.getSubtype());
+    }
+
+    return matches(required.getSubtype(), test.getSubtype());
   }
 
   private static boolean matches(final String required, final String test) {
