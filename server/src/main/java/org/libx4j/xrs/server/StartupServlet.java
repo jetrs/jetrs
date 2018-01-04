@@ -63,26 +63,28 @@ public abstract class StartupServlet extends HttpServlet {
   private ExecutionContext executionContext;
 
   private static void addProvider(final List<MessageBodyReader<?>> entityReaders, final List<MessageBodyWriter<?>> entityWriters, final List<ContainerRequestFilter> requestFilters, final List<ContainerResponseFilter> responseFilters, final List<ParamConverterProvider> paramConverterProviders, final Object singleton) {
-    if (singleton instanceof MessageBodyReader) {
-      final MessageBodyReader<?> entityReader = (MessageBodyReader<?>)singleton;
-      entityReaders.add(entityReader);
-    }
-    else if (singleton instanceof MessageBodyWriter) {
-      final MessageBodyWriter<?> entityWriter = (MessageBodyWriter<?>)singleton;
-      entityWriters.add(entityWriter);
-    }
-    else if (singleton instanceof ParamConverterProvider) {
-      final ParamConverterProvider paramConverterProvider = (ParamConverterProvider)singleton;
-      paramConverterProviders.add(paramConverterProvider);
-    }
-    else if (singleton instanceof ContainerRequestFilter) {
-      requestFilters.add((ContainerRequestFilter)singleton);
-    }
-    else if (singleton instanceof ContainerResponseFilter) {
-      responseFilters.add((ContainerResponseFilter)singleton);
-    }
-    else {
-      throw new UnsupportedOperationException("Unsupported @Provider of type: " + singleton.getClass().getName());
+    for (final Class<?> inter : singleton.getClass().getInterfaces()) {
+      if (inter == MessageBodyReader.class) {
+        final MessageBodyReader<?> entityReader = (MessageBodyReader<?>)singleton;
+        entityReaders.add(entityReader);
+      }
+      else if (inter == MessageBodyWriter.class) {
+        final MessageBodyWriter<?> entityWriter = (MessageBodyWriter<?>)singleton;
+        entityWriters.add(entityWriter);
+      }
+      else if (inter == ParamConverterProvider.class) {
+        final ParamConverterProvider paramConverterProvider = (ParamConverterProvider)singleton;
+        paramConverterProviders.add(paramConverterProvider);
+      }
+      else if (inter == ContainerRequestFilter.class) {
+        requestFilters.add((ContainerRequestFilter)singleton);
+      }
+      else if (inter == ContainerResponseFilter.class) {
+        responseFilters.add((ContainerResponseFilter)singleton);
+      }
+      else {
+        throw new UnsupportedOperationException("Unsupported @Provider of type: " + singleton.getClass().getName());
+      }
     }
   }
 

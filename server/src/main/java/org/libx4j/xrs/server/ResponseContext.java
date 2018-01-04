@@ -58,12 +58,13 @@ public class ResponseContext {
     return httpHeaders;
   }
 
-  public void writeHeader() {
+  protected void writeHeader() {
     final MultivaluedMap<String,String> containerResponseHeaders = containerResponseContext.getStringHeaders();
     if (getResponse() != null) {
       if (getResponse().hasEntity())
         containerResponseContext.setEntity(getResponse().getEntity());
 
+      containerResponseContext.setStatus(getResponse().getStatus());
       containerResponseContext.setStatusInfo(getResponse().getStatusInfo());
 
       final MultivaluedMap<String,String> responseHeaders = getResponse().getStringHeaders();
@@ -86,9 +87,19 @@ public class ResponseContext {
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
-  public void writeBody(final Providers providers) throws IOException {
+  protected void writeBody(final Providers providers) throws IOException {
     final Object entity = containerResponseContext.getEntity();
-    if (entity != null) {
+    if (entity == null)
+      return;
+
+    if (entity instanceof Response) {
+      final Response response = (Response)entity;
+      containerResponseContext.setStatus(response.getStatus());
+      containerResponseContext.setStatusInfo(response.getStatusInfo());
+      containerResponseContext.setEntity(response.getEntity());
+      writeBody(providers);
+    }
+    else {
       final Annotation[] annotations = containerResponseContext.getEntityAnnotations() != null ? Arrays.concat(containerResponseContext.getEntityAnnotations(), entity.getClass().getAnnotations()) : entity.getClass().getAnnotations();
       final MessageBodyWriter messageBodyWriter = providers.getMessageBodyWriter(containerResponseContext.getEntityClass(), containerResponseContext.getEntityType(), annotations, containerResponseContext.getMediaType());
       if (messageBodyWriter != null) {
@@ -100,7 +111,7 @@ public class ResponseContext {
     }
   }
 
-  public void commit() throws IOException {
+  protected void commit() throws IOException {
     if (outputStream != null)
       httpServletResponse.getOutputStream().write(outputStream.toByteArray());
 

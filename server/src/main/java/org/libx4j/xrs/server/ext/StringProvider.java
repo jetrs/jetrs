@@ -19,21 +19,21 @@ package org.libx4j.xrs.server.ext;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
-import javax.ws.rs.Consumes;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
+import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
 import org.lib4j.io.Readers;
 
 @Provider
-@Consumes({MediaType.TEXT_PLAIN, MediaType.TEXT_HTML, MediaType.TEXT_XML})
-public class StringMessageBodyReader implements MessageBodyReader<String> {
+public class StringProvider implements MessageBodyReader<String>, MessageBodyWriter<String> {
   @Override
   public boolean isReadable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
     return type == String.class;
@@ -42,5 +42,20 @@ public class StringMessageBodyReader implements MessageBodyReader<String> {
   @Override
   public String readFrom(final Class<String> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,String> httpHeaders, final InputStream entityStream) throws IOException, WebApplicationException {
     return Readers.readFully(new InputStreamReader(entityStream));
+  }
+
+  @Override
+  public boolean isWriteable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
+    return type == String.class;
+  }
+
+  @Override
+  public long getSize(final String t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
+    return t.length();
+  }
+
+  @Override
+  public void writeTo(final String t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,Object> httpHeaders, final OutputStream entityStream) throws IOException, WebApplicationException {
+    entityStream.write(t.getBytes());
   }
 }
