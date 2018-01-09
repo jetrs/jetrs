@@ -16,24 +16,45 @@
 
 package org.libx4j.xrs.server.util;
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.StringTokenizer;
 
 import javax.ws.rs.core.MediaType;
 
 public final class MediaTypes {
-  // FIXME: Is this correct?
-  public static boolean matches(final MediaType[] required, final Set<MediaType> tests) {
-    for (final MediaType req : required)
-      if (matches(req, tests))
-        return true;
+  private static final Comparator<MediaType> qComparator = new Comparator<MediaType>() {
+    @Override
+    public int compare(final MediaType o1, final MediaType o2) {
+      if (o1.getParameters().isEmpty())
+        return -1;
 
-    return false;
+      if (o2.getParameters().isEmpty())
+        return 1;
+
+      final String q1 = o1.getParameters().get("q");
+      if (q1 == null)
+        return -1;
+
+      final String q2 = o2.getParameters().get("q");
+      if (q2 == null)
+        return 1;
+
+      return Double.valueOf(q1) > Double.valueOf(q2) ? -1 : 1;
+    }
+  };
+
+  public static MediaType matches(final MediaType[] required, final Set<MediaType> tests) {
+    for (final MediaType test : tests)
+      if (matches(test, required))
+        return test;
+
+    return null;
   }
 
   public static boolean matches(final MediaType required, final Set<MediaType> tests) {
@@ -44,12 +65,12 @@ public final class MediaTypes {
     return false;
   }
 
-  public static boolean matches(final MediaType[] required, final MediaType[] tests) {
-    for (final MediaType req : required)
-      if (matches(req, tests))
-        return true;
+  public static MediaType matches(final MediaType[] required, final MediaType[] tests) {
+    for (final MediaType test : tests)
+      if (matches(test, required))
+        return test;
 
-    return false;
+    return null;
   }
 
   public static boolean matches(final MediaType required, final MediaType[] tests) {
@@ -64,56 +85,26 @@ public final class MediaTypes {
     if (required == null || test == null)
       return true;
 
-    if (!required.isWildcardType() && !test.isWildcardType() && !matchesType(required, test))
+    if (!required.isCompatible(test))
       return false;
 
-    if (!required.isWildcardSubtype() && !test.isWildcardSubtype() && !matchesSubtype(required, test))
-      return false;
-
+    required.getParameters().equals(test.getParameters());
     for (final Map.Entry<String,String> entry : required.getParameters().entrySet()) {
       final String value = test.getParameters().get(entry.getKey());
       if (value != null && !value.equals(entry.getValue()))
-          return false;
+        return false;
     }
 
     return true;
-  }
-
-  private static boolean matchesType(final MediaType required, final MediaType test) {
-    return matches(required.getType(), test.getType());
-  }
-
-  private static boolean matchesSubtype(final MediaType required, final MediaType test) {
-    final int r = required.getSubtype().indexOf('+');
-    final int t = test.getSubtype().indexOf('+');
-    if (r != -1) {
-      if (t != -1)
-        return matches(required.getSubtype().substring(r + 1), test.getSubtype().substring(t + 1)) || matches(required.getSubtype().substring(r + 1), test.getSubtype()) || matches(required.getSubtype(), test.getSubtype().substring(t + 1)) || matches(required.getSubtype(), test.getSubtype());
-
-      return matches(required.getSubtype().substring(r + 1), test.getSubtype()) || matches(required.getSubtype(), test.getSubtype());
-    }
-
-    return matches(required.getSubtype(), test.getSubtype());
-  }
-
-  private static boolean matches(final String required, final String test) {
-    final StringTokenizer requiredTokenizer = new StringTokenizer(required, ",");
-    while (requiredTokenizer.hasMoreTokens()) {
-      final String token = requiredTokenizer.nextToken();
-      final StringTokenizer testTokenizer = new StringTokenizer(test, ",");
-      while (testTokenizer.hasMoreTokens())
-        if (token.equals(testTokenizer.nextToken()))
-          return true;
-    }
-
-    return false;
   }
 
   public static MediaType[] parse(final Collection<String> strings) {
     if (strings == null)
       return null;
 
-    return parse(strings.iterator(), 0);
+    final MediaType[] mediaTypes = parse(strings.iterator(), 0);
+    Arrays.sort(mediaTypes, qComparator);
+    return mediaTypes;
   }
 
   private static MediaType[] parse(final Iterator<String> iterator, final int depth) {
@@ -129,7 +120,9 @@ public final class MediaTypes {
   }
 
   public static MediaType[] parse(final Enumeration<String> enumeration) {
-    return parse(enumeration, 0);
+    final MediaType[] mediaTypes = parse(enumeration, 0);
+    Arrays.sort(mediaTypes, qComparator);
+    return mediaTypes;
   }
 
   private static MediaType[] parse(final Enumeration<String> enumeration, final int depth) {
@@ -145,7 +138,9 @@ public final class MediaTypes {
   }
 
   public static MediaType[] parse(final String ... strings) {
-    return parse(strings, 0, 0);
+    final MediaType[] mediaTypes = parse(strings, 0, 0);
+    Arrays.sort(mediaTypes, qComparator);
+    return mediaTypes;
   }
 
   private static MediaType[] parse(final String[] strings, int index, final int depth) {
@@ -186,6 +181,21 @@ public final class MediaTypes {
     while (semicolon > 0);
 
     return new MediaType(type, subtype, parameters);
+  }
+
+  public static String toString(final MediaType value) {
+    if (value == null)
+      throw new NullPointerException();
+
+    final StringBuilder builder = new StringBuilder();
+    builder.append(value.getType());
+    builder.append('/');
+    builder.append(value.getSubtype());
+    if (value.getParameters() != null)
+      for (final Map.Entry<String,String> entry : value.getParameters().entrySet())
+        builder.append(';').append(entry.getKey()).append('=').append(entry.getValue());
+
+    return builder.toString();
   }
 
   private MediaTypes() {

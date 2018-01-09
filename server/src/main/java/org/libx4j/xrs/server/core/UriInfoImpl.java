@@ -113,7 +113,7 @@ public class UriInfoImpl implements UriInfo {
     final RequestMatchParams pathParams = RequestMatchParams.forContext(containerRequestContext);
     MultivaluedMap<String,String> parameters = (decode ? decodedParameters : encodedParameters).get(pathParams);
     if (parameters == null)
-      (decode ? decodedParameters : encodedParameters).put(pathParams, parameters = executionContext.filterAndMatch(pathParams).getPathPattern().getParameters(getPath(decode)));
+      (decode ? decodedParameters : encodedParameters).put(pathParams, parameters = executionContext.filterAndMatch(pathParams).getManifest().getPathPattern().getParameters(getPath(decode)));
 
     return parameters;
   }

@@ -110,19 +110,20 @@ public class DefaultRESTServlet extends StartupServlet {
           return;
         }
 
-        final ResourceManifest manifest; // NOTE: This weird construct is done this way to at least somehow make the two object cohesive
-        request.setResourceManifest(manifest = getExecutionContext().filterAndMatch(RequestMatchParams.forContext(containerRequestContext)));
+        final ResourceMatch resource = getExecutionContext().filterAndMatch(RequestMatchParams.forContext(containerRequestContext));
+        if (resource != null)
+          request.setResourceManifest(resource.getManifest());
 
         getExecutionContext().getContainerFilters().filterPostMatchRequest(containerRequestContext, injectionContext);
 
-        if (manifest == null)
+        if (resource == null)
           throw new NotFoundException();
 
-        final Produces produces = manifest.getMatcher(Produces.class).getAnnotation();
+        final Produces produces = resource.getManifest().getMatcher(Produces.class).getAnnotation();
         if (produces != null)
-          containerResponseContext.getStringHeaders().addAll(HttpHeaders.CONTENT_TYPE, produces.value());
+          containerResponseContext.getStringHeaders().putSingle(HttpHeaders.CONTENT_TYPE, resource.getAccept().toString());
 
-        final Object content = manifest.service(containerRequestContext, injectionContext, getExecutionContext().getParamConverterProviders());
+        final Object content = resource.getManifest().service(containerRequestContext, injectionContext, getExecutionContext().getParamConverterProviders());
         if (content != null)
           containerResponseContext.setEntity(content);
 

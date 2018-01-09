@@ -1,4 +1,4 @@
-/* Copyright (c) 2016 lib4j
+/* Copyright (c) 2018 lib4j
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -14,21 +14,24 @@
  * program. If not, see <http://opensource.org/licenses/MIT/>.
  */
 
-package org.libx4j.xrs.server.ext;
+package org.libx4j.xrs.server;
 
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.ext.RuntimeDelegate;
 
-import org.libx4j.xrs.server.util.MediaTypes;
+public class ResourceMatch {
+  private final ResourceManifest manifest;
+  private final MediaType accept;
 
-public class MediaTypeHeaderDelegate implements RuntimeDelegate.HeaderDelegate<MediaType> {
-  @Override
-  public MediaType fromString(final String value) {
-    return MediaTypes.parse(value);
+  public ResourceMatch(final ResourceManifest manifest, final MediaType accept) {
+    this.manifest = manifest;
+    this.accept = accept;
   }
 
-  @Override
-  public String toString(final MediaType value) {
-    return MediaTypes.toString(value);
+  public ResourceManifest getManifest() {
+    return this.manifest;
+  }
+
+  public MediaType getAccept() {
+    return this.accept;
   }
 }

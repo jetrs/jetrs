@@ -18,7 +18,6 @@ package org.libx4j.xrs.server;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.util.Set;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
@@ -50,9 +49,14 @@ public class MediaTypeMatcher<T extends Annotation> {
     this.mediaTypes = annotation == null ? null : MediaTypes.parse(annotation instanceof Consumes ? ((Consumes)annotation).value() : annotation instanceof Produces ? ((Produces)annotation).value() : null);
   }
 
-  // FIXME: http://stackoverflow.com/questions/29857643/how-are-jersey-consumes-endpoints-matched
-  public boolean matches(final Set<MediaType> mediaTypes) {
-    return this.mediaTypes == null ? mediaTypes == null || MediaTypes.matches(MediaType.WILDCARD_TYPE, mediaTypes) : mediaTypes == null || MediaTypes.matches(this.mediaTypes, mediaTypes);
+  public MediaType matches(final MediaType[] mediaTypes) {
+    if (this.mediaTypes == null)
+      return mediaTypes == null || MediaTypes.matches(MediaType.WILDCARD_TYPE, mediaTypes) ? MediaType.WILDCARD_TYPE : null;
+
+    if (mediaTypes == null)
+      return this.mediaTypes[0];
+
+    return MediaTypes.matches(this.mediaTypes, mediaTypes);
   }
 
   public T getAnnotation() {

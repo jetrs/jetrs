@@ -22,7 +22,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.List;
-import java.util.Set;
 
 import javax.annotation.security.DenyAll;
 import javax.annotation.security.PermitAll;
@@ -101,23 +100,24 @@ public class ResourceManifest {
     this.producesMatcher = new MediaTypeMatcher<Produces>(method, Produces.class);
   }
 
-  public boolean matches(final RequestMatchParams matchParams) {
+  public MediaType matches(final RequestMatchParams matchParams) {
     if (!httpMethod.value().toUpperCase().equals(matchParams.getMethod()))
-      return false;
+      return null;
 
     final String path = matchParams.getPath();
     if (!pathPattern.matches(path))
-      return false;
+      return null;
 
-    final Set<MediaType> accept = matchParams.getAccept();
-    if (!producesMatcher.matches(accept))
-      return false;
+    final MediaType[] accept = matchParams.getAccept();
+    final MediaType acceptedType = producesMatcher.matches(accept);
+    if (acceptedType == null)
+      return acceptedType;
 
-    final Set<MediaType> contentType = matchParams.getContentType();
-    if (!consumesMatcher.matches(contentType))
-      return false;
+    final MediaType[] contentType = matchParams.getContentType();
+    if (consumesMatcher.matches(contentType) == null)
+      return null;
 
-    return true;
+    return acceptedType;
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
@@ -209,9 +209,8 @@ public class ResourceManifest {
     final MediaType[] test = MediaTypes.parse(headerValueParts);
 
     final String[] annotationValue = annotationClass == Produces.class ? ((Produces)annotation).value() : annotationClass == Consumes.class ? ((Consumes)annotation).value() : null;
-    // FIXME: Order matters, and also the q value
     final MediaType[] required = MediaTypes.parse(annotationValue);
-    if (MediaTypes.matches(required, test))
+    if (MediaTypes.matches(required, test) != null)
       return true;
 
     return logMissingHeaderWarning(headerName, annotationClass);

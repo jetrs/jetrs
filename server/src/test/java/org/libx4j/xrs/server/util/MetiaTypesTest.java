@@ -19,15 +19,29 @@ package org.libx4j.xrs.server.util;
 import java.util.Collections;
 
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.ext.RuntimeDelegate;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.libx4j.xrs.server.util.MediaTypes;
+import org.libx4j.xrs.server.ext.RuntimeDelegateImpl;
 
 public class MetiaTypesTest {
+  static {
+    System.setProperty(RuntimeDelegate.JAXRS_RUNTIME_DELEGATE_PROPERTY, RuntimeDelegateImpl.class.getName());
+  }
+
   @Test
   public void testParse() {
-    Assert.assertEquals(new MediaType("application", "json"), MediaTypes.parse("application/json"));
-    Assert.assertEquals(new MediaType("application", "json", Collections.singletonMap("charset", "utf8")), MediaTypes.parse("application/json; charset=utf8"));
+    Assert.assertEquals(new MediaType("application", "json"), MediaType.valueOf("application/json"));
+    Assert.assertEquals(new MediaType("application", "json", "utf8"), MediaType.valueOf("application/json; charset=utf8"));
+    Assert.assertEquals(new MediaType("application", "json", Collections.singletonMap("charset", "utf8")), MediaType.valueOf("application/json; charset=utf8"));
+  }
+
+  @Test
+  public void testMatch() {
+    MediaTypes.matches(new MediaType(), new MediaType());
+    MediaTypes.matches(new MediaType("application", "json"), new MediaType());
+    MediaTypes.matches(new MediaType(), new MediaType("application", "json"));
+    MediaTypes.matches(new MediaType("application", "json"), new MediaType("application", "json"));
   }
 }

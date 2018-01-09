@@ -16,29 +16,27 @@
 
 package org.libx4j.xrs.server;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Arrays;
 
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 
-import org.lib4j.util.Collections;
 import org.libx4j.xrs.server.util.MediaTypes;
 
 public class RequestMatchParams {
   public static RequestMatchParams forContext(final ContainerRequestContext containerRequestContext) {
     final MediaType[] accept = MediaTypes.parse(containerRequestContext.getHeaders().get(HttpHeaders.ACCEPT));
     final MediaType[] contentType = MediaTypes.parse(containerRequestContext.getHeaders().get(HttpHeaders.CONTENT_TYPE));
-    return new RequestMatchParams(containerRequestContext.getMethod(), containerRequestContext.getUriInfo().getPath(), accept == null ? null : Collections.asCollection(new HashSet<MediaType>(), accept), contentType == null ? null : Collections.asCollection(new HashSet<MediaType>(), contentType));
+    return new RequestMatchParams(containerRequestContext.getMethod(), containerRequestContext.getUriInfo().getPath(), accept == null ? null : accept, contentType);
   }
 
   private final String method;
   private final String path;
-  private final Set<MediaType> accept;
-  private final Set<MediaType> contentType;
+  private final MediaType[] accept;
+  private final MediaType[] contentType;
 
-  public RequestMatchParams(final String method, final String path, final Set<MediaType> accept, final Set<MediaType> contentType) {
+  public RequestMatchParams(final String method, final String path, final MediaType[] accept, final MediaType[] contentType) {
     this.method = method.toUpperCase();
     this.path = path;
     this.accept = accept;
@@ -53,11 +51,11 @@ public class RequestMatchParams {
     return path;
   }
 
-  public Set<MediaType> getAccept() {
+  public MediaType[] getAccept() {
     return accept;
   }
 
-  public Set<MediaType> getContentType() {
+  public MediaType[] getContentType() {
     return contentType;
   }
 
@@ -70,7 +68,7 @@ public class RequestMatchParams {
       return false;
 
     final RequestMatchParams that = (RequestMatchParams)obj;
-    return method.equals(that.method) && path.equals(that.path) && (accept != null ? that.accept != null && accept.containsAll(that.accept) : that.accept == null) && (contentType != null ? that.contentType != null && contentType.containsAll(that.contentType) : contentType == null);
+    return method.equals(that.method) && path.equals(that.path) && (accept != null ? that.accept != null && Arrays.equals(accept, that.accept) : that.accept == null) && (contentType != null ? that.contentType != null && Arrays.equals(contentType, that.contentType) : contentType == null);
   }
 
   @Override

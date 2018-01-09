@@ -18,6 +18,7 @@ package org.libx4j.xrs.server;
 
 import java.util.List;
 
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.ParamConverterProvider;
 import javax.ws.rs.ext.Providers;
@@ -57,14 +58,16 @@ public class ExecutionContext {
     return null;
   }
 
-  public ResourceManifest filterAndMatch(final RequestMatchParams matchParams) {
+  public ResourceMatch filterAndMatch(final RequestMatchParams matchParams) {
     final List<ResourceManifest> manifests = resources.get(matchParams.getMethod());
     if (manifests == null)
       return null;
 
-    for (final ResourceManifest manifest : manifests)
-      if (manifest.matches(matchParams))
-        return manifest;
+    for (final ResourceManifest manifest : manifests) {
+      final MediaType accept = manifest.matches(matchParams);
+      if (accept != null)
+        return new ResourceMatch(manifest, accept);
+    }
 
     return null;
   }
