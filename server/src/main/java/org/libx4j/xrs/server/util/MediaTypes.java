@@ -23,7 +23,6 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 
 import javax.ws.rs.core.MediaType;
 
@@ -49,22 +48,6 @@ public final class MediaTypes {
     }
   };
 
-  public static MediaType matches(final MediaType[] required, final Set<MediaType> tests) {
-    for (final MediaType test : tests)
-      if (matches(test, required))
-        return test;
-
-    return null;
-  }
-
-  public static boolean matches(final MediaType required, final Set<MediaType> tests) {
-    for (final MediaType test : tests)
-      if (matches(required, test))
-        return true;
-
-    return false;
-  }
-
   public static MediaType matches(final MediaType[] required, final MediaType[] tests) {
     for (final MediaType test : tests)
       if (matches(test, required))
@@ -88,10 +71,9 @@ public final class MediaTypes {
     if (!required.isCompatible(test))
       return false;
 
-    required.getParameters().equals(test.getParameters());
     for (final Map.Entry<String,String> entry : required.getParameters().entrySet()) {
       final String value = test.getParameters().get(entry.getKey());
-      if (value != null && !value.equals(entry.getValue()))
+      if (value != null && !"q".equals(value) && !value.equals(entry.getValue()))
         return false;
     }
 
