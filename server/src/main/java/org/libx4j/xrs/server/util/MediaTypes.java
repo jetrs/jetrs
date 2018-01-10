@@ -48,33 +48,51 @@ public final class MediaTypes {
     }
   };
 
-  public static MediaType matches(final MediaType[] required, final MediaType[] tests) {
-    for (final MediaType test : tests)
-      if (matches(test, required))
-        return test;
+  public static MediaType matches(final MediaType[] mediaTypes1, final MediaType[] mediaTypes2) {
+    for (final MediaType mediaType2 : mediaTypes2)
+      if (matches(mediaType2, mediaTypes1))
+        return mediaType2;
 
     return null;
   }
 
-  public static boolean matches(final MediaType required, final MediaType[] tests) {
-    for (final MediaType test : tests)
-      if (matches(required, test))
+  public static boolean matches(final MediaType mediaType1, final MediaType[] mediaTypes2) {
+    for (final MediaType mediaType2 : mediaTypes2)
+      if (matches(mediaType1, mediaType2))
         return true;
 
     return false;
   }
 
-  public static boolean matches(final MediaType required, final MediaType test) {
-    if (required == null || test == null)
+  public static boolean matches(final MediaType mediaType1, final MediaType mediaType2) {
+    if (mediaType1 == null || mediaType2 == null)
       return true;
 
-    if (!required.isCompatible(test))
+    if (!mediaType1.isCompatible(mediaType2))
       return false;
 
-    for (final Map.Entry<String,String> entry : required.getParameters().entrySet()) {
-      final String value = test.getParameters().get(entry.getKey());
-      if (value != null && !"q".equals(value) && !value.equals(entry.getValue()))
-        return false;
+    if (!mediaType1.getParameters().isEmpty() || !mediaType2.getParameters().isEmpty()) {
+      final Iterator<Map.Entry<String,String>> iterator1 = mediaType1.getParameters().entrySet().iterator();
+      final Iterator<Map.Entry<String,String>> iterator2 = mediaType2.getParameters().entrySet().iterator();
+      while (iterator1.hasNext()) {
+        final Map.Entry<String,String> entry1 = iterator1.next();
+        if ("q".equalsIgnoreCase(entry1.getKey()))
+          continue;
+
+        if (!iterator2.hasNext())
+          return false;
+
+        Map.Entry<String,String> entry2 = iterator2.next();
+        if ("q".equalsIgnoreCase(entry2.getKey())) {
+          if (!iterator2.hasNext())
+            return false;
+
+          entry2 = iterator2.next();
+        }
+
+        if (!entry1.getKey().equalsIgnoreCase(entry2.getKey()) || !entry1.getValue().equalsIgnoreCase(entry2.getValue()))
+          return false;
+      }
     }
 
     return true;
@@ -157,8 +175,10 @@ public final class MediaTypes {
       semicolon = string.indexOf(";", semicolon + 1);
       final String token = string.substring(start + 1, semicolon > 0 ? semicolon : string.length());
       final int eq = token.indexOf('=');
-      if (eq >= 0)
-        parameters.put(token.substring(0, eq).trim(), token.substring(eq + 1).trim());
+      if (eq >= 0) {
+        final String value = token.substring(eq + 1).trim();
+        parameters.put(token.substring(0, eq).trim(), value.length() > 1 && (value.charAt(0) == '"' || value.charAt(0) == '\'') && (value.charAt(value.length() - 1) == '"' || value.charAt(value.length() - 1) == '\'') ? value.substring(1, value.length() - 2) : value);
+      }
     }
     while (semicolon > 0);
 
