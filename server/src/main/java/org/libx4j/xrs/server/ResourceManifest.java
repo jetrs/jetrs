@@ -111,7 +111,7 @@ public class ResourceManifest {
     final MediaType[] accept = matchParams.getAccept();
     final MediaType acceptedType = producesMatcher.matches(accept);
     if (acceptedType == null)
-      return acceptedType;
+      return null;
 
     final MediaType[] contentType = matchParams.getContentType();
     if (consumesMatcher.matches(contentType) == null)
