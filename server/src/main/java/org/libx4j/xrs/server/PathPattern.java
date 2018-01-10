@@ -36,10 +36,7 @@ public class PathPattern {
 
     final String name = matcher.group(1);
     final String regex = matcher.group(3);
-    if (regex != null)
-      return "(?<" + name + ">" + regex + ")";
-
-    return "(?<" + name + ">[^\\/]+)";
+    return regex != null ? "(?<" + name + ">" + regex + ")" : "(?<" + name + ">[^\\/]+)";
   }
 
   private static Pattern createPattern(final String path) {
@@ -93,11 +90,31 @@ public class PathPattern {
 
     final MultivaluedMap<String,String> parameters = new MultivaluedHashMap<String,String>();
     for (final String groupName : groupNames) {
-      final String[] values = matcher.group(groupName).replace("%3B", ";").split(";");
-      for (final String value : values)
-        parameters.add(groupName, value);
+      final String values = matcher.group(groupName).replace("%3B", ";");
+      int start = 0;
+      for (int end = -1; (end = values.indexOf(';', end + 1)) != -1; start = end + 1)
+        if (start != end)
+          parameters.add(groupName, values.substring(start, end));
+
+      parameters.add(groupName, values.substring(start));
     }
 
     return parameters;
+  }
+
+  @Override
+  public boolean equals(final Object obj) {
+    if (obj == this)
+      return true;
+
+    if (!(obj instanceof PathPattern))
+      return false;
+
+    return pattern.equals(((PathPattern)obj).pattern);
+  }
+
+  @Override
+  public int hashCode() {
+    return 31 + 7 * pattern.hashCode();
   }
 }

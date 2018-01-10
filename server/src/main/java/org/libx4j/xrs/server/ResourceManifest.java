@@ -280,4 +280,29 @@ public class ResourceManifest {
   public boolean isRestricted() {
     return securityAnnotation instanceof DenyAll || securityAnnotation instanceof RolesAllowed;
   }
+
+  @Override
+  public boolean equals(final Object obj) {
+    if (obj == this)
+      return true;
+
+    if (!(obj instanceof ResourceManifest))
+      return false;
+
+    final ResourceManifest that = (ResourceManifest)obj;
+    return httpMethod.equals(that.httpMethod) && securityAnnotation.equals(that.securityAnnotation) && method.equals(that.method) && serviceClass.equals(that.serviceClass) && pathPattern.equals(that.pathPattern) && consumesMatcher.equals(that.consumesMatcher) && producesMatcher.equals(that.producesMatcher);
+  }
+
+  @Override
+  public int hashCode() {
+    int hashCode = 1;
+    hashCode *= 31 ^ hashCode + httpMethod.hashCode();
+    hashCode *= 31 ^ hashCode + securityAnnotation.hashCode();
+    hashCode *= 31 ^ hashCode + method.hashCode();
+    hashCode *= 31 ^ hashCode + serviceClass.hashCode();
+    hashCode *= 31 ^ hashCode + pathPattern.hashCode();
+    hashCode *= 31 ^ hashCode + consumesMatcher.hashCode();
+    hashCode *= 31 ^ hashCode + producesMatcher.hashCode();
+    return hashCode;
+  }
 }

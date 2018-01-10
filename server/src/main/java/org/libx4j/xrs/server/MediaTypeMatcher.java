@@ -18,6 +18,7 @@ package org.libx4j.xrs.server;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
@@ -28,10 +29,7 @@ import org.libx4j.xrs.server.util.MediaTypes;
 public class MediaTypeMatcher<T extends Annotation> {
   public static <T extends Annotation>T getMethodClassAnnotation(final Class<T> annotationClass, final Method method) {
     T annotation = method.getAnnotation(annotationClass);
-    if (annotation != null)
-      return annotation;
-
-    return method.getDeclaringClass().getAnnotation(annotationClass);
+    return annotation != null ? annotation : method.getDeclaringClass().getAnnotation(annotationClass);
   }
 
   private final T annotation;
@@ -53,13 +51,30 @@ public class MediaTypeMatcher<T extends Annotation> {
     if (this.mediaTypes == null)
       return mediaTypes == null || MediaTypes.matches(MediaType.WILDCARD_TYPE, mediaTypes) ? MediaType.WILDCARD_TYPE : null;
 
-    if (mediaTypes == null)
-      return this.mediaTypes[0];
-
-    return MediaTypes.matches(this.mediaTypes, mediaTypes);
+    return mediaTypes == null ? this.mediaTypes[0] : MediaTypes.matches(this.mediaTypes, mediaTypes);
   }
 
   public T getAnnotation() {
     return annotation;
+  }
+
+  @Override
+  public boolean equals(final Object obj) {
+    if (obj == this)
+      return true;
+
+    if (!(obj instanceof MediaTypeMatcher))
+      return false;
+
+    final MediaTypeMatcher<?> that = (MediaTypeMatcher<?>)obj;
+    return annotation.equals(that.annotation) && Arrays.equals(mediaTypes, that.mediaTypes);
+  }
+
+  @Override
+  public int hashCode() {
+    int hashCode = 1;
+    hashCode *= 31 ^ hashCode + annotation.hashCode();
+    hashCode *= 31 ^ hashCode + mediaTypes.hashCode();
+    return hashCode;
   }
 }

@@ -28,7 +28,7 @@ public class RequestMatchParams {
   public static RequestMatchParams forContext(final ContainerRequestContext containerRequestContext) {
     final MediaType[] accept = MediaTypes.parse(containerRequestContext.getHeaders().get(HttpHeaders.ACCEPT));
     final MediaType[] contentType = MediaTypes.parse(containerRequestContext.getHeaders().get(HttpHeaders.CONTENT_TYPE));
-    return new RequestMatchParams(containerRequestContext.getMethod(), containerRequestContext.getUriInfo().getPath(), accept == null ? null : accept, contentType);
+    return new RequestMatchParams(containerRequestContext.getMethod(), containerRequestContext.getUriInfo().getPath(), accept, contentType);
   }
 
   private final String method;

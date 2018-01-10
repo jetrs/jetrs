@@ -31,7 +31,7 @@ import javax.ws.rs.container.PreMatching;
 import org.lib4j.util.Collections;
 import org.libx4j.xrs.server.core.ContextInjector;
 
-public class ContainerFilters {
+public final class ContainerFilters {
   private final List<ContainerResponseFilter> preMatchResponseFilters = new ArrayList<ContainerResponseFilter>();
   private final List<ContainerResponseFilter> postMatchResponseFilters = new ArrayList<ContainerResponseFilter>();
   private final List<ContainerRequestFilter> preMatchRequestFilters = new ArrayList<ContainerRequestFilter>();

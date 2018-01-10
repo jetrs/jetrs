@@ -24,7 +24,12 @@ public class ResourceMatch {
 
   public ResourceMatch(final ResourceManifest manifest, final MediaType accept) {
     this.manifest = manifest;
+    if (manifest == null)
+      throw new NullPointerException("manifest == null");
+
     this.accept = accept;
+    if (accept == null)
+      throw new NullPointerException("accept == null");
   }
 
   public ResourceManifest getManifest() {
@@ -33,5 +38,25 @@ public class ResourceMatch {
 
   public MediaType getAccept() {
     return this.accept;
+  }
+
+  @Override
+  public boolean equals(final Object obj) {
+    if (obj == this)
+      return true;
+
+    if (!(obj instanceof ResourceMatch))
+      return false;
+
+    final ResourceMatch that = (ResourceMatch)obj;
+    return accept.equals(that.accept) && manifest.equals(that.manifest);
+  }
+
+  @Override
+  public int hashCode() {
+    int hashCode = 1;
+    hashCode *= 31 ^ hashCode + manifest.hashCode();
+    hashCode *= 31 ^ hashCode + accept.hashCode();
+    return hashCode;
   }
 }

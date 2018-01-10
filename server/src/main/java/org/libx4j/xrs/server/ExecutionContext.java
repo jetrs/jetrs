@@ -31,8 +31,8 @@ public class ExecutionContext {
   private final Providers providers;
   private final List<ParamConverterProvider> paramConverterProviders;
 
-  public ExecutionContext(final MultivaluedMap<String,ResourceManifest> registry, final ContainerFilters containerFilters, final ProvidersImpl providers, final List<ParamConverterProvider> paramConverterProviders) {
-    this.resources = registry;
+  public ExecutionContext(final MultivaluedMap<String,ResourceManifest> resources, final ContainerFilters containerFilters, final ProvidersImpl providers, final List<ParamConverterProvider> paramConverterProviders) {
+    this.resources = resources;
     this.containerFilters = containerFilters;
     this.providers = providers;
     this.paramConverterProviders = paramConverterProviders;
