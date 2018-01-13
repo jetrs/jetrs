@@ -155,7 +155,7 @@ public abstract class StartupServlet extends HttpServlet {
               for (final HttpMethod httpMethodAnnotation : httpMethodAnnotations) {
                 ContextInjector.allowsInjectableClass(Field.class, t);
                 final ResourceManifest manifest = new ResourceManifest(httpMethodAnnotation, method);
-                logger.info("[XRS] " + httpMethodAnnotation.value() + " " + manifest.getPathPattern().getPattern().toString() + " -> " + t.getSimpleName() + "." + method.getName() + "()");
+                logger.info(httpMethodAnnotation.value() + " " + manifest.getPathPattern().getPattern().toString() + " -> " + t.getSimpleName() + "." + method.getName() + "()");
                 registry.add(manifest.getHttpMethod().value().toUpperCase(), manifest);
               }
             }
