@@ -42,6 +42,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.ParamConverterProvider;
@@ -100,20 +101,24 @@ public class ResourceManifest {
     this.producesMatcher = new MediaTypeMatcher<Produces>(method, Produces.class);
   }
 
-  public MediaType matches(final RequestMatchParams matchParams) {
-    if (!httpMethod.value().toUpperCase().equals(matchParams.getMethod()))
+  public Class<?> getServiceClass() {
+    return this.serviceClass;
+  }
+
+  public MediaType matches(final ContainerRequestContext containerRequestContext) {
+    if (!httpMethod.value().toUpperCase().equals(containerRequestContext.getMethod()))
       return null;
 
-    final String path = matchParams.getPath();
+    final String path = containerRequestContext.getUriInfo().getPath();
     if (!pathPattern.matches(path))
       return null;
 
-    final MediaType[] accept = matchParams.getAccept();
+    final MediaType[] accept = MediaTypes.parse(containerRequestContext.getHeaders().get(HttpHeaders.ACCEPT));
     final MediaType acceptedType = producesMatcher.matches(accept);
     if (acceptedType == null)
       return null;
 
-    final MediaType[] contentType = matchParams.getContentType();
+    final MediaType[] contentType = MediaTypes.parse(containerRequestContext.getHeaders().get(HttpHeaders.CONTENT_TYPE));
     if (consumesMatcher.matches(contentType) == null)
       return null;
 
@@ -223,8 +228,28 @@ public class ResourceManifest {
     if (securityAnnotation instanceof DenyAll)
       throw new ForbiddenException("@DenyAll");
 
-    if (containerRequestContext.getSecurityContext().getUserPrincipal() == null)
-      throw new NotAuthorizedException("Unauthorized");
+    if (containerRequestContext.getSecurityContext().getUserPrincipal() == null) {
+      final StringBuilder builder = new StringBuilder();
+      if (containerRequestContext.getSecurityContext().getAuthenticationScheme() != null)
+        builder.append(containerRequestContext.getSecurityContext().getAuthenticationScheme()).append(" ");
+
+      final RolesAllowed rolesAllowed = (RolesAllowed)securityAnnotation;
+      if (rolesAllowed.value().length == 1)
+        throw new NotAuthorizedException(containerRequestContext.getSecurityContext().getAuthenticationScheme() != null ? containerRequestContext.getSecurityContext().getAuthenticationScheme() + " realm=\"" + rolesAllowed.value()[0] + "\"" : "realm=\"" + rolesAllowed.value()[0] + "\"");
+
+      final String[] challenges = new String[rolesAllowed.value().length];
+      if (containerRequestContext.getSecurityContext().getAuthenticationScheme() != null) {
+        final String scheme = containerRequestContext.getSecurityContext().getAuthenticationScheme();
+        for (int i = 0; i < challenges.length; i++)
+          challenges[i] = scheme + " realm=\"" + rolesAllowed.value()[i] + "\"";
+      }
+      else {
+        for (int i = 0; i < challenges.length; i++)
+          challenges[i] = "realm=\"" + rolesAllowed.value()[i] + "\"";
+      }
+
+      throw new NotAuthorizedException(challenges);
+    }
 
     if (securityAnnotation instanceof RolesAllowed)
       for (final String role : ((RolesAllowed)securityAnnotation).value())
@@ -234,16 +259,23 @@ public class ResourceManifest {
     throw new ForbiddenException("@RolesAllowed(" + Arrays.toString(((RolesAllowed)securityAnnotation).value(), ",") + ")");
   }
 
-  public Object service(final ContainerRequestContext containerRequestContext, final ContextInjector injectionContext, final List<ParamConverterProvider> paramConverterProviders) throws ServletException, IOException {
+  public Object service(final ExecutionContext executionContext, final ContainerRequestContext containerRequestContext, final ContextInjector injectionContext, final List<ParamConverterProvider> paramConverterProviders) throws ServletException, IOException {
+    if (executionContext.getMatchedResources() == null)
+      throw new IllegalStateException("service() called before filterAndMatch()");
+
+    if (executionContext.getMatchedResources().size() == 0)
+      throw new IllegalStateException("should have already issued 404");
+
+    // FIXME: The ExecutionContext instance contains the resource object already instantiated for
+    // FIXME: the serviceClass in this ResourceManifest. The cohesion needs to be made tighter!
+    final Object serviceResource = executionContext.getMatchedResources().get(0);
     allow(securityAnnotation, containerRequestContext);
 
     try {
       final Object[] parameters = getParameters(method, containerRequestContext, injectionContext, paramConverterProviders);
-
-      final Object object = serviceClass.getDeclaredConstructor().newInstance();
-      return parameters != null ? method.invoke(object, parameters) : method.invoke(object);
+      return parameters != null ? method.invoke(serviceResource, parameters) : method.invoke(serviceResource);
     }
-    catch (final IllegalAccessException | InstantiationException | NoSuchMethodException e) {
+    catch (final IllegalAccessException e) {
       throw new WebApplicationException(e);
     }
     catch (final InvocationTargetException e) {

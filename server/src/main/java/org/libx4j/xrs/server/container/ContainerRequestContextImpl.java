@@ -42,7 +42,6 @@ import javax.ws.rs.core.UriInfo;
 
 import org.lib4j.util.Locales;
 import org.libx4j.xrs.server.ExecutionContext;
-import org.libx4j.xrs.server.ResponseContext;
 import org.libx4j.xrs.server.core.DefaultSecurityContext;
 import org.libx4j.xrs.server.core.UriInfoImpl;
 import org.libx4j.xrs.server.util.MediaTypes;
@@ -51,14 +50,14 @@ public class ContainerRequestContextImpl extends ContainerContextImpl implements
   private final Map<String,Object> properties = new HashMap<String,Object>();
   private final HttpServletRequest httpServletRequest;
 
-  private final ResponseContext response;
+  private final ExecutionContext executionContext;
   private final HttpHeaders headers;
   private final UriInfo uriInfo;
   private final List<MediaType> accept;
   private final List<Locale> acceptLanguages;
   private InputStream entityStream;
 
-  public ContainerRequestContextImpl(final ExecutionContext executionContext, final HttpServletRequest httpServletRequest, final ResponseContext response) {
+  public ContainerRequestContextImpl(final HttpServletRequest httpServletRequest, final ExecutionContext executionContext) {
     super(httpServletRequest.getLocale());
     final Enumeration<String> attributes = httpServletRequest.getAttributeNames();
     String attribute;
@@ -66,11 +65,11 @@ public class ContainerRequestContextImpl extends ContainerContextImpl implements
       properties.put(attribute = attributes.nextElement(), httpServletRequest.getAttribute(attribute));
 
     this.httpServletRequest = httpServletRequest;
-    this.response = response;
+    this.executionContext = executionContext;
     this.accept = Collections.unmodifiableList(Arrays.asList(MediaTypes.parse(httpServletRequest.getHeaders(HttpHeaders.ACCEPT))));
     this.acceptLanguages = Collections.unmodifiableList(Arrays.asList(Locales.parse(httpServletRequest.getHeaders(HttpHeaders.ACCEPT_LANGUAGE))));
-    this.headers = response.getHttpHeaders();
-    this.uriInfo = new UriInfoImpl(this, executionContext, httpServletRequest);
+    this.headers = executionContext.getHttpHeaders();
+    this.uriInfo = new UriInfoImpl(this, httpServletRequest, executionContext);
   }
 
   @Override
@@ -200,6 +199,6 @@ public class ContainerRequestContextImpl extends ContainerContextImpl implements
 
   @Override
   public void abortWith(final Response response) {
-    this.response.setResponse(response);
+    this.executionContext.setResponse(response);
   }
 }

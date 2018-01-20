@@ -17,7 +17,6 @@
 package org.libx4j.xrs.server.core;
 
 import java.net.URI;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -30,20 +29,21 @@ import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
 import org.lib4j.net.URIComponent;
+import org.lib4j.net.URLs;
 import org.libx4j.xrs.server.ExecutionContext;
-import org.libx4j.xrs.server.RequestMatchParams;
 
 public class UriInfoImpl implements UriInfo {
-  private final Map<RequestMatchParams,MultivaluedMap<String,String>> decodedParameters = new HashMap<RequestMatchParams,MultivaluedMap<String,String>>();
-  private final Map<RequestMatchParams,MultivaluedMap<String,String>> encodedParameters = new HashMap<RequestMatchParams,MultivaluedMap<String,String>>();
   private final ContainerRequestContext containerRequestContext;
-  private final ExecutionContext executionContext;
   private final HttpServletRequest request;
+  private final ExecutionContext executionContext;
 
-  public UriInfoImpl(final ContainerRequestContext containerRequestContext, final ExecutionContext executionContext, final HttpServletRequest request) {
+  private MultivaluedMap<String,String> decodedParameters;
+  private MultivaluedMap<String,String> encodedParameters;
+
+  public UriInfoImpl(final ContainerRequestContext containerRequestContext, final HttpServletRequest request, final ExecutionContext executionContext) {
     this.containerRequestContext = containerRequestContext;
-    this.executionContext = executionContext;
     this.request = request;
+    this.executionContext = executionContext;
   }
 
   @Override
@@ -51,9 +51,11 @@ public class UriInfoImpl implements UriInfo {
     return getPath(true);
   }
 
+  private String decodedPath;
+
   @Override
   public String getPath(final boolean decode) {
-    return decode ? URIComponent.decode(request.getPathInfo()) : request.getPathInfo();
+    return !decode ? request.getPathInfo() : decodedPath == null ? decodedPath = URLs.pathDecode(request.getPathInfo()) : decodedPath;
   }
 
   @Override
@@ -108,14 +110,13 @@ public class UriInfoImpl implements UriInfo {
     return getPathParameters(true);
   }
 
+  private MultivaluedMap<String,String> filterPathParameters(final boolean decode) {
+    return executionContext.filterAndMatch(containerRequestContext).getManifest().getPathPattern().getParameters(getPath(decode));
+  }
+
   @Override
   public MultivaluedMap<String,String> getPathParameters(final boolean decode) {
-    final RequestMatchParams pathParams = RequestMatchParams.forContext(containerRequestContext);
-    MultivaluedMap<String,String> parameters = (decode ? decodedParameters : encodedParameters).get(pathParams);
-    if (parameters == null)
-      (decode ? decodedParameters : encodedParameters).put(pathParams, parameters = executionContext.filterAndMatch(pathParams).getManifest().getPathPattern().getParameters(getPath(decode)));
-
-    return parameters;
+    return decode ? (decodedParameters == null ? decodedParameters = filterPathParameters(decode) : decodedParameters) : encodedParameters == null ? encodedParameters = filterPathParameters(decode) : encodedParameters;
   }
 
   @Override
@@ -141,20 +142,17 @@ public class UriInfoImpl implements UriInfo {
 
   @Override
   public List<String> getMatchedURIs() {
-    // TODO:
-    throw new UnsupportedOperationException();
+    return executionContext.getMatchedURIs(true);
   }
 
   @Override
   public List<String> getMatchedURIs(final boolean decode) {
-    // TODO:
-    throw new UnsupportedOperationException();
+    return executionContext.getMatchedURIs(decode);
   }
 
   @Override
   public List<Object> getMatchedResources() {
-    // TODO:
-    throw new UnsupportedOperationException();
+    return executionContext.getMatchedResources();
   }
 
   @Override

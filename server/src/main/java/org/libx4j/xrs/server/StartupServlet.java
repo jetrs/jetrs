@@ -60,7 +60,7 @@ public abstract class StartupServlet extends HttpServlet {
 
   private static final Logger logger = LoggerFactory.getLogger(StartupServlet.class);
 
-  private ExecutionContext executionContext;
+  private ResourceContext resourceContext;
 
   private static void addProvider(final List<MessageBodyReader<?>> entityReaders, final List<MessageBodyWriter<?>> entityWriters, final List<ContainerRequestFilter> requestFilters, final List<ContainerResponseFilter> responseFilters, final List<ParamConverterProvider> paramConverterProviders, final Object singleton) {
     for (final Class<?> inter : singleton.getClass().getInterfaces()) {
@@ -88,8 +88,8 @@ public abstract class StartupServlet extends HttpServlet {
     }
   }
 
-  protected ExecutionContext getExecutionContext() {
-    return executionContext;
+  protected ResourceContext getResourceContext() {
+    return resourceContext;
   }
 
   /**
@@ -200,6 +200,6 @@ public abstract class StartupServlet extends HttpServlet {
       }
     }
 
-    this.executionContext = new ExecutionContext(registry, new ContainerFilters(requestFilters, responseFilters), new ProvidersImpl(entityReaders, entityWriters), paramConverterProviders);
+    this.resourceContext = new ResourceContext(registry, new ContainerFilters(requestFilters, responseFilters), new ProvidersImpl(entityReaders, entityWriters), paramConverterProviders);
   }
 }

@@ -24,6 +24,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 
+import org.lib4j.net.URLs;
 import org.lib4j.util.Patterns;
 
 public class PathPattern {
@@ -46,8 +47,7 @@ public class PathPattern {
     while ((start = path.indexOf("{", end + 1)) > -1) {
       builder.append(path.substring(end + 1, start++));
       end = path.indexOf("}", start);
-      final String token = path.substring(start, end);
-      builder.append(pathExpressionToRegex(token));
+      builder.append(pathExpressionToRegex(path.substring(start, end)));
     }
 
     return Pattern.compile(builder.length() != 0 ? builder.toString() : path);
@@ -57,6 +57,8 @@ public class PathPattern {
     return path == null ? null : path.value().startsWith("/") ? path.value() : "/" + path.value();
   }
 
+  private final String uri;
+  private final String decodedUri;
   private final Pattern pattern;
 
   public PathPattern(final Method method) {
@@ -67,7 +69,15 @@ public class PathPattern {
     if (path == null && methodPath == null)
       throw new IllegalArgumentException("path == null && methodPath == null");
 
-    this.pattern = methodPath == null ? createPattern(prependSlash(path)) : path != null ? createPattern(prependSlash(path) + prependSlash(methodPath)) : createPattern(prependSlash(methodPath));
+    final String pathString = methodPath == null ? prependSlash(path) : path == null ? prependSlash(methodPath) : prependSlash(path) + prependSlash(methodPath);
+    final int index = pathString.indexOf('{');
+    this.uri = index < 0 ? pathString : pathString.substring(0, index);
+    this.decodedUri = URLs.pathDecode(uri);
+    this.pattern = createPattern(pathString);
+  }
+
+  public String getURI(final boolean decode) {
+    return decode ? this.decodedUri : this.uri;
   }
 
   public Pattern getPattern() {

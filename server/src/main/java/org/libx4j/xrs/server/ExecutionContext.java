@@ -16,59 +16,154 @@
 
 package org.libx4j.xrs.server;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
-import javax.ws.rs.core.MediaType;
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerResponseContext;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.ext.ParamConverterProvider;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Providers;
 
-import org.libx4j.xrs.server.ext.ProvidersImpl;
+import org.lib4j.lang.Arrays;
 
 public class ExecutionContext {
-  private final MultivaluedMap<String,ResourceManifest> resources;
-  private final ContainerFilters containerFilters;
-  private final Providers providers;
-  private final List<ParamConverterProvider> paramConverterProviders;
+  private final HttpHeaders httpHeaders;
+  private final HttpServletResponse httpServletResponse;
+  private final ContainerResponseContext containerResponseContext;
+  private final ResourceContext resourceContext;
 
-  public ExecutionContext(final MultivaluedMap<String,ResourceManifest> resources, final ContainerFilters containerFilters, final ProvidersImpl providers, final List<ParamConverterProvider> paramConverterProviders) {
-    this.resources = resources;
-    this.containerFilters = containerFilters;
-    this.providers = providers;
-    this.paramConverterProviders = paramConverterProviders;
+  public ExecutionContext(final HttpHeaders httpHeaders, final HttpServletResponse httpServletResponse, final ContainerResponseContext containerResponseContext, final ResourceContext resourceContext) {
+    this.httpHeaders = httpHeaders;
+    this.httpServletResponse = httpServletResponse;
+    this.containerResponseContext = containerResponseContext;
+    this.resourceContext = resourceContext;
   }
 
-  public ContainerFilters getContainerFilters() {
-    return containerFilters;
-  }
+  private List<String> matchedURIs;
+  private List<String> decodedMatchedURIs;
+  private List<Object> matchedResources;
 
-  public Providers getProviders() {
-    return providers;
-  }
-
-  public List<ParamConverterProvider> getParamConverterProviders() {
-    return paramConverterProviders;
-  }
-
-  public PathPattern findPathPattern(final String path, final String method) {
-    for (final ResourceManifest manifest : resources.get(method))
-      if (manifest.getPathPattern().matches(path))
-        return manifest.getPathPattern();
-
-    return null;
-  }
-
-  public ResourceMatch filterAndMatch(final RequestMatchParams matchParams) {
-    final List<ResourceManifest> manifests = resources.get(matchParams.getMethod());
-    if (manifests == null)
+  public ResourceMatch filterAndMatch(final ContainerRequestContext containerRequestContext) {
+    final ResourceMatch[] resources = resourceContext.filterAndMatch(containerRequestContext);
+    if (resources == null)
       return null;
 
-    for (final ResourceManifest manifest : manifests) {
-      final MediaType accept = manifest.matches(matchParams);
-      if (accept != null)
-        return new ResourceMatch(manifest, accept);
+    final List<String> matchedURIs = new ArrayList<String>(resources.length);
+    final List<String> decodedMatchedURIs = new ArrayList<String>(resources.length);
+    final List<Object> matchedResources = new ArrayList<Object>(resources.length);
+
+    try {
+      for (final ResourceMatch resource : resources) {
+        matchedURIs.add(resource.getManifest().getPathPattern().getURI(false));
+        decodedMatchedURIs.add(resource.getManifest().getPathPattern().getURI(true));
+        // FIXME: This is not efficient if there are multiple resource matches, and only one is needed.
+        // FIXME: Need to finish implementing the beforeGet and afterGet methods on ObservableList, and
+        // FIXME: have it translate a Class<?> into an Object instance on get operation.
+        matchedResources.add(resource.getManifest().getServiceClass().getDeclaredConstructor().newInstance());
+      }
+    }
+    catch (final IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException e) {
+      throw new WebApplicationException(e);
     }
 
-    return null;
+    this.matchedURIs = Collections.unmodifiableList(matchedURIs);
+    this.decodedMatchedURIs = Collections.unmodifiableList(decodedMatchedURIs);
+    this.matchedResources = Collections.unmodifiableList(matchedResources);
+
+    return resources[0];
+  }
+
+  public List<String> getMatchedURIs(final boolean decode) {
+    return decode ? this.decodedMatchedURIs : this.matchedURIs;
+  }
+
+  public List<Object> getMatchedResources() {
+    return this.matchedResources;
+  }
+
+  private Response response;
+
+  public Response getResponse() {
+    return response;
+  }
+
+  public void setResponse(final Response response) {
+    this.response = response;
+  }
+
+  public HttpHeaders getHttpHeaders() {
+    return httpHeaders;
+  }
+
+  protected void writeHeader() {
+    final MultivaluedMap<String,String> containerResponseHeaders = containerResponseContext.getStringHeaders();
+    if (getResponse() != null) {
+      if (getResponse().hasEntity())
+        containerResponseContext.setEntity(getResponse().getEntity());
+
+      containerResponseContext.setStatus(getResponse().getStatus());
+      containerResponseContext.setStatusInfo(getResponse().getStatusInfo());
+
+      final MultivaluedMap<String,String> responseHeaders = getResponse().getStringHeaders();
+      for (final Map.Entry<String,List<String>> entry : responseHeaders.entrySet())
+        for (final String header : entry.getValue())
+          containerResponseHeaders.add(entry.getKey(), header);
+    }
+
+    for (final Map.Entry<String,List<String>> entry : containerResponseHeaders.entrySet())
+      for (final String header : entry.getValue())
+        httpServletResponse.addHeader(entry.getKey(), header);
+
+    httpServletResponse.setStatus(containerResponseContext.getStatus());
+  }
+
+  private ByteArrayOutputStream outputStream = null;
+
+  private ByteArrayOutputStream getOutputStream() {
+    return outputStream == null ? outputStream = new ByteArrayOutputStream() : outputStream;
+  }
+
+  @SuppressWarnings({"rawtypes", "unchecked"})
+  protected void writeBody(final Providers providers) throws IOException {
+    final Object entity = containerResponseContext.getEntity();
+    if (entity == null)
+      return;
+
+    if (entity instanceof Response) {
+      final Response response = (Response)entity;
+      containerResponseContext.setStatus(response.getStatus());
+      containerResponseContext.setStatusInfo(response.getStatusInfo());
+      containerResponseContext.setEntity(response.getEntity());
+      writeBody(providers);
+    }
+    else {
+      final Annotation[] annotations = containerResponseContext.getEntityAnnotations() != null ? Arrays.concat(containerResponseContext.getEntityAnnotations(), entity.getClass().getAnnotations()) : entity.getClass().getAnnotations();
+      final MessageBodyWriter messageBodyWriter = providers.getMessageBodyWriter(containerResponseContext.getEntityClass(), containerResponseContext.getEntityType(), annotations, containerResponseContext.getMediaType());
+      if (messageBodyWriter != null) {
+        messageBodyWriter.writeTo(entity, containerResponseContext.getEntityClass(), entity.getClass().getGenericSuperclass(), annotations, httpHeaders.getMediaType(), httpHeaders.getRequestHeaders(), getOutputStream());
+      }
+      else {
+        throw new WebApplicationException("Could not find MessageBodyWriter for type: " + entity.getClass().getName());
+      }
+    }
+  }
+
+  protected void commit() throws IOException {
+    if (outputStream != null)
+      httpServletResponse.getOutputStream().write(outputStream.toByteArray());
+
+    // @see ServletResponse#getOutputStream :: "Calling flush() on the ServletOutputStream commits the response."
+    httpServletResponse.getOutputStream().flush();
   }
 }
