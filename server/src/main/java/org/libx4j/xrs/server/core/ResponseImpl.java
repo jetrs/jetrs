@@ -34,13 +34,13 @@ import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 
 public class ResponseImpl extends Response {
-  private final Response.Status status;
+  private final Response.StatusType status;
   private final HeaderMap headers;
   private final Object entity;
   private boolean closed;
 
   // FIXME: annotations are not being used.. there's no API to get them out of this class
-  public ResponseImpl(final Response.Status status, final HeaderMap headers, final Object entity, final Annotation[] annotations) {
+  public ResponseImpl(final Response.StatusType status, final HeaderMap headers, final Object entity, final Annotation[] annotations) {
     this.status = status;
     this.headers = headers;
     this.entity = entity;

@@ -32,6 +32,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Variant;
 
 import org.lib4j.util.Locales;
@@ -52,7 +53,8 @@ public class ResponseBuilderImpl extends Response.ResponseBuilder {
 
   @Override
   public Response build() {
-    return new ResponseImpl(Responses.fromStatusCode(status), headers, entity, annotations);
+    final Response.StatusType statusType = reasonPhrase != null ? Responses.fromStatusCode(status, reasonPhrase) : Responses.fromStatusCode(status);
+    return new ResponseImpl(statusType, headers, entity, annotations);
   }
 
   @Override
@@ -61,10 +63,18 @@ public class ResponseBuilderImpl extends Response.ResponseBuilder {
   }
 
   private int status;
+  private String reasonPhrase;
 
   @Override
   public Response.ResponseBuilder status(final int status) {
     this.status = status;
+    return this;
+  }
+
+  @Override
+  public ResponseBuilder status(final int status, final String reasonPhrase) {
+    this.status = status;
+    this.reasonPhrase = reasonPhrase;
     return this;
   }
 

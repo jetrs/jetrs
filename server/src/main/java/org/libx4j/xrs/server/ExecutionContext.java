@@ -23,6 +23,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
@@ -36,6 +37,7 @@ import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Providers;
 
 import org.lib4j.lang.Arrays;
+import org.lib4j.util.ObservableList;
 
 public class ExecutionContext {
   private final HttpHeaders httpHeaders;
@@ -61,20 +63,29 @@ public class ExecutionContext {
 
     final List<String> matchedURIs = new ArrayList<String>(resources.length);
     final List<String> decodedMatchedURIs = new ArrayList<String>(resources.length);
-    final List<Object> matchedResources = new ArrayList<Object>(resources.length);
-
-    try {
-      for (final ResourceMatch resource : resources) {
-        matchedURIs.add(resource.getManifest().getPathPattern().getURI(false));
-        decodedMatchedURIs.add(resource.getManifest().getPathPattern().getURI(true));
-        // FIXME: This is not efficient if there are multiple resource matches, and only one is needed.
-        // FIXME: Need to finish implementing the beforeGet and afterGet methods on ObservableList, and
-        // FIXME: have it translate a Class<?> into an Object instance on get operation.
-        matchedResources.add(resource.getManifest().getServiceClass().getDeclaredConstructor().newInstance());
+    final List<Object> matchedResources = new ObservableList<Object>(new ArrayList<Object>(resources.length)) {
+      @Override
+      protected void beforeGet(final int index, final ListIterator<Object> iterator) {
+        final Object object = this.source.get(index);
+        if (object instanceof Class) {
+          try {
+            final Object instance = ((Class<?>)object).getDeclaredConstructor().newInstance();
+            if (iterator != null)
+              iterator.set(instance);
+            else
+              this.source.set(index, instance);
+          }
+          catch (final IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException e) {
+            throw new WebApplicationException(e);
+          }
+        }
       }
-    }
-    catch (final IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException e) {
-      throw new WebApplicationException(e);
+    };
+
+    for (final ResourceMatch resource : resources) {
+      matchedURIs.add(resource.getManifest().getPathPattern().getURI(false));
+      decodedMatchedURIs.add(resource.getManifest().getPathPattern().getURI(true));
+      matchedResources.add(resource.getManifest().getServiceClass());
     }
 
     this.matchedURIs = Collections.unmodifiableList(matchedURIs);

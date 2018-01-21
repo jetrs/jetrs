@@ -21,6 +21,7 @@ import java.util.Comparator;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.Response.Status.Family;
 
 public final class Responses {
   private static final Response.Status[] statuses = Response.Status.values();
@@ -49,6 +50,31 @@ public final class Responses {
     return index < 0 ? null : statuses[index];
   }
 
+  /**
+   * Convert a numerical status code into the corresponding Status.
+   *
+   * @param statusCode the numerical status code.
+   * @return the matching Status or null is no matching Status is defined.
+   */
+  public static Response.StatusType fromStatusCode(final int statusCode, final String reasonPhrase) {
+    final Response.Status status = fromStatusCode(statusCode);
+    return new Response.StatusType() {
+      @Override
+      public int getStatusCode() {
+        return statusCode;
+      }
+
+      @Override
+      public Family getFamily() {
+        return status.getFamily();
+      }
+
+      @Override
+      public String getReasonPhrase() {
+        return reasonPhrase;
+      }
+    };
+  }
 
   private Responses() {
   }
