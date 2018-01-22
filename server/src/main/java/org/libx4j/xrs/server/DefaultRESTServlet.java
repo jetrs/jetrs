@@ -147,15 +147,12 @@ public class DefaultRESTServlet extends StartupServlet {
       }
 
       if (t instanceof WebApplicationException) {
-        final WebApplicationException e = (WebApplicationException)t;
-        executionContext.setResponse(e.getResponse());
-        response.sendError(e.getResponse().getStatus(), builder.toString());
+        executionContext.setResponse(((WebApplicationException)t).getResponse());
       }
       else {
         response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        throw t;
       }
-
-      throw t;
     }
     finally {
       executionContext.writeHeader();
