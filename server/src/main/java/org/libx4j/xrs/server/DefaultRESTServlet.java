@@ -27,7 +27,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.BadRequestException;
-import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Produces;
@@ -99,40 +98,35 @@ public class DefaultRESTServlet extends StartupServlet {
 
       final ContextInjector injectionContext = ContextInjector.createInjectionContext(containerRequestContext, new RequestImpl(request.getMethod()), httpHeaders, getResourceContext().getProviders());
 
-      try {
-        getResourceContext().getContainerFilters().filterPreMatchRequest(containerRequestContext, injectionContext);
-        getResourceContext().getContainerFilters().filterPreMatchResponse(containerRequestContext, containerResponseContext, injectionContext);
+      getResourceContext().getContainerFilters().filterPreMatchRequest(containerRequestContext, injectionContext);
+      getResourceContext().getContainerFilters().filterPreMatchResponse(containerRequestContext, containerResponseContext, injectionContext);
 
-        if (executionContext.getResponse() != null) {
-          executionContext.writeHeader();
-          executionContext.writeBody(getResourceContext().getProviders());
-          executionContext.commit();
-          return;
-        }
-
-        final ResourceMatch resource = executionContext.filterAndMatch(containerRequestContext);
-        if (resource != null)
-          request.setResourceManifest(resource.getManifest());
-
-        getResourceContext().getContainerFilters().filterPostMatchRequest(containerRequestContext, injectionContext);
-
-        if (resource == null)
-          throw new NotFoundException();
-
-        final Produces produces = resource.getManifest().getMatcher(Produces.class).getAnnotation();
-        if (produces != null)
-          containerResponseContext.getStringHeaders().putSingle(HttpHeaders.CONTENT_TYPE, resource.getAccept().toString());
-
-        final Object content = resource.getManifest().service(executionContext, containerRequestContext, injectionContext, getResourceContext().getParamConverterProviders());
-        if (content != null)
-          containerResponseContext.setEntity(content);
-
-        executionContext.writeBody(getResourceContext().getProviders());
-        getResourceContext().getContainerFilters().filterPostMatchResponse(containerRequestContext, containerResponseContext, injectionContext);
-      }
-      finally {
+      if (executionContext.getResponse() != null) {
         executionContext.writeHeader();
+        executionContext.writeBody(getResourceContext().getProviders());
+        executionContext.commit();
+        return;
       }
+
+      final ResourceMatch resource = executionContext.filterAndMatch(containerRequestContext);
+      if (resource != null)
+        request.setResourceManifest(resource.getManifest());
+
+      getResourceContext().getContainerFilters().filterPostMatchRequest(containerRequestContext, injectionContext);
+
+      if (resource == null)
+        throw new NotFoundException();
+
+      final Produces produces = resource.getManifest().getMatcher(Produces.class).getAnnotation();
+      if (produces != null)
+        containerResponseContext.getStringHeaders().putSingle(HttpHeaders.CONTENT_TYPE, resource.getAccept().toString());
+
+      final Object content = resource.getManifest().service(executionContext, containerRequestContext, injectionContext, getResourceContext().getParamConverterProviders());
+      if (content != null)
+        containerResponseContext.setEntity(content);
+
+      executionContext.writeBody(getResourceContext().getProviders());
+      getResourceContext().getContainerFilters().filterPostMatchResponse(containerRequestContext, containerResponseContext, injectionContext);
     }
     catch (final IOException | ServletException e) {
       response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -152,12 +146,9 @@ public class DefaultRESTServlet extends StartupServlet {
         builder.append(t.getCause().getMessage() != null ? t.getCause().getMessage() : "");
       }
 
-      if (t instanceof ClientErrorException) {
-        final ClientErrorException e = (ClientErrorException)t;
-        response.sendError(e.getResponse().getStatus(), builder.toString());
-      }
-      else if (t instanceof WebApplicationException) {
+      if (t instanceof WebApplicationException) {
         final WebApplicationException e = (WebApplicationException)t;
+        executionContext.setResponse(e.getResponse());
         response.sendError(e.getResponse().getStatus(), builder.toString());
       }
       else {
@@ -165,6 +156,9 @@ public class DefaultRESTServlet extends StartupServlet {
       }
 
       throw t;
+    }
+    finally {
+      executionContext.writeHeader();
     }
 
     executionContext.commit();
