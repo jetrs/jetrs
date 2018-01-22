@@ -48,7 +48,6 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.ParamConverterProvider;
 import javax.ws.rs.ext.Providers;
 
-import org.lib4j.lang.Arrays;
 import org.lib4j.util.JavaIdentifiers;
 import org.libx4j.xrs.server.core.ContextInjector;
 import org.libx4j.xrs.server.util.MediaTypes;
@@ -228,35 +227,30 @@ public class ResourceManifest {
     if (securityAnnotation instanceof DenyAll)
       throw new ForbiddenException("@DenyAll");
 
-    if (containerRequestContext.getSecurityContext().getUserPrincipal() == null) {
-      final StringBuilder builder = new StringBuilder();
-      if (containerRequestContext.getSecurityContext().getAuthenticationScheme() != null)
-        builder.append(containerRequestContext.getSecurityContext().getAuthenticationScheme()).append(" ");
+    if (!(securityAnnotation instanceof RolesAllowed))
+      throw new UnsupportedOperationException("Unsupported security annotation: " + securityAnnotation.getClass().getName());
 
-      final RolesAllowed rolesAllowed = (RolesAllowed)securityAnnotation;
-      if (rolesAllowed.value().length == 1)
-        throw new NotAuthorizedException(containerRequestContext.getSecurityContext().getAuthenticationScheme() != null ? containerRequestContext.getSecurityContext().getAuthenticationScheme() + " realm=\"" + rolesAllowed.value()[0] + "\"" : "realm=\"" + rolesAllowed.value()[0] + "\"");
-
-      final String[] challenges = new String[rolesAllowed.value().length];
-      if (containerRequestContext.getSecurityContext().getAuthenticationScheme() != null) {
-        final String scheme = containerRequestContext.getSecurityContext().getAuthenticationScheme();
-        for (int i = 0; i < challenges.length; i++)
-          challenges[i] = scheme + " realm=\"" + rolesAllowed.value()[i] + "\"";
-      }
-      else {
-        for (int i = 0; i < challenges.length; i++)
-          challenges[i] = "realm=\"" + rolesAllowed.value()[i] + "\"";
-      }
-
-      throw new NotAuthorizedException(challenges);
-    }
-
-    if (securityAnnotation instanceof RolesAllowed)
+    if (containerRequestContext.getSecurityContext().getUserPrincipal() != null)
       for (final String role : ((RolesAllowed)securityAnnotation).value())
         if (containerRequestContext.getSecurityContext().isUserInRole(role))
           return;
 
-    throw new ForbiddenException("@RolesAllowed(" + Arrays.toString(((RolesAllowed)securityAnnotation).value(), ",") + ")");
+    final RolesAllowed rolesAllowed = (RolesAllowed)securityAnnotation;
+    if (rolesAllowed.value().length == 1)
+      throw new NotAuthorizedException(containerRequestContext.getSecurityContext().getAuthenticationScheme() != null ? containerRequestContext.getSecurityContext().getAuthenticationScheme() + " realm=\"" + rolesAllowed.value()[0] + "\"" : "realm=\"" + rolesAllowed.value()[0] + "\"");
+
+    final String[] challenges = new String[rolesAllowed.value().length];
+    if (containerRequestContext.getSecurityContext().getAuthenticationScheme() != null) {
+      final String scheme = containerRequestContext.getSecurityContext().getAuthenticationScheme();
+      for (int i = 0; i < challenges.length; i++)
+        challenges[i] = scheme + " realm=\"" + rolesAllowed.value()[i] + "\"";
+    }
+    else {
+      for (int i = 0; i < challenges.length; i++)
+        challenges[i] = "realm=\"" + rolesAllowed.value()[i] + "\"";
+    }
+
+    throw new NotAuthorizedException(challenges);
   }
 
   public Object service(final ExecutionContext executionContext, final ContainerRequestContext containerRequestContext, final ContextInjector injectionContext, final List<ParamConverterProvider> paramConverterProviders) throws ServletException, IOException {

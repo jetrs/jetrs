@@ -87,7 +87,12 @@ public class DefaultRESTServlet extends StartupServlet {
     }
   }
 
-  private void service(final HttpServletRequestContext request, final HttpServletResponse response) throws IOException, ServletException {
+  private void checkWebApplicationException(final ExecutionContext executionContext, final Throwable t, final boolean overwriteResponse) {
+    if ((overwriteResponse || executionContext.getResponse() == null) && t instanceof WebApplicationException)
+      executionContext.setResponse(((WebApplicationException)t).getResponse());
+  }
+
+  private void service(final HttpServletRequestContext request, final HttpServletResponse response) throws Throwable {
     final ContainerResponseContext containerResponseContext = new ContainerResponseContextImpl(response);
     final HttpHeaders httpHeaders = new HttpHeadersImpl(request);
     final ExecutionContext executionContext = new ExecutionContext(httpHeaders, response, containerResponseContext, getResourceContext());
@@ -98,13 +103,29 @@ public class DefaultRESTServlet extends StartupServlet {
 
       final ContextInjector injectionContext = ContextInjector.createInjectionContext(containerRequestContext, new RequestImpl(request.getMethod()), httpHeaders, getResourceContext().getProviders());
 
-      getResourceContext().getContainerFilters().filterPreMatchRequest(containerRequestContext, injectionContext);
-      getResourceContext().getContainerFilters().filterPreMatchResponse(containerRequestContext, containerResponseContext, injectionContext);
+      Throwable t = null;
+
+      try {
+        getResourceContext().getContainerFilters().filterPreMatchRequest(containerRequestContext, injectionContext);
+      }
+      catch (final Throwable e) {
+        checkWebApplicationException(executionContext, t = e, true);
+      }
+
+      try {
+        getResourceContext().getContainerFilters().filterPreMatchResponse(containerRequestContext, containerResponseContext, injectionContext);
+      }
+      catch (final Throwable e) {
+        checkWebApplicationException(executionContext, t = e, false);
+      }
 
       if (executionContext.getResponse() != null) {
         executionContext.writeHeader();
         executionContext.writeBody(getResourceContext().getProviders());
         executionContext.commit();
+        if (t != null)
+          throw t;
+
         return;
       }
 
@@ -112,7 +133,12 @@ public class DefaultRESTServlet extends StartupServlet {
       if (resource != null)
         request.setResourceManifest(resource.getManifest());
 
-      getResourceContext().getContainerFilters().filterPostMatchRequest(containerRequestContext, injectionContext);
+      try {
+        getResourceContext().getContainerFilters().filterPostMatchRequest(containerRequestContext, injectionContext);
+      }
+      catch (final Throwable e) {
+        checkWebApplicationException(executionContext, t = e, false);
+      }
 
       if (resource == null)
         throw new NotFoundException();
@@ -121,12 +147,31 @@ public class DefaultRESTServlet extends StartupServlet {
       if (produces != null)
         containerResponseContext.getStringHeaders().putSingle(HttpHeaders.CONTENT_TYPE, resource.getAccept().toString());
 
-      final Object content = resource.getManifest().service(executionContext, containerRequestContext, injectionContext, getResourceContext().getParamConverterProviders());
-      if (content != null)
-        containerResponseContext.setEntity(content);
+      try {
+        final Object content = resource.getManifest().service(executionContext, containerRequestContext, injectionContext, getResourceContext().getParamConverterProviders());
+        if (content != null)
+          containerResponseContext.setEntity(content);
+      }
+      catch (final Throwable e) {
+        checkWebApplicationException(executionContext, t = e, false);
+      }
 
-      executionContext.writeBody(getResourceContext().getProviders());
-      getResourceContext().getContainerFilters().filterPostMatchResponse(containerRequestContext, containerResponseContext, injectionContext);
+      try {
+        executionContext.writeBody(getResourceContext().getProviders());
+      }
+      catch (final Throwable e) {
+        checkWebApplicationException(executionContext, t = e, false);
+      }
+
+      try {
+        getResourceContext().getContainerFilters().filterPostMatchResponse(containerRequestContext, containerResponseContext, injectionContext);
+      }
+      catch (final Throwable e) {
+        checkWebApplicationException(executionContext, t = e, false);
+      }
+
+      if (t != null)
+        throw t;
     }
     catch (final IOException | ServletException e) {
       response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -163,26 +208,38 @@ public class DefaultRESTServlet extends StartupServlet {
 
   @Override
   protected final void service(final HttpServletRequest request, final HttpServletResponse response) throws IOException, ServletException {
-    service(new HttpServletRequestContext(request) {
-      // NOTE: Check for the existence of the @Consumes header, and subsequently the Content-Type header in the request,
-      // NOTE: only if data is expected (i.e. GET, HEAD, DELETE, OPTIONS methods will not have a body and should thus not
-      // NOTE: expect a Content-Type header from the request)
-      private void checkContentType() {
-        if (getResourceManifest() != null && !getResourceManifest().checkHeader(HttpHeaders.CONTENT_TYPE, Consumes.class, getRequestContext()))
-          throw new BadRequestException("Request has data yet missing Content-Type header");
-      }
+    try {
+      service(new HttpServletRequestContext(request) {
+        // NOTE: Check for the existence of the @Consumes header, and subsequently the Content-Type header in the request,
+        // NOTE: only if data is expected (i.e. GET, HEAD, DELETE, OPTIONS methods will not have a body and should thus not
+        // NOTE: expect a Content-Type header from the request)
+        private void checkContentType() {
+          if (getResourceManifest() != null && !getResourceManifest().checkHeader(HttpHeaders.CONTENT_TYPE, Consumes.class, getRequestContext()))
+            throw new BadRequestException("Request has data yet missing Content-Type header");
+        }
 
-      @Override
-      public ServletInputStream getInputStream() throws IOException {
-        checkContentType();
-        return request.getInputStream();
-      }
+        @Override
+        public ServletInputStream getInputStream() throws IOException {
+          checkContentType();
+          return request.getInputStream();
+        }
 
-      @Override
-      public BufferedReader getReader() throws IOException {
-        checkContentType();
-        return request.getReader();
-      }
-    }, response);
+        @Override
+        public BufferedReader getReader() throws IOException {
+          checkContentType();
+          return request.getReader();
+        }
+      }, response);
+    }
+    catch (final Throwable e) {
+      if (e instanceof RuntimeException)
+        throw (RuntimeException)e;
+
+      if (e instanceof IOException)
+        throw (IOException)e;
+
+      // FIXME: It is not strongly-type-connected that the only type that e can be otherwise is ServletException
+      throw (ServletException)e;
+    }
   }
 }
