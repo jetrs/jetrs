@@ -88,12 +88,19 @@ public class DefaultRESTServlet extends StartupServlet {
     }
   }
 
-  private static Throwable checkWebApplicationException(final ExecutionContext executionContext, final Throwable chain, final Throwable t, final boolean overwriteResponse) throws Throwable {
-    if (chain == null && !(t instanceof WebApplicationException))
-      throw t;
+  private static Throwable handleException(final ExecutionContext executionContext, final HttpServletResponse response, final Throwable chain, final Throwable t, final boolean overwriteResponse) throws Throwable {
+    if (t instanceof WebApplicationException) {
+      if (overwriteResponse || executionContext.getResponse() == null)
+        executionContext.setResponse(((WebApplicationException)t).getResponse());
+    }
+    // If there has not been a WebApplicationException yet, then throw the Throwable immediately
+    else if (chain == null) {
+      response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR); // Or should this use the formal InternalServerErrorException?
+      if (t.getCause() instanceof ServletException)
+        throw (ServletException)t.getCause();
 
-    if ((overwriteResponse || executionContext.getResponse() == null) && t instanceof WebApplicationException)
-      executionContext.setResponse(((WebApplicationException)t).getResponse());
+      throw t;
+    }
 
     if (chain == null)
       return t;
@@ -103,7 +110,7 @@ public class DefaultRESTServlet extends StartupServlet {
       cause = cause.getCause();
 
     Throwables.set(cause, chain);
-    return cause;
+    return t;
   }
 
   private void service(final HttpServletRequestContext request, final HttpServletResponse response) throws Throwable {
@@ -112,7 +119,7 @@ public class DefaultRESTServlet extends StartupServlet {
     final ExecutionContext executionContext = new ExecutionContext(httpHeaders, response, containerResponseContext, getResourceContext());
 
     try {
-      final ContainerRequestContext containerRequestContext; // NOTE: This weird construct is done this way to at least somehow make the two object cohesive
+      final ContainerRequestContext containerRequestContext; // NOTE: This weird construct is done this way to at least somehow make the two objects cohesive
       request.setRequestContext(containerRequestContext = new ContainerRequestContextImpl(request, executionContext));
 
       final ContextInjector injectionContext = ContextInjector.createInjectionContext(containerRequestContext, new RequestImpl(request.getMethod()), httpHeaders, getResourceContext().getProviders());
@@ -123,14 +130,14 @@ public class DefaultRESTServlet extends StartupServlet {
         getResourceContext().getContainerFilters().filterPreMatchRequest(containerRequestContext, injectionContext);
       }
       catch (final Throwable e) {
-        chain = checkWebApplicationException(executionContext, chain, e, true);
+        chain = handleException(executionContext, response, chain, e, true);
       }
 
       try {
         getResourceContext().getContainerFilters().filterPreMatchResponse(containerRequestContext, containerResponseContext, injectionContext);
       }
       catch (final Throwable e) {
-        chain = checkWebApplicationException(executionContext, chain, e, false);
+        chain = handleException(executionContext, response, chain, e, false);
       }
 
       if (executionContext.getResponse() != null) {
@@ -151,7 +158,7 @@ public class DefaultRESTServlet extends StartupServlet {
         getResourceContext().getContainerFilters().filterPostMatchRequest(containerRequestContext, injectionContext);
       }
       catch (final Throwable e) {
-        chain = checkWebApplicationException(executionContext, chain, e, false);
+        chain = handleException(executionContext, response, chain, e, false);
       }
 
       if (resource == null)
@@ -167,41 +174,25 @@ public class DefaultRESTServlet extends StartupServlet {
           containerResponseContext.setEntity(content);
       }
       catch (final Throwable e) {
-        chain = checkWebApplicationException(executionContext, chain, e, false);
+        chain = handleException(executionContext, response, chain, e, false);
       }
 
       try {
         executionContext.writeBody(getResourceContext().getProviders());
       }
       catch (final Throwable e) {
-        chain = checkWebApplicationException(executionContext, chain, e, false);
+        chain = handleException(executionContext, response, chain, e, false);
       }
 
       try {
         getResourceContext().getContainerFilters().filterPostMatchResponse(containerRequestContext, containerResponseContext, injectionContext);
       }
       catch (final Throwable e) {
-        chain = checkWebApplicationException(executionContext, chain, e, false);
+        chain = handleException(executionContext, response, chain, e, false);
       }
 
       if (chain != null)
         throw chain;
-    }
-    catch (final IOException | ServletException e) {
-      response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-      throw e;
-    }
-    catch (final Throwable t) {
-      if (t.getCause() instanceof ServletException) {
-        response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-        throw (ServletException)t.getCause();
-      }
-
-      if (!(t instanceof WebApplicationException)) {
-        response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-      }
-
-      throw t;
     }
     finally {
       executionContext.writeHeader();
