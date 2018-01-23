@@ -162,7 +162,7 @@ public class DefaultRESTServlet extends StartupServlet {
       }
 
       if (resource == null)
-        throw new NotFoundException();
+        throw handleException(executionContext, response, chain, new NotFoundException(), true);
 
       final Produces produces = resource.getManifest().getMatcher(Produces.class).getAnnotation();
       if (produces != null)
