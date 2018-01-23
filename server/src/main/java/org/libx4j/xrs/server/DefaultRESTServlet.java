@@ -37,6 +37,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.ext.RuntimeDelegate;
 
 import org.lib4j.lang.Classes;
+import org.lib4j.lang.Throwables;
 import org.libx4j.xrs.server.container.ContainerRequestContextImpl;
 import org.libx4j.xrs.server.container.ContainerResponseContextImpl;
 import org.libx4j.xrs.server.core.ContextInjector;
@@ -87,9 +88,22 @@ public class DefaultRESTServlet extends StartupServlet {
     }
   }
 
-  private void checkWebApplicationException(final ExecutionContext executionContext, final Throwable t, final boolean overwriteResponse) {
+  private static Throwable checkWebApplicationException(final ExecutionContext executionContext, final Throwable chain, final Throwable t, final boolean overwriteResponse) throws Throwable {
+    if (chain == null && !(t instanceof WebApplicationException))
+      throw t;
+
     if ((overwriteResponse || executionContext.getResponse() == null) && t instanceof WebApplicationException)
       executionContext.setResponse(((WebApplicationException)t).getResponse());
+
+    if (chain == null)
+      return t;
+
+    Throwable cause = t;
+    while (cause.getCause() != null)
+      cause = cause.getCause();
+
+    Throwables.set(cause, chain);
+    return cause;
   }
 
   private void service(final HttpServletRequestContext request, final HttpServletResponse response) throws Throwable {
@@ -103,28 +117,28 @@ public class DefaultRESTServlet extends StartupServlet {
 
       final ContextInjector injectionContext = ContextInjector.createInjectionContext(containerRequestContext, new RequestImpl(request.getMethod()), httpHeaders, getResourceContext().getProviders());
 
-      Throwable t = null;
+      Throwable chain = null;
 
       try {
         getResourceContext().getContainerFilters().filterPreMatchRequest(containerRequestContext, injectionContext);
       }
       catch (final Throwable e) {
-        checkWebApplicationException(executionContext, t = e, true);
+        chain = checkWebApplicationException(executionContext, chain, e, true);
       }
 
       try {
         getResourceContext().getContainerFilters().filterPreMatchResponse(containerRequestContext, containerResponseContext, injectionContext);
       }
       catch (final Throwable e) {
-        checkWebApplicationException(executionContext, t = e, false);
+        chain = checkWebApplicationException(executionContext, chain, e, false);
       }
 
       if (executionContext.getResponse() != null) {
         executionContext.writeHeader();
         executionContext.writeBody(getResourceContext().getProviders());
         executionContext.commit();
-        if (t != null)
-          throw t;
+        if (chain != null)
+          throw chain;
 
         return;
       }
@@ -137,7 +151,7 @@ public class DefaultRESTServlet extends StartupServlet {
         getResourceContext().getContainerFilters().filterPostMatchRequest(containerRequestContext, injectionContext);
       }
       catch (final Throwable e) {
-        checkWebApplicationException(executionContext, t = e, false);
+        chain = checkWebApplicationException(executionContext, chain, e, false);
       }
 
       if (resource == null)
@@ -153,25 +167,25 @@ public class DefaultRESTServlet extends StartupServlet {
           containerResponseContext.setEntity(content);
       }
       catch (final Throwable e) {
-        checkWebApplicationException(executionContext, t = e, false);
+        chain = checkWebApplicationException(executionContext, chain, e, false);
       }
 
       try {
         executionContext.writeBody(getResourceContext().getProviders());
       }
       catch (final Throwable e) {
-        checkWebApplicationException(executionContext, t = e, false);
+        chain = checkWebApplicationException(executionContext, chain, e, false);
       }
 
       try {
         getResourceContext().getContainerFilters().filterPostMatchResponse(containerRequestContext, containerResponseContext, injectionContext);
       }
       catch (final Throwable e) {
-        checkWebApplicationException(executionContext, t = e, false);
+        chain = checkWebApplicationException(executionContext, chain, e, false);
       }
 
-      if (t != null)
-        throw t;
+      if (chain != null)
+        throw chain;
     }
     catch (final IOException | ServletException e) {
       response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -183,21 +197,11 @@ public class DefaultRESTServlet extends StartupServlet {
         throw (ServletException)t.getCause();
       }
 
-      final StringBuilder builder = new StringBuilder(t.getMessage() != null ? t.getMessage() : "");
-      if (t.getCause() != null) {
-        if (builder.length() > 0)
-          builder.append(" ");
-
-        builder.append(t.getCause().getMessage() != null ? t.getCause().getMessage() : "");
-      }
-
-      if (t instanceof WebApplicationException) {
-        executionContext.setResponse(((WebApplicationException)t).getResponse());
-      }
-      else {
+      if (!(t instanceof WebApplicationException)) {
         response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-        throw t;
       }
+
+      throw t;
     }
     finally {
       executionContext.writeHeader();
