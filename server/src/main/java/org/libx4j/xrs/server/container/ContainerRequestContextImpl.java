@@ -50,7 +50,7 @@ public class ContainerRequestContextImpl extends ContainerContextImpl implements
   private final Map<String,Object> properties = new HashMap<String,Object>();
   private final HttpServletRequest httpServletRequest;
 
-  private final ExecutionContext executionContext;
+  private String method;
   private final HttpHeaders headers;
   private final UriInfo uriInfo;
   private final List<MediaType> accept;
@@ -59,13 +59,13 @@ public class ContainerRequestContextImpl extends ContainerContextImpl implements
 
   public ContainerRequestContextImpl(final HttpServletRequest httpServletRequest, final ExecutionContext executionContext) {
     super(httpServletRequest.getLocale());
+    this.method = httpServletRequest.getMethod();
     final Enumeration<String> attributes = httpServletRequest.getAttributeNames();
     String attribute;
     while (attributes.hasMoreElements())
       properties.put(attribute = attributes.nextElement(), httpServletRequest.getAttribute(attribute));
 
     this.httpServletRequest = httpServletRequest;
-    this.executionContext = executionContext;
     this.accept = Collections.unmodifiableList(Arrays.asList(MediaTypes.parse(httpServletRequest.getHeaders(HttpHeaders.ACCEPT))));
     this.acceptLanguages = Collections.unmodifiableList(Arrays.asList(Locales.parse(httpServletRequest.getHeaders(HttpHeaders.ACCEPT_LANGUAGE))));
     this.headers = executionContext.getHttpHeaders();
@@ -122,13 +122,12 @@ public class ContainerRequestContextImpl extends ContainerContextImpl implements
 
   @Override
   public String getMethod() {
-    return httpServletRequest.getMethod();
+    return method;
   }
 
   @Override
   public void setMethod(final String method) {
-    // TODO:
-    throw new UnsupportedOperationException();
+    this.method = method;
   }
 
   @Override
@@ -199,6 +198,6 @@ public class ContainerRequestContextImpl extends ContainerContextImpl implements
 
   @Override
   public void abortWith(final Response response) {
-    this.executionContext.setResponse(response);
+    throw new WebApplicationException(response);
   }
 }

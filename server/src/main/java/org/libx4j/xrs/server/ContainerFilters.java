@@ -30,12 +30,15 @@ import javax.ws.rs.container.PreMatching;
 
 import org.lib4j.util.Collections;
 import org.libx4j.xrs.server.core.ContextInjector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class ContainerFilters {
-  private final List<ContainerResponseFilter> preMatchResponseFilters = new ArrayList<ContainerResponseFilter>();
-  private final List<ContainerResponseFilter> postMatchResponseFilters = new ArrayList<ContainerResponseFilter>();
-  private final List<ContainerRequestFilter> preMatchRequestFilters = new ArrayList<ContainerRequestFilter>();
-  private final List<ContainerRequestFilter> postMatchRequestFilters = new ArrayList<ContainerRequestFilter>();
+  private static final Logger logger = LoggerFactory.getLogger(ContainerFilters.class);
+
+  private final List<ContainerRequestFilter> preMatchContainerRequestFilters = new ArrayList<ContainerRequestFilter>();
+  private final List<ContainerRequestFilter> containerRequestFilters = new ArrayList<ContainerRequestFilter>();
+  private final List<ContainerResponseFilter> containerResponseFilters = new ArrayList<ContainerResponseFilter>();
 
   private static final Comparator<Object> priorityComparator = new Comparator<Object>() {
     @Override
@@ -48,42 +51,32 @@ public final class ContainerFilters {
 
   public ContainerFilters(final List<ContainerRequestFilter> requestFilters, final List<ContainerResponseFilter> responseFilters) {
     for (final ContainerRequestFilter requestFilter : requestFilters)
-      (requestFilter.getClass().isAnnotationPresent(PreMatching.class) ? preMatchRequestFilters : postMatchRequestFilters).add(requestFilter);
+      (requestFilter.getClass().isAnnotationPresent(PreMatching.class) ? preMatchContainerRequestFilters : containerRequestFilters).add(requestFilter);
 
-    for (final ContainerResponseFilter responseFilter : responseFilters)
-      (responseFilter.getClass().isAnnotationPresent(PreMatching.class) ? preMatchResponseFilters : postMatchResponseFilters).add(responseFilter);
+    for (final ContainerResponseFilter responseFilter : responseFilters) {
+      if (responseFilter.getClass().isAnnotationPresent(PreMatching.class))
+        logger.warn("@PreMatching annotation is not applicable to ContainerResponseFilter");
 
-    Collections.sort(preMatchRequestFilters, priorityComparator);
-    Collections.sort(postMatchRequestFilters, priorityComparator);
-    Collections.sort(preMatchResponseFilters, priorityComparator);
-    Collections.sort(postMatchResponseFilters, priorityComparator);
+      containerResponseFilters.add(responseFilter);
+    }
+
+    Collections.sort(preMatchContainerRequestFilters, priorityComparator);
+    Collections.sort(containerRequestFilters, priorityComparator);
+    Collections.sort(containerResponseFilters, priorityComparator);
   }
 
-  public void filterPreMatchRequest(final ContainerRequestContext requestContext, final ContextInjector injectionContext) throws IOException {
-    for (final ContainerRequestFilter preMatchRequestFilter : preMatchRequestFilters) {
-      final ContainerRequestFilter filter = injectionContext.inject(preMatchRequestFilter.getClass());
-      filter.filter(requestContext);
-    }
+  public void filterPreMatchContainerRequest(final ContainerRequestContext requestContext, final ContextInjector injectionContext) throws IOException {
+    for (final ContainerRequestFilter preMatchRequestFilter : preMatchContainerRequestFilters)
+      injectionContext.inject(preMatchRequestFilter.getClass()).filter(requestContext);
   }
 
-  public void filterPostMatchRequest(final ContainerRequestContext requestContext, final ContextInjector injectionContext) throws IOException {
-    for (final ContainerRequestFilter postMatchRequestFilter : postMatchRequestFilters) {
-      final ContainerRequestFilter filter = injectionContext.inject(postMatchRequestFilter.getClass());
-      filter.filter(requestContext);
-    }
+  public void filterContainerRequest(final ContainerRequestContext requestContext, final ContextInjector injectionContext) throws IOException {
+    for (final ContainerRequestFilter postMatchRequestFilter : containerRequestFilters)
+      injectionContext.inject(postMatchRequestFilter.getClass()).filter(requestContext);
   }
 
-  public void filterPreMatchResponse(final ContainerRequestContext requestContext, final ContainerResponseContext responseContext, final ContextInjector injectionContext) throws IOException {
-    for (final ContainerResponseFilter preMatchResponseFilter : preMatchResponseFilters) {
-      final ContainerResponseFilter filter = injectionContext.inject(preMatchResponseFilter.getClass());
-      filter.filter(requestContext, responseContext);
-    }
-  }
-
-  public void filterPostMatchResponse(final ContainerRequestContext requestContext, final ContainerResponseContext responseContext, final ContextInjector injectionContext) throws IOException {
-    for (final ContainerResponseFilter postMatchResponseFilter : postMatchResponseFilters) {
-      final ContainerResponseFilter filter = injectionContext.inject(postMatchResponseFilter.getClass());
-      filter.filter(requestContext, responseContext);
-    }
+  public void filterContainerResponse(final ContainerRequestContext requestContext, final ContainerResponseContext responseContext, final ContextInjector injectionContext) throws IOException {
+    for (final ContainerResponseFilter postMatchResponseFilter : containerResponseFilters)
+      injectionContext.inject(postMatchResponseFilter.getClass()).filter(requestContext, responseContext);
   }
 }

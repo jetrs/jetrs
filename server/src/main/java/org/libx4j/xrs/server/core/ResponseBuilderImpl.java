@@ -34,6 +34,7 @@ import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Variant;
+import javax.ws.rs.ext.RuntimeDelegate;
 
 import org.lib4j.util.Locales;
 import org.libx4j.xrs.server.util.Responses;
@@ -120,8 +121,15 @@ public class ResponseBuilderImpl extends Response.ResponseBuilder {
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public Response.ResponseBuilder header(final String name, final Object value) {
-    headers.getMirroredMap().add(name, value);
+    if (value == null) {
+      headers.getMirroredMap().add(name, null);
+      return this;
+    }
+
+    final RuntimeDelegate.HeaderDelegate<Object> headerDelegate = (RuntimeDelegate.HeaderDelegate<Object>)RuntimeDelegate.getInstance().createHeaderDelegate(value.getClass());
+    headers.getMirroredMap().add(name, headerDelegate != null ? headerDelegate.toString(value) : value.toString());
     return this;
   }
 

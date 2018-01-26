@@ -105,38 +105,37 @@ public class ExecutionContext {
 
   private Response response;
 
-  public Response getResponse() {
+  protected Response getResponse() {
     return response;
   }
 
-  public void setResponse(final Response response) {
+  protected void setResponse(final Response response) {
+    if (this.response != null)
+      throw new IllegalStateException("Response has already been set");
+
     this.response = response;
+    containerResponseContext.setEntityStream(null);
+    containerResponseContext.setEntity(response.hasEntity() ? response.getEntity() : null);
+
+    if (response.getStatusInfo() != null) {
+      containerResponseContext.setStatusInfo(response.getStatusInfo());
+    }
+    else {
+      containerResponseContext.setStatusInfo(null);
+      containerResponseContext.setStatus(response.getStatus());
+    }
+
+    final MultivaluedMap<String,String> containerResponseHeaders = containerResponseContext.getStringHeaders();
+    containerResponseHeaders.clear();
+
+    final MultivaluedMap<String,String> responseHeaders = response.getStringHeaders();
+    for (final Map.Entry<String,List<String>> entry : responseHeaders.entrySet())
+      for (final String header : entry.getValue())
+        containerResponseHeaders.add(entry.getKey(), header);
   }
 
   public HttpHeaders getHttpHeaders() {
     return httpHeaders;
-  }
-
-  protected void writeHeader() {
-    final MultivaluedMap<String,String> containerResponseHeaders = containerResponseContext.getStringHeaders();
-    if (getResponse() != null) {
-      if (getResponse().hasEntity())
-        containerResponseContext.setEntity(getResponse().getEntity());
-
-      containerResponseContext.setStatus(getResponse().getStatus());
-      containerResponseContext.setStatusInfo(getResponse().getStatusInfo());
-
-      final MultivaluedMap<String,String> responseHeaders = getResponse().getStringHeaders();
-      for (final Map.Entry<String,List<String>> entry : responseHeaders.entrySet())
-        for (final String header : entry.getValue())
-          containerResponseHeaders.add(entry.getKey(), header);
-    }
-
-    for (final Map.Entry<String,List<String>> entry : containerResponseHeaders.entrySet())
-      for (final String header : entry.getValue())
-        httpServletResponse.addHeader(entry.getKey(), header);
-
-    httpServletResponse.setStatus(containerResponseContext.getStatus());
   }
 
   private ByteArrayOutputStream outputStream = null;
@@ -145,32 +144,34 @@ public class ExecutionContext {
     return outputStream == null ? outputStream = new ByteArrayOutputStream() : outputStream;
   }
 
+  private void writeHeader() {
+    final MultivaluedMap<String,String> containerResponseHeaders = containerResponseContext.getStringHeaders();
+
+    for (final Map.Entry<String,List<String>> entry : containerResponseHeaders.entrySet())
+      for (final String header : entry.getValue())
+        httpServletResponse.addHeader(entry.getKey(), header);
+
+    httpServletResponse.setStatus(containerResponseContext.getStatus());
+  }
+
   @SuppressWarnings({"rawtypes", "unchecked"})
-  protected void writeBody(final Providers providers) throws IOException {
+  private void writeBody(final Providers providers) throws IOException {
     final Object entity = containerResponseContext.getEntity();
     if (entity == null)
       return;
 
-    if (entity instanceof Response) {
-      final Response response = (Response)entity;
-      containerResponseContext.setStatus(response.getStatus());
-      containerResponseContext.setStatusInfo(response.getStatusInfo());
-      containerResponseContext.setEntity(response.getEntity());
-      writeBody(providers);
-    }
-    else {
-      final Annotation[] annotations = containerResponseContext.getEntityAnnotations() != null ? Arrays.concat(containerResponseContext.getEntityAnnotations(), entity.getClass().getAnnotations()) : entity.getClass().getAnnotations();
-      final MessageBodyWriter messageBodyWriter = providers.getMessageBodyWriter(containerResponseContext.getEntityClass(), containerResponseContext.getEntityType(), annotations, containerResponseContext.getMediaType());
-      if (messageBodyWriter != null) {
-        messageBodyWriter.writeTo(entity, containerResponseContext.getEntityClass(), entity.getClass().getGenericSuperclass(), annotations, httpHeaders.getMediaType(), httpHeaders.getRequestHeaders(), getOutputStream());
-      }
-      else {
-        throw new WebApplicationException("Could not find MessageBodyWriter for type: " + entity.getClass().getName());
-      }
-    }
+    final Annotation[] annotations = containerResponseContext.getEntityAnnotations() != null ? Arrays.concat(containerResponseContext.getEntityAnnotations(), entity.getClass().getAnnotations()) : entity.getClass().getAnnotations();
+    final MessageBodyWriter messageBodyWriter = providers.getMessageBodyWriter(containerResponseContext.getEntityClass(), containerResponseContext.getEntityType(), annotations, containerResponseContext.getMediaType());
+    if (messageBodyWriter != null)
+      messageBodyWriter.writeTo(entity, containerResponseContext.getEntityClass(), entity.getClass().getGenericSuperclass(), annotations, httpHeaders.getMediaType(), httpHeaders.getRequestHeaders(), getOutputStream());
+    else
+      throw new WebApplicationException("Could not find MessageBodyWriter for type: " + entity.getClass().getName());
   }
 
-  protected void commit() throws IOException {
+  protected void commit(final Providers providers) throws IOException {
+    writeHeader();
+    writeBody(providers);
+
     if (outputStream != null)
       httpServletResponse.getOutputStream().write(outputStream.toByteArray());
 

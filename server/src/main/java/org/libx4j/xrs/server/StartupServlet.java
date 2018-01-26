@@ -57,7 +57,6 @@ import org.slf4j.LoggerFactory;
 
 public abstract class StartupServlet extends HttpServlet {
   private static final long serialVersionUID = 6825431027711735886L;
-
   private static final Logger logger = LoggerFactory.getLogger(StartupServlet.class);
 
   private ResourceContext resourceContext;
@@ -109,12 +108,9 @@ public abstract class StartupServlet extends HttpServlet {
 
     try {
       final Method[] methods = cls.getMethods();
-      for (final Method method : methods) {
-        if (!Modifier.isAbstract(method.getModifiers()) && !Modifier.isStatic(method.getModifiers()) && !Modifier.isNative(method.getModifiers())) {
-          if (method.isAnnotationPresent(Path.class) || method.isAnnotationPresent(GET.class) || method.isAnnotationPresent(POST.class) || method.isAnnotationPresent(PUT.class) || method.isAnnotationPresent(DELETE.class) || method.isAnnotationPresent(HEAD.class))
-            return true;
-        }
-      }
+      for (final Method method : methods)
+        if (!Modifier.isAbstract(method.getModifiers()) && !Modifier.isStatic(method.getModifiers()) && !Modifier.isNative(method.getModifiers()) && (method.isAnnotationPresent(Path.class) || method.isAnnotationPresent(GET.class) || method.isAnnotationPresent(POST.class) || method.isAnnotationPresent(PUT.class) || method.isAnnotationPresent(DELETE.class) || method.isAnnotationPresent(HEAD.class)))
+          return true;
 
       return false;
     }
