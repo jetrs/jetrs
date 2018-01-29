@@ -270,7 +270,7 @@ public class ResourceManifest {
       return parameters != null ? method.invoke(serviceResource, parameters) : method.invoke(serviceResource);
     }
     catch (final IllegalAccessException e) {
-      throw new WebApplicationException(e);
+      throw new ServletException(e);
     }
     catch (final InvocationTargetException e) {
       // FIXME: Hmm, this is an interesting idea to help reduce the noise in Exceptions from dynamically invoked methods
@@ -283,9 +283,9 @@ public class ResourceManifest {
       if (e.getCause() instanceof IOException)
         throw (IOException)e.getCause();
 
-      throw new WebApplicationException(e);
+      throw new ServletException(e.getCause());
     }
-    catch (final IllegalArgumentException | IOException e) {
+    catch (final IllegalArgumentException e) {
       throw new BadRequestException(e);
     }
   }
