@@ -45,7 +45,6 @@ import org.libx4j.xrs.server.core.ContextInjector;
 import org.libx4j.xrs.server.core.HttpHeadersImpl;
 import org.libx4j.xrs.server.core.RequestImpl;
 import org.libx4j.xrs.server.ext.RuntimeDelegateImpl;
-import org.slf4j.Logger;
 
 @WebServlet(name="javax.ws.rs.core.Application", urlPatterns="/*")
 public abstract class DefaultRESTServlet extends StartupServlet {
@@ -91,49 +90,43 @@ public abstract class DefaultRESTServlet extends StartupServlet {
   }
 
   private void service(final HttpServletRequestContext request, final HttpServletResponse response) throws IOException, ServletException {
-    ExecutionContext executionContext = null;
+    final ContainerResponseContext containerResponseContext = new ContainerResponseContextImpl(response);
+    final HttpHeaders httpHeaders = new HttpHeadersImpl(request);
+    final ExecutionContext executionContext = new ExecutionContext(httpHeaders, response, containerResponseContext, getResourceContext());
+
+    final ContainerRequestContext containerRequestContext; // NOTE: This weird construct is done this way to at least somehow make the two objects cohesive
+    request.setRequestContext(containerRequestContext = new ContainerRequestContextImpl(request, executionContext));
+
+    final ContextInjector injectionContext = ContextInjector.createInjectionContext(containerRequestContext, new RequestImpl(request.getMethod()), httpHeaders, getResourceContext().getProviders());
+
     WebApplicationException executionException = null;
 
     try {
-      final ContainerResponseContext containerResponseContext = new ContainerResponseContextImpl(response);
-      final HttpHeaders httpHeaders = new HttpHeadersImpl(request);
-      executionContext = new ExecutionContext(httpHeaders, response, containerResponseContext, getResourceContext());
+      getResourceContext().getContainerFilters().filterPreMatchContainerRequest(containerRequestContext, injectionContext);
+      final ResourceMatch resource = executionContext.filterAndMatch(containerRequestContext);
+      if (resource == null)
+        throw new NotFoundException();
 
-      final ContainerRequestContext containerRequestContext; // NOTE: This weird construct is done this way to at least somehow make the two objects cohesive
-      request.setRequestContext(containerRequestContext = new ContainerRequestContextImpl(request, executionContext));
+      request.setResourceManifest(resource.getManifest());
+      getResourceContext().getContainerFilters().filterContainerRequest(containerRequestContext, injectionContext);
 
-      final ContextInjector injectionContext = ContextInjector.createInjectionContext(containerRequestContext, new RequestImpl(request.getMethod()), httpHeaders, getResourceContext().getProviders());
+      final Produces produces = resource.getManifest().getMatcher(Produces.class).getAnnotation();
+      if (produces != null)
+        containerResponseContext.getStringHeaders().putSingle(HttpHeaders.CONTENT_TYPE, resource.getAccept().toString());
 
-      try {
-        getResourceContext().getContainerFilters().filterPreMatchContainerRequest(containerRequestContext, injectionContext);
-        final ResourceMatch resource = executionContext.filterAndMatch(containerRequestContext);
-        if (resource == null)
-          throw new NotFoundException();
+      final Object content = resource.getManifest().service(executionContext, containerRequestContext, injectionContext, getResourceContext().getParamConverterProviders());
+      if (content instanceof Response)
+        executionContext.setResponse((Response)content);
+      else if (content != null)
+        containerResponseContext.setEntity(content);
 
-        request.setResourceManifest(resource.getManifest());
-        getResourceContext().getContainerFilters().filterContainerRequest(containerRequestContext, injectionContext);
-
-        final Produces produces = resource.getManifest().getMatcher(Produces.class).getAnnotation();
-        if (produces != null)
-          containerResponseContext.getStringHeaders().putSingle(HttpHeaders.CONTENT_TYPE, resource.getAccept().toString());
-
-        final Object content = resource.getManifest().service(executionContext, containerRequestContext, injectionContext, getResourceContext().getParamConverterProviders());
-        if (content instanceof Response)
-          executionContext.setResponse((Response)content);
-        else if (content != null)
-          containerResponseContext.setEntity(content);
-
-        getResourceContext().getContainerFilters().filterContainerResponse(containerRequestContext, containerResponseContext, injectionContext);
-      }
-      catch (final WebApplicationException e) {
-        executionException = e;
-        executionContext.setResponse(e.getResponse());
-        getResourceContext().getContainerFilters().filterContainerResponse(containerRequestContext, containerResponseContext, injectionContext);
-        if (e.getResponse().getStatus() == 200)
-          getLogger().info(e.getMessage(), e);
-        else
-          getLogger().error(e.getMessage(), e);
-      }
+      getResourceContext().getContainerFilters().filterContainerResponse(containerRequestContext, containerResponseContext, injectionContext);
+    }
+    catch (final WebApplicationException e) {
+      executionException = e;
+      executionContext.setResponse(e.getResponse());
+      getResourceContext().getContainerFilters().filterContainerResponse(containerRequestContext, containerResponseContext, injectionContext);
+      throw e;
     }
     catch (final IOException | RuntimeException | ServletException e) {
       if (executionException != null)
@@ -143,8 +136,7 @@ public abstract class DefaultRESTServlet extends StartupServlet {
       throw e;
     }
     finally {
-      if (executionContext != null)
-        executionContext.commit(getResourceContext().getProviders());
+      executionContext.commit(getResourceContext().getProviders());
     }
   }
 
@@ -180,6 +172,4 @@ public abstract class DefaultRESTServlet extends StartupServlet {
       throw e;
     }
   }
-
-  protected abstract Logger getLogger();
 }
