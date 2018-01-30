@@ -45,9 +45,10 @@ import org.libx4j.xrs.server.core.ContextInjector;
 import org.libx4j.xrs.server.core.HttpHeadersImpl;
 import org.libx4j.xrs.server.core.RequestImpl;
 import org.libx4j.xrs.server.ext.RuntimeDelegateImpl;
+import org.slf4j.Logger;
 
 @WebServlet(name="javax.ws.rs.core.Application", urlPatterns="/*")
-public class DefaultRESTServlet extends StartupServlet {
+public abstract class DefaultRESTServlet extends StartupServlet {
   private static final long serialVersionUID = 3700080355780006441L;
 
   static {
@@ -128,6 +129,10 @@ public class DefaultRESTServlet extends StartupServlet {
         executionException = e;
         executionContext.setResponse(e.getResponse());
         getResourceContext().getContainerFilters().filterContainerResponse(containerRequestContext, containerResponseContext, injectionContext);
+        if (e.getResponse().getStatus() == 200)
+          getLogger().info(e.getMessage(), e);
+        else
+          getLogger().error(e.getMessage(), e);
       }
     }
     catch (final IOException | RuntimeException | ServletException e) {
@@ -175,4 +180,6 @@ public class DefaultRESTServlet extends StartupServlet {
       throw e;
     }
   }
+
+  protected abstract Logger getLogger();
 }
