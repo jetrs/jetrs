@@ -58,6 +58,15 @@ import org.slf4j.LoggerFactory;
 public abstract class StartupServlet extends HttpServlet {
   private static final long serialVersionUID = 6825431027711735886L;
   private static final Logger logger = LoggerFactory.getLogger(StartupServlet.class);
+  private static final String[] excludeStartsWith = {"jdk", "java", "javax", "com.sun", "sun", "org.w3c", "org.xml", "org.jvnet", "org.joda", "org.jcp", "apple.security"};
+
+  private static boolean acceptPackage(final Package pkg) {
+    for (int i = 0; i < excludeStartsWith.length; i++)
+      if (pkg.getName().startsWith(excludeStartsWith[i] + "."))
+        return false;
+
+    return true;
+  }
 
   private ResourceContext resourceContext;
 
@@ -172,7 +181,8 @@ public abstract class StartupServlet extends HttpServlet {
 
     try {
       for (final Package pkg : Package.getPackages())
-        PackageLoader.getSystemContextPackageLoader().loadPackage(pkg, initialize);
+        if (acceptPackage(pkg))
+          PackageLoader.getSystemContextPackageLoader().loadPackage(pkg, initialize);
     }
     catch (final PackageNotFoundException e) {
     }
