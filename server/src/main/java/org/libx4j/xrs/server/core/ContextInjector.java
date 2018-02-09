@@ -22,6 +22,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Context;
@@ -44,11 +46,13 @@ public class ContextInjector {
     SecurityContext.class,
     UriInfo.class,
     Request.class,
-    HttpHeaders.class
+    HttpHeaders.class,
+    HttpServletRequest.class,
+    HttpServletResponse.class
   });
 
-  public static ContextInjector createInjectionContext(final ContainerRequestContext containerRequestContext, final Request request, final HttpHeaders headers, final Providers providers) {
-    return new ContextInjector(injectionContextPrototype.allowedClasses, containerRequestContext, request, headers, providers);
+  public static ContextInjector createInjectionContext(final ContainerRequestContext containerRequestContext, final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse, final HttpHeaders headers, final Providers providers) {
+    return new ContextInjector(injectionContextPrototype.allowedClasses, containerRequestContext, new RequestImpl(httpServletRequest.getMethod()), httpServletRequest, httpServletResponse, headers, providers);
   }
 
   public static boolean allowsInjectableClass(final Class<?> type, final Class<?> injectableClass) {
@@ -60,20 +64,25 @@ public class ContextInjector {
   private final ContainerRequestContext containerRequestContext;
   private final Request request;
   private final HttpHeaders httpHeaders;
+  private final HttpServletRequest httpServletRequest;
+  private final HttpServletResponse httpServletResponse;
   private final Providers providers;
 
-  private ContextInjector(final Class<?>[] allowedClasses, final ContainerRequestContext containerRequestContext, final Request request, final HttpHeaders httpHeaders, final Providers providers) {
-    this.allowedClasses = allowedClasses;
-    this.request = request;
-    this.httpHeaders = httpHeaders;
-    this.providers = providers;
+  private ContextInjector(final Class<?>[] allowedClasses, final ContainerRequestContext containerRequestContext, final Request request, final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse, final HttpHeaders httpHeaders, final Providers providers) {
     for (final Class<?> allowedClass : allowedClasses)
       allowedInjectableClasses.add(allowedClass);
+
+    this.allowedClasses = allowedClasses;
     this.containerRequestContext = containerRequestContext;
+    this.request = request;
+    this.httpHeaders = httpHeaders;
+    this.httpServletRequest = httpServletRequest;
+    this.httpServletResponse = httpServletResponse;
+    this.providers = providers;
   }
 
   private ContextInjector(final Class<?>[] allowedClasses) {
-    this(allowedClasses, null, null, null, null);
+    this(allowedClasses, null, null, null, null, null, null);
   }
 
   private final Map<Class<?>,Object> injectableClassToObject = new HashMap<Class<?>,Object>();
@@ -101,6 +110,12 @@ public class ContextInjector {
 
     if (allowedInjectibleClass == HttpHeaders.class)
       return (T)httpHeaders;
+
+    if (allowedInjectibleClass == HttpServletRequest.class)
+      return (T)httpServletRequest;
+
+    if (allowedInjectibleClass == HttpServletResponse.class)
+      return (T)httpServletResponse;
 
     if (allowedInjectibleClass == UriInfo.class)
       return (T)containerRequestContext.getUriInfo();

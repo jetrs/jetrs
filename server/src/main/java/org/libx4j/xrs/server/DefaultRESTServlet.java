@@ -43,7 +43,6 @@ import org.libx4j.xrs.server.container.ContainerRequestContextImpl;
 import org.libx4j.xrs.server.container.ContainerResponseContextImpl;
 import org.libx4j.xrs.server.core.ContextInjector;
 import org.libx4j.xrs.server.core.HttpHeadersImpl;
-import org.libx4j.xrs.server.core.RequestImpl;
 import org.libx4j.xrs.server.ext.RuntimeDelegateImpl;
 
 @WebServlet(name="javax.ws.rs.core.Application", urlPatterns="/*")
@@ -89,15 +88,15 @@ public abstract class DefaultRESTServlet extends StartupServlet {
     }
   }
 
-  private void service(final HttpServletRequestContext request, final HttpServletResponse response) throws IOException, ServletException {
-    final ContainerResponseContext containerResponseContext = new ContainerResponseContextImpl(response);
-    final HttpHeaders httpHeaders = new HttpHeadersImpl(request);
-    final ExecutionContext executionContext = new ExecutionContext(httpHeaders, response, containerResponseContext, getResourceContext());
+  private void service(final HttpServletRequestContext httpServletRequest, final HttpServletResponse httpServletResponse) throws IOException, ServletException {
+    final ContainerResponseContext containerResponseContext = new ContainerResponseContextImpl(httpServletResponse);
+    final HttpHeaders httpHeaders = new HttpHeadersImpl(httpServletRequest);
+    final ExecutionContext executionContext = new ExecutionContext(httpHeaders, httpServletResponse, containerResponseContext, getResourceContext());
 
     final ContainerRequestContext containerRequestContext; // NOTE: This weird construct is done this way to at least somehow make the two objects cohesive
-    request.setRequestContext(containerRequestContext = new ContainerRequestContextImpl(request, executionContext));
+    httpServletRequest.setRequestContext(containerRequestContext = new ContainerRequestContextImpl(httpServletRequest, executionContext));
 
-    final ContextInjector injectionContext = ContextInjector.createInjectionContext(containerRequestContext, new RequestImpl(request.getMethod()), httpHeaders, getResourceContext().getProviders());
+    final ContextInjector injectionContext = ContextInjector.createInjectionContext(containerRequestContext, httpServletRequest, httpServletResponse, httpHeaders, getResourceContext().getProviders());
 
     WebApplicationException executionException = null;
 
@@ -107,7 +106,7 @@ public abstract class DefaultRESTServlet extends StartupServlet {
       if (resource == null)
         throw new NotFoundException();
 
-      request.setResourceManifest(resource.getManifest());
+      httpServletRequest.setResourceManifest(resource.getManifest());
       getResourceContext().getContainerFilters().filterContainerRequest(containerRequestContext, injectionContext);
 
       final Produces produces = resource.getManifest().getMatcher(Produces.class).getAnnotation();
@@ -132,7 +131,7 @@ public abstract class DefaultRESTServlet extends StartupServlet {
       if (executionException != null)
         Throwables.set(e, executionException);
 
-      response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR); // Or should this use the formal InternalServerErrorException?
+      httpServletResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR); // Or should this use the formal InternalServerErrorException?
       throw e;
     }
     finally {
