@@ -168,9 +168,14 @@ public class ExecutionContext {
       throw new WebApplicationException("Could not find MessageBodyWriter for type: " + entity.getClass().getName());
   }
 
-  protected void commit(final Providers providers) throws IOException {
+  protected void writeResponse(final Providers providers) throws IOException {
     writeHeader();
     writeBody(providers);
+  }
+
+  protected void commit() throws IOException {
+    if (httpServletResponse.isCommitted())
+      return;
 
     if (outputStream != null)
       httpServletResponse.getOutputStream().write(outputStream.toByteArray());

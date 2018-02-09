@@ -28,6 +28,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
@@ -88,7 +89,7 @@ public abstract class DefaultRESTServlet extends StartupServlet {
     }
   }
 
-  private void service(final HttpServletRequestContext httpServletRequest, final HttpServletResponse httpServletResponse) throws IOException, ServletException {
+  private void service(final HttpServletRequestContext httpServletRequest, final HttpServletResponse httpServletResponse) throws IOException {
     final ContainerResponseContext containerResponseContext = new ContainerResponseContextImpl(httpServletResponse);
     final HttpHeaders httpHeaders = new HttpHeadersImpl(httpServletRequest);
     final ExecutionContext executionContext = new ExecutionContext(httpHeaders, httpServletResponse, containerResponseContext, getResourceContext());
@@ -98,44 +99,60 @@ public abstract class DefaultRESTServlet extends StartupServlet {
 
     final ContextInjector injectionContext = ContextInjector.createInjectionContext(containerRequestContext, httpServletRequest, httpServletResponse, httpHeaders, getResourceContext().getProviders());
 
-    WebApplicationException executionException = null;
+    Exception executionException = null;
 
     try {
-      getResourceContext().getContainerFilters().filterPreMatchContainerRequest(containerRequestContext, injectionContext);
-      final ResourceMatch resource = executionContext.filterAndMatch(containerRequestContext);
-      if (resource == null)
-        throw new NotFoundException();
+      try {
+        getResourceContext().getContainerFilters().filterPreMatchContainerRequest(containerRequestContext, injectionContext);
+        final ResourceMatch resource = executionContext.filterAndMatch(containerRequestContext);
+        if (resource == null)
+          throw new NotFoundException();
 
-      httpServletRequest.setResourceManifest(resource.getManifest());
-      getResourceContext().getContainerFilters().filterContainerRequest(containerRequestContext, injectionContext);
+        httpServletRequest.setResourceManifest(resource.getManifest());
+        getResourceContext().getContainerFilters().filterContainerRequest(containerRequestContext, injectionContext);
 
-      final Produces produces = resource.getManifest().getMatcher(Produces.class).getAnnotation();
-      if (produces != null)
-        containerResponseContext.getStringHeaders().putSingle(HttpHeaders.CONTENT_TYPE, resource.getAccept().toString());
+        final Produces produces = resource.getManifest().getMatcher(Produces.class).getAnnotation();
+        if (produces != null)
+          containerResponseContext.getStringHeaders().putSingle(HttpHeaders.CONTENT_TYPE, resource.getAccept().toString());
 
-      final Object content = resource.getManifest().service(executionContext, containerRequestContext, injectionContext, getResourceContext().getParamConverterProviders());
-      if (content instanceof Response)
-        executionContext.setResponse((Response)content);
-      else if (content != null)
-        containerResponseContext.setEntity(content);
+        final Object content = resource.getManifest().service(executionContext, containerRequestContext, injectionContext, getResourceContext().getParamConverterProviders());
+        if (content instanceof Response)
+          executionContext.setResponse((Response)content);
+        else if (content != null)
+          containerResponseContext.setEntity(content);
 
-      getResourceContext().getContainerFilters().filterContainerResponse(containerRequestContext, containerResponseContext, injectionContext);
+        getResourceContext().getContainerFilters().filterContainerResponse(containerRequestContext, containerResponseContext, injectionContext);
+        executionContext.writeResponse(getResourceContext().getProviders());
+      }
+      catch (final WebApplicationException e) {
+        throw e;
+      }
+      catch (final IOException | RuntimeException | ServletException e) {
+        executionException = e;
+        throw new InternalServerErrorException(e);
+      }
     }
     catch (final WebApplicationException e) {
-      executionException = e;
-      executionContext.setResponse(e.getResponse());
-      getResourceContext().getContainerFilters().filterContainerResponse(containerRequestContext, containerResponseContext, injectionContext);
-      throw e;
-    }
-    catch (final IOException | RuntimeException | ServletException e) {
       if (executionException != null)
         Throwables.set(e, executionException);
 
-      httpServletResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR); // Or should this use the formal InternalServerErrorException?
+      try {
+        executionContext.setResponse(e.getResponse());
+        getResourceContext().getContainerFilters().filterContainerResponse(containerRequestContext, containerResponseContext, injectionContext);
+        executionContext.writeResponse(getResourceContext().getProviders());
+      }
+      catch (final IOException | RuntimeException e2) {
+        if (executionException != null)
+          Throwables.set(e2, executionException);
+
+        httpServletResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        throw e2;
+      }
+
       throw e;
     }
     finally {
-      executionContext.commit(getResourceContext().getProviders());
+      executionContext.commit();
     }
   }
 
@@ -164,7 +181,7 @@ public abstract class DefaultRESTServlet extends StartupServlet {
         }
       }, response);
     }
-    catch (final IOException | RuntimeException | ServletException e) {
+    catch (final IOException | RuntimeException e) {
       if (e.getCause() instanceof ServletException)
         throw (ServletException)e.getCause();
 
