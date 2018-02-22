@@ -68,33 +68,56 @@ public abstract class StartupServlet extends HttpServlet {
     return true;
   }
 
-  private ResourceContext resourceContext;
+  private static <T>void addResourceProvider(final MultivaluedMap<String,ResourceManifest> registry, final List<MessageBodyReader<?>> entityReaders, final List<MessageBodyWriter<?>> entityWriters, final List<ContainerRequestFilter> requestFilters, final List<ContainerResponseFilter> responseFilters, final List<ParamConverterProvider> paramConverterProviders, final Class<? extends T> cls, T singleton) throws IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException {
+    if (isRootResource(cls)) {
+      final Method[] methods = cls.getMethods();
+      for (final Method method : methods) {
+        final Set<HttpMethod> httpMethodAnnotations = new HashSet<HttpMethod>(); // FIXME: Can this be done without a Collection?
+        final Annotation[] annotations = method.getAnnotations();
+        for (final Annotation annotation : annotations) {
+          final HttpMethod httpMethodAnnotation = annotation.annotationType().getAnnotation(HttpMethod.class);
+          if (httpMethodAnnotation != null)
+            httpMethodAnnotations.add(httpMethodAnnotation);
+        }
 
-  private static void addProvider(final List<MessageBodyReader<?>> entityReaders, final List<MessageBodyWriter<?>> entityWriters, final List<ContainerRequestFilter> requestFilters, final List<ContainerResponseFilter> responseFilters, final List<ParamConverterProvider> paramConverterProviders, final Object singleton) {
-    for (final Class<?> inter : singleton.getClass().getInterfaces()) {
-      if (inter == MessageBodyReader.class) {
-        final MessageBodyReader<?> entityReader = (MessageBodyReader<?>)singleton;
-        entityReaders.add(entityReader);
+        for (final HttpMethod httpMethodAnnotation : httpMethodAnnotations) {
+          ContextInjector.allowsInjectableClass(Field.class, cls);
+          final ResourceManifest manifest = new ResourceManifest(httpMethodAnnotation, method, singleton);
+          logger.info(httpMethodAnnotation.value() + " " + manifest.getPathPattern().getPattern().toString() + " -> " + cls.getSimpleName() + "." + method.getName() + "()");
+          registry.add(manifest.getHttpMethod().value().toUpperCase(), manifest);
+        }
       }
-      else if (inter == MessageBodyWriter.class) {
-        final MessageBodyWriter<?> entityWriter = (MessageBodyWriter<?>)singleton;
-        entityWriters.add(entityWriter);
-      }
-      else if (inter == ParamConverterProvider.class) {
-        final ParamConverterProvider paramConverterProvider = (ParamConverterProvider)singleton;
-        paramConverterProviders.add(paramConverterProvider);
-      }
-      else if (inter == ContainerRequestFilter.class) {
-        requestFilters.add((ContainerRequestFilter)singleton);
-      }
-      else if (inter == ContainerResponseFilter.class) {
-        responseFilters.add((ContainerResponseFilter)singleton);
-      }
-      else {
-        throw new UnsupportedOperationException("Unsupported @Provider of type: " + singleton.getClass().getName());
+    }
+    else if (cls.isAnnotationPresent(Provider.class)) {
+      // Automatically discovered @Provider(s) are singletons
+      // FIXME: Have to inject here! Constructor may have @Context stuff
+      if (singleton == null)
+        singleton = cls.getDeclaredConstructor().newInstance();
+
+      for (final Class<?> inter : cls.getInterfaces()) {
+        if (inter == MessageBodyReader.class) {
+          entityReaders.add((MessageBodyReader<?>)singleton);
+        }
+        else if (inter == MessageBodyWriter.class) {
+          entityWriters.add((MessageBodyWriter<?>)singleton);
+        }
+        else if (inter == ParamConverterProvider.class) {
+          paramConverterProviders.add((ParamConverterProvider)singleton);
+        }
+        else if (inter == ContainerRequestFilter.class) {
+          requestFilters.add((ContainerRequestFilter)singleton);
+        }
+        else if (inter == ContainerResponseFilter.class) {
+          responseFilters.add((ContainerResponseFilter)singleton);
+        }
+        else {
+          throw new UnsupportedOperationException("Unsupported @Provider of type: " + cls.getName());
+        }
       }
     }
   }
+
+  private ResourceContext resourceContext;
 
   protected ResourceContext getResourceContext() {
     return resourceContext;
@@ -138,71 +161,48 @@ public abstract class StartupServlet extends HttpServlet {
     final List<ContainerRequestFilter> requestFilters = new ArrayList<ContainerRequestFilter>();
     final List<ContainerResponseFilter> responseFilters = new ArrayList<ContainerResponseFilter>();
 
-    final Predicate<Class<?>> initialize = new Predicate<Class<?>>() {
-      private final Set<Class<?>> loadedClasses = new HashSet<Class<?>>();
-      @Override
-      public boolean test(final Class<?> t) {
-        try {
-          if (Modifier.isAbstract(t.getModifiers()) || loadedClasses.contains(t))
-            return false;
-
-          if (isRootResource(t)) {
-            final Method[] methods = t.getMethods();
-            for (final Method method : methods) {
-              final Set<HttpMethod> httpMethodAnnotations = new HashSet<HttpMethod>(); // FIXME: Can this be done without a Collection?
-              final Annotation[] annotations = method.getAnnotations();
-              for (final Annotation annotation : annotations) {
-                final HttpMethod httpMethodAnnotation = annotation.annotationType().getAnnotation(HttpMethod.class);
-                if (httpMethodAnnotation != null)
-                  httpMethodAnnotations.add(httpMethodAnnotation);
-              }
-
-              for (final HttpMethod httpMethodAnnotation : httpMethodAnnotations) {
-                ContextInjector.allowsInjectableClass(Field.class, t);
-                final ResourceManifest manifest = new ResourceManifest(httpMethodAnnotation, method);
-                logger.info(httpMethodAnnotation.value() + " " + manifest.getPathPattern().getPattern().toString() + " -> " + t.getSimpleName() + "." + method.getName() + "()");
-                registry.add(manifest.getHttpMethod().value().toUpperCase(), manifest);
-              }
-            }
-          }
-          else if (t.isAnnotationPresent(Provider.class)) {
-            // Automatically discovered @Provider(s) are singletons
-            addProvider(entityReaders, entityWriters, requestFilters, responseFilters, paramConverterProviders, t.getDeclaredConstructor().newInstance());
-          }
-        }
-        catch (final IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException e) {
-          throw new WebApplicationException(e);
-        }
-
-        loadedClasses.add(t);
-        return false;
-      }
-    };
-
-    try {
-      for (final Package pkg : Package.getPackages())
-        if (acceptPackage(pkg))
-          PackageLoader.getSystemContextPackageLoader().loadPackage(pkg, initialize);
-    }
-    catch (final PackageNotFoundException e) {
-    }
-
     final String applicationSpec = getInitParameter("javax.ws.rs.Application");
     if (applicationSpec != null) {
       try {
         final Application application = (Application)Class.forName(applicationSpec).getDeclaredConstructor().newInstance();
         final Set<?> singletons = application.getSingletons();
         if (singletons != null)
-          for (final Object provider : singletons)
-            addProvider(entityReaders, entityWriters, requestFilters, responseFilters, paramConverterProviders, provider);
+          for (final Object singleton : singletons)
+            addResourceProvider(registry, entityReaders, entityWriters, requestFilters, responseFilters, paramConverterProviders, singleton.getClass(), singleton);
 
         final Set<Class<?>> classes = application.getClasses();
         if (classes != null)
           for (final Class<?> cls : classes)
-            addProvider(entityReaders, entityWriters, requestFilters, responseFilters, paramConverterProviders, cls);
+            addResourceProvider(registry, entityReaders, entityWriters, requestFilters, responseFilters, paramConverterProviders, cls, null);
       }
       catch (final ClassNotFoundException | IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException e) {
         throw new WebApplicationException(e);
+      }
+    }
+    else {
+      final Predicate<Class<?>> initialize = new Predicate<Class<?>>() {
+        private final Set<Class<?>> loadedClasses = new HashSet<Class<?>>();
+        @Override
+        public boolean test(final Class<?> t) {
+          try {
+            if (!Modifier.isAbstract(t.getModifiers()) && !loadedClasses.contains(t))
+              addResourceProvider(registry, entityReaders, entityWriters, requestFilters, responseFilters, paramConverterProviders, t, null);
+          }
+          catch (final IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException e) {
+            throw new WebApplicationException(e);
+          }
+
+          loadedClasses.add(t);
+          return false;
+        }
+      };
+
+      try {
+        for (final Package pkg : Package.getPackages())
+          if (acceptPackage(pkg))
+            PackageLoader.getSystemContextPackageLoader().loadPackage(pkg, initialize);
+      }
+      catch (final PackageNotFoundException e) {
       }
     }
 

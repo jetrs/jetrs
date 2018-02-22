@@ -79,12 +79,13 @@ public class ResourceManifest {
   private final HttpMethod httpMethod;
   private final Annotation securityAnnotation;
   private final Method method;
+  private final Object singleton;
   private final Class<?> serviceClass;
   private final PathPattern pathPattern;
   private final MediaTypeMatcher<Consumes> consumesMatcher;
   private final MediaTypeMatcher<Produces> producesMatcher;
 
-  public ResourceManifest(final HttpMethod httpMethod, final Method method) {
+  public ResourceManifest(final HttpMethod httpMethod, final Method method, final Object singleton) {
     this.httpMethod = httpMethod;
     final Annotation securityAnnotation = findSecurityAnnotation(method);
     this.securityAnnotation = securityAnnotation != null ? securityAnnotation : new PermitAll() {
@@ -94,10 +95,15 @@ public class ResourceManifest {
       }
     };
     this.method = method;
-    this.serviceClass = method.getDeclaringClass();
+    this.singleton = singleton;
+    this.serviceClass = singleton != null ? singleton.getClass() : method.getDeclaringClass();
     this.pathPattern = new PathPattern(method);
     this.consumesMatcher = new MediaTypeMatcher<Consumes>(method, Consumes.class);
     this.producesMatcher = new MediaTypeMatcher<Produces>(method, Produces.class);
+  }
+
+  public Object getSingleton() {
+    return this.singleton;
   }
 
   public Class<?> getServiceClass() {

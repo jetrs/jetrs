@@ -85,7 +85,7 @@ public class ExecutionContext {
     for (final ResourceMatch resource : resources) {
       matchedURIs.add(resource.getManifest().getPathPattern().getURI(false));
       decodedMatchedURIs.add(resource.getManifest().getPathPattern().getURI(true));
-      matchedResources.add(resource.getManifest().getServiceClass());
+      matchedResources.add(resource.getManifest().getSingleton() != null ? resource.getManifest().getSingleton() : resource.getManifest().getServiceClass());
     }
 
     this.matchedURIs = Collections.unmodifiableList(matchedURIs);
