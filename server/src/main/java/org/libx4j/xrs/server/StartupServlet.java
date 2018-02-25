@@ -70,8 +70,7 @@ public abstract class StartupServlet extends HttpServlet {
 
   private static <T>void addResourceProvider(final MultivaluedMap<String,ResourceManifest> registry, final List<MessageBodyReader<?>> entityReaders, final List<MessageBodyWriter<?>> entityWriters, final List<ContainerRequestFilter> requestFilters, final List<ContainerResponseFilter> responseFilters, final List<ParamConverterProvider> paramConverterProviders, final Class<? extends T> cls, T singleton) throws IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException {
     if (isRootResource(cls)) {
-      final Method[] methods = cls.getMethods();
-      for (final Method method : methods) {
+      for (final Method method : cls.getMethods()) {
         final Set<HttpMethod> httpMethodAnnotations = new HashSet<HttpMethod>(); // FIXME: Can this be done without a Collection?
         final Annotation[] annotations = method.getAnnotations();
         for (final Annotation annotation : annotations) {
