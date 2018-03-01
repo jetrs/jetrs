@@ -18,7 +18,6 @@ package org.libx4j.xrs.server.core;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -27,11 +26,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 
 import org.lib4j.lang.Numbers;
 import org.lib4j.util.Collections;
+import org.libx4j.xrs.server.util.HttpServletRequestUtil;
 import org.libx4j.xrs.server.util.MediaTypes;
 
 public class HttpHeadersImpl implements HttpHeaders {
@@ -42,14 +41,7 @@ public class HttpHeadersImpl implements HttpHeaders {
   }
 
   public HttpHeadersImpl(final HttpServletRequest request) {
-    this(new MultivaluedHashMap<String,String>());
-    final Enumeration<String> headerNames = request.getHeaderNames();
-    while (headerNames.hasMoreElements()) {
-      final String headerName = headerNames.nextElement();
-      final Enumeration<String> enumeration = request.getHeaders(headerName);
-      while (enumeration.hasMoreElements())
-        headers.add(headerName, enumeration.nextElement());
-    }
+    this(HttpServletRequestUtil.getHeaders(request));
   }
 
   @Override

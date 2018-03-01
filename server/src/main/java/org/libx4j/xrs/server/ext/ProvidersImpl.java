@@ -17,6 +17,7 @@
 package org.libx4j.xrs.server.ext;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -34,16 +35,51 @@ import org.lib4j.util.Collections;
 import org.libx4j.xrs.server.util.MediaTypes;
 
 public class ProvidersImpl implements Providers {
-  private static final Comparator<EntityProvider<?>> comparator = new Comparator<EntityProvider<?>>() {
-    @Override
-    public int compare(final EntityProvider<?> o1, final EntityProvider<?> o2) {
-      final Class<?> c1 = o1.getProvider().getClass();
-      final Class<?> c2 = o2.getProvider().getClass();
-      return c1 == c2 ? 0 : c1.isAssignableFrom(c2) ? 1 : -1;
-    }
-  };
+  private static Class<?> getGenericInterfaceType(final Class<?> interfaceType, final Class<?> cls) {
+    final Type[] genericInterfaces = cls.getGenericInterfaces();
+    if (genericInterfaces == null || genericInterfaces.length == 0)
+      return null;
 
-  private class ReaderProvider extends EntityProvider<MessageBodyReader<?>> {
+    for (int i = 0; i < genericInterfaces.length; i++)
+      if (genericInterfaces[i].getTypeName().startsWith(interfaceType.getTypeName() + "<"))
+        return (Class<?>)((ParameterizedType)genericInterfaces[i]).getActualTypeArguments()[0];
+
+    return null;
+  }
+
+  private static class ProviderComparator implements Comparator<Object> {
+    private final Class<?> providerType;
+
+    public ProviderComparator(final Class<?> providerType) {
+      this.providerType = providerType;
+    }
+
+    @Override
+    public int compare(final Object o1, final Object o2) {
+      final Class<?> c1 = getGenericInterfaceType(providerType, o1.getClass());
+      final Class<?> c2 = getGenericInterfaceType(providerType, o2.getClass());
+      return c1 == c2 ? 0 : c1.isAssignableFrom(c2) ? -1 : 1;
+    }
+  }
+
+  private static class BodyProviderComparator implements Comparator<BodyProvider<?>> {
+    private final Comparator<Object> providerComparator;
+
+    public BodyProviderComparator(final Comparator<Object> providerComparator) {
+      this.providerComparator = providerComparator;
+    }
+
+    @Override
+    public int compare(final BodyProvider<?> o1, final BodyProvider<?> o2) {
+      return providerComparator.compare(o1.getProvider(), o2.getProvider());
+    }
+  }
+
+  private static final Comparator<Object> exceptionMapperComparator = new ProviderComparator(ExceptionMapper.class);
+  private static final Comparator<BodyProvider<?>> messageBodyReaderComparator = new BodyProviderComparator(new ProviderComparator(MessageBodyReader.class));
+  private static final Comparator<BodyProvider<?>> messageBodyWriterComparator = new BodyProviderComparator(new ProviderComparator(MessageBodyWriter.class));
+
+  private class ReaderProvider extends BodyProvider<MessageBodyReader<?>> {
     public ReaderProvider(final MessageBodyReader<?> provider) {
       super(provider);
     }
@@ -54,7 +90,7 @@ public class ProvidersImpl implements Providers {
     }
   }
 
-  private class WriterProvider extends EntityProvider<MessageBodyWriter<?>> {
+  private class WriterProvider extends BodyProvider<MessageBodyWriter<?>> {
     public WriterProvider(final MessageBodyWriter<?> provider) {
       super(provider);
     }
@@ -65,11 +101,21 @@ public class ProvidersImpl implements Providers {
     }
   }
 
-  private abstract class EntityProvider<T> {
+  private class ExceptionMappingProvider {
+    private final ExceptionMapper<?> provider;
+    private final Class<?> exceptionType;
+
+    public ExceptionMappingProvider(final ExceptionMapper<?> provider) {
+      this.provider = provider;
+      this.exceptionType = getGenericInterfaceType(ExceptionMapper.class, provider.getClass());
+    }
+  }
+
+  private abstract class BodyProvider<T> {
     private final MediaType[] allowedTypes;
     private final T provider;
 
-    public EntityProvider(final T provider) {
+    public BodyProvider(final T provider) {
       this.provider = provider;
       final Consumes consumes = provider.getClass().getAnnotation(Consumes.class);
       this.allowedTypes = consumes == null ? new MediaType[] {MediaType.WILDCARD_TYPE} : MediaTypes.parse(consumes.value());
@@ -84,18 +130,26 @@ public class ProvidersImpl implements Providers {
     }
   }
 
-  private final List<ReaderProvider> readerProviders = new ArrayList<ReaderProvider>();
-  private final List<WriterProvider> writerProviders = new ArrayList<WriterProvider>();
+  private final List<ExceptionMappingProvider> exceptionMappers;
+  private final List<ReaderProvider> readerProviders;
+  private final List<WriterProvider> writerProviders;
 
-  public ProvidersImpl(final List<MessageBodyReader<?>> readerProviders, final List<MessageBodyWriter<?>> writerProviders) {
+  public ProvidersImpl(final List<ExceptionMapper<?>> exceptionMappers, final List<MessageBodyReader<?>> readerProviders, final List<MessageBodyWriter<?>> writerProviders) {
+    this.exceptionMappers = new ArrayList<ExceptionMappingProvider>(exceptionMappers.size());
+    for (final ExceptionMapper<?> exceptionMapper : exceptionMappers)
+      this.exceptionMappers.add(new ExceptionMappingProvider(exceptionMapper));
+
+    this.readerProviders = new ArrayList<ReaderProvider>(readerProviders.size());
     for (final MessageBodyReader<?> readerProvider : readerProviders)
       this.readerProviders.add(new ReaderProvider(readerProvider));
 
+    this.writerProviders = new ArrayList<WriterProvider>(writerProviders.size());
     for (final MessageBodyWriter<?> writerProvider : writerProviders)
       this.writerProviders.add(new WriterProvider(writerProvider));
 
-    Collections.sort(this.readerProviders, comparator);
-    Collections.sort(this.writerProviders, comparator);
+    Collections.sort(this.exceptionMappers, exceptionMapperComparator);
+    Collections.sort(this.readerProviders, messageBodyReaderComparator);
+    Collections.sort(this.writerProviders, messageBodyWriterComparator);
   }
 
   @Override
@@ -119,7 +173,12 @@ public class ProvidersImpl implements Providers {
   }
 
   @Override
-  public <T extends Throwable> ExceptionMapper<T> getExceptionMapper(final Class<T> type) {
+  @SuppressWarnings("unchecked")
+  public <T extends Throwable>ExceptionMapper<T> getExceptionMapper(final Class<T> type) {
+    for (final ExceptionMappingProvider exceptionMapper : exceptionMappers)
+      if (exceptionMapper.exceptionType.isAssignableFrom(type))
+        return (ExceptionMapper<T>)exceptionMapper.provider;
+
     return null;
   }
 

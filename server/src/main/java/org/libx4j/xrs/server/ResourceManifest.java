@@ -259,7 +259,7 @@ public class ResourceManifest {
     throw new NotAuthorizedException(challenges);
   }
 
-  public Object service(final ExecutionContext executionContext, final ContainerRequestContext containerRequestContext, final ContextInjector injectionContext, final List<ParamConverterProvider> paramConverterProviders) throws ServletException, IOException {
+  public Object service(final ExecutionContext executionContext, final ContainerRequestContext containerRequestContext, final ContextInjector injectionContext, final List<ParamConverterProvider> paramConverterProviders) throws IOException, ServletException {
     if (executionContext.getMatchedResources() == null)
       throw new IllegalStateException("service() called before filterAndMatch()");
 
@@ -280,8 +280,8 @@ public class ResourceManifest {
     }
     catch (final InvocationTargetException e) {
       // FIXME: Hmm, this is an interesting idea to help reduce the noise in Exceptions from dynamically invoked methods
-      if (e.getCause() instanceof WebApplicationException)
-        throw (WebApplicationException)e.getCause();
+      if (e.getCause() instanceof RuntimeException)
+        throw (RuntimeException)e.getCause();
 
       if (e.getCause() instanceof ServletException)
         throw (ServletException)e.getCause();
@@ -336,5 +336,10 @@ public class ResourceManifest {
     hashCode *= 31 ^ hashCode + consumesMatcher.hashCode();
     hashCode *= 31 ^ hashCode + producesMatcher.hashCode();
     return hashCode;
+  }
+
+  @Override
+  public String toString() {
+    return serviceClass.getName() + '#' + method.getName();
   }
 }

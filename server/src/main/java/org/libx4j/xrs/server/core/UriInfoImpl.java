@@ -34,15 +34,15 @@ import org.libx4j.xrs.server.ExecutionContext;
 
 public class UriInfoImpl implements UriInfo {
   private final ContainerRequestContext containerRequestContext;
-  private final HttpServletRequest request;
+  private final HttpServletRequest httpServletRequest;
   private final ExecutionContext executionContext;
 
   private MultivaluedMap<String,String> decodedParameters;
   private MultivaluedMap<String,String> encodedParameters;
 
-  public UriInfoImpl(final ContainerRequestContext containerRequestContext, final HttpServletRequest request, final ExecutionContext executionContext) {
+  public UriInfoImpl(final ContainerRequestContext containerRequestContext, final HttpServletRequest httpServletRequest, final ExecutionContext executionContext) {
     this.containerRequestContext = containerRequestContext;
-    this.request = request;
+    this.httpServletRequest = httpServletRequest;
     this.executionContext = executionContext;
   }
 
@@ -55,7 +55,7 @@ public class UriInfoImpl implements UriInfo {
 
   @Override
   public String getPath(final boolean decode) {
-    return !decode ? request.getPathInfo() : decodedPath == null ? decodedPath = URLs.pathDecode(request.getPathInfo()) : decodedPath;
+    return !decode ? httpServletRequest.getPathInfo() : decodedPath == null ? decodedPath = URLs.pathDecode(httpServletRequest.getPathInfo()) : decodedPath;
   }
 
   @Override
@@ -72,7 +72,7 @@ public class UriInfoImpl implements UriInfo {
 
   @Override
   public URI getRequestUri() {
-    return URI.create(request.getRequestURI());
+    return URI.create(httpServletRequest.getRequestURI());
   }
 
   @Override
@@ -128,12 +128,12 @@ public class UriInfoImpl implements UriInfo {
   public MultivaluedMap<String,String> getQueryParameters(final boolean decode) {
     final MultivaluedMap<String,String> parameters = new MultivaluedHashMap<String,String>();
     if (decode) {
-      for (final Map.Entry<String,String[]> entry : request.getParameterMap().entrySet())
+      for (final Map.Entry<String,String[]> entry : httpServletRequest.getParameterMap().entrySet())
         for (final String value : entry.getValue())
           parameters.add(entry.getKey(), URIComponent.decode(value));
     }
     else {
-      for (final Map.Entry<String,String[]> entry : request.getParameterMap().entrySet())
+      for (final Map.Entry<String,String[]> entry : httpServletRequest.getParameterMap().entrySet())
         parameters.addAll(entry.getKey(), entry.getValue());
     }
 

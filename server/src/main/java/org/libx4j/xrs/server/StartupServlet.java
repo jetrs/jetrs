@@ -43,6 +43,7 @@ import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.ParamConverterProvider;
@@ -68,7 +69,7 @@ public abstract class StartupServlet extends HttpServlet {
     return true;
   }
 
-  private static <T>void addResourceProvider(final MultivaluedMap<String,ResourceManifest> registry, final List<MessageBodyReader<?>> entityReaders, final List<MessageBodyWriter<?>> entityWriters, final List<ContainerRequestFilter> requestFilters, final List<ContainerResponseFilter> responseFilters, final List<ParamConverterProvider> paramConverterProviders, final Class<? extends T> cls, T singleton) throws IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException {
+  private static <T>void addResourceProvider(final MultivaluedMap<String,ResourceManifest> registry, final List<ExceptionMapper<?>> exceptionMappers, final List<MessageBodyReader<?>> entityReaders, final List<MessageBodyWriter<?>> entityWriters, final List<ContainerRequestFilter> requestFilters, final List<ContainerResponseFilter> responseFilters, final List<ParamConverterProvider> paramConverterProviders, final Class<? extends T> cls, T singleton) throws IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException {
     if (isRootResource(cls)) {
       for (final Method method : cls.getMethods()) {
         final Set<HttpMethod> httpMethodAnnotations = new HashSet<HttpMethod>(); // FIXME: Can this be done without a Collection?
@@ -96,6 +97,9 @@ public abstract class StartupServlet extends HttpServlet {
       for (final Class<?> inter : cls.getInterfaces()) {
         if (inter == MessageBodyReader.class) {
           entityReaders.add((MessageBodyReader<?>)singleton);
+        }
+        else if (inter == ExceptionMapper.class) {
+          exceptionMappers.add((ExceptionMapper<?>)singleton);
         }
         else if (inter == MessageBodyWriter.class) {
           entityWriters.add((MessageBodyWriter<?>)singleton);
@@ -155,6 +159,7 @@ public abstract class StartupServlet extends HttpServlet {
     super.init(config);
     final MultivaluedMap<String,ResourceManifest> registry = new MultivaluedHashMap<String,ResourceManifest>();
     final List<ParamConverterProvider> paramConverterProviders = new ArrayList<ParamConverterProvider>();
+    final List<ExceptionMapper<?>> exceptionMappers = new ArrayList<ExceptionMapper<?>>();
     final List<MessageBodyReader<?>> entityReaders = new ArrayList<MessageBodyReader<?>>();
     final List<MessageBodyWriter<?>> entityWriters = new ArrayList<MessageBodyWriter<?>>();
     final List<ContainerRequestFilter> requestFilters = new ArrayList<ContainerRequestFilter>();
@@ -167,12 +172,12 @@ public abstract class StartupServlet extends HttpServlet {
         final Set<?> singletons = application.getSingletons();
         if (singletons != null)
           for (final Object singleton : singletons)
-            addResourceProvider(registry, entityReaders, entityWriters, requestFilters, responseFilters, paramConverterProviders, singleton.getClass(), singleton);
+            addResourceProvider(registry, exceptionMappers, entityReaders, entityWriters, requestFilters, responseFilters, paramConverterProviders, singleton.getClass(), singleton);
 
         final Set<Class<?>> classes = application.getClasses();
         if (classes != null)
           for (final Class<?> cls : classes)
-            addResourceProvider(registry, entityReaders, entityWriters, requestFilters, responseFilters, paramConverterProviders, cls, null);
+            addResourceProvider(registry, exceptionMappers, entityReaders, entityWriters, requestFilters, responseFilters, paramConverterProviders, cls, null);
       }
       catch (final ClassNotFoundException | IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException e) {
         throw new WebApplicationException(e);
@@ -185,7 +190,7 @@ public abstract class StartupServlet extends HttpServlet {
         public boolean test(final Class<?> t) {
           try {
             if (!Modifier.isAbstract(t.getModifiers()) && !loadedClasses.contains(t))
-              addResourceProvider(registry, entityReaders, entityWriters, requestFilters, responseFilters, paramConverterProviders, t, null);
+              addResourceProvider(registry, exceptionMappers, entityReaders, entityWriters, requestFilters, responseFilters, paramConverterProviders, t, null);
           }
           catch (final IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException e) {
             throw new WebApplicationException(e);
@@ -205,6 +210,6 @@ public abstract class StartupServlet extends HttpServlet {
       }
     }
 
-    this.resourceContext = new ResourceContext(registry, new ContainerFilters(requestFilters, responseFilters), new ProvidersImpl(entityReaders, entityWriters), paramConverterProviders);
+    this.resourceContext = new ResourceContext(registry, new ContainerFilters(requestFilters, responseFilters), new ProvidersImpl(exceptionMappers, entityReaders, entityWriters), paramConverterProviders);
   }
 }

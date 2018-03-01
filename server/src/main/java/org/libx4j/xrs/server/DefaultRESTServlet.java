@@ -36,15 +36,16 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.RuntimeDelegate;
 
 import org.lib4j.lang.Classes;
-import org.lib4j.lang.Throwables;
 import org.libx4j.xrs.server.container.ContainerRequestContextImpl;
 import org.libx4j.xrs.server.container.ContainerResponseContextImpl;
 import org.libx4j.xrs.server.core.ContextInjector;
 import org.libx4j.xrs.server.core.HttpHeadersImpl;
 import org.libx4j.xrs.server.ext.RuntimeDelegateImpl;
+import org.libx4j.xrs.server.util.HttpServletRequestUtil;
 
 @WebServlet(name="javax.ws.rs.core.Application", urlPatterns="/*")
 public abstract class DefaultRESTServlet extends StartupServlet {
@@ -89,7 +90,10 @@ public abstract class DefaultRESTServlet extends StartupServlet {
     }
   }
 
+  @SuppressWarnings("unchecked")
   private void service(final HttpServletRequestContext httpServletRequest, final HttpServletResponse httpServletResponse) throws IOException {
+    final StringBuilder accessLogDebug = new StringBuilder();
+    accessLogDebug.append("Headers: ").append(HttpServletRequestUtil.getHeaders(httpServletRequest));
     final ContainerResponseContext containerResponseContext = new ContainerResponseContextImpl(httpServletResponse);
     final HttpHeaders httpHeaders = new HttpHeadersImpl(httpServletRequest);
     final ExecutionContext executionContext = new ExecutionContext(httpHeaders, httpServletResponse, containerResponseContext, getResourceContext());
@@ -99,57 +103,55 @@ public abstract class DefaultRESTServlet extends StartupServlet {
 
     final ContextInjector injectionContext = ContextInjector.createInjectionContext(containerRequestContext, httpServletRequest, httpServletResponse, httpHeaders, getResourceContext().getProviders());
 
-    Exception executionException = null;
-
     try {
-      try {
-        getResourceContext().getContainerFilters().filterPreMatchContainerRequest(containerRequestContext, injectionContext);
-        final ResourceMatch resource = executionContext.filterAndMatch(containerRequestContext);
-        if (resource == null)
-          throw new NotFoundException();
-
-        httpServletRequest.setResourceManifest(resource.getManifest());
-        getResourceContext().getContainerFilters().filterContainerRequest(containerRequestContext, injectionContext);
-
-        final Produces produces = resource.getManifest().getMatcher(Produces.class).getAnnotation();
-        if (produces != null)
-          containerResponseContext.getStringHeaders().putSingle(HttpHeaders.CONTENT_TYPE, resource.getAccept().toString());
-
-        final Object content = resource.getManifest().service(executionContext, containerRequestContext, injectionContext, getResourceContext().getParamConverterProviders());
-        if (content instanceof Response)
-          executionContext.setResponse((Response)content);
-        else if (content != null)
-          containerResponseContext.setEntity(content);
-
-        getResourceContext().getContainerFilters().filterContainerResponse(containerRequestContext, containerResponseContext, injectionContext);
-        executionContext.writeResponse(getResourceContext().getProviders());
+      getResourceContext().getContainerFilters().filterPreMatchContainerRequest(containerRequestContext, injectionContext);
+      final ResourceMatch resource = executionContext.filterAndMatch(containerRequestContext);
+      if (resource == null) {
+        accessLogDebug.append(", Matched: null");
+        throw new NotFoundException();
       }
-      catch (final WebApplicationException e) {
-        throw e;
-      }
-      catch (final IOException | RuntimeException | ServletException e) {
-        executionException = e;
-        throw new InternalServerErrorException(e);
-      }
+
+      accessLogDebug.append(", Matched: ").append(resource.getManifest());
+      httpServletRequest.setResourceManifest(resource.getManifest());
+      getResourceContext().getContainerFilters().filterContainerRequest(containerRequestContext, injectionContext);
+
+      final Produces produces = resource.getManifest().getMatcher(Produces.class).getAnnotation();
+      if (produces != null)
+        containerResponseContext.getStringHeaders().putSingle(HttpHeaders.CONTENT_TYPE, resource.getAccept().toString());
+
+      final Object content = resource.getManifest().service(executionContext, containerRequestContext, injectionContext, getResourceContext().getParamConverterProviders());
+      if (content instanceof Response)
+        executionContext.setResponse((Response)content);
+      else if (content != null)
+        containerResponseContext.setEntity(content);
+
+      getResourceContext().getContainerFilters().filterContainerResponse(containerRequestContext, containerResponseContext, injectionContext);
+      executionContext.writeResponse(getResourceContext().getProviders());
+      // FIXME: There's kind of a mixup of when to use the ContainerResponseContext vs Response.
     }
-    catch (final WebApplicationException e) {
-      if (executionException != null)
-        Throwables.set(e, executionException);
+    catch (final IOException | RuntimeException | ServletException e) {
+      final WebApplicationException e1 = e instanceof WebApplicationException ? (WebApplicationException)e : new InternalServerErrorException(e);
+
+      final ExceptionMapper<WebApplicationException> exceptionMapper = getResourceContext().getProviders().getExceptionMapper((Class<WebApplicationException>)e1.getClass());
+      final Response response = exceptionMapper != null ? exceptionMapper.toResponse(e1) : e1.getResponse();
 
       try {
-        executionContext.setResponse(e.getResponse());
+        executionContext.setResponse(response);
         getResourceContext().getContainerFilters().filterContainerResponse(containerRequestContext, containerResponseContext, injectionContext);
         executionContext.writeResponse(getResourceContext().getProviders());
+      }
+      catch (final WebApplicationException e2) {
+        e2.addSuppressed(e1);
+        throw e2;
       }
       catch (final IOException | RuntimeException e2) {
-        if (executionException != null)
-          Throwables.set(e2, executionException);
-
         httpServletResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        e2.addSuppressed(e1);
         throw e2;
       }
 
-      throw e;
+      if (response.getStatusInfo().getFamily() == Response.Status.Family.SERVER_ERROR)
+        throw e1;
     }
     finally {
       executionContext.commit();
