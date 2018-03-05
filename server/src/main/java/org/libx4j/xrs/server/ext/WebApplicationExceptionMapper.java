@@ -25,9 +25,7 @@ import javax.ws.rs.ext.Provider;
 public class WebApplicationExceptionMapper implements ExceptionMapper<WebApplicationException> {
   @Override
   public Response toResponse(final WebApplicationException exception) {
-    final StringBuilder builder = new StringBuilder("{\"status\":");
-    builder.append(exception.getResponse().getStatus());
-
+    final StringBuilder builder = new StringBuilder("{\"status\":").append(exception.getResponse().getStatus());
     final String message = exception.getMessage();
     if (message != null) {
       final String prefix = "HTTP " + exception.getResponse().getStatus() + " ";
