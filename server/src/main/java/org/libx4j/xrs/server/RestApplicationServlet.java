@@ -48,7 +48,7 @@ import org.libx4j.xrs.server.ext.RuntimeDelegateImpl;
 import org.libx4j.xrs.server.util.HttpServletRequestUtil;
 
 @WebServlet(name="javax.ws.rs.core.Application", urlPatterns="/*")
-public abstract class DefaultRESTServlet extends StartupServlet {
+public class RestApplicationServlet extends RestHttpServlet {
   private static final long serialVersionUID = 3700080355780006441L;
 
   static {
@@ -65,7 +65,7 @@ public abstract class DefaultRESTServlet extends StartupServlet {
     return null;
   }
 
-  public DefaultRESTServlet() {
+  public RestApplicationServlet() {
     final WebServlet webServlet = getClass().getAnnotation(WebServlet.class);
     if (webServlet == null)
       return;
@@ -74,7 +74,7 @@ public abstract class DefaultRESTServlet extends StartupServlet {
     if (applicationClassName == null)
       return;
 
-    Classes.setAnnotationValue(DefaultRESTServlet.class.getAnnotation(WebServlet.class), "urlPatterns", new String[0]);
+    Classes.setAnnotationValue(RestApplicationServlet.class.getAnnotation(WebServlet.class), "urlPatterns", new String[0]);
     Classes.setAnnotationValue(webServlet, "name", applicationClassName);
     if (webServlet.urlPatterns().length > 0 || webServlet.value().length > 0)
       return;

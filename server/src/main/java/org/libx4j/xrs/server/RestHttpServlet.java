@@ -56,9 +56,9 @@ import org.libx4j.xrs.server.ext.ProvidersImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class StartupServlet extends HttpServlet {
+abstract class RestHttpServlet extends HttpServlet {
   private static final long serialVersionUID = 6825431027711735886L;
-  private static final Logger logger = LoggerFactory.getLogger(StartupServlet.class);
+  private static final Logger logger = LoggerFactory.getLogger(RestHttpServlet.class);
   private static final String[] excludeStartsWith = {"jdk", "java", "javax", "com.sun", "sun", "org.w3c", "org.xml", "org.jvnet", "org.joda", "org.jcp", "apple.security"};
 
   private static boolean acceptPackage(final Package pkg) {

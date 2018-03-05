@@ -47,59 +47,19 @@ public class ProvidersImpl implements Providers {
     return null;
   }
 
-  private static class ProviderComparator implements Comparator<Object> {
-    private final Class<?> providerType;
-
-    public ProviderComparator(final Class<?> providerType) {
-      this.providerType = providerType;
-    }
-
+  private static final Comparator<ExceptionMappingProvider> exceptionMapperComparator = new Comparator<ExceptionMappingProvider>() {
     @Override
-    public int compare(final Object o1, final Object o2) {
-      final Class<?> c1 = getGenericInterfaceType(providerType, o1.getClass());
-      final Class<?> c2 = getGenericInterfaceType(providerType, o2.getClass());
-      return c1 == c2 ? 0 : c1.isAssignableFrom(c2) ? -1 : 1;
+    public int compare(final ExceptionMappingProvider o1, final ExceptionMappingProvider o2) {
+      return o1.exceptionType == o2.exceptionType ? 0 : o1.exceptionType.isAssignableFrom(o2.exceptionType) ? 1 : -1;
     }
-  }
+  };
 
-  private static class BodyProviderComparator implements Comparator<BodyProvider<?>> {
-    private final Comparator<Object> providerComparator;
-
-    public BodyProviderComparator(final Comparator<Object> providerComparator) {
-      this.providerComparator = providerComparator;
-    }
-
+  private static final Comparator<BodyProvider<?>> messageBodyComparator = new Comparator<BodyProvider<?>>() {
     @Override
     public int compare(final BodyProvider<?> o1, final BodyProvider<?> o2) {
-      return providerComparator.compare(o1.getProvider(), o2.getProvider());
+      return o1.type == o2.type ? 0 : o1.type.isAssignableFrom(o2.type) ? 1 : -1;
     }
-  }
-
-  private static final Comparator<Object> exceptionMapperComparator = new ProviderComparator(ExceptionMapper.class);
-  private static final Comparator<BodyProvider<?>> messageBodyReaderComparator = new BodyProviderComparator(new ProviderComparator(MessageBodyReader.class));
-  private static final Comparator<BodyProvider<?>> messageBodyWriterComparator = new BodyProviderComparator(new ProviderComparator(MessageBodyWriter.class));
-
-  private class ReaderProvider extends BodyProvider<MessageBodyReader<?>> {
-    public ReaderProvider(final MessageBodyReader<?> provider) {
-      super(provider);
-    }
-
-    @Override
-    public boolean matches(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
-      return super.matches(type, genericType, annotations, mediaType) && getProvider().isReadable(type, genericType, annotations, mediaType);
-    }
-  }
-
-  private class WriterProvider extends BodyProvider<MessageBodyWriter<?>> {
-    public WriterProvider(final MessageBodyWriter<?> provider) {
-      super(provider);
-    }
-
-    @Override
-    public boolean matches(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
-      return super.matches(type, genericType, annotations, mediaType) && getProvider().isWriteable(type, genericType, type.getAnnotations(), mediaType);
-    }
-  }
+  };
 
   private class ExceptionMappingProvider {
     private final ExceptionMapper<?> provider;
@@ -111,22 +71,42 @@ public class ProvidersImpl implements Providers {
     }
   }
 
+  private class ReaderProvider extends BodyProvider<MessageBodyReader<?>> {
+    public ReaderProvider(final MessageBodyReader<?> provider) {
+      super(MessageBodyReader.class, provider);
+    }
+
+    @Override
+    public boolean matches(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
+      return super.matches(type, genericType, annotations, mediaType) && provider.isReadable(type, genericType, annotations, mediaType);
+    }
+  }
+
+  private class WriterProvider extends BodyProvider<MessageBodyWriter<?>> {
+    public WriterProvider(final MessageBodyWriter<?> provider) {
+      super(MessageBodyWriter.class, provider);
+    }
+
+    @Override
+    public boolean matches(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
+      return super.matches(type, genericType, annotations, mediaType) && provider.isWriteable(type, genericType, type.getAnnotations(), mediaType);
+    }
+  }
+
   private abstract class BodyProvider<T> {
     private final MediaType[] allowedTypes;
-    private final T provider;
+    protected final T provider;
+    private final Class<?> type;
 
-    public BodyProvider(final T provider) {
+    protected BodyProvider(final Class<?> interfaceType, final T provider) {
       this.provider = provider;
+      this.type = getGenericInterfaceType(interfaceType, provider.getClass());
       final Consumes consumes = provider.getClass().getAnnotation(Consumes.class);
       this.allowedTypes = consumes == null ? new MediaType[] {MediaType.WILDCARD_TYPE} : MediaTypes.parse(consumes.value());
     }
 
     public boolean matches(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
       return MediaTypes.matches(mediaType, allowedTypes);
-    }
-
-    public T getProvider() {
-      return provider;
     }
   }
 
@@ -148,8 +128,8 @@ public class ProvidersImpl implements Providers {
       this.writerProviders.add(new WriterProvider(writerProvider));
 
     Collections.sort(this.exceptionMappers, exceptionMapperComparator);
-    Collections.sort(this.readerProviders, messageBodyReaderComparator);
-    Collections.sort(this.writerProviders, messageBodyWriterComparator);
+    Collections.sort(this.readerProviders, messageBodyComparator);
+    Collections.sort(this.writerProviders, messageBodyComparator);
   }
 
   @Override
@@ -157,7 +137,7 @@ public class ProvidersImpl implements Providers {
   public <T>MessageBodyReader<T> getMessageBodyReader(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
     for (final ReaderProvider provider : readerProviders)
       if (provider.matches(type, genericType, annotations, mediaType))
-        return (MessageBodyReader<T>)provider.getProvider();
+        return (MessageBodyReader<T>)provider.provider;
 
     return null;
   }
@@ -167,7 +147,7 @@ public class ProvidersImpl implements Providers {
   public <T>MessageBodyWriter<T> getMessageBodyWriter(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
     for (final WriterProvider provider : writerProviders)
       if (provider.matches(type, genericType, annotations, mediaType))
-        return (MessageBodyWriter<T>)provider.getProvider();
+        return (MessageBodyWriter<T>)provider.provider;
 
     return null;
   }
