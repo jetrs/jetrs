@@ -30,6 +30,7 @@ import javax.ws.rs.ext.ParamConverter;
 import javax.ws.rs.ext.ParamConverterProvider;
 
 import org.lib4j.util.Collections;
+import org.libx4j.xrs.server.ProviderResource;
 
 public final class ParameterUtil {
   private static final String[] forEnums = new String[] {"fromString", "valueOf"};
@@ -46,9 +47,9 @@ public final class ParameterUtil {
     return null;
   }
 
-  private static <T>ParamConverter<T> lookupParamConverter(final List<ParamConverterProvider> paramConverterProviders, final Class<T> rawType, final Type genericType, final Annotation[] annotations) {
-    for (final ParamConverterProvider paramConverterProvider : paramConverterProviders) {
-      final ParamConverter<T> paramConverter = paramConverterProvider.getConverter(rawType, genericType, annotations);
+  private static <T>ParamConverter<T> lookupParamConverter(final List<ProviderResource<ParamConverterProvider>> paramConverterProviders, final Class<T> rawType, final Type genericType, final Annotation[] annotations) {
+    for (final ProviderResource<ParamConverterProvider> paramConverterProvider : paramConverterProviders) {
+      final ParamConverter<T> paramConverter = paramConverterProvider.getMatchInstance().getConverter(rawType, genericType, annotations);
       if (paramConverter != null)
         return paramConverter;
     }
@@ -58,7 +59,7 @@ public final class ParameterUtil {
 
   // http://download.oracle.com/otn-pub/jcp/jaxrs-2_0_rev_A-mrel-eval-spec/jsr339-jaxrs-2.0-final-spec.pdf Section 3.2
   @SuppressWarnings({"rawtypes", "unchecked"})
-  public static Object convertParameter(final Class<?> parameterType, final Type genericType, final Annotation[] annotations, final List<String> values, final List<ParamConverterProvider> paramConverterProviders) throws ReflectiveOperationException {
+  public static Object convertParameter(final Class<?> parameterType, final Type genericType, final Annotation[] annotations, final List<String> values, final List<ProviderResource<ParamConverterProvider>> paramConverterProviders) throws ReflectiveOperationException {
     if (values == null || values.size() == 0)
       return null;
 

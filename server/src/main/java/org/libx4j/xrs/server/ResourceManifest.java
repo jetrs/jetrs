@@ -131,7 +131,7 @@ public class ResourceManifest {
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
-  private static Object[] getParameters(final Method method, final ContainerRequestContext containerRequestContext, final ContextInjector injectionContext, final List<ParamConverterProvider> paramConverterProviders) throws IOException {
+  private static Object[] getParameters(final Method method, final ContainerRequestContext containerRequestContext, final ContextInjector injectionContext, final List<ProviderResource<ParamConverterProvider>> paramConverterProviders) throws IOException {
     final Class<?>[] parameterTypes = method.getParameterTypes();
     final Type[] genericParameterTypes = method.getGenericParameterTypes();
     final Annotation[][] parameterAnnotations = method.getParameterAnnotations();
@@ -259,7 +259,7 @@ public class ResourceManifest {
     throw new NotAuthorizedException(challenges);
   }
 
-  public Object service(final ExecutionContext executionContext, final ContainerRequestContext containerRequestContext, final ContextInjector injectionContext, final List<ParamConverterProvider> paramConverterProviders) throws IOException, ServletException {
+  public Object service(final ExecutionContext executionContext, final ContainerRequestContext containerRequestContext, final ContextInjector injectionContext, final List<ProviderResource<ParamConverterProvider>> paramConverterProviders) throws IOException, ServletException {
     if (executionContext.getMatchedResources() == null)
       throw new IllegalStateException("service() called before filterAndMatch()");
 

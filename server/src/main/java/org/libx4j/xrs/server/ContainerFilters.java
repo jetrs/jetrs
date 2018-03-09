@@ -36,9 +36,9 @@ import org.slf4j.LoggerFactory;
 public final class ContainerFilters {
   private static final Logger logger = LoggerFactory.getLogger(ContainerFilters.class);
 
-  private final List<ContainerRequestFilter> preMatchContainerRequestFilters = new ArrayList<ContainerRequestFilter>();
-  private final List<ContainerRequestFilter> containerRequestFilters = new ArrayList<ContainerRequestFilter>();
-  private final List<ContainerResponseFilter> containerResponseFilters = new ArrayList<ContainerResponseFilter>();
+  private final List<ProviderResource<ContainerRequestFilter>> preMatchContainerRequestFilters = new ArrayList<ProviderResource<ContainerRequestFilter>>();
+  private final List<ProviderResource<ContainerRequestFilter>> containerRequestFilters = new ArrayList<ProviderResource<ContainerRequestFilter>>();
+  private final List<ProviderResource<ContainerResponseFilter>> containerResponseFilters = new ArrayList<ProviderResource<ContainerResponseFilter>>();
 
   private static final Comparator<Object> priorityComparator = new Comparator<Object>() {
     @Override
@@ -49,12 +49,12 @@ public final class ContainerFilters {
     }
   };
 
-  public ContainerFilters(final List<ContainerRequestFilter> requestFilters, final List<ContainerResponseFilter> responseFilters) {
-    for (final ContainerRequestFilter requestFilter : requestFilters)
-      (requestFilter.getClass().isAnnotationPresent(PreMatching.class) ? preMatchContainerRequestFilters : containerRequestFilters).add(requestFilter);
+  public ContainerFilters(final List<ProviderResource<ContainerRequestFilter>> requestFilters, final List<ProviderResource<ContainerResponseFilter>> responseFilters) {
+    for (final ProviderResource<ContainerRequestFilter> requestFilter : requestFilters)
+      (requestFilter.getProviderClass().isAnnotationPresent(PreMatching.class) ? preMatchContainerRequestFilters : containerRequestFilters).add(requestFilter);
 
-    for (final ContainerResponseFilter responseFilter : responseFilters) {
-      if (responseFilter.getClass().isAnnotationPresent(PreMatching.class))
+    for (final ProviderResource<ContainerResponseFilter> responseFilter : responseFilters) {
+      if (responseFilter.getProviderClass().isAnnotationPresent(PreMatching.class))
         logger.warn("@PreMatching annotation is not applicable to ContainerResponseFilter");
 
       containerResponseFilters.add(responseFilter);
@@ -66,17 +66,17 @@ public final class ContainerFilters {
   }
 
   public void filterPreMatchContainerRequest(final ContainerRequestContext requestContext, final ContextInjector injectionContext) throws IOException {
-    for (final ContainerRequestFilter preMatchRequestFilter : preMatchContainerRequestFilters)
-      injectionContext.inject(preMatchRequestFilter.getClass()).filter(requestContext);
+    for (final ProviderResource<ContainerRequestFilter> preMatchRequestFilter : preMatchContainerRequestFilters)
+      injectionContext.inject(preMatchRequestFilter).filter(requestContext);
   }
 
   public void filterContainerRequest(final ContainerRequestContext requestContext, final ContextInjector injectionContext) throws IOException {
-    for (final ContainerRequestFilter postMatchRequestFilter : containerRequestFilters)
-      injectionContext.inject(postMatchRequestFilter.getClass()).filter(requestContext);
+    for (final ProviderResource<ContainerRequestFilter> postMatchRequestFilter : containerRequestFilters)
+      injectionContext.inject(postMatchRequestFilter).filter(requestContext);
   }
 
   public void filterContainerResponse(final ContainerRequestContext requestContext, final ContainerResponseContext responseContext, final ContextInjector injectionContext) throws IOException {
-    for (final ContainerResponseFilter postMatchResponseFilter : containerResponseFilters)
-      injectionContext.inject(postMatchResponseFilter.getClass()).filter(requestContext, responseContext);
+    for (final ProviderResource<ContainerResponseFilter> postMatchResponseFilter : containerResponseFilters)
+      injectionContext.inject(postMatchResponseFilter).filter(requestContext, responseContext);
   }
 }

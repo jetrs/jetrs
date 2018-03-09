@@ -34,6 +34,7 @@ import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.Providers;
 
 import org.lib4j.lang.Classes;
+import org.libx4j.xrs.server.ProviderResource;
 
 /**
  * @see <a href="http://download.oracle.com/otn-pub/jcp/jaxrs-2_0_rev_A-mrel-spec/jsr339-jaxrs-2.0-final-spec.pdf">JSR339 JAX-RS 2.0 [9.2]</a>
@@ -129,15 +130,15 @@ public class ContextInjector {
     return (T)injectableClassToObject.get(allowedInjectibleClass);
   }
 
-  private <T>T testOrInject(final Class<T> targetClass, final boolean inject) {
+  private <T>T testOrInject(final ProviderResource<T> provider, final boolean inject) {
     try {
-      final T object = targetClass.getDeclaredConstructor().newInstance();
-      final Field[] fields = Classes.getDeclaredFieldsDeep(targetClass);
+      final T object = provider.getSingletonOrNewInstance();
+      final Field[] fields = Classes.getDeclaredFieldsDeep(provider.getProviderClass());
       for (final Field field : fields) {
         if (field.isAnnotationPresent(Context.class)) {
           final Object injectableObject = getInjectableObject(field.getType());
           if (injectableObject == null)
-            throw new UnsupportedOperationException("Unsupported @Context type: " + field.getType().getName() + " on: " + targetClass.getName() + "." + field.getName());
+            throw new UnsupportedOperationException("Unsupported @Context type: " + field.getType().getName() + " on: " + provider.getProviderClass().getName() + "." + field.getName());
 
           if (inject) {
             field.setAccessible(true);
@@ -153,11 +154,11 @@ public class ContextInjector {
     }
   }
 
-  public void test(final Class<?> targetClass) {
-    testOrInject(targetClass, false);
+  public <T>void test(final ProviderResource<?> provider) {
+    testOrInject(provider, false);
   }
 
-  public <T>T inject(final Class<T> targetClass) {
-    return testOrInject(targetClass, true);
+  public <T>T inject(final ProviderResource<T> provider) {
+    return testOrInject(provider, true);
   }
 }

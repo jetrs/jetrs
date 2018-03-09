@@ -37,7 +37,6 @@ import javax.ws.rs.HttpMethod;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.Application;
@@ -69,7 +68,8 @@ abstract class RestHttpServlet extends HttpServlet {
     return true;
   }
 
-  private static <T>void addResourceProvider(final MultivaluedMap<String,ResourceManifest> registry, final List<ExceptionMapper<?>> exceptionMappers, final List<MessageBodyReader<?>> entityReaders, final List<MessageBodyWriter<?>> entityWriters, final List<ContainerRequestFilter> requestFilters, final List<ContainerResponseFilter> responseFilters, final List<ParamConverterProvider> paramConverterProviders, final Class<? extends T> cls, T singleton) throws IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException {
+  @SuppressWarnings("unchecked")
+  private static <T>void addResourceProvider(final MultivaluedMap<String,ResourceManifest> registry, final List<ExceptionMappingProviderResource> exceptionMappers, final List<EntityReaderProviderResource> entityReaders, final List<EntityWriterProviderResource> entityWriters, final List<ProviderResource<ContainerRequestFilter>> requestFilters, final List<ProviderResource<ContainerResponseFilter>> responseFilters, final List<ProviderResource<ParamConverterProvider>> paramConverterProviders, final Class<? extends T> cls, T singleton) throws IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException, SecurityException {
     if (isRootResource(cls)) {
       for (final Method method : cls.getMethods()) {
         final Set<HttpMethod> httpMethodAnnotations = new HashSet<HttpMethod>(); // FIXME: Can this be done without a Collection?
@@ -91,27 +91,24 @@ abstract class RestHttpServlet extends HttpServlet {
     else if (cls.isAnnotationPresent(Provider.class)) {
       // Automatically discovered @Provider(s) are singletons
       // FIXME: Have to inject here! Constructor may have @Context stuff
-      if (singleton == null)
-        singleton = cls.getDeclaredConstructor().newInstance();
-
-      for (final Class<?> inter : cls.getInterfaces()) {
-        if (inter == MessageBodyReader.class) {
-          entityReaders.add((MessageBodyReader<?>)singleton);
+      for (final Class<?> type : cls.getInterfaces()) {
+        if (type == MessageBodyReader.class) {
+          entityReaders.add(new EntityReaderProviderResource((Class<MessageBodyReader<?>>)cls, (MessageBodyReader<?>)singleton));
         }
-        else if (inter == ExceptionMapper.class) {
-          exceptionMappers.add((ExceptionMapper<?>)singleton);
+        else if (type == MessageBodyWriter.class) {
+          entityWriters.add(new EntityWriterProviderResource((Class<MessageBodyWriter<?>>)cls, (MessageBodyWriter<?>)singleton));
         }
-        else if (inter == MessageBodyWriter.class) {
-          entityWriters.add((MessageBodyWriter<?>)singleton);
+        else if (type == ExceptionMapper.class) {
+          exceptionMappers.add(new ExceptionMappingProviderResource((Class<ExceptionMapper<?>>)cls, (ExceptionMapper<?>)singleton));
         }
-        else if (inter == ParamConverterProvider.class) {
-          paramConverterProviders.add((ParamConverterProvider)singleton);
+        else if (type == ParamConverterProvider.class) {
+          paramConverterProviders.add(new ProviderResource<ParamConverterProvider>((Class<ParamConverterProvider>)cls, (ParamConverterProvider)singleton));
         }
-        else if (inter == ContainerRequestFilter.class) {
-          requestFilters.add((ContainerRequestFilter)singleton);
+        else if (type == ContainerRequestFilter.class) {
+          requestFilters.add(new ProviderResource<ContainerRequestFilter>((Class<ContainerRequestFilter>)cls, (ContainerRequestFilter)singleton));
         }
-        else if (inter == ContainerResponseFilter.class) {
-          responseFilters.add((ContainerResponseFilter)singleton);
+        else if (type == ContainerResponseFilter.class) {
+          responseFilters.add(new ProviderResource<ContainerResponseFilter>((Class<ContainerResponseFilter>)cls, (ContainerResponseFilter)singleton));
         }
         else {
           throw new UnsupportedOperationException("Unsupported @Provider of type: " + cls.getName());
@@ -158,16 +155,16 @@ abstract class RestHttpServlet extends HttpServlet {
   public void init(final ServletConfig config) throws ServletException {
     super.init(config);
     final MultivaluedMap<String,ResourceManifest> registry = new MultivaluedHashMap<String,ResourceManifest>();
-    final List<ParamConverterProvider> paramConverterProviders = new ArrayList<ParamConverterProvider>();
-    final List<ExceptionMapper<?>> exceptionMappers = new ArrayList<ExceptionMapper<?>>();
-    final List<MessageBodyReader<?>> entityReaders = new ArrayList<MessageBodyReader<?>>();
-    final List<MessageBodyWriter<?>> entityWriters = new ArrayList<MessageBodyWriter<?>>();
-    final List<ContainerRequestFilter> requestFilters = new ArrayList<ContainerRequestFilter>();
-    final List<ContainerResponseFilter> responseFilters = new ArrayList<ContainerResponseFilter>();
+    final List<ProviderResource<ParamConverterProvider>> paramConverterProviders = new ArrayList<ProviderResource<ParamConverterProvider>>();
+    final List<ExceptionMappingProviderResource> exceptionMappers = new ArrayList<ExceptionMappingProviderResource>();
+    final List<EntityReaderProviderResource> entityReaders = new ArrayList<EntityReaderProviderResource>();
+    final List<EntityWriterProviderResource> entityWriters = new ArrayList<EntityWriterProviderResource>();
+    final List<ProviderResource<ContainerRequestFilter>> requestFilters = new ArrayList<ProviderResource<ContainerRequestFilter>>();
+    final List<ProviderResource<ContainerResponseFilter>> responseFilters = new ArrayList<ProviderResource<ContainerResponseFilter>>();
 
-    final String applicationSpec = getInitParameter("javax.ws.rs.Application");
-    if (applicationSpec != null) {
-      try {
+    try {
+      final String applicationSpec = getInitParameter("javax.ws.rs.Application");
+      if (applicationSpec != null) {
         final Application application = (Application)Class.forName(applicationSpec).getDeclaredConstructor().newInstance();
         final Set<?> singletons = application.getSingletons();
         if (singletons != null)
@@ -179,35 +176,42 @@ abstract class RestHttpServlet extends HttpServlet {
           for (final Class<?> cls : classes)
             addResourceProvider(registry, exceptionMappers, entityReaders, entityWriters, requestFilters, responseFilters, paramConverterProviders, cls, null);
       }
-      catch (final ClassNotFoundException | IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException e) {
-        throw new WebApplicationException(e);
+      else {
+        final Predicate<Class<?>> initialize = new Predicate<Class<?>>() {
+          private final Set<Class<?>> loadedClasses = new HashSet<Class<?>>();
+          @Override
+          public boolean test(final Class<?> t) {
+            if (!Modifier.isAbstract(t.getModifiers()) && !loadedClasses.contains(t)) {
+              try {
+                addResourceProvider(registry, exceptionMappers, entityReaders, entityWriters, requestFilters, responseFilters, paramConverterProviders, t, null);
+              }
+              catch (final IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
+                throw new ProviderInstantiationException(e);
+              }
+            }
+
+            loadedClasses.add(t);
+            return false;
+          }
+        };
+
+        try {
+          for (final Package pkg : Package.getPackages())
+            if (acceptPackage(pkg))
+              PackageLoader.getSystemContextPackageLoader().loadPackage(pkg, initialize);
+        }
+        catch (final ProviderInstantiationException e) {
+          throw e.getCause();
+        }
+        catch (final PackageNotFoundException e) {
+        }
       }
     }
-    else {
-      final Predicate<Class<?>> initialize = new Predicate<Class<?>>() {
-        private final Set<Class<?>> loadedClasses = new HashSet<Class<?>>();
-        @Override
-        public boolean test(final Class<?> t) {
-          try {
-            if (!Modifier.isAbstract(t.getModifiers()) && !loadedClasses.contains(t))
-              addResourceProvider(registry, exceptionMappers, entityReaders, entityWriters, requestFilters, responseFilters, paramConverterProviders, t, null);
-          }
-          catch (final IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException e) {
-            throw new WebApplicationException(e);
-          }
+    catch (final Throwable e) {
+      if (e instanceof RuntimeException)
+        throw (RuntimeException)e;
 
-          loadedClasses.add(t);
-          return false;
-        }
-      };
-
-      try {
-        for (final Package pkg : Package.getPackages())
-          if (acceptPackage(pkg))
-            PackageLoader.getSystemContextPackageLoader().loadPackage(pkg, initialize);
-      }
-      catch (final PackageNotFoundException e) {
-      }
+      throw new ServletException(e);
     }
 
     this.resourceContext = new ResourceContext(registry, new ContainerFilters(requestFilters, responseFilters), new ProvidersImpl(exceptionMappers, entityReaders, entityWriters), paramConverterProviders);

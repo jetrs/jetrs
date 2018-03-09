@@ -31,9 +31,9 @@ public class ResourceContext {
   private final MultivaluedMap<String,ResourceManifest> resources;
   private final ContainerFilters containerFilters;
   private final Providers providers;
-  private final List<ParamConverterProvider> paramConverterProviders;
+  private final List<ProviderResource<ParamConverterProvider>> paramConverterProviders;
 
-  public ResourceContext(final MultivaluedMap<String,ResourceManifest> resources, final ContainerFilters containerFilters, final ProvidersImpl providers, final List<ParamConverterProvider> paramConverterProviders) {
+  public ResourceContext(final MultivaluedMap<String,ResourceManifest> resources, final ContainerFilters containerFilters, final ProvidersImpl providers, final List<ProviderResource<ParamConverterProvider>> paramConverterProviders) {
     this.resources = resources;
     this.containerFilters = containerFilters;
     this.providers = providers;
@@ -48,7 +48,7 @@ public class ResourceContext {
     return providers;
   }
 
-  public List<ParamConverterProvider> getParamConverterProviders() {
+  public List<ProviderResource<ParamConverterProvider>> getParamConverterProviders() {
     return paramConverterProviders;
   }
 
