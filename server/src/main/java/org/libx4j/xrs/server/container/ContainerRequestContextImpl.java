@@ -29,6 +29,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Cookie;
@@ -174,7 +175,7 @@ public class ContainerRequestContextImpl extends ContainerContextImpl implements
       return httpServletRequest.getInputStream();
     }
     catch (final IOException e) {
-      throw new WebApplicationException(e);
+      throw new InternalServerErrorException(e);
     }
   }
 

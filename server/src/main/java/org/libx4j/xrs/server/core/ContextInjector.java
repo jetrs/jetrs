@@ -24,7 +24,7 @@ import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
@@ -132,7 +132,7 @@ public class ContextInjector {
 
   private <T>T testOrInject(final ProviderResource<T> provider, final boolean inject) {
     try {
-      final T object = provider.getSingletonOrNewInstance();
+      final T instance = provider.getSingletonOrNewInstance();
       final Field[] fields = Classes.getDeclaredFieldsDeep(provider.getProviderClass());
       for (final Field field : fields) {
         if (field.isAnnotationPresent(Context.class)) {
@@ -142,19 +142,19 @@ public class ContextInjector {
 
           if (inject) {
             field.setAccessible(true);
-            field.set(object, injectableObject);
+            field.set(instance, injectableObject);
           }
         }
       }
 
-      return object;
+      return instance;
     }
-    catch (final IllegalArgumentException | ReflectiveOperationException e) {
-      throw new WebApplicationException(e);
+    catch (final IllegalAccessException e) {
+      throw new InternalServerErrorException(e);
     }
   }
 
-  public <T>void test(final ProviderResource<?> provider) {
+  public void test(final ProviderResource<?> provider) {
     testOrInject(provider, false);
   }
 

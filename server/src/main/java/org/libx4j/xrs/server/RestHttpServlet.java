@@ -89,8 +89,6 @@ abstract class RestHttpServlet extends HttpServlet {
       }
     }
     else if (cls.isAnnotationPresent(Provider.class)) {
-      // Automatically discovered @Provider(s) are singletons
-      // FIXME: Have to inject here! Constructor may have @Context stuff
       for (final Class<?> type : cls.getInterfaces()) {
         if (type == MessageBodyReader.class) {
           entityReaders.add(new EntityReaderProviderResource((Class<MessageBodyReader<?>>)cls, (MessageBodyReader<?>)singleton));

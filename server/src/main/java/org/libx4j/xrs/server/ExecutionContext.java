@@ -27,6 +27,7 @@ import java.util.ListIterator;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerResponseContext;
@@ -76,7 +77,7 @@ public class ExecutionContext {
               this.source.set(index, instance);
           }
           catch (final IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException e) {
-            throw new WebApplicationException(e);
+            throw new InternalServerErrorException(e);
           }
         }
       }
