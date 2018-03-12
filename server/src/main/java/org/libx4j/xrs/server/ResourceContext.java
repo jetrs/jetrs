@@ -20,32 +20,40 @@ import java.util.Iterator;
 import java.util.List;
 
 import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.ParamConverterProvider;
 import javax.ws.rs.ext.Providers;
 
+import org.libx4j.xrs.server.core.AnnotationInjector;
 import org.libx4j.xrs.server.ext.ProvidersImpl;
 
 public class ResourceContext {
+  private final Application application;
   private final MultivaluedMap<String,ResourceManifest> resources;
   private final ContainerFilters containerFilters;
-  private final Providers providers;
+  private final ProvidersImpl providers;
   private final List<ProviderResource<ParamConverterProvider>> paramConverterProviders;
 
-  public ResourceContext(final MultivaluedMap<String,ResourceManifest> resources, final ContainerFilters containerFilters, final ProvidersImpl providers, final List<ProviderResource<ParamConverterProvider>> paramConverterProviders) {
+  public ResourceContext(final Application application, final MultivaluedMap<String,ResourceManifest> resources, final ContainerFilters containerFilters, final ProvidersImpl providers, final List<ProviderResource<ParamConverterProvider>> paramConverterProviders) {
+    this.application = application;
     this.resources = resources;
     this.containerFilters = containerFilters;
     this.providers = providers;
     this.paramConverterProviders = paramConverterProviders;
   }
 
+  public Application getApplication() {
+    return this.application;
+  }
+
   public ContainerFilters getContainerFilters() {
     return containerFilters;
   }
 
-  public Providers getProviders() {
-    return providers;
+  public Providers getProviders(final AnnotationInjector annotationInjector) {
+    return new ProvidersImpl(providers, annotationInjector);
   }
 
   public List<ProviderResource<ParamConverterProvider>> getParamConverterProviders() {

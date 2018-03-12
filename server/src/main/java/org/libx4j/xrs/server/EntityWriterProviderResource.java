@@ -24,7 +24,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.MessageBodyWriter;
 
 public class EntityWriterProviderResource extends EntityProviderResource<MessageBodyWriter<?>> {
-  public EntityWriterProviderResource(final Class<MessageBodyWriter<?>> clazz, final MessageBodyWriter<?> singleton) throws IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException, SecurityException {
+  public EntityWriterProviderResource(final Class<MessageBodyWriter<?>> clazz, final MessageBodyWriter<?> singleton) throws IllegalAccessException, InstantiationException, InvocationTargetException {
     super(clazz, singleton, MessageBodyWriter.class);
   }
 

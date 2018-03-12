@@ -37,12 +37,13 @@ import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
+import javax.ws.rs.ext.Providers;
 import javax.ws.rs.ext.RuntimeDelegate;
 
 import org.lib4j.lang.Classes;
 import org.libx4j.xrs.server.container.ContainerRequestContextImpl;
 import org.libx4j.xrs.server.container.ContainerResponseContextImpl;
-import org.libx4j.xrs.server.core.ContextInjector;
+import org.libx4j.xrs.server.core.AnnotationInjector;
 import org.libx4j.xrs.server.core.HttpHeadersImpl;
 import org.libx4j.xrs.server.ext.RuntimeDelegateImpl;
 import org.libx4j.xrs.server.util.HttpServletRequestUtil;
@@ -91,54 +92,54 @@ public class RestApplicationServlet extends RestHttpServlet {
   }
 
   @SuppressWarnings("unchecked")
-  private void service(final HttpServletRequestContext httpServletRequest, final HttpServletResponse httpServletResponse) throws IOException {
+  private void service(final HttpServletRequestContext httpServletRequestContext, final HttpServletResponse httpServletResponse) throws IOException {
     final StringBuilder accessLogDebug = new StringBuilder();
-    accessLogDebug.append("Headers: ").append(HttpServletRequestUtil.getHeaders(httpServletRequest));
+    accessLogDebug.append("Headers: ").append(HttpServletRequestUtil.getHeaders(httpServletRequestContext));
     final ContainerResponseContext containerResponseContext = new ContainerResponseContextImpl(httpServletResponse);
-    final HttpHeaders httpHeaders = new HttpHeadersImpl(httpServletRequest);
+    final HttpHeaders httpHeaders = new HttpHeadersImpl(httpServletRequestContext);
     final ExecutionContext executionContext = new ExecutionContext(httpHeaders, httpServletResponse, containerResponseContext, getResourceContext());
 
     final ContainerRequestContext containerRequestContext; // NOTE: This weird construct is done this way to at least somehow make the two objects cohesive
-    httpServletRequest.setRequestContext(containerRequestContext = new ContainerRequestContextImpl(httpServletRequest, executionContext));
+    httpServletRequestContext.setRequestContext(containerRequestContext = new ContainerRequestContextImpl(httpServletRequestContext, executionContext));
 
-    final ContextInjector injectionContext = ContextInjector.createInjectionContext(containerRequestContext, httpServletRequest, httpServletResponse, httpHeaders, getResourceContext().getProviders());
-
+    final AnnotationInjector annotationInjector = AnnotationInjector.createAnnotationInjector(containerRequestContext, httpServletRequestContext, httpServletResponse, httpHeaders, getResourceContext());
+    final Providers providers = getResourceContext().getProviders(annotationInjector);
     try {
-      getResourceContext().getContainerFilters().filterPreMatchContainerRequest(containerRequestContext, injectionContext);
-      final ResourceMatch resource = executionContext.filterAndMatch(containerRequestContext);
+      getResourceContext().getContainerFilters().filterPreMatchContainerRequest(containerRequestContext, annotationInjector);
+      final ResourceMatch resource = executionContext.filterAndMatch(containerRequestContext, annotationInjector);
       if (resource == null) {
         accessLogDebug.append(", Matched: null");
         throw new NotFoundException();
       }
 
       accessLogDebug.append(", Matched: ").append(resource.getManifest());
-      httpServletRequest.setResourceManifest(resource.getManifest());
-      getResourceContext().getContainerFilters().filterContainerRequest(containerRequestContext, injectionContext);
+      httpServletRequestContext.setResourceManifest(resource.getManifest());
+      getResourceContext().getContainerFilters().filterContainerRequest(containerRequestContext, annotationInjector);
 
       final Produces produces = resource.getManifest().getMatcher(Produces.class).getAnnotation();
       if (produces != null)
         containerResponseContext.getStringHeaders().putSingle(HttpHeaders.CONTENT_TYPE, resource.getAccept().toString());
 
-      final Object content = resource.getManifest().service(executionContext, containerRequestContext, injectionContext, getResourceContext().getParamConverterProviders());
+      final Object content = resource.getManifest().service(executionContext, containerRequestContext, annotationInjector, getResourceContext().getParamConverterProviders());
       if (content instanceof Response)
         executionContext.setResponse((Response)content);
       else if (content != null)
         containerResponseContext.setEntity(content);
 
-      getResourceContext().getContainerFilters().filterContainerResponse(containerRequestContext, containerResponseContext, injectionContext);
-      executionContext.writeResponse(getResourceContext().getProviders());
+      getResourceContext().getContainerFilters().filterContainerResponse(containerRequestContext, containerResponseContext, annotationInjector);
+      executionContext.writeResponse(providers);
       // FIXME: There's kind of a mixup of when to use the ContainerResponseContext vs Response.
     }
     catch (final IOException | RuntimeException | ServletException e) {
       final WebApplicationException e1 = e instanceof WebApplicationException ? (WebApplicationException)e : new InternalServerErrorException(e);
 
-      final ExceptionMapper<WebApplicationException> exceptionMapper = getResourceContext().getProviders().getExceptionMapper((Class<WebApplicationException>)e1.getClass());
+      final ExceptionMapper<WebApplicationException> exceptionMapper = providers.getExceptionMapper((Class<WebApplicationException>)e1.getClass());
       final Response response = exceptionMapper != null ? exceptionMapper.toResponse(e1) : e1.getResponse();
 
       try {
         executionContext.setResponse(response);
-        getResourceContext().getContainerFilters().filterContainerResponse(containerRequestContext, containerResponseContext, injectionContext);
-        executionContext.writeResponse(getResourceContext().getProviders());
+        getResourceContext().getContainerFilters().filterContainerResponse(containerRequestContext, containerResponseContext, annotationInjector);
+        executionContext.writeResponse(providers);
       }
       catch (final WebApplicationException e2) {
         e2.addSuppressed(e1);

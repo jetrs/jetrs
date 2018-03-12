@@ -17,7 +17,6 @@
 package org.libx4j.xrs.server;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -50,7 +49,6 @@ import javax.ws.rs.ext.Provider;
 
 import org.lib4j.lang.PackageLoader;
 import org.lib4j.lang.PackageNotFoundException;
-import org.libx4j.xrs.server.core.ContextInjector;
 import org.libx4j.xrs.server.ext.ProvidersImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,9 +67,9 @@ abstract class RestHttpServlet extends HttpServlet {
   }
 
   @SuppressWarnings("unchecked")
-  private static <T>void addResourceProvider(final MultivaluedMap<String,ResourceManifest> registry, final List<ExceptionMappingProviderResource> exceptionMappers, final List<EntityReaderProviderResource> entityReaders, final List<EntityWriterProviderResource> entityWriters, final List<ProviderResource<ContainerRequestFilter>> requestFilters, final List<ProviderResource<ContainerResponseFilter>> responseFilters, final List<ProviderResource<ParamConverterProvider>> paramConverterProviders, final Class<? extends T> cls, T singleton) throws IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException, SecurityException {
-    if (isRootResource(cls)) {
-      for (final Method method : cls.getMethods()) {
+  private static <T>void addResourceOrProvider(final MultivaluedMap<String,ResourceManifest> registry, final List<ExceptionMappingProviderResource> exceptionMappers, final List<EntityReaderProviderResource> entityReaders, final List<EntityWriterProviderResource> entityWriters, final List<ProviderResource<ContainerRequestFilter>> requestFilters, final List<ProviderResource<ContainerResponseFilter>> responseFilters, final List<ProviderResource<ParamConverterProvider>> paramConverterProviders, final Class<? extends T> clazz, T singleton) throws IllegalAccessException, InstantiationException, InvocationTargetException {
+    if (isRootResource(clazz)) {
+      for (final Method method : clazz.getMethods()) {
         final Set<HttpMethod> httpMethodAnnotations = new HashSet<HttpMethod>(); // FIXME: Can this be done without a Collection?
         final Annotation[] annotations = method.getAnnotations();
         for (final Annotation annotation : annotations) {
@@ -81,35 +79,34 @@ abstract class RestHttpServlet extends HttpServlet {
         }
 
         for (final HttpMethod httpMethodAnnotation : httpMethodAnnotations) {
-          ContextInjector.allowsInjectableClass(Field.class, cls);
           final ResourceManifest manifest = new ResourceManifest(httpMethodAnnotation, method, singleton);
-          logger.info(httpMethodAnnotation.value() + " " + manifest.getPathPattern().getPattern().toString() + " -> " + cls.getSimpleName() + "." + method.getName() + "()");
+          logger.info(httpMethodAnnotation.value() + " " + manifest.getPathPattern().getPattern().toString() + " -> " + clazz.getSimpleName() + "." + method.getName() + "()");
           registry.add(manifest.getHttpMethod().value().toUpperCase(), manifest);
         }
       }
     }
-    else if (cls.isAnnotationPresent(Provider.class)) {
-      for (final Class<?> type : cls.getInterfaces()) {
+    else if (clazz.isAnnotationPresent(Provider.class)) {
+      for (final Class<?> type : clazz.getInterfaces()) {
         if (type == MessageBodyReader.class) {
-          entityReaders.add(new EntityReaderProviderResource((Class<MessageBodyReader<?>>)cls, (MessageBodyReader<?>)singleton));
+          entityReaders.add(new EntityReaderProviderResource((Class<MessageBodyReader<?>>)clazz, (MessageBodyReader<?>)singleton));
         }
         else if (type == MessageBodyWriter.class) {
-          entityWriters.add(new EntityWriterProviderResource((Class<MessageBodyWriter<?>>)cls, (MessageBodyWriter<?>)singleton));
+          entityWriters.add(new EntityWriterProviderResource((Class<MessageBodyWriter<?>>)clazz, (MessageBodyWriter<?>)singleton));
         }
         else if (type == ExceptionMapper.class) {
-          exceptionMappers.add(new ExceptionMappingProviderResource((Class<ExceptionMapper<?>>)cls, (ExceptionMapper<?>)singleton));
+          exceptionMappers.add(new ExceptionMappingProviderResource((Class<ExceptionMapper<?>>)clazz, (ExceptionMapper<?>)singleton));
         }
         else if (type == ParamConverterProvider.class) {
-          paramConverterProviders.add(new ProviderResource<ParamConverterProvider>((Class<ParamConverterProvider>)cls, (ParamConverterProvider)singleton));
+          paramConverterProviders.add(new ProviderResource<ParamConverterProvider>((Class<ParamConverterProvider>)clazz, (ParamConverterProvider)singleton));
         }
         else if (type == ContainerRequestFilter.class) {
-          requestFilters.add(new ProviderResource<ContainerRequestFilter>((Class<ContainerRequestFilter>)cls, (ContainerRequestFilter)singleton));
+          requestFilters.add(new ProviderResource<ContainerRequestFilter>((Class<ContainerRequestFilter>)clazz, (ContainerRequestFilter)singleton));
         }
         else if (type == ContainerResponseFilter.class) {
-          responseFilters.add(new ProviderResource<ContainerResponseFilter>((Class<ContainerResponseFilter>)cls, (ContainerResponseFilter)singleton));
+          responseFilters.add(new ProviderResource<ContainerResponseFilter>((Class<ContainerResponseFilter>)clazz, (ContainerResponseFilter)singleton));
         }
         else {
-          throw new UnsupportedOperationException("Unsupported @Provider of type: " + cls.getName());
+          throw new UnsupportedOperationException("Unsupported @Provider of type: " + clazz.getName());
         }
       }
     }
@@ -161,29 +158,31 @@ abstract class RestHttpServlet extends HttpServlet {
     final List<ProviderResource<ContainerResponseFilter>> responseFilters = new ArrayList<ProviderResource<ContainerResponseFilter>>();
 
     try {
+      final Application application;
       final String applicationSpec = getInitParameter("javax.ws.rs.Application");
       if (applicationSpec != null) {
-        final Application application = (Application)Class.forName(applicationSpec).getDeclaredConstructor().newInstance();
+        application = (Application)Class.forName(applicationSpec).getDeclaredConstructor().newInstance();
         final Set<?> singletons = application.getSingletons();
         if (singletons != null)
           for (final Object singleton : singletons)
-            addResourceProvider(registry, exceptionMappers, entityReaders, entityWriters, requestFilters, responseFilters, paramConverterProviders, singleton.getClass(), singleton);
+            addResourceOrProvider(registry, exceptionMappers, entityReaders, entityWriters, requestFilters, responseFilters, paramConverterProviders, singleton.getClass(), singleton);
 
         final Set<Class<?>> classes = application.getClasses();
         if (classes != null)
           for (final Class<?> cls : classes)
-            addResourceProvider(registry, exceptionMappers, entityReaders, entityWriters, requestFilters, responseFilters, paramConverterProviders, cls, null);
+            addResourceOrProvider(registry, exceptionMappers, entityReaders, entityWriters, requestFilters, responseFilters, paramConverterProviders, cls, null);
       }
       else {
+        application = null;
         final Predicate<Class<?>> initialize = new Predicate<Class<?>>() {
           private final Set<Class<?>> loadedClasses = new HashSet<Class<?>>();
           @Override
           public boolean test(final Class<?> t) {
             if (!Modifier.isAbstract(t.getModifiers()) && !loadedClasses.contains(t)) {
               try {
-                addResourceProvider(registry, exceptionMappers, entityReaders, entityWriters, requestFilters, responseFilters, paramConverterProviders, t, null);
+                addResourceOrProvider(registry, exceptionMappers, entityReaders, entityWriters, requestFilters, responseFilters, paramConverterProviders, t, null);
               }
-              catch (final IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
+              catch (final IllegalAccessException | InstantiationException | InvocationTargetException e) {
                 throw new ProviderInstantiationException(e);
               }
             }
@@ -204,14 +203,14 @@ abstract class RestHttpServlet extends HttpServlet {
         catch (final PackageNotFoundException e) {
         }
       }
+
+      this.resourceContext = new ResourceContext(application, registry, new ContainerFilters(requestFilters, responseFilters), new ProvidersImpl(exceptionMappers, entityReaders, entityWriters, null), paramConverterProviders);
+    }
+    catch (final RuntimeException e) {
+      throw e;
     }
     catch (final Throwable e) {
-      if (e instanceof RuntimeException)
-        throw (RuntimeException)e;
-
       throw new ServletException(e);
     }
-
-    this.resourceContext = new ResourceContext(registry, new ContainerFilters(requestFilters, responseFilters), new ProvidersImpl(exceptionMappers, entityReaders, entityWriters), paramConverterProviders);
   }
 }

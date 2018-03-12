@@ -29,9 +29,7 @@ import javax.annotation.security.RolesAllowed;
 import javax.servlet.ServletException;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.CookieParam;
 import javax.ws.rs.ForbiddenException;
-import javax.ws.rs.HeaderParam;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.MatrixParam;
 import javax.ws.rs.NotAuthorizedException;
@@ -41,7 +39,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.MessageBodyReader;
@@ -49,9 +46,8 @@ import javax.ws.rs.ext.ParamConverterProvider;
 import javax.ws.rs.ext.Providers;
 
 import org.lib4j.util.JavaIdentifiers;
-import org.libx4j.xrs.server.core.ContextInjector;
+import org.libx4j.xrs.server.core.AnnotationInjector;
 import org.libx4j.xrs.server.util.MediaTypes;
-import org.libx4j.xrs.server.util.ParameterUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -131,7 +127,7 @@ public class ResourceManifest {
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
-  private static Object[] getParameters(final Method method, final ContainerRequestContext containerRequestContext, final ContextInjector injectionContext, final List<ProviderResource<ParamConverterProvider>> paramConverterProviders) throws IOException {
+  private static Object[] getParameters(final Method method, final ContainerRequestContext containerRequestContext, final AnnotationInjector annotationInjector, final List<ProviderResource<ParamConverterProvider>> paramConverterProviders) throws IOException {
     final Class<?>[] parameterTypes = method.getParameterTypes();
     final Type[] genericParameterTypes = method.getGenericParameterTypes();
     final Annotation[][] parameterAnnotations = method.getParameterAnnotations();
@@ -143,18 +139,9 @@ public class ResourceManifest {
       final Class<?> parameterType = parameterTypes[i];
       final Type genericParameterType = genericParameterTypes[i];
       final Annotation[] annotations = parameterAnnotations[i];
-      Annotation paramAnnotation = null;
-      for (final Annotation annotation : annotations) {
-        if (annotation.annotationType() == QueryParam.class || annotation.annotationType() == PathParam.class || annotation.annotationType() == MatrixParam.class || annotation.annotationType() == CookieParam.class || annotation.annotationType() == HeaderParam.class || annotation.annotationType() == Context.class) {
-          if (paramAnnotation == null)
-            paramAnnotation = annotation;
-          else
-            throw new WebApplicationException("Conflicting annotations found: " + paramAnnotation.annotationType().getName() + " and " + annotation.annotationType().getName());
-        }
-      }
-
+      final Annotation paramAnnotation = AnnotationInjector.getInjectableAnnotation(parameterType, annotations);
       if (paramAnnotation == null) {
-        final Providers providers = injectionContext.getInjectableObject(Providers.class);
+        final Providers providers = annotationInjector.getContextObject(Providers.class);
         final MessageBodyReader messageBodyReader = providers.getMessageBodyReader(parameterType, genericParameterType, annotations, containerRequestContext.getMediaType());
         if (messageBodyReader != null)
           parameters[i] = messageBodyReader.readFrom(parameterType, parameterType.getGenericSuperclass(), parameterType.getAnnotations(), containerRequestContext.getMediaType(), containerRequestContext.getHeaders(), containerRequestContext.getEntityStream());
@@ -163,30 +150,7 @@ public class ResourceManifest {
       }
       else {
         try {
-          if (paramAnnotation.annotationType() == QueryParam.class) {
-            final boolean decode = ParameterUtil.decode(annotations);
-            parameters[i] = ParameterUtil.convertParameter(parameterType, genericParameterType, annotations, containerRequestContext.getUriInfo().getQueryParameters(decode).get(((QueryParam)paramAnnotation).value()), paramConverterProviders);
-          }
-          else if (paramAnnotation.annotationType() == PathParam.class) {
-            final boolean decode = ParameterUtil.decode(annotations);
-            final String pathParam = ((PathParam)paramAnnotation).value();
-            parameters[i] = ParameterUtil.convertParameter(parameterType, genericParameterType, annotations, containerRequestContext.getUriInfo().getPathParameters(decode).get(pathParam), paramConverterProviders);
-          }
-          else if (paramAnnotation.annotationType() == MatrixParam.class) {
-            // TODO:
-            throw new UnsupportedOperationException();
-          }
-          else if (paramAnnotation.annotationType() == CookieParam.class) {
-            // TODO:
-            throw new UnsupportedOperationException();
-          }
-          else if (paramAnnotation.annotationType() == HeaderParam.class) {
-            // TODO:
-            throw new UnsupportedOperationException();
-          }
-          else if (paramAnnotation.annotationType() == Context.class) {
-            parameters[i] = injectionContext.getInjectableObject(parameterType);
-          }
+          parameters[i] = annotationInjector.getParamObject(paramAnnotation, parameterType, annotations, genericParameterType, paramConverterProviders);
         }
         catch (final ReflectiveOperationException e) {
           if (paramAnnotation.annotationType() == MatrixParam.class || paramAnnotation.annotationType() == QueryParam.class || paramAnnotation.annotationType() == PathParam.class)
@@ -259,7 +223,7 @@ public class ResourceManifest {
     throw new NotAuthorizedException(challenges);
   }
 
-  public Object service(final ExecutionContext executionContext, final ContainerRequestContext containerRequestContext, final ContextInjector injectionContext, final List<ProviderResource<ParamConverterProvider>> paramConverterProviders) throws IOException, ServletException {
+  public Object service(final ExecutionContext executionContext, final ContainerRequestContext containerRequestContext, final AnnotationInjector injectionContext, final List<ProviderResource<ParamConverterProvider>> paramConverterProviders) throws IOException, ServletException {
     if (executionContext.getMatchedResources() == null)
       throw new IllegalStateException("service() called before filterAndMatch()");
 

@@ -31,6 +31,7 @@ import javax.ws.rs.core.UriInfo;
 import org.lib4j.net.URIComponent;
 import org.lib4j.net.URLs;
 import org.libx4j.xrs.server.ExecutionContext;
+import org.libx4j.xrs.server.ResourceMatch;
 
 public class UriInfoImpl implements UriInfo {
   private final ContainerRequestContext containerRequestContext;
@@ -111,7 +112,8 @@ public class UriInfoImpl implements UriInfo {
   }
 
   private MultivaluedMap<String,String> filterPathParameters(final boolean decode) {
-    return executionContext.filterAndMatch(containerRequestContext).getManifest().getPathPattern().getParameters(getPath(decode));
+    final ResourceMatch[] resourceMatches = executionContext.filterAndMatch(containerRequestContext);
+    return resourceMatches == null ? null : resourceMatches[0].getManifest().getPathPattern().getParameters(getPath(decode));
   }
 
   @Override

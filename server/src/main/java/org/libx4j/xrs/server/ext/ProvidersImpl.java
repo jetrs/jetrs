@@ -30,9 +30,10 @@ import javax.ws.rs.ext.Providers;
 
 import org.lib4j.util.Collections;
 import org.libx4j.xrs.server.EntityProviderResource;
-import org.libx4j.xrs.server.ExceptionMappingProviderResource;
 import org.libx4j.xrs.server.EntityReaderProviderResource;
 import org.libx4j.xrs.server.EntityWriterProviderResource;
+import org.libx4j.xrs.server.ExceptionMappingProviderResource;
+import org.libx4j.xrs.server.core.AnnotationInjector;
 
 public class ProvidersImpl implements Providers {
   private static final Comparator<ExceptionMappingProviderResource> exceptionMapperComparator = new Comparator<ExceptionMappingProviderResource>() {
@@ -52,11 +53,17 @@ public class ProvidersImpl implements Providers {
   private final List<ExceptionMappingProviderResource> exceptionMappers;
   private final List<EntityReaderProviderResource> readerProviders;
   private final List<EntityWriterProviderResource> writerProviders;
+  private final AnnotationInjector annotationInjector;
 
-  public ProvidersImpl(final List<ExceptionMappingProviderResource> exceptionMappers, final List<EntityReaderProviderResource> readerProviders, final List<EntityWriterProviderResource> writerProviders) {
+  public ProvidersImpl(final ProvidersImpl copy, final AnnotationInjector annotationInjector) {
+    this(copy.exceptionMappers, copy.readerProviders, copy.writerProviders, annotationInjector);
+  }
+
+  public ProvidersImpl(final List<ExceptionMappingProviderResource> exceptionMappers, final List<EntityReaderProviderResource> readerProviders, final List<EntityWriterProviderResource> writerProviders, final AnnotationInjector annotationInjector) {
     this.exceptionMappers = exceptionMappers;
     this.readerProviders = readerProviders;
     this.writerProviders = writerProviders;
+    this.annotationInjector = annotationInjector;
 
     Collections.sort(this.exceptionMappers, exceptionMapperComparator);
     Collections.sort(this.readerProviders, messageBodyComparator);
@@ -68,7 +75,7 @@ public class ProvidersImpl implements Providers {
   public <T>MessageBodyReader<T> getMessageBodyReader(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
     for (final EntityReaderProviderResource provider : readerProviders)
       if (provider.matches(provider.getMatchInstance(), type, genericType, annotations, mediaType))
-        return (MessageBodyReader<T>)provider.getSingletonOrNewInstance();
+        return (MessageBodyReader<T>)provider.getSingletonOrNewInstance(annotationInjector);
 
     return null;
   }
@@ -78,7 +85,7 @@ public class ProvidersImpl implements Providers {
   public <T>MessageBodyWriter<T> getMessageBodyWriter(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
     for (final EntityWriterProviderResource provider : writerProviders)
       if (provider.matches(provider.getMatchInstance(), type, genericType, annotations, mediaType))
-        return (MessageBodyWriter<T>)provider.getSingletonOrNewInstance();
+        return (MessageBodyWriter<T>)provider.getSingletonOrNewInstance(annotationInjector);
 
     return null;
   }
@@ -88,7 +95,7 @@ public class ProvidersImpl implements Providers {
   public <T extends Throwable>ExceptionMapper<T> getExceptionMapper(final Class<T> type) {
     for (final ExceptionMappingProviderResource exceptionMapper : exceptionMappers)
       if (exceptionMapper.getExceptionType().isAssignableFrom(type))
-        return (ExceptionMapper<T>)exceptionMapper.getSingletonOrNewInstance();
+        return (ExceptionMapper<T>)exceptionMapper.getSingletonOrNewInstance(annotationInjector);
 
     return null;
   }

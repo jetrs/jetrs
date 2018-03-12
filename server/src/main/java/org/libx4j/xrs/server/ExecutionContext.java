@@ -39,6 +39,7 @@ import javax.ws.rs.ext.Providers;
 
 import org.lib4j.lang.Arrays;
 import org.lib4j.util.ObservableList;
+import org.libx4j.xrs.server.core.AnnotationInjector;
 
 public class ExecutionContext {
   private final HttpHeaders httpHeaders;
@@ -57,8 +58,12 @@ public class ExecutionContext {
   private List<String> decodedMatchedURIs;
   private List<Object> matchedResources;
 
-  public ResourceMatch filterAndMatch(final ContainerRequestContext containerRequestContext) {
-    final ResourceMatch[] resources = resourceContext.filterAndMatch(containerRequestContext);
+  public ResourceMatch[] filterAndMatch(final ContainerRequestContext containerRequestContext) {
+    return resourceContext.filterAndMatch(containerRequestContext);
+  }
+
+  public ResourceMatch filterAndMatch(final ContainerRequestContext containerRequestContext, final AnnotationInjector annotationInjector) {
+    final ResourceMatch[] resources = filterAndMatch(containerRequestContext);
     if (resources == null)
       return null;
 
@@ -70,13 +75,13 @@ public class ExecutionContext {
         final Object object = this.source.get(index);
         if (object instanceof Class) {
           try {
-            final Object instance = ((Class<?>)object).getDeclaredConstructor().newInstance();
+            final Object instance = annotationInjector.newResourceInstance((Class<?>)object);
             if (iterator != null)
               iterator.set(instance);
             else
               this.source.set(index, instance);
           }
-          catch (final IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException e) {
+          catch (final IllegalAccessException | InstantiationException | InvocationTargetException e) {
             throw new InternalServerErrorException(e);
           }
         }

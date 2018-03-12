@@ -23,7 +23,7 @@ import javax.ws.rs.ext.ExceptionMapper;
 public class ExceptionMappingProviderResource extends ProviderResource<ExceptionMapper<?>> {
   private final Class<?> exceptionType;
 
-  public ExceptionMappingProviderResource(final Class<ExceptionMapper<?>> clazz, final ExceptionMapper<?> singleton) throws IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException, SecurityException {
+  public ExceptionMappingProviderResource(final Class<ExceptionMapper<?>> clazz, final ExceptionMapper<?> singleton) throws IllegalAccessException, InstantiationException, InvocationTargetException {
     super(clazz, singleton);
     this.exceptionType = getGenericInterfaceType(ExceptionMapper.class, clazz);
   }

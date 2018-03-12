@@ -20,6 +20,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
+import org.libx4j.xrs.server.core.AnnotationInjector;
+
 public class ProviderResource<T> {
   protected static Class<?> getGenericInterfaceType(final Class<?> interfaceType, final Class<?> cls) {
     final Type[] genericInterfaces = cls.getGenericInterfaces();
@@ -37,10 +39,10 @@ public class ProviderResource<T> {
   private final T singleton;
   private final T matchInstance;
 
-  public ProviderResource(final Class<T> clazz, final T singleton) throws IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException, SecurityException {
+  public ProviderResource(final Class<T> clazz, final T singleton) throws IllegalAccessException, InstantiationException, InvocationTargetException {
     this.clazz = clazz;
     this.singleton = singleton;
-    this.matchInstance = singleton != null ? singleton : clazz.getDeclaredConstructor().newInstance();
+    this.matchInstance = singleton != null ? singleton : AnnotationInjector.CONTEXT_ONLY.newProviderInstance(clazz);
   }
 
   public Class<T> getProviderClass() {
@@ -51,11 +53,11 @@ public class ProviderResource<T> {
     return this.matchInstance;
   }
 
-  public T getSingletonOrNewInstance() {
+  public T getSingletonOrNewInstance(final AnnotationInjector annotationInjector) {
     try {
-      return singleton != null ? singleton : clazz.getDeclaredConstructor().newInstance();
+      return annotationInjector.injectFields(singleton != null ? singleton : annotationInjector.newProviderInstance(clazz));
     }
-    catch (final IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
+    catch (final IllegalAccessException | InstantiationException | InvocationTargetException e) {
       // This should not happen, because an instance of this class would have already been instantiated once in the constructor for the matchInstance instance.
       throw new ProviderInstantiationException(e);
     }

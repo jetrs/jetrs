@@ -13,7 +13,7 @@ public abstract class EntityProviderResource<T> extends ProviderResource<T> {
   private final MediaType[] allowedTypes;
   private final Class<?> type;
 
-  protected EntityProviderResource(final Class<T> clazz, final T singleton, final Class<?> interfaceType) throws IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException, SecurityException {
+  protected EntityProviderResource(final Class<T> clazz, final T singleton, final Class<?> interfaceType) throws IllegalAccessException, InstantiationException, InvocationTargetException {
     super(clazz, singleton);
     this.type = getGenericInterfaceType(interfaceType, clazz);
     final Consumes consumes = clazz.getAnnotation(Consumes.class);
