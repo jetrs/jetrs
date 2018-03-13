@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
 import java.util.List;
 
@@ -128,29 +129,29 @@ public class ResourceManifest {
 
   @SuppressWarnings({"rawtypes", "unchecked"})
   private static Object[] getParameters(final Method method, final ContainerRequestContext containerRequestContext, final AnnotationInjector annotationInjector, final List<ProviderResource<ParamConverterProvider>> paramConverterProviders) throws IOException {
-    final Class<?>[] parameterTypes = method.getParameterTypes();
+    final Parameter[] parameters = method.getParameters();
     final Type[] genericParameterTypes = method.getGenericParameterTypes();
     final Annotation[][] parameterAnnotations = method.getParameterAnnotations();
-    if (parameterTypes.length == 0)
+    if (parameters.length == 0)
       return null;
 
-    final Object[] parameters = new Object[parameterTypes.length];
-    for (int i = 0; i < parameterTypes.length; i++) {
-      final Class<?> parameterType = parameterTypes[i];
+    final Object[] parameterInstances = new Object[parameters.length];
+    for (int i = 0; i < parameters.length; i++) {
+      final Parameter parameter = parameters[i];
       final Type genericParameterType = genericParameterTypes[i];
       final Annotation[] annotations = parameterAnnotations[i];
-      final Annotation paramAnnotation = AnnotationInjector.getInjectableAnnotation(parameterType, annotations);
+      final Annotation paramAnnotation = AnnotationInjector.getInjectableAnnotation(parameter, annotations);
       if (paramAnnotation == null) {
         final Providers providers = annotationInjector.getContextObject(Providers.class);
-        final MessageBodyReader messageBodyReader = providers.getMessageBodyReader(parameterType, genericParameterType, annotations, containerRequestContext.getMediaType());
+        final MessageBodyReader messageBodyReader = providers.getMessageBodyReader(parameter.getType(), genericParameterType, annotations, containerRequestContext.getMediaType());
         if (messageBodyReader != null)
-          parameters[i] = messageBodyReader.readFrom(parameterType, parameterType.getGenericSuperclass(), parameterType.getAnnotations(), containerRequestContext.getMediaType(), containerRequestContext.getHeaders(), containerRequestContext.getEntityStream());
+          parameterInstances[i] = messageBodyReader.readFrom(parameter.getType(), parameter.getType().getGenericSuperclass(), parameter.getAnnotations(), containerRequestContext.getMediaType(), containerRequestContext.getHeaders(), containerRequestContext.getEntityStream());
         else
-          throw new WebApplicationException("Could not find MessageBodyReader for type: " + parameterType.getName());
+          throw new WebApplicationException("Could not find MessageBodyReader for type: " + parameter.getName());
       }
       else {
         try {
-          parameters[i] = annotationInjector.getParamObject(paramAnnotation, parameterType, annotations, genericParameterType, paramConverterProviders);
+          parameterInstances[i] = annotationInjector.getParamObject(paramAnnotation, parameter.getType(), annotations, genericParameterType, paramConverterProviders);
         }
         catch (final ReflectiveOperationException e) {
           if (paramAnnotation.annotationType() == MatrixParam.class || paramAnnotation.annotationType() == QueryParam.class || paramAnnotation.annotationType() == PathParam.class)
@@ -161,7 +162,7 @@ public class ResourceManifest {
       }
     }
 
-    return parameters;
+    return parameterInstances;
   }
 
   protected boolean checkHeader(final String headerName, final Class<? extends Annotation> annotationClass, final ContainerRequestContext containerRequestContext) {

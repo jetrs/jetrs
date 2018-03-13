@@ -18,8 +18,10 @@ package org.libx4j.xrs.server.core;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -89,20 +91,31 @@ public class AnnotationInjector {
   @SuppressWarnings("unchecked")
   private static final Class<Annotation>[] paramAnnotationTypes = new Class[] {QueryParam.class, PathParam.class, MatrixParam.class, CookieParam.class, HeaderParam.class};
 
-  public static Annotation getInjectableAnnotation(final Class<?> clazz, final Annotation[] annotations) {
+  private static String toString(final Executable source) {
+    final StringBuilder builder = new StringBuilder();
+    builder.append(source.getDeclaringClass().getName()).append('.').append(source.getName()).append('(');
+    for (int i = 0; i < source.getParameterCount(); i++)
+      builder.append(source.getParameters()[i]).append(',');
+
+    builder.setCharAt(builder.length() - 1, ')');
+    return builder.toString();
+  }
+
+  public static Annotation getInjectableAnnotation(final Parameter parameter, final Annotation[] annotations) {
     Annotation injectableAnnotation = null;
     for (final Annotation annotation : annotations) {
       for (final Class<Annotation> paramAnnotationType : paramAnnotationTypes) {
-        if (injectableAnnotation != null)
-          throw new IllegalAnnotationException(injectableAnnotation, "Conflicting annotations on parameter of type " + clazz.getName());
+        if (annotation.annotationType() == paramAnnotationType) {
+          if (injectableAnnotation != null)
+            throw new IllegalAnnotationException(injectableAnnotation, "Conflicting annotations on parameter " + parameter.getName() + " in " + toString(parameter.getDeclaringExecutable()));
 
-        if (annotation.annotationType() == paramAnnotationType)
           injectableAnnotation = annotation;
+        }
       }
 
       if (annotation.annotationType() == Context.class) {
         if (injectableAnnotation != null)
-          throw new IllegalAnnotationException(injectableAnnotation, "Conflicting annotations on parameter of type " + clazz.getName());
+          throw new IllegalAnnotationException(injectableAnnotation, "Conflicting annotations on parameter " + parameter.getName() + " in " + toString(parameter.getDeclaringExecutable()));
 
         injectableAnnotation = annotation;
       }
@@ -216,29 +229,29 @@ public class AnnotationInjector {
     Arrays.sort(constructors, parameterCountComparator);
     outer:
     for (final Constructor<?> constructor : constructors) {
-      final Class<?>[] parameterTypes = constructor.getParameterTypes();
-      if (parameterTypes.length == 0)
+      final Parameter[] parameters = constructor.getParameters();
+      if (parameters.length == 0)
         return (T)constructor.newInstance();
 
-      final Object[] parameters = new Object[parameterTypes.length];
-      for (int i = 0; i < parameterTypes.length; i++) {
-        final Class<?> parameterType = parameterTypes[i];
-        final Annotation injectableAnnotation = isResource ? getInjectableAnnotation(parameterType, parameterType.getAnnotations()) : parameterType.getAnnotation(Context.class);
+      final Object[] parameterInstances = new Object[parameters.length];
+      for (int i = 0; i < parameters.length; i++) {
+        final Parameter parameter = parameters[i];
+        final Annotation injectableAnnotation = isResource ? getInjectableAnnotation(parameter, parameter.getAnnotations()) : parameter.getAnnotation(Context.class);
         if (injectableAnnotation == null) {
-          logger.warn("Unsupported parameter type: " + parameterType.getName() + " on: " + clazz.getName() + "(" + Arrays.stream(parameterTypes).map(p -> p.getSimpleName()).collect(Collectors.joining(",")) + ")");
+          logger.warn("Unsupported parameter type: " + parameter.getName() + " on: " + clazz.getName() + "(" + Arrays.stream(parameters).map(p -> p.getType().getSimpleName()).collect(Collectors.joining(",")) + ")");
           continue outer;
         }
 
-        final Object injectableObject = getContextObject(parameterType);
+        final Object injectableObject = getContextObject(parameter.getType());
         if (injectableObject == null) {
-          logger.warn("Unsupported @Context parameter: " + parameterType.getName() + " on: " + clazz.getName() + "(" + Arrays.stream(parameterTypes).map(p -> p.getSimpleName()).collect(Collectors.joining(",")) + ")");
+          logger.warn("Unsupported @Context parameter: " + parameter.getName() + " on: " + clazz.getName() + "(" + Arrays.stream(parameters).map(p -> p.getType().getSimpleName()).collect(Collectors.joining(",")) + ")");
           continue outer;
         }
 
-        parameters[i] = injectableObject;
+        parameterInstances[i] = injectableObject;
       }
 
-      return (T)constructor.newInstance(parameters);
+      return (T)constructor.newInstance(parameterInstances);
     }
 
     throw new InstantiationException("No suitable constructor found on " + (isResource ? "resource" : "provider") + " " + clazz.getName());
