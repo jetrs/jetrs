@@ -182,8 +182,11 @@ abstract class RestHttpServlet extends HttpServlet {
               try {
                 addResourceOrProvider(registry, exceptionMappers, entityReaders, entityWriters, requestFilters, responseFilters, paramConverterProviders, t, null);
               }
-              catch (final IllegalAccessException | InstantiationException | InvocationTargetException e) {
+              catch (final IllegalAccessException | InstantiationException e) {
                 throw new ProviderInstantiationException(e);
+              }
+              catch (final InvocationTargetException e) {
+                throw new ProviderInstantiationException(e.getCause());
               }
             }
 
