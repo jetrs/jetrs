@@ -99,11 +99,11 @@ public class HeaderMap extends MirroredMultivaluedHashMap<String,String,Object> 
     if (values.size() == 0)
       return "";
 
-    final StringBuilder string = new StringBuilder();
+    final StringBuilder builder = new StringBuilder();
     for (final String value : values)
-      string.append(",").append(value);
+      builder.append(',').append(value);
 
-    return string.substring(1);
+    return builder.substring(1);
   }
 
   public Set<String> getAllowedMethods() {
