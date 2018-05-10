@@ -48,7 +48,6 @@ import javax.ws.rs.ext.ParamConverterProvider;
 import javax.ws.rs.ext.Provider;
 
 import org.lib4j.lang.PackageLoader;
-import org.lib4j.lang.PackageNotFoundException;
 import org.libx4j.xrs.server.ext.ProvidersImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -176,6 +175,7 @@ abstract class RestHttpServlet extends HttpServlet {
         application = null;
         final Predicate<Class<?>> initialize = new Predicate<Class<?>>() {
           private final Set<Class<?>> loadedClasses = new HashSet<Class<?>>();
+
           @Override
           public boolean test(final Class<?> t) {
             if (!Modifier.isAbstract(t.getModifiers()) && !loadedClasses.contains(t)) {
@@ -202,8 +202,6 @@ abstract class RestHttpServlet extends HttpServlet {
         }
         catch (final ProviderInstantiationException e) {
           throw e.getCause();
-        }
-        catch (final PackageNotFoundException e) {
         }
       }
 
