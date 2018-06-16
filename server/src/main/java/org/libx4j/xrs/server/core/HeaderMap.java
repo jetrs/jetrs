@@ -41,7 +41,7 @@ public class HeaderMap extends MirroredMultivaluedHashMap<String,String,Object> 
   private static final long serialVersionUID = -424669813370868690L;
 
   public HeaderMap(final HttpServletResponse response) {
-    super(ArrayList.class, new Function<String,Object>() {
+    super(new ArrayList<String>(), new ArrayList<Object>(), new Function<String,Object>() {
       @Override
       public Object apply(final String value) {
         return value == null ? null : MediaType.valueOf(value);
@@ -85,7 +85,7 @@ public class HeaderMap extends MirroredMultivaluedHashMap<String,String,Object> 
 
   @SuppressWarnings("unchecked")
   public HeaderMap(final HeaderMap copy) {
-    super(ArrayList.class, copy.getMirror(), ((MirroredMultivaluedHashMap<String,Object,String>)copy.getMirroredMap()).getMirror());
+    super(new ArrayList<String>(), new ArrayList<Object>(), copy.getMirror(), ((MirroredMultivaluedHashMap<String,Object,String>)copy.getMirroredMap()).getMirror());
     for (final Map.Entry<String,List<String>> entry : entrySet())
       for (final String value : entry.getValue())
         add(entry.getKey(), value);

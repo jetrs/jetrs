@@ -31,22 +31,23 @@ import org.lib4j.util.ObservableMap;
 public class MirroredMultivaluedHashMap<K,V,M> extends ObservableMap<K,List<V>> implements MultivaluedMap<K,V>, Cloneable, Serializable {
   private static final long serialVersionUID = -7406535904458617108L;
 
-  @SuppressWarnings("rawtypes")
-  private final Class<? extends List> componentType;
+  private final List<V> list1;
+  private final List<M> list2;
   protected MirroredMultivaluedHashMap<K,M,V> mirroredMap;
   private final Function<V,M> mirror;
 
-  @SuppressWarnings("rawtypes")
-  public MirroredMultivaluedHashMap(final Class<? extends List> componentType, final Function<V,M> mirror1, final Function<M,V> mirror2) {
+  public MirroredMultivaluedHashMap(final List<V> list1, final List<M> list2, final Function<V,M> mirror1, final Function<M,V> mirror2) {
     super(new HashMap<K,List<V>>());
-    this.componentType = componentType;
+    this.list1 = list1;
+    this.list2 = list2;
     this.mirroredMap = new MirroredMultivaluedHashMap<K,M,V>(this, mirror2);
     this.mirror = mirror1;
   }
 
   private MirroredMultivaluedHashMap(final MirroredMultivaluedHashMap<K,M,V> mirroredMap, final Function<V,M> mirror) {
     super(new HashMap<K,List<V>>());
-    this.componentType = mirroredMap.componentType;
+    this.list1 = mirroredMap.list2;
+    this.list2 = mirroredMap.list1;
     this.mirroredMap = mirroredMap;
     this.mirror = mirror;
   }
@@ -62,7 +63,7 @@ public class MirroredMultivaluedHashMap<K,V,M> extends ObservableMap<K,List<V>> 
   protected final List<V> getValues(final K key) {
     List<V> values = get(key);
     if (values == null)
-      put(key, values = new MirroredList<V,M>(componentType, mirror, mirroredMap.mirror));
+      put(key, values = new MirroredList<V,M>(list1, list2, mirror, mirroredMap.mirror));
 
     return values;
   }
@@ -140,7 +141,7 @@ public class MirroredMultivaluedHashMap<K,V,M> extends ObservableMap<K,List<V>> 
       list = (MirroredList<V,M>)value;
     }
     else {
-      list = new MirroredList<V,M>(componentType, mirror, mirroredMap.mirror);
+      list = new MirroredList<V,M>(list1, list2, mirror, mirroredMap.mirror);
       list.addAll(value);
     }
 
