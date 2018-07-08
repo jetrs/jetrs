@@ -198,7 +198,7 @@ abstract class RestHttpServlet extends HttpServlet {
         try {
           for (final Package pkg : Package.getPackages())
             if (acceptPackage(pkg))
-              PackageLoader.getSystemContextPackageLoader().loadPackage(pkg, initialize);
+              PackageLoader.getContextPackageLoader().loadPackage(pkg, initialize);
         }
         catch (final ProviderInstantiationException e) {
           throw e.getCause();
