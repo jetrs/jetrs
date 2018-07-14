@@ -25,11 +25,11 @@ public class ResourceMatch {
   public ResourceMatch(final ResourceManifest manifest, final MediaType accept) {
     this.manifest = manifest;
     if (manifest == null)
-      throw new NullPointerException("manifest == null");
+      throw new IllegalArgumentException("manifest == null");
 
     this.accept = accept;
     if (accept == null)
-      throw new NullPointerException("accept == null");
+      throw new IllegalArgumentException("accept == null");
   }
 
   public ResourceManifest getManifest() {
