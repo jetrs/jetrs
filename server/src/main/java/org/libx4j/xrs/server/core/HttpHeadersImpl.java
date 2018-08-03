@@ -65,7 +65,7 @@ public class HttpHeadersImpl implements HttpHeaders {
     if (accepts == null)
       return java.util.Collections.unmodifiableList(java.util.Collections.singletonList(MediaType.WILDCARD_TYPE));
 
-    final List<MediaType> mediaTypes = new ArrayList<MediaType>();
+    final List<MediaType> mediaTypes = new ArrayList<>();
     // FIXME: MediaType.valueOf(), subtype, charset
     for (final String accept : accepts)
       mediaTypes.add(new MediaType(accept, null));

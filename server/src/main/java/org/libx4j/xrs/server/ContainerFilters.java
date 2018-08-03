@@ -36,11 +36,11 @@ import org.slf4j.LoggerFactory;
 public final class ContainerFilters {
   private static final Logger logger = LoggerFactory.getLogger(ContainerFilters.class);
 
-  private final List<ProviderResource<ContainerRequestFilter>> preMatchContainerRequestFilters = new ArrayList<ProviderResource<ContainerRequestFilter>>();
-  private final List<ProviderResource<ContainerRequestFilter>> containerRequestFilters = new ArrayList<ProviderResource<ContainerRequestFilter>>();
-  private final List<ProviderResource<ContainerResponseFilter>> containerResponseFilters = new ArrayList<ProviderResource<ContainerResponseFilter>>();
+  private final List<ProviderResource<ContainerRequestFilter>> preMatchContainerRequestFilters = new ArrayList<>();
+  private final List<ProviderResource<ContainerRequestFilter>> containerRequestFilters = new ArrayList<>();
+  private final List<ProviderResource<ContainerResponseFilter>> containerResponseFilters = new ArrayList<>();
 
-  private static final Comparator<Object> priorityComparator = new Comparator<Object>() {
+  private static final Comparator<Object> priorityComparator = new Comparator<>() {
     @Override
     public int compare(final Object o1, final Object o2) {
       final Priority p1 = o1.getClass().getAnnotation(Priority.class);

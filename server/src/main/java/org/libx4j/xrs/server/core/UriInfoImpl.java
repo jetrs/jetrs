@@ -128,7 +128,7 @@ public class UriInfoImpl implements UriInfo {
 
   @Override
   public MultivaluedMap<String,String> getQueryParameters(final boolean decode) {
-    final MultivaluedMap<String,String> parameters = new MultivaluedHashMap<String,String>();
+    final MultivaluedMap<String,String> parameters = new MultivaluedHashMap<>();
     if (decode) {
       for (final Map.Entry<String,String[]> entry : httpServletRequest.getParameterMap().entrySet())
         for (final String value : entry.getValue())

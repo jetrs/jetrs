@@ -69,7 +69,7 @@ abstract class RestHttpServlet extends HttpServlet {
   private static <T>void addResourceOrProvider(final MultivaluedMap<String,ResourceManifest> registry, final List<ExceptionMappingProviderResource> exceptionMappers, final List<EntityReaderProviderResource> entityReaders, final List<EntityWriterProviderResource> entityWriters, final List<ProviderResource<ContainerRequestFilter>> requestFilters, final List<ProviderResource<ContainerResponseFilter>> responseFilters, final List<ProviderResource<ParamConverterProvider>> paramConverterProviders, final Class<? extends T> clazz, T singleton) throws IllegalAccessException, InstantiationException, InvocationTargetException {
     if (isRootResource(clazz)) {
       for (final Method method : clazz.getMethods()) {
-        final Set<HttpMethod> httpMethodAnnotations = new HashSet<HttpMethod>(); // FIXME: Can this be done without a Collection?
+        final Set<HttpMethod> httpMethodAnnotations = new HashSet<>(); // FIXME: Can this be done without a Collection?
         final Annotation[] annotations = method.getAnnotations();
         for (final Annotation annotation : annotations) {
           final HttpMethod httpMethodAnnotation = annotation.annotationType().getAnnotation(HttpMethod.class);
@@ -96,13 +96,13 @@ abstract class RestHttpServlet extends HttpServlet {
           exceptionMappers.add(new ExceptionMappingProviderResource((Class<ExceptionMapper<?>>)clazz, (ExceptionMapper<?>)singleton));
         }
         else if (type == ParamConverterProvider.class) {
-          paramConverterProviders.add(new ProviderResource<ParamConverterProvider>((Class<ParamConverterProvider>)clazz, (ParamConverterProvider)singleton));
+          paramConverterProviders.add(new ProviderResource<>((Class<ParamConverterProvider>)clazz, (ParamConverterProvider)singleton));
         }
         else if (type == ContainerRequestFilter.class) {
-          requestFilters.add(new ProviderResource<ContainerRequestFilter>((Class<ContainerRequestFilter>)clazz, (ContainerRequestFilter)singleton));
+          requestFilters.add(new ProviderResource<>((Class<ContainerRequestFilter>)clazz, (ContainerRequestFilter)singleton));
         }
         else if (type == ContainerResponseFilter.class) {
-          responseFilters.add(new ProviderResource<ContainerResponseFilter>((Class<ContainerResponseFilter>)clazz, (ContainerResponseFilter)singleton));
+          responseFilters.add(new ProviderResource<>((Class<ContainerResponseFilter>)clazz, (ContainerResponseFilter)singleton));
         }
         else {
           throw new UnsupportedOperationException("Unsupported @Provider of type: " + clazz.getName());
@@ -148,13 +148,13 @@ abstract class RestHttpServlet extends HttpServlet {
   @Override
   public void init(final ServletConfig config) throws ServletException {
     super.init(config);
-    final MultivaluedMap<String,ResourceManifest> registry = new MultivaluedHashMap<String,ResourceManifest>();
-    final List<ProviderResource<ParamConverterProvider>> paramConverterProviders = new ArrayList<ProviderResource<ParamConverterProvider>>();
-    final List<ExceptionMappingProviderResource> exceptionMappers = new ArrayList<ExceptionMappingProviderResource>();
-    final List<EntityReaderProviderResource> entityReaders = new ArrayList<EntityReaderProviderResource>();
-    final List<EntityWriterProviderResource> entityWriters = new ArrayList<EntityWriterProviderResource>();
-    final List<ProviderResource<ContainerRequestFilter>> requestFilters = new ArrayList<ProviderResource<ContainerRequestFilter>>();
-    final List<ProviderResource<ContainerResponseFilter>> responseFilters = new ArrayList<ProviderResource<ContainerResponseFilter>>();
+    final MultivaluedMap<String,ResourceManifest> registry = new MultivaluedHashMap<>();
+    final List<ProviderResource<ParamConverterProvider>> paramConverterProviders = new ArrayList<>();
+    final List<ExceptionMappingProviderResource> exceptionMappers = new ArrayList<>();
+    final List<EntityReaderProviderResource> entityReaders = new ArrayList<>();
+    final List<EntityWriterProviderResource> entityWriters = new ArrayList<>();
+    final List<ProviderResource<ContainerRequestFilter>> requestFilters = new ArrayList<>();
+    final List<ProviderResource<ContainerResponseFilter>> responseFilters = new ArrayList<>();
 
     try {
       final Application application;
@@ -173,8 +173,8 @@ abstract class RestHttpServlet extends HttpServlet {
       }
       else {
         application = null;
-        final Predicate<Class<?>> initialize = new Predicate<Class<?>>() {
-          private final Set<Class<?>> loadedClasses = new HashSet<Class<?>>();
+        final Predicate<Class<?>> initialize = new Predicate<>() {
+          private final Set<Class<?>> loadedClasses = new HashSet<>();
 
           @Override
           public boolean test(final Class<?> t) {

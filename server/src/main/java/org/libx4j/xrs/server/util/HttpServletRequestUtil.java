@@ -23,7 +23,7 @@ import javax.ws.rs.core.MultivaluedHashMap;
 
 public final class HttpServletRequestUtil {
   public static MultivaluedHashMap<String,String> getHeaders(final HttpServletRequest request) {
-    final MultivaluedHashMap<String,String> headers = new MultivaluedHashMap<String,String>();
+    final MultivaluedHashMap<String,String> headers = new MultivaluedHashMap<>();
     final Enumeration<String> headerNames = request.getHeaderNames();
     while (headerNames.hasMoreElements()) {
       final String headerName = headerNames.nextElement();

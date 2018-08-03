@@ -48,7 +48,7 @@ import org.libx4j.xrs.server.core.UriInfoImpl;
 import org.libx4j.xrs.server.util.MediaTypes;
 
 public class ContainerRequestContextImpl extends ContainerContextImpl implements ContainerRequestContext {
-  private final Map<String,Object> properties = new HashMap<String,Object>();
+  private final Map<String,Object> properties = new HashMap<>();
   private final HttpServletRequest httpServletRequest;
 
   private String method;

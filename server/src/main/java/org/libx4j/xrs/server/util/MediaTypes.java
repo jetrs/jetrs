@@ -27,7 +27,7 @@ import java.util.Map;
 import javax.ws.rs.core.MediaType;
 
 public final class MediaTypes {
-  private static final Comparator<MediaType> qComparator = new Comparator<MediaType>() {
+  private static final Comparator<MediaType> qComparator = new Comparator<>() {
     @Override
     public int compare(final MediaType o1, final MediaType o2) {
       if (o1.getParameters().isEmpty())
@@ -170,7 +170,7 @@ public final class MediaTypes {
       return new MediaType(type, subtype);
 
     start = semicolon;
-    final Map<String,String> parameters = new HashMap<String,String>();
+    final Map<String,String> parameters = new HashMap<>();
     do {
       semicolon = string.indexOf(";", semicolon + 1);
       final String token = string.substring(start + 1, semicolon > 0 ? semicolon : string.length());

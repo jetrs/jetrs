@@ -67,9 +67,9 @@ public class ExecutionContext {
     if (resources == null)
       return null;
 
-    final List<String> matchedURIs = new ArrayList<String>(resources.length);
-    final List<String> decodedMatchedURIs = new ArrayList<String>(resources.length);
-    final List<Object> matchedResources = new ObservableList<Object>(new ArrayList<Object>(resources.length)) {
+    final List<String> matchedURIs = new ArrayList<>(resources.length);
+    final List<String> decodedMatchedURIs = new ArrayList<>(resources.length);
+    final List<Object> matchedResources = new ObservableList<>(new ArrayList<>(resources.length)) {
       @Override
       protected void beforeGet(final int index, final ListIterator<Object> iterator) {
         final Object object = this.source.get(index);

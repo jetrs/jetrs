@@ -95,8 +95,8 @@ public class ResourceManifest {
     this.singleton = singleton;
     this.serviceClass = singleton != null ? singleton.getClass() : method.getDeclaringClass();
     this.pathPattern = new PathPattern(method);
-    this.consumesMatcher = new MediaTypeMatcher<Consumes>(method, Consumes.class);
-    this.producesMatcher = new MediaTypeMatcher<Produces>(method, Produces.class);
+    this.consumesMatcher = new MediaTypeMatcher<>(method, Consumes.class);
+    this.producesMatcher = new MediaTypeMatcher<>(method, Produces.class);
   }
 
   public Object getSingleton() {

@@ -40,7 +40,7 @@ public class MirroredMultivaluedHashMap<K,V,M> extends ObservableMap<K,List<V>> 
     super(new HashMap<K,List<V>>());
     this.list1 = list1;
     this.list2 = list2;
-    this.mirroredMap = new MirroredMultivaluedHashMap<K,M,V>(this, mirror2);
+    this.mirroredMap = new MirroredMultivaluedHashMap<>(this, mirror2);
     this.mirror = mirror1;
   }
 
@@ -63,7 +63,7 @@ public class MirroredMultivaluedHashMap<K,V,M> extends ObservableMap<K,List<V>> 
   protected final List<V> getValues(final K key) {
     List<V> values = get(key);
     if (values == null)
-      put(key, values = new MirroredList<V,M>(list1, list2, mirror, mirroredMap.mirror));
+      put(key, values = new MirroredList<>(list1, list2, mirror, mirroredMap.mirror));
 
     return values;
   }
@@ -141,7 +141,7 @@ public class MirroredMultivaluedHashMap<K,V,M> extends ObservableMap<K,List<V>> 
       list = (MirroredList<V,M>)value;
     }
     else {
-      list = new MirroredList<V,M>(list1, list2, mirror, mirroredMap.mirror);
+      list = new MirroredList<>(list1, list2, mirror, mirroredMap.mirror);
       list.addAll(value);
     }
 
