@@ -46,7 +46,7 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.ParamConverterProvider;
 import javax.ws.rs.ext.Providers;
 
-import org.lib4j.lang.JavaIdentifiers;
+import org.lib4j.util.JavaIdentifiers;
 import org.libx4j.xrs.server.core.AnnotationInjector;
 import org.libx4j.xrs.server.util.MediaTypes;
 import org.slf4j.Logger;

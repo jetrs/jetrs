@@ -186,9 +186,6 @@ public final class MediaTypes {
   }
 
   public static String toString(final MediaType value) {
-    if (value == null)
-      throw new IllegalArgumentException("value == null");
-
     final StringBuilder builder = new StringBuilder();
     builder.append(value.getType());
     builder.append('/');

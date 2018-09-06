@@ -40,7 +40,7 @@ import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Providers;
 import javax.ws.rs.ext.RuntimeDelegate;
 
-import org.lib4j.lang.Classes;
+import org.lib4j.util.Classes;
 import org.libx4j.xrs.server.container.ContainerRequestContextImpl;
 import org.libx4j.xrs.server.container.ContainerResponseContextImpl;
 import org.libx4j.xrs.server.core.AnnotationInjector;
