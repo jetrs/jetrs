@@ -32,6 +32,18 @@ import javax.ws.rs.ext.Provider;
 
 @Provider
 public class InputStreamProvider implements MessageBodyReader<InputStream>, MessageBodyWriter<InputStream> {
+  private static final int DEFAULT_BUFFER_SIZE = 0xffff;
+
+  private final int bufferSize;
+
+  public InputStreamProvider(final int bufferSize) {
+    this.bufferSize = bufferSize;
+  }
+
+  public InputStreamProvider() {
+    this(DEFAULT_BUFFER_SIZE);
+  }
+
   @Override
   public boolean isReadable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
     return InputStream.class.isAssignableFrom(type);
@@ -54,12 +66,17 @@ public class InputStreamProvider implements MessageBodyReader<InputStream>, Mess
 
   @Override
   public void writeTo(final InputStream t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,Object> httpHeaders, final OutputStream entityStream) throws IOException, WebApplicationException {
-    final byte[] buffer = new byte[1024 * 10];
+    final byte[] buffer = new byte[bufferSize];
     int total = 0;
-    int len;
-    while ((len = t.read(buffer)) != -1) {
-      total += len;
-      entityStream.write(buffer, 0, len);
+    while (true) {
+      for (int len; (len = t.read(buffer)) != 0; total += len)
+        entityStream.write(buffer, 0, len);
+
+      final int ch = t.read();
+      if (ch == -1)
+        break;
+
+      entityStream.write(ch);
     }
 
     httpHeaders.putSingle(HttpHeaders.CONTENT_LENGTH, total);
