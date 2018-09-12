@@ -24,7 +24,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 
-import org.lib4j.net.URLs;
+import org.fastjax.net.URLs;
 import org.fastjax.util.Patterns;
 
 public class PathPattern {
