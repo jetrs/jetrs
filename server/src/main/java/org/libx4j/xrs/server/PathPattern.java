@@ -25,7 +25,7 @@ import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 
 import org.lib4j.net.URLs;
-import org.lib4j.util.Patterns;
+import org.fastjax.util.Patterns;
 
 public class PathPattern {
   private static final Pattern pathExpressionPattern = Pattern.compile("(\\w+)\\s*(:\\s*\\(([^\\)]+)\\))?");

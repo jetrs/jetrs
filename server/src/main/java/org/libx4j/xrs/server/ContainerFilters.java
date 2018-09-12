@@ -28,7 +28,7 @@ import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.container.PreMatching;
 
-import org.lib4j.util.Collections;
+import org.fastjax.util.Collections;
 import org.libx4j.xrs.server.core.AnnotationInjector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

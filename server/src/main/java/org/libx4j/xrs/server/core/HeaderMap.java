@@ -31,8 +31,8 @@ import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 
-import org.lib4j.util.Locales;
-import org.lib4j.util.Numbers;
+import org.fastjax.util.Locales;
+import org.fastjax.util.Numbers;
 import org.libx4j.xrs.server.ext.DateHeaderDelegate;
 import org.libx4j.xrs.server.util.MediaTypes;
 import org.libx4j.xrs.server.util.MirroredMultivaluedHashMap;

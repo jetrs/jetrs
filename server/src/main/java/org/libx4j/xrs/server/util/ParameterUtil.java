@@ -29,7 +29,7 @@ import javax.ws.rs.Encoded;
 import javax.ws.rs.ext.ParamConverter;
 import javax.ws.rs.ext.ParamConverterProvider;
 
-import org.lib4j.util.Collections;
+import org.fastjax.util.Collections;
 import org.libx4j.xrs.server.ProviderResource;
 
 public final class ParameterUtil {

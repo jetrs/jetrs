@@ -45,8 +45,8 @@ import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.ParamConverterProvider;
 import javax.ws.rs.ext.Providers;
 
-import org.lib4j.lang.IllegalAnnotationException;
-import org.lib4j.util.Classes;
+import org.fastjax.lang.IllegalAnnotationException;
+import org.fastjax.util.Classes;
 import org.libx4j.xrs.server.ProviderResource;
 import org.libx4j.xrs.server.ResourceContext;
 import org.libx4j.xrs.server.util.ParameterUtil;

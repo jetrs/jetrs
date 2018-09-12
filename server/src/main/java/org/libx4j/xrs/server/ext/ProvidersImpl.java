@@ -28,7 +28,7 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Providers;
 
-import org.lib4j.util.Collections;
+import org.fastjax.util.Collections;
 import org.libx4j.xrs.server.EntityProviderResource;
 import org.libx4j.xrs.server.EntityReaderProviderResource;
 import org.libx4j.xrs.server.EntityWriterProviderResource;
