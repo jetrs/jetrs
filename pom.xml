@@ -40,4 +40,17 @@
   <modules>
     <module>server</module>
   </modules>
+  <dependencies>
+    <dependency>
+      <groupId>org.fastjax</groupId>
+      <artifactId>fastjax-logging</artifactId>
+      <version>1.0.7-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>org.fastjax</groupId>
+      <artifactId>fastjax-test</artifactId>
+      <version>1.1.7-SNAPSHOT</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
 </project>
