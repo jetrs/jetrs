@@ -9,8 +9,8 @@
 2. Add the EmbeddedServletContainer dependency:
 
         <dependency>
-          <groupId>org.libx4j.jetty</groupId>
-          <artifactId>servlet</artifactId>
+          <groupId>org.easyjax.jetty</groupId>
+          <artifactId>jetty-servlet</artifactId>
           <version>1.1.3-SNAPSHOT</version>
         </dependency>
 

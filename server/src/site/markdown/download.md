@@ -6,19 +6,19 @@ release of **XRS**.
 Maven is the preferred installation mechanism for **XRS**. For other dependency managers, please
 see [dependency information](/dependency-info.html).
 
-To install **XRS** in a maven project, please add the lib4j.org repository and **XRS** dependency:
+To install **XRS** in a maven project, please add the OpenJAX Maven Repository and **XRS** dependency:
 
-1. Add lib4j.org repository.
+1. Add OpenJAX Maven Repository.
 
         <repository>
-          <id>mvn.repo.lib4j.org</id>
-          <url>http://mvn.repo.lib4j.org/m2</url>
+          <id>mvn.repo.openjax.org</id>
+          <url>http://mvn.repo.openjax.org/m2</url>
         </repository>
 
 2. Add XRS dependency.
 
         <dependency>
-          <groupId>org.libx4j.xrs</groupId>
+          <groupId>org.openjax.xrs</groupId>
           <artifactId>server</artifactId>
           <version>2.0.2-SNAPSHOT</version>
         </dependency>
