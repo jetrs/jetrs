@@ -1,17 +1,17 @@
-<img src="https://www.cohesionfirst.org/logo.png" align="right">
+<img src="https://images.cooltext.com/5195722.png" align="right">
 
-## XRS<br>![java-enterprise][java-enterprise] <a href="https://www.cohesionfirst.org/"><img src="https://img.shields.io/badge/CohesionFirst%E2%84%A2--blue.svg"></a>
+## XRS<br><a href="https://www.openjax.org/"><img src="https://img.shields.io/badge/OpenJAX--blue.svg"></a>
 > jaX REST Server
 
 ### Introduction
 
-**XRS** is an implementation of the [JAX-RS v2.0 Specification][jax-rs-spec] that runs in a [Servlet Container][web-container]. This project was inspired with the goal to create a better, simpler, easier to use, reliable, and debugable JAX-RS implementation using the CohesionFirst™ approach.
+**XRS** is an implementation of the [JAX-RS v2.0 Specification][jax-rs-spec] that runs in a [Servlet Container][web-container]. This project was inspired with the goal to create a better, simpler, easier to use, reliable, and debugable JAX-RS implementation using the CohesionFirst approach.
 
 ### Why **XRS**?
 
-#### CohesionFirst™
+#### CohesionFirst
 
-Developed with the CohesionFirst™ approach, **XRS** is reliably designed, consistently implemented, and straightforward to use. Made possible by the rigorous conformance to design patterns and best practices in every line of its implementation, **XRS** is a pure [JAX-RS 2.0][jax-rs-spec] solution that is written with the developer in mind. The **XRS** solution differentiates itself from the rest with its ease of use and debugability of RESTful applications.
+Developed with the CohesionFirst approach, **XRS** is reliably designed, consistently implemented, and straightforward to use. Made possible by the rigorous conformance to design patterns and best practices in every line of its implementation, **XRS** is a pure [JAX-RS 2.0][jax-rs-spec] solution that is written with the developer in mind. The **XRS** solution differentiates itself from the rest with its ease of use and debugability of RESTful applications.
 
 #### Simple and Lightweight
 
@@ -111,10 +111,11 @@ A common pattern that is used in JAX-RS implementations is dynamic method invoca
 
 This project is licensed under the MIT License - see the [LICENSE.txt](LICENSE.txt) file for details.
 
+<a href="http://cooltext.com" target="_top"><img src="https://cooltext.com/images/ct_pixel.gif" width="80" height="15" alt="Cool Text: Logo and Graphics Generator" border="0" /></a>
+
 [apache-cxf]: http://cxf.apache.org/
 [apache-wink]: https://wink.apache.org/
-[easyjax-jetty]: https://github.com/easyjax/easyjax-jetty
-[java-enterprise]: https://img.shields.io/badge/java-enterprise-blue.svg
+[easyjax-jetty]: /easyjax/easyjax-jetty
 [jax-rs-spec]: http://download.oracle.com/otn-pub/jcp/jaxrs-2_0_rev_A-mrel-eval-spec/jsr339-jaxrs-2.0-final-spec.pdf
 [jdk8-download]: http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html
 [jersey]: https://jersey.java.net/
