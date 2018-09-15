@@ -79,7 +79,7 @@ public class AnnotationInjector {
     return null;
   }
 
-  private static final Comparator<Constructor<?>> parameterCountComparator = new Comparator<>() {
+  private static final Comparator<Constructor<?>> parameterCountComparator = new Comparator<Constructor<?>>() {
     @Override
     public int compare(final Constructor<?> o1, Constructor<?> o2) {
       return o1.getParameterCount() < o2.getParameterCount() ? -1 : 1;

@@ -173,7 +173,7 @@ abstract class RestHttpServlet extends HttpServlet {
       }
       else {
         application = null;
-        final Predicate<Class<?>> initialize = new Predicate<>() {
+        final Predicate<Class<?>> initialize = new Predicate<Class<?>>() {
           private final Set<Class<?>> loadedClasses = new HashSet<>();
 
           @Override

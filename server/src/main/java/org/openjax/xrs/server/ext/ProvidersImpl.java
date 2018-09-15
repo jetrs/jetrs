@@ -36,14 +36,14 @@ import org.openjax.xrs.server.ExceptionMappingProviderResource;
 import org.openjax.xrs.server.core.AnnotationInjector;
 
 public class ProvidersImpl implements Providers {
-  private static final Comparator<ExceptionMappingProviderResource> exceptionMapperComparator = new Comparator<>() {
+  private static final Comparator<ExceptionMappingProviderResource> exceptionMapperComparator = new Comparator<ExceptionMappingProviderResource>() {
     @Override
     public int compare(final ExceptionMappingProviderResource o1, final ExceptionMappingProviderResource o2) {
       return o1.getExceptionType() == o2.getExceptionType() ? 0 : o1.getExceptionType().isAssignableFrom(o2.getExceptionType()) ? 1 : -1;
     }
   };
 
-  private static final Comparator<EntityProviderResource<?>> messageBodyComparator = new Comparator<>() {
+  private static final Comparator<EntityProviderResource<?>> messageBodyComparator = new Comparator<EntityProviderResource<?>>() {
     @Override
     public int compare(final EntityProviderResource<?> o1, final EntityProviderResource<?> o2) {
       return o1.getType() == o2.getType() ? 0 : o1.getType().isAssignableFrom(o2.getType()) ? 1 : -1;

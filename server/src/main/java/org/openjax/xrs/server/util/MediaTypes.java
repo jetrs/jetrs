@@ -27,7 +27,7 @@ import java.util.Map;
 import javax.ws.rs.core.MediaType;
 
 public final class MediaTypes {
-  private static final Comparator<MediaType> qComparator = new Comparator<>() {
+  private static final Comparator<MediaType> qComparator = new Comparator<MediaType>() {
     @Override
     public int compare(final MediaType o1, final MediaType o2) {
       if (o1.getParameters().isEmpty())
