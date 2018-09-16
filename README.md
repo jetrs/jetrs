@@ -83,7 +83,7 @@ A common pattern that is used in JAX-RS implementations is dynamic method invoca
   public class Application extends javax.ws.rs.core.Application {
     @Override
     public java.util.Set<Object> getSingletons() {
-      final java.util.Set<Object> singletons = new java.util.HashSet<Object>();
+      java.util.Set<Object> singletons = new java.util.HashSet<Object>();
       singletons.add(new org.openjax.jjb.rs.JSObjectBodyReader()); // Optional MessageBodyReader to parse JSON messages to Java beans.
       singletons.add(new org.openjax.jjb.rs.JSObjectBodyWriter()); // Optional MessageBodyWriter to marshal Java beans to JSON messages.
       return singletons;
