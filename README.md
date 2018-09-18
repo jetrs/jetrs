@@ -99,7 +99,7 @@ A common pattern that is used in JAX-RS implementations is dynamic method invoca
   }
   ```
 
-6. Deploy the servlet to a Servlet Container. For an easy embedded servlet container solution, [see here][easyjax-jetty] for a solution based on [Jetty][jetty]. In the arguments to `new Server(8080, ...)` add `RESTServlet.class` as such:
+6. Deploy the servlet to a Servlet Container. For an easy embedded servlet container solution, [see here][jetty] for a solution based on [Jetty][jetty]. In the arguments to `new Server(8080, ...)` add `RESTServlet.class` as such:
 
   ```java
   new Server(8080, null, null, true, null, RESTServlet.class);
@@ -115,7 +115,7 @@ This project is licensed under the MIT License - see the [LICENSE.txt](LICENSE.t
 
 [apache-cxf]: http://cxf.apache.org/
 [apache-wink]: https://wink.apache.org/
-[easyjax-jetty]: /../../../../easyjax/easyjax-jetty
+[jetty]: /../../../../easyjax/jetty
 [jax-rs-spec]: http://download.oracle.com/otn-pub/jcp/jaxrs-2_0_rev_A-mrel-eval-spec/jsr339-jaxrs-2.0-final-spec.pdf
 [jdk8-download]: http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html
 [jersey]: https://jersey.java.net/
