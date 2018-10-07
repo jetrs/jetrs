@@ -29,7 +29,7 @@ import javax.ws.rs.Encoded;
 import javax.ws.rs.ext.ParamConverter;
 import javax.ws.rs.ext.ParamConverterProvider;
 
-import org.fastjax.util.Collections;
+import org.fastjax.util.FastCollections;
 import org.openjax.xrs.server.ProviderResource;
 
 public final class ParameterUtil {
@@ -65,7 +65,7 @@ public final class ParameterUtil {
 
     final ParamConverter<?> paramConverter = lookupParamConverter(paramConverterProviders, parameterType, genericType, annotations);
     if (paramConverter != null)
-      return paramConverter.fromString(Collections.toString(values, ';'));
+      return paramConverter.fromString(FastCollections.toString(values, ';'));
 
     if (parameterType == String.class)
       return values.get(0);
@@ -93,7 +93,7 @@ public final class ParameterUtil {
       return Byte.valueOf(values.get(0));
 
     if (parameterType == Set.class || parameterType == List.class || parameterType == SortedSet.class) {
-      final Collection collection = Collections.concat(((Class<? extends Collection>)parameterType).getDeclaredConstructor().newInstance(), values);
+      final Collection collection = FastCollections.concat(((Class<? extends Collection>)parameterType).getDeclaredConstructor().newInstance(), values);
       final Class<?> type = (Class<?>)((ParameterizedType)parameterType.getGenericInterfaces()[0]).getActualTypeArguments()[0];
       if (type == String.class) {
         for (final String value : values) {
@@ -111,7 +111,7 @@ public final class ParameterUtil {
     }
 
     final Method method = findToString(parameterType);
-    return method.invoke(null, Collections.toString(values, ';'));
+    return method.invoke(null, FastCollections.toString(values, ';'));
   }
 
   public static boolean decode(final Annotation[] annotations) {

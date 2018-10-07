@@ -37,7 +37,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Providers;
 
-import org.fastjax.util.Arrays;
+import org.fastjax.util.FastArrays;
 import org.fastjax.util.ObservableList;
 import org.openjax.xrs.server.core.AnnotationInjector;
 
@@ -166,7 +166,7 @@ public class ExecutionContext {
     if (entity == null)
       return;
 
-    final Annotation[] annotations = containerResponseContext.getEntityAnnotations() != null ? Arrays.concat(containerResponseContext.getEntityAnnotations(), entity.getClass().getAnnotations()) : entity.getClass().getAnnotations();
+    final Annotation[] annotations = containerResponseContext.getEntityAnnotations() != null ? FastArrays.concat(containerResponseContext.getEntityAnnotations(), entity.getClass().getAnnotations()) : entity.getClass().getAnnotations();
     final MessageBodyWriter messageBodyWriter = providers.getMessageBodyWriter(containerResponseContext.getEntityClass(), containerResponseContext.getEntityType(), annotations, containerResponseContext.getMediaType());
     if (messageBodyWriter != null)
       messageBodyWriter.writeTo(entity, containerResponseContext.getEntityClass(), entity.getClass().getGenericSuperclass(), annotations, httpHeaders.getMediaType(), httpHeaders.getRequestHeaders(), getOutputStream());

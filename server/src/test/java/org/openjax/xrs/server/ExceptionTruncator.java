@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 
-import org.fastjax.util.Collections;
+import org.fastjax.util.FastCollections;
 
 public class ExceptionTruncator {
   private static final StackTraceElement[] reflectElements = new StackTraceElement[] {
@@ -51,7 +51,7 @@ public class ExceptionTruncator {
 
   public static Throwable unwind(final Throwable t) {
     if (!isInvoked(t.getCause())) {
-      final Collection<StackTraceElement> elements = Collections.asCollection(new ArrayList<StackTraceElement>(), t.getCause().getStackTrace());
+      final Collection<StackTraceElement> elements = FastCollections.asCollection(new ArrayList<StackTraceElement>(), t.getCause().getStackTrace());
       removeInvokeElements(elements);
       t.getCause().setStackTrace(elements.toArray(new StackTraceElement[elements.size()]));
       return t.getCause();

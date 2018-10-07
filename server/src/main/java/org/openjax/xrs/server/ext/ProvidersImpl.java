@@ -28,7 +28,7 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Providers;
 
-import org.fastjax.util.Collections;
+import org.fastjax.util.FastCollections;
 import org.openjax.xrs.server.EntityProviderResource;
 import org.openjax.xrs.server.EntityReaderProviderResource;
 import org.openjax.xrs.server.EntityWriterProviderResource;
@@ -68,9 +68,9 @@ public class ProvidersImpl implements Providers {
     this.writerProviders = writerProviders;
     this.annotationInjector = annotationInjector;
 
-    Collections.sort(this.exceptionMappers, exceptionMapperComparator);
-    Collections.sort(this.readerProviders, messageBodyComparator);
-    Collections.sort(this.writerProviders, messageBodyComparator);
+    FastCollections.sort(this.exceptionMappers, exceptionMapperComparator);
+    FastCollections.sort(this.readerProviders, messageBodyComparator);
+    FastCollections.sort(this.writerProviders, messageBodyComparator);
   }
 
   @Override

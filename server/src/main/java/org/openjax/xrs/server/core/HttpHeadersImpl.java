@@ -28,7 +28,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
-import org.fastjax.util.Collections;
+import org.fastjax.util.FastCollections;
 import org.fastjax.util.Numbers;
 import org.openjax.xrs.server.util.HttpServletRequestUtil;
 import org.openjax.xrs.server.util.MediaTypes;
@@ -51,7 +51,7 @@ public class HttpHeadersImpl implements HttpHeaders {
 
   @Override
   public String getHeaderString(final String name) {
-    return Collections.toString(getRequestHeader(name), ",");
+    return FastCollections.toString(getRequestHeader(name), ",");
   }
 
   @Override

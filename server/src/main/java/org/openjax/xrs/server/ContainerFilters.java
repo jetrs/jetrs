@@ -28,7 +28,7 @@ import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.container.PreMatching;
 
-import org.fastjax.util.Collections;
+import org.fastjax.util.FastCollections;
 import org.openjax.xrs.server.core.AnnotationInjector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,9 +60,9 @@ public final class ContainerFilters {
       containerResponseFilters.add(responseFilter);
     }
 
-    Collections.sort(preMatchContainerRequestFilters, priorityComparator);
-    Collections.sort(containerRequestFilters, priorityComparator);
-    Collections.sort(containerResponseFilters, priorityComparator);
+    FastCollections.sort(preMatchContainerRequestFilters, priorityComparator);
+    FastCollections.sort(containerRequestFilters, priorityComparator);
+    FastCollections.sort(containerResponseFilters, priorityComparator);
   }
 
   public void filterPreMatchContainerRequest(final ContainerRequestContext requestContext, final AnnotationInjector annotationInjector) throws IOException {
