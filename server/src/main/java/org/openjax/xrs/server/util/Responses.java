@@ -22,7 +22,11 @@ import java.util.Comparator;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.Response.Status.Family;
+import javax.ws.rs.core.Response.StatusType;
 
+/**
+ * Utility functions for operations pertaining to {@link Response}.
+ */
 public final class Responses {
   private static final Response.Status[] statuses = Response.Status.values();
   private static final int[] statusCodes = new int[statuses.length];
@@ -35,15 +39,15 @@ public final class Responses {
       }
     });
 
-    for (int i = 0; i < statuses.length; i++)
+    for (int i = 0; i < statuses.length; ++i)
       statusCodes[i] = statuses[i].getStatusCode();
   }
 
   /**
    * Convert a numerical status code into the corresponding Status.
    *
-   * @param statusCode the numerical status code.
-   * @return the matching Status or null is no matching Status is defined.
+   * @param statusCode The numerical status code.
+   * @return The matching {@link Status} or null if there is no match.
    */
   public static Response.Status fromStatusCode(final int statusCode) {
     final int index = Arrays.binarySearch(statusCodes, statusCode);
@@ -53,11 +57,11 @@ public final class Responses {
   /**
    * Convert a numerical status code into the corresponding Status.
    *
-   * @param statusCode the numerical status code.
-   * @return the matching Status or null is no matching Status is defined.
+   * @param statusCode The numerical status code.
+   * @param reasonPhrase The reason phrase.
+   * @return The matching {@link StatusType} or null if there is no match.
    */
   public static Response.StatusType fromStatusCode(final int statusCode, final String reasonPhrase) {
-    final Response.Status status = fromStatusCode(statusCode);
     return new Response.StatusType() {
       @Override
       public int getStatusCode() {
@@ -66,7 +70,7 @@ public final class Responses {
 
       @Override
       public Family getFamily() {
-        return status.getFamily();
+        return fromStatusCode(statusCode).getFamily();
       }
 
       @Override
