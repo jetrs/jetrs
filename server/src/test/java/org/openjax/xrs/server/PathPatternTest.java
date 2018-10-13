@@ -16,11 +16,12 @@
 
 package org.openjax.xrs.server;
 
+import static org.junit.Assert.*;
+
 import java.lang.annotation.Annotation;
 
 import javax.ws.rs.Path;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 public class PathPatternTest {
@@ -48,18 +49,18 @@ public class PathPatternTest {
 
   @Test
   public void test() {
-    Assert.assertEquals("/foo/bar", pathToPattern("/foo", "/bar"));
-    Assert.assertEquals("/foo/bar", pathToPattern("foo", "bar"));
-    Assert.assertEquals("/foo/bar", pathToPattern("/foo", "bar"));
-    Assert.assertEquals("/foo/bar", pathToPattern("foo", "/bar"));
+    assertEquals("/foo/bar", pathToPattern("/foo", "/bar"));
+    assertEquals("/foo/bar", pathToPattern("foo", "bar"));
+    assertEquals("/foo/bar", pathToPattern("/foo", "bar"));
+    assertEquals("/foo/bar", pathToPattern("foo", "/bar"));
 
-    Assert.assertEquals("/foo", pathToPattern("/foo", null));
-    Assert.assertEquals("/bar", pathToPattern(null, "/bar"));
-    Assert.assertEquals("/foo/(?<id>[^\\/]+)", pathToPattern("/foo", "{id}"));
-    Assert.assertEquals("/foo/bar/(?<id>[^\\/]+)", pathToPattern("/foo", "bar/{id}"));
+    assertEquals("/foo", pathToPattern("/foo", null));
+    assertEquals("/bar", pathToPattern(null, "/bar"));
+    assertEquals("/foo/(?<id>[^\\/]+)", pathToPattern("/foo", "{id}"));
+    assertEquals("/foo/bar/(?<id>[^\\/]+)", pathToPattern("/foo", "bar/{id}"));
 
-    Assert.assertEquals("/foo/bar/(?<id>[^\\/]+)", pathToPattern("/foo", "bar/{id:([^\\/]+)}"));
-    Assert.assertEquals("/foo/bar/(?<id>[^\\/]+)/(?<name>[^\\/]+)", pathToPattern("/foo", "bar/{id:([^\\/]+)}/{name}"));
-    Assert.assertEquals("/foo/bar/(?<id>[^\\/]+)/blank/(?<name>[^\\/]+)", pathToPattern("/foo", "bar/{id:([^\\/]+)}/blank/{name}"));
+    assertEquals("/foo/bar/(?<id>[^\\/]+)", pathToPattern("/foo", "bar/{id:([^\\/]+)}"));
+    assertEquals("/foo/bar/(?<id>[^\\/]+)/(?<name>[^\\/]+)", pathToPattern("/foo", "bar/{id:([^\\/]+)}/{name}"));
+    assertEquals("/foo/bar/(?<id>[^\\/]+)/blank/(?<name>[^\\/]+)", pathToPattern("/foo", "bar/{id:([^\\/]+)}/blank/{name}"));
   }
 }

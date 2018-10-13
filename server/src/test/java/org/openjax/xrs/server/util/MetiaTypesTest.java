@@ -16,12 +16,13 @@
 
 package org.openjax.xrs.server.util;
 
+import static org.junit.Assert.*;
+
 import java.util.Collections;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.RuntimeDelegate;
 
-import org.junit.Assert;
 import org.junit.Test;
 import org.openjax.xrs.server.ext.RuntimeDelegateImpl;
 
@@ -32,9 +33,9 @@ public class MetiaTypesTest {
 
   @Test
   public void testParse() {
-    Assert.assertEquals(new MediaType("application", "json"), MediaType.valueOf("application/json"));
-    Assert.assertEquals(new MediaType("application", "json", "utf8"), MediaType.valueOf("application/json; charset=utf8"));
-    Assert.assertEquals(new MediaType("application", "json", Collections.singletonMap("charset", "utf8")), MediaType.valueOf("application/json; charset=utf8"));
+    assertEquals(new MediaType("application", "json"), MediaType.valueOf("application/json"));
+    assertEquals(new MediaType("application", "json", "utf8"), MediaType.valueOf("application/json; charset=utf8"));
+    assertEquals(new MediaType("application", "json", Collections.singletonMap("charset", "utf8")), MediaType.valueOf("application/json; charset=utf8"));
   }
 
   @Test
