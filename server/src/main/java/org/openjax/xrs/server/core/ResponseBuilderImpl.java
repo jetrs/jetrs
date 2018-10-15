@@ -39,17 +39,23 @@ import javax.ws.rs.ext.RuntimeDelegate;
 import org.fastjax.util.Locales;
 import org.openjax.xrs.server.util.Responses;
 
-public class ResponseBuilderImpl extends Response.ResponseBuilder {
+public class ResponseBuilderImpl extends Response.ResponseBuilder implements Cloneable {
   private final HeaderMap headers;
+  private int status;
+  private String reasonPhrase;
   private Object entity;
   private Annotation[] annotations;
 
-  public ResponseBuilderImpl(final ResponseBuilderImpl copy) {
-    headers = copy.headers.clone();
+  public ResponseBuilderImpl() {
+    this.headers = new HeaderMap();
   }
 
-  public ResponseBuilderImpl() {
-    headers = new HeaderMap();
+  private ResponseBuilderImpl(final ResponseBuilderImpl copy) {
+    this.headers = copy.headers.clone();
+    this.status = copy.status;
+    this.reasonPhrase = copy.reasonPhrase;
+    this.entity = copy.entity;
+    this.annotations = copy.annotations;
   }
 
   @Override
@@ -57,14 +63,6 @@ public class ResponseBuilderImpl extends Response.ResponseBuilder {
     final Response.StatusType statusType = reasonPhrase != null ? Responses.fromStatusCode(status, reasonPhrase) : Responses.fromStatusCode(status);
     return new ResponseImpl(statusType, headers, entity, annotations);
   }
-
-  @Override
-  public Response.ResponseBuilder clone() {
-    return new ResponseBuilderImpl(this);
-  }
-
-  private int status;
-  private String reasonPhrase;
 
   @Override
   public Response.ResponseBuilder status(final int status) {
@@ -110,7 +108,7 @@ public class ResponseBuilderImpl extends Response.ResponseBuilder {
 
   @Override
   public Response.ResponseBuilder cacheControl(final CacheControl cacheControl) {
-    headers.getMirroredMap().putSingle(HttpHeaders.CACHE_CONTROL, cacheControl);
+    headers.getMirror().putSingle(HttpHeaders.CACHE_CONTROL, cacheControl);
     return this;
   }
 
@@ -124,18 +122,18 @@ public class ResponseBuilderImpl extends Response.ResponseBuilder {
   @SuppressWarnings("unchecked")
   public Response.ResponseBuilder header(final String name, final Object value) {
     if (value == null) {
-      headers.getMirroredMap().add(name, null);
+      headers.getMirror().add(name, null);
       return this;
     }
 
     final RuntimeDelegate.HeaderDelegate<Object> headerDelegate = (RuntimeDelegate.HeaderDelegate<Object>)RuntimeDelegate.getInstance().createHeaderDelegate(value.getClass());
-    headers.getMirroredMap().add(name, headerDelegate != null ? headerDelegate.toString(value) : value.toString());
+    headers.getMirror().add(name, headerDelegate != null ? headerDelegate.toString(value) : value.toString());
     return this;
   }
 
   @Override
   public Response.ResponseBuilder replaceAll(final MultivaluedMap<String,Object> headers) {
-    final MultivaluedMap<String,Object> mirroredMap = this.headers.getMirroredMap();
+    final MultivaluedMap<String,Object> mirroredMap = this.headers.getMirror();
     mirroredMap.clear();
     for (final Map.Entry<String,List<Object>> entry : headers.entrySet())
       mirroredMap.addAll(entry.getKey(), entry.getValue());
@@ -145,20 +143,20 @@ public class ResponseBuilderImpl extends Response.ResponseBuilder {
 
   @Override
   public Response.ResponseBuilder language(final String language) {
-    headers.getMirroredMap().putSingle(HttpHeaders.CONTENT_LANGUAGE, Locales.parse(language));
+    headers.getMirror().putSingle(HttpHeaders.CONTENT_LANGUAGE, Locales.parse(language));
     headers.putSingle(HttpHeaders.CONTENT_LANGUAGE, language);
     return this;
   }
 
   @Override
   public Response.ResponseBuilder language(final Locale language) {
-    headers.getMirroredMap().putSingle(HttpHeaders.CONTENT_LANGUAGE, language);
+    headers.getMirror().putSingle(HttpHeaders.CONTENT_LANGUAGE, language);
     return this;
   }
 
   @Override
   public Response.ResponseBuilder type(final MediaType type) {
-    headers.getMirroredMap().putSingle(HttpHeaders.CONTENT_TYPE, type);
+    headers.getMirror().putSingle(HttpHeaders.CONTENT_TYPE, type);
     return this;
   }
 
@@ -176,7 +174,7 @@ public class ResponseBuilderImpl extends Response.ResponseBuilder {
 
   @Override
   public Response.ResponseBuilder contentLocation(final URI location) {
-    headers.getMirroredMap().putSingle(HttpHeaders.CONTENT_LOCATION, location);
+    headers.getMirror().putSingle(HttpHeaders.CONTENT_LOCATION, location);
     return this;
   }
 
@@ -188,19 +186,19 @@ public class ResponseBuilderImpl extends Response.ResponseBuilder {
 
   @Override
   public Response.ResponseBuilder expires(final Date expires) {
-    headers.getMirroredMap().putSingle(HttpHeaders.EXPIRES, expires);
+    headers.getMirror().putSingle(HttpHeaders.EXPIRES, expires);
     return this;
   }
 
   @Override
   public Response.ResponseBuilder lastModified(final Date lastModified) {
-    headers.getMirroredMap().putSingle(HttpHeaders.LAST_MODIFIED, lastModified);
+    headers.getMirror().putSingle(HttpHeaders.LAST_MODIFIED, lastModified);
     return this;
   }
 
   @Override
   public Response.ResponseBuilder location(final URI location) {
-    headers.getMirroredMap().putSingle(HttpHeaders.LOCATION, location);
+    headers.getMirror().putSingle(HttpHeaders.LOCATION, location);
     return this;
   }
 
@@ -244,5 +242,10 @@ public class ResponseBuilderImpl extends Response.ResponseBuilder {
   public Response.ResponseBuilder link(final String uri, final String rel) {
     // TODO:
     throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public Response.ResponseBuilder clone() {
+    return new ResponseBuilderImpl(this);
   }
 }

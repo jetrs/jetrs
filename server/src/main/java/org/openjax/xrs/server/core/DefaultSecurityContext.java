@@ -29,22 +29,22 @@ public final class DefaultSecurityContext implements SecurityContext {
   }
 
   @Override
-  public final Principal getUserPrincipal() {
+  public Principal getUserPrincipal() {
     return null;
   }
 
   @Override
-  public final boolean isUserInRole(final String role) {
+  public boolean isUserInRole(final String role) {
     return false;
   }
 
   @Override
-  public final boolean isSecure() {
+  public boolean isSecure() {
     return request.isSecure();
   }
 
   @Override
-  public final String getAuthenticationScheme() {
+  public String getAuthenticationScheme() {
     return null;
   }
 }

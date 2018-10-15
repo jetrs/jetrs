@@ -28,7 +28,7 @@ public class ProviderResource<T> {
     if (genericInterfaces == null || genericInterfaces.length == 0)
       return null;
 
-    for (int i = 0; i < genericInterfaces.length; i++)
+    for (int i = 0; i < genericInterfaces.length; ++i)
       if (genericInterfaces[i].getTypeName().startsWith(interfaceType.getTypeName() + "<"))
         return (Class<?>)((ParameterizedType)genericInterfaces[i]).getActualTypeArguments()[0];
 
@@ -58,7 +58,7 @@ public class ProviderResource<T> {
       return annotationInjector.injectFields(singleton != null ? singleton : annotationInjector.newProviderInstance(clazz));
     }
     catch (final IllegalAccessException | InstantiationException | InvocationTargetException e) {
-      // This should not happen, because an instance of this class would have already been instantiated once in the constructor for the matchInstance instance.
+      // This should not happen, because an instance of this class would have already been instantiated once in the constructor for the matchInstance instance
       throw new ProviderInstantiationException(e);
     }
   }

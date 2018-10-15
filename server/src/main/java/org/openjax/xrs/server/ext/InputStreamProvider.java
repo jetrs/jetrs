@@ -32,7 +32,7 @@ import javax.ws.rs.ext.Provider;
 
 @Provider
 public class InputStreamProvider implements MessageBodyReader<InputStream>, MessageBodyWriter<InputStream> {
-  private static final int DEFAULT_BUFFER_SIZE = 0xffff;
+  private static final int DEFAULT_BUFFER_SIZE = 65536;
 
   private final int bufferSize;
 

@@ -62,6 +62,7 @@ public class ResponseImpl extends Response {
 
   @Override
   public Object getEntity() {
+    // TODO: Also add: "Previously consumed as an InputStream"
     if (closed)
       throw new IllegalStateException("response has been closed");
 
@@ -94,6 +95,7 @@ public class ResponseImpl extends Response {
 
   @Override
   public boolean hasEntity() {
+    // TODO: Also add: "Previously consumed as an InputStream"
     if (closed)
       throw new IllegalStateException("response has been closed");
 
@@ -185,7 +187,7 @@ public class ResponseImpl extends Response {
 
   @Override
   public MultivaluedMap<String,Object> getMetadata() {
-    return headers.getMirroredMap();
+    return headers.getMirror();
   }
 
   @Override

@@ -48,11 +48,11 @@ public class StringArrayHeaderDelegate implements RuntimeDelegate.HeaderDelegate
       return null;
 
     if (value.length == 0)
-     return "";
+      return "";
 
     final StringBuilder builder = new StringBuilder();
     builder.append(value[0]);
-    for (int i = 1; i < value.length; i++)
+    for (int i = 1; i < value.length; ++i)
       builder.append(',').append(value[i]);
 
     return builder.toString();

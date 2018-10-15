@@ -94,7 +94,7 @@ public class AnnotationInjector {
   private static String toString(final Executable source) {
     final StringBuilder builder = new StringBuilder();
     builder.append(source.getDeclaringClass().getName()).append('.').append(source.getName()).append('(');
-    for (int i = 0; i < source.getParameterCount(); i++)
+    for (int i = 0; i < source.getParameterCount(); ++i)
       builder.append(source.getParameters()[i]).append(',');
 
     builder.setCharAt(builder.length() - 1, ')');
@@ -136,7 +136,7 @@ public class AnnotationInjector {
   private final HttpServletRequest httpServletRequest;
   private final HttpServletResponse httpServletResponse;
   private final Application application;
-  // NOTE: Have to leave this non-final because there is a circular reference in the createAnnotationInjector() factory method.
+  // NOTE: Have to leave this non-final because there is a circular reference in the createAnnotationInjector() factory method
   private Providers providers;
 
   private AnnotationInjector(final ContainerRequestContext containerRequestContext, final Request request, final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse, final HttpHeaders httpHeaders, final Application application) {
@@ -234,7 +234,7 @@ public class AnnotationInjector {
         return (T)constructor.newInstance();
 
       final Object[] parameterInstances = new Object[parameters.length];
-      for (int i = 0; i < parameters.length; i++) {
+      for (int i = 0; i < parameters.length; ++i) {
         final Parameter parameter = parameters[i];
         final Annotation injectableAnnotation = isResource ? getInjectableAnnotation(parameter, parameter.getAnnotations()) : parameter.getAnnotation(Context.class);
         if (injectableAnnotation == null) {

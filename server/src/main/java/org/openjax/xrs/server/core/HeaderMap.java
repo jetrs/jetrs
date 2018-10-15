@@ -19,10 +19,10 @@ package org.openjax.xrs.server.core;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -35,13 +35,13 @@ import org.fastjax.util.Locales;
 import org.fastjax.util.Numbers;
 import org.openjax.xrs.server.ext.DateHeaderDelegate;
 import org.openjax.xrs.server.util.MediaTypes;
-import org.openjax.xrs.server.util.MirroredMultivaluedHashMap;
+import org.openjax.xrs.server.util.MirroredMultivaluedMap;
 
-public class HeaderMap extends MirroredMultivaluedHashMap<String,String,Object> {
+public class HeaderMap extends MirroredMultivaluedMap<String,String,Object> {
   private static final long serialVersionUID = -424669813370868690L;
 
   public HeaderMap(final HttpServletResponse response) {
-    super(new ArrayList<String>(), new ArrayList<>(), new Function<String,Object>() {
+    super(HashMap::new, ArrayList::new, new Function<String,Object>() {
       @Override
       public Object apply(final String value) {
         return value == null ? null : MediaType.valueOf(value);
@@ -81,14 +81,6 @@ public class HeaderMap extends MirroredMultivaluedHashMap<String,String,Object> 
 
   public HeaderMap() {
     this((HttpServletResponse)null);
-  }
-
-  @SuppressWarnings("unchecked")
-  public HeaderMap(final HeaderMap copy) {
-    super(new ArrayList<String>(), new ArrayList<>(), copy.getMirror(), ((MirroredMultivaluedHashMap<String,Object,String>)copy.getMirroredMap()).getMirror());
-    for (final Map.Entry<String,List<String>> entry : entrySet())
-      for (final String value : entry.getValue())
-        add(entry.getKey(), value);
   }
 
   public String getString(final String header) {
