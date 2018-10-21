@@ -72,7 +72,7 @@ public class PathPattern {
     final String pathString = methodPath == null ? prependSlash(path) : path == null ? prependSlash(methodPath) : prependSlash(path) + prependSlash(methodPath);
     final int index = pathString.indexOf('{');
     this.uri = index < 0 ? pathString : pathString.substring(0, index);
-    this.decodedUri = URLs.pathDecode(uri);
+    this.decodedUri = URLs.decodePath(uri);
     this.pattern = createPattern(pathString);
   }
 

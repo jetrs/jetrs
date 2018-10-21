@@ -56,7 +56,7 @@ public class UriInfoImpl implements UriInfo {
 
   @Override
   public String getPath(final boolean decode) {
-    return !decode ? httpServletRequest.getPathInfo() : decodedPath == null ? decodedPath = URLs.pathDecode(httpServletRequest.getPathInfo()) : decodedPath;
+    return !decode ? httpServletRequest.getPathInfo() : decodedPath == null ? decodedPath = URLs.decodePath(httpServletRequest.getPathInfo()) : decodedPath;
   }
 
   @Override
