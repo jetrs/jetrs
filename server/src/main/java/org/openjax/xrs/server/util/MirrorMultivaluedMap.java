@@ -26,27 +26,27 @@ import java.util.function.Supplier;
 
 import javax.ws.rs.core.MultivaluedMap;
 
-import org.fastjax.util.MirroredList;
+import org.fastjax.util.MirrorList;
 import org.fastjax.util.ObservableMap;
 
-public class MirroredMultivaluedMap<K,V,M> extends ObservableMap<K,List<V>> implements MultivaluedMap<K,V>, Cloneable, Serializable {
+public class MirrorMultivaluedMap<K,V,M> extends ObservableMap<K,List<V>> implements MultivaluedMap<K,V>, Cloneable, Serializable {
   private static final long serialVersionUID = -7406535904458617108L;
 
   private final Supplier<Map> mapSupplier;
   private final Supplier<List> listSupplier;
   private final Function<V,M> mirror;
 
-  protected MirroredMultivaluedMap<K,M,V> mirroredMap;
+  protected MirrorMultivaluedMap<K,M,V> mirroredMap;
 
-  public MirroredMultivaluedMap(final Supplier<Map> mapSupplier, final Supplier<List> listSupplier, final Function<V,M> mirror1, final Function<M,V> mirror2) {
+  public MirrorMultivaluedMap(final Supplier<Map> mapSupplier, final Supplier<List> listSupplier, final Function<V,M> mirror1, final Function<M,V> mirror2) {
     super(mapSupplier.get());
     this.mapSupplier = Objects.requireNonNull(mapSupplier);
     this.listSupplier = Objects.requireNonNull(listSupplier);
     this.mirror = Objects.requireNonNull(mirror1);
-    this.mirroredMap = new MirroredMultivaluedMap<>(this, Objects.requireNonNull(mirror2));
+    this.mirroredMap = new MirrorMultivaluedMap<>(this, Objects.requireNonNull(mirror2));
   }
 
-  private MirroredMultivaluedMap(final MirroredMultivaluedMap<K,M,V> mirroredMap, final Function<V,M> mirror) {
+  private MirrorMultivaluedMap(final MirrorMultivaluedMap<K,M,V> mirroredMap, final Function<V,M> mirror) {
     super(mirroredMap.mapSupplier.get());
     this.mapSupplier = mirroredMap.mapSupplier;
     this.listSupplier = mirroredMap.listSupplier;
@@ -61,7 +61,7 @@ public class MirroredMultivaluedMap<K,V,M> extends ObservableMap<K,List<V>> impl
   protected final List<V> getValues(final K key) {
     List<V> values = get(key);
     if (values == null)
-      put(key, values = new MirroredList<>(listSupplier.get(), listSupplier.get(), mirror, mirroredMap.mirror));
+      put(key, values = new MirrorList<>(listSupplier.get(), listSupplier.get(), mirror, mirroredMap.mirror));
 
     return values;
   }
@@ -69,7 +69,7 @@ public class MirroredMultivaluedMap<K,V,M> extends ObservableMap<K,List<V>> impl
   @Override
   @SuppressWarnings("unchecked")
   protected void afterPut(final K key, final List<V> oldValue, final List<V> newValue, final RuntimeException re) {
-    final MirroredList<V,M> list = (MirroredList<V,M>)get(key);
+    final MirrorList<V,M> list = (MirrorList<V,M>)get(key);
     mirroredMap.source.put(key, list == null ? null : list.getMirror());
   }
 
@@ -134,12 +134,12 @@ public class MirroredMultivaluedMap<K,V,M> extends ObservableMap<K,List<V>> impl
   @Override
   @SuppressWarnings("unchecked")
   public List<V> put(final K key, final List<V> value) {
-    final MirroredList<V,M> list;
-    if (value instanceof MirroredList) {
-      list = (MirroredList<V,M>)value;
+    final MirrorList<V,M> list;
+    if (value instanceof MirrorList) {
+      list = (MirrorList<V,M>)value;
     }
     else {
-      list = new MirroredList<>(listSupplier.get(), listSupplier.get(), mirror, mirroredMap.mirror);
+      list = new MirrorList<>(listSupplier.get(), listSupplier.get(), mirror, mirroredMap.mirror);
       list.addAll(value);
     }
 
@@ -147,9 +147,9 @@ public class MirroredMultivaluedMap<K,V,M> extends ObservableMap<K,List<V>> impl
   }
 
   @SuppressWarnings("unchecked")
-  private MirroredMultivaluedMap<K,V,M> superClone() {
+  private MirrorMultivaluedMap<K,V,M> superClone() {
     try {
-      return (MirroredMultivaluedMap<K,V,M>)super.clone();
+      return (MirrorMultivaluedMap<K,V,M>)super.clone();
     }
     catch (final CloneNotSupportedException e) {
       throw new UnsupportedOperationException(e);
@@ -157,8 +157,8 @@ public class MirroredMultivaluedMap<K,V,M> extends ObservableMap<K,List<V>> impl
   }
 
   @Override
-  public MirroredMultivaluedMap<K,V,M> clone() {
-    final MirroredMultivaluedMap<K,V,M> clone = superClone();
+  public MirrorMultivaluedMap<K,V,M> clone() {
+    final MirrorMultivaluedMap<K,V,M> clone = superClone();
     clone.mirroredMap = mirroredMap.superClone();
     clone.mirroredMap.mirroredMap = clone;
     return clone;
