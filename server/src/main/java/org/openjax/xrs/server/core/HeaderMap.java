@@ -35,9 +35,9 @@ import org.fastjax.util.Locales;
 import org.fastjax.util.Numbers;
 import org.openjax.xrs.server.ext.DateHeaderDelegate;
 import org.openjax.xrs.server.util.MediaTypes;
-import org.openjax.xrs.server.util.MirroredMultivaluedMap;
+import org.openjax.xrs.server.util.MirrorMultivaluedMap;
 
-public class HeaderMap extends MirroredMultivaluedMap<String,String,Object> {
+public class HeaderMap extends MirrorMultivaluedMap<String,String,Object> {
   private static final long serialVersionUID = -424669813370868690L;
 
   public HeaderMap(final HttpServletResponse response) {
