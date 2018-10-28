@@ -61,7 +61,7 @@ public class MirrorMultivaluedMap<K,V,M> extends ObservableMap<K,List<V>> implem
   protected final List<V> getValues(final K key) {
     List<V> values = get(key);
     if (values == null)
-      put(key, values = new MirrorList<>(listSupplier.get(), listSupplier.get(), mirror, mirroredMap.mirror));
+      put(key, values = new MirrorList<V,M>(listSupplier.get(), listSupplier.get(), mirror, mirroredMap.mirror));
 
     return values;
   }
