@@ -70,12 +70,12 @@ public class MirrorMultivaluedMap<K,V,M> extends ObservableMap<K,List<V>> implem
   @SuppressWarnings("unchecked")
   protected void afterPut(final K key, final List<V> oldValue, final List<V> newValue, final RuntimeException re) {
     final MirrorList<V,M> list = (MirrorList<V,M>)get(key);
-    mirroredMap.source.put(key, list == null ? null : list.getMirror());
+    mirroredMap.target.put(key, list == null ? null : list.getMirror());
   }
 
   @Override
   protected boolean beforeRemove(final Object key, final List<V> value) {
-    mirroredMap.source.remove(key);
+    mirroredMap.target.remove(key);
     return true;
   }
 

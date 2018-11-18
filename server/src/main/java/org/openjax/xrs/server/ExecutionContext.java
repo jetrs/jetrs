@@ -72,14 +72,14 @@ public class ExecutionContext {
     final List<Object> matchedResources = new ObservableList<Object>(new ArrayList<>(resources.length)) {
       @Override
       protected void beforeGet(final int index, final ListIterator<Object> iterator) {
-        final Object object = this.source.get(index);
+        final Object object = this.target.get(index);
         if (object instanceof Class) {
           try {
             final Object instance = annotationInjector.newResourceInstance((Class<?>)object);
             if (iterator != null)
               iterator.set(instance);
             else
-              this.source.set(index, instance);
+              this.target.set(index, instance);
           }
           catch (final IllegalAccessException | InstantiationException | InvocationTargetException e) {
             throw new InternalServerErrorException(e);
