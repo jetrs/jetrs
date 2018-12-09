@@ -16,19 +16,18 @@
 
 package org.openjax.xrs.server;
 
-import java.lang.reflect.Method;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import javax.ws.rs.Path;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
+import java.lang.reflect.Method;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.fastjax.net.URLs;
 import org.fastjax.util.Patterns;
 
 public class PathPattern {
-  private static final Pattern pathExpressionPattern = Pattern.compile("(\\w+)\\s*(:\\s*\\(([^\\)]+)\\))?");
+  private static final Pattern pathExpressionPattern = Pattern.compile("(\\w+)\\s*(:\\s*\\(([^)]+)\\))?");
 
   private static String pathExpressionToRegex(final String pathExpression) {
     final Matcher matcher = pathExpressionPattern.matcher(pathExpression);

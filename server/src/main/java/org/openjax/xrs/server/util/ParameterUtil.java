@@ -16,6 +16,9 @@
 
 package org.openjax.xrs.server.util;
 
+import javax.ws.rs.Encoded;
+import javax.ws.rs.ext.ParamConverter;
+import javax.ws.rs.ext.ParamConverterProvider;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
@@ -24,10 +27,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
-
-import javax.ws.rs.Encoded;
-import javax.ws.rs.ext.ParamConverter;
-import javax.ws.rs.ext.ParamConverterProvider;
 
 import org.fastjax.util.FastCollections;
 import org.openjax.xrs.server.ProviderResource;
@@ -96,9 +95,7 @@ public final class ParameterUtil {
       final Collection collection = FastCollections.concat(((Class<? extends Collection>)parameterType).getDeclaredConstructor().newInstance(), values);
       final Class<?> type = (Class<?>)((ParameterizedType)parameterType.getGenericInterfaces()[0]).getActualTypeArguments()[0];
       if (type == String.class) {
-        for (final String value : values) {
-          collection.add(value);
-        }
+        collection.addAll(values);
       }
       else {
         final Method method = findToString(type);

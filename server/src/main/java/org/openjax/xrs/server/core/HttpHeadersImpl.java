@@ -16,22 +16,21 @@
 
 package org.openjax.xrs.server.core;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import org.fastjax.util.FastCollections;
+import org.fastjax.util.Numbers;
+import org.openjax.xrs.server.util.HttpServletRequestUtil;
+import org.openjax.xrs.server.util.MediaTypes;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
-
-import org.fastjax.util.FastCollections;
-import org.fastjax.util.Numbers;
-import org.openjax.xrs.server.util.HttpServletRequestUtil;
-import org.openjax.xrs.server.util.MediaTypes;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 public class HttpHeadersImpl implements HttpHeaders {
   private final MultivaluedMap<String,String> headers;
@@ -105,6 +104,6 @@ public class HttpHeadersImpl implements HttpHeaders {
   @Override
   public int getLength() {
     final String contentLength = headers.getFirst(HttpHeaders.CONTENT_LENGTH);
-    return contentLength != null && Numbers.isNumber(contentLength) ? Integer.parseInt(contentLength) : null;
+    return Numbers.isNumber(contentLength) ? Integer.parseInt(contentLength) : null;
   }
 }
