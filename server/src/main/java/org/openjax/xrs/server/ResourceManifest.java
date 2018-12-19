@@ -46,7 +46,7 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.ParamConverterProvider;
 import javax.ws.rs.ext.Providers;
 
-import org.fastjax.util.JavaIdentifiers;
+import org.fastjax.util.Identifiers;
 import org.openjax.xrs.server.core.AnnotationInjector;
 import org.openjax.xrs.server.util.MediaTypes;
 import org.slf4j.Logger;
@@ -168,7 +168,7 @@ public class ResourceManifest {
   protected boolean checkHeader(final String headerName, final Class<? extends Annotation> annotationClass, final ContainerRequestContext containerRequestContext) {
     final Annotation annotation = getMatcher(annotationClass).getAnnotation();
     if (annotation == null) {
-      final String message = "@" + annotationClass.getSimpleName() + " annotation missing for " + method.getDeclaringClass().getName() + "." + JavaIdentifiers.toClassCase(containerRequestContext.getMethod().toLowerCase()) + "()";
+      final String message = "@" + annotationClass.getSimpleName() + " annotation missing for " + method.getDeclaringClass().getName() + "." + Identifiers.toClassCase(containerRequestContext.getMethod().toLowerCase()) + "()";
       if (annotationClass == Consumes.class)
         throw new RuntimeException(message);
 
