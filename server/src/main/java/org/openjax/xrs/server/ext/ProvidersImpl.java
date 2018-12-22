@@ -28,7 +28,6 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Providers;
 
-import org.fastjax.util.FastCollections;
 import org.openjax.xrs.server.EntityProviderResource;
 import org.openjax.xrs.server.EntityReaderProviderResource;
 import org.openjax.xrs.server.EntityWriterProviderResource;
@@ -36,19 +35,19 @@ import org.openjax.xrs.server.ExceptionMappingProviderResource;
 import org.openjax.xrs.server.core.AnnotationInjector;
 
 public class ProvidersImpl implements Providers {
-  private static final Comparator<ExceptionMappingProviderResource> exceptionMapperComparator = new Comparator<ExceptionMappingProviderResource>() {
+  private static final Comparator<ExceptionMappingProviderResource> exceptionMapperComparator = Comparator.nullsFirst(new Comparator<ExceptionMappingProviderResource>() {
     @Override
     public int compare(final ExceptionMappingProviderResource o1, final ExceptionMappingProviderResource o2) {
       return o1.getExceptionType() == o2.getExceptionType() ? 0 : o1.getExceptionType().isAssignableFrom(o2.getExceptionType()) ? 1 : -1;
     }
-  };
+  });
 
-  private static final Comparator<EntityProviderResource<?>> messageBodyComparator = new Comparator<EntityProviderResource<?>>() {
+  private static final Comparator<EntityProviderResource<?>> messageBodyComparator = Comparator.nullsFirst(new Comparator<EntityProviderResource<?>>() {
     @Override
     public int compare(final EntityProviderResource<?> o1, final EntityProviderResource<?> o2) {
       return o1.getType() == o2.getType() ? 0 : o1.getType().isAssignableFrom(o2.getType()) ? 1 : -1;
     }
-  };
+  });
 
   private final List<ExceptionMappingProviderResource> exceptionMappers;
   private final List<EntityReaderProviderResource> readerProviders;
@@ -68,9 +67,9 @@ public class ProvidersImpl implements Providers {
     this.writerProviders = writerProviders;
     this.annotationInjector = annotationInjector;
 
-    FastCollections.sort(this.exceptionMappers, exceptionMapperComparator);
-    FastCollections.sort(this.readerProviders, messageBodyComparator);
-    FastCollections.sort(this.writerProviders, messageBodyComparator);
+    this.exceptionMappers.sort(exceptionMapperComparator);
+    this.readerProviders.sort(messageBodyComparator);
+    this.writerProviders.sort(messageBodyComparator);
   }
 
   @Override
