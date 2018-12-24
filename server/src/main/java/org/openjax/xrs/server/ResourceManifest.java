@@ -170,7 +170,7 @@ public class ResourceManifest {
     if (annotation == null) {
       final String message = "@" + annotationClass.getSimpleName() + " annotation missing for " + method.getDeclaringClass().getName() + "." + Identifiers.toClassCase(containerRequestContext.getMethod().toLowerCase()) + "()";
       if (annotationClass == Consumes.class)
-        throw new RuntimeException(message);
+        throw new IllegalStateException(message);
 
       logger.warn(message);
       return true;

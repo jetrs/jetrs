@@ -120,6 +120,6 @@ public class ExceptionTruncator {
 
   public void test7() {
     System.out.println("yer");
-    throw new RuntimeException();
+    throw new IllegalStateException();
   }
 }
