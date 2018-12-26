@@ -106,7 +106,17 @@ A common pattern that is used in JAX-RS implementations is dynamic method invoca
   ```
 
   This will automatically add `RESTServlet` to the application.
-  
+
+### JavaDocs
+
+JavaDocs are available [here](https://xrs.openjax.org/javadocs/).
+
+## Contributing
+
+Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
+
+Please make sure to update tests as appropriate.
+
 ### License
 
 This project is licensed under the MIT License - see the [LICENSE.txt](LICENSE.txt) file for details.
