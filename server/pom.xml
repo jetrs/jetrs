@@ -27,9 +27,6 @@
   <artifactId>xrs-server</artifactId>
   <name>${project.groupId}:${project.artifactId}</name>
   <description>XRS is an implementation of Java's JAX-RS 2.1 server specification.</description>
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
   <build>
     <plugins>
       <plugin>
