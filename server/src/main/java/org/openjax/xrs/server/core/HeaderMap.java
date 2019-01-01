@@ -16,16 +16,6 @@
 
 package org.openjax.xrs.server.core;
 
-import org.fastjax.util.Locales;
-import org.fastjax.util.Numbers;
-import org.openjax.xrs.server.ext.DateHeaderDelegate;
-import org.openjax.xrs.server.util.MediaTypes;
-import org.openjax.xrs.server.util.MirrorMultivaluedMap;
-
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.core.CacheControl;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Date;
@@ -35,6 +25,17 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.function.Function;
+
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.CacheControl;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+
+import org.openjax.classic.util.Locales;
+import org.openjax.classic.util.Numbers;
+import org.openjax.xrs.server.ext.DateHeaderDelegate;
+import org.openjax.xrs.server.util.MediaTypes;
+import org.openjax.xrs.server.util.MirrorMultivaluedMap;
 
 public class HeaderMap extends MirrorMultivaluedMap<String,String,Object> {
   private static final long serialVersionUID = -424669813370868690L;

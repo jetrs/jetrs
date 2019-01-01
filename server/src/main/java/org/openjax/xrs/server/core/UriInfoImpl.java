@@ -28,8 +28,8 @@ import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
-import org.fastjax.net.URIComponent;
-import org.fastjax.net.URLs;
+import org.openjax.classic.net.URIComponent;
+import org.openjax.classic.net.URLs;
 import org.openjax.xrs.server.ExecutionContext;
 import org.openjax.xrs.server.ResourceMatch;
 

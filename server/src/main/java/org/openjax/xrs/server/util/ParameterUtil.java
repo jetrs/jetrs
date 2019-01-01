@@ -16,9 +16,6 @@
 
 package org.openjax.xrs.server.util;
 
-import javax.ws.rs.Encoded;
-import javax.ws.rs.ext.ParamConverter;
-import javax.ws.rs.ext.ParamConverterProvider;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
@@ -28,7 +25,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 
-import org.fastjax.util.FastCollections;
+import javax.ws.rs.Encoded;
+import javax.ws.rs.ext.ParamConverter;
+import javax.ws.rs.ext.ParamConverterProvider;
+
+import org.openjax.classic.util.FastCollections;
 import org.openjax.xrs.server.ProviderResource;
 
 public final class ParameterUtil {

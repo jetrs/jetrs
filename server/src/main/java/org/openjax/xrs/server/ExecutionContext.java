@@ -37,8 +37,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Providers;
 
-import org.fastjax.util.FastArrays;
-import org.fastjax.util.ObservableList;
+import org.openjax.classic.util.FastArrays;
+import org.openjax.classic.util.ObservableList;
 import org.openjax.xrs.server.core.AnnotationInjector;
 
 public class ExecutionContext {

@@ -8,55 +8,61 @@
 
 2. Add the EmbeddedServletContainer dependency:
 
-        <dependency>
-          <groupId>org.easyjax.jetty</groupId>
-          <artifactId>jetty-servlet</artifactId>
-          <version>1.1.3-SNAPSHOT</version>
-        </dependency>
+    ```xml
+    <dependency>
+      <groupId>org.openjax.support.jetty</groupId>
+      <artifactId>jetty-server</artifactId>
+      <version>1.1.3-SNAPSHOT</version>
+    </dependency>
+    ```
 
 3. Create Server.java as the executable entrypoint:
 
-        package com.example;
+    ```java
+    package com.example;
 
-        import javax.ws.rs.ext.RuntimeDelegate;
+    import javax.ws.rs.ext.RuntimeDelegate;
 
-        import org.safris.jetty.servlet.EmbeddedServletContainer;
-        import org.safris.xws.xrs.ext.RuntimeDelegateImpl;
+    import org.safris.jetty.servlet.EmbeddedServletContainer;
+    import org.safris.xws.xrs.ext.RuntimeDelegateImpl;
 
-        public class Server extends EmbeddedServletContainer {
-          static {
-            System.setProperty(RuntimeDelegate.JAXRS_RUNTIME_DELEGATE_PROPERTY, RuntimeDelegateImpl.class.getName());
-          }
+    public class Server extends EmbeddedServletContainer {
+      static {
+        System.setProperty(RuntimeDelegate.JAXRS_RUNTIME_DELEGATE_PROPERTY, RuntimeDelegateImpl.class.getName());
+      }
 
-          public static void main(final String[] args) throws Exception {
-            final Server instance = new Server();
-            instance.start();
-            instance.join();
-          }
+      public static void main(final String[] args) throws Exception {
+        final Server instance = new Server();
+        instance.start();
+        instance.join();
+      }
 
-          private Server() {
-            super(8080, null, null, false, null, RESTServlet.class);
-          }
-        }
+      private Server() {
+        super(8080, null, null, false, null, RESTServlet.class);
+      }
+    }
+    ```
 
 4. Create a Hello World REST Service:
 
-        package com.example.service;
+    ```java
+    package com.example.service;
 
-        import javax.ws.rs.GET;
-        import javax.ws.rs.Path;
-        import javax.ws.rs.PathParam;
-        import javax.ws.rs.core.Response;
+    import javax.ws.rs.GET;
+    import javax.ws.rs.Path;
+    import javax.ws.rs.PathParam;
+    import javax.ws.rs.core.Response;
 
-        @Path("/hello")
-        public class HelloWorldService {
-          @GET
-          @Path("/{param}")
-          public Response getMsg(@PathParam("param") final String msg) {
-            final String output = "XSR says: " + msg;
-            return Response.status(200).entity(output).build();
-          }
-        }
+    @Path("/hello")
+    public class HelloWorldService {
+      @GET
+      @Path("/{param}")
+      public Response getMsg(@PathParam("param") final String msg) {
+        final String output = "XSR says: " + msg;
+        return Response.status(200).entity(output).build();
+      }
+    }
+    ```
 
 5. Build and run com.example.Server. The server should initialize and start listening on port 8080, as specified in Server.java.
 

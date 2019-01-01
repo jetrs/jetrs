@@ -16,21 +16,22 @@
 
 package org.openjax.xrs.server.core;
 
-import org.fastjax.util.FastCollections;
-import org.fastjax.util.Numbers;
-import org.openjax.xrs.server.util.HttpServletRequestUtil;
-import org.openjax.xrs.server.util.MediaTypes;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+
+import org.openjax.classic.util.FastCollections;
+import org.openjax.classic.util.Numbers;
+import org.openjax.xrs.server.util.HttpServletRequestUtil;
+import org.openjax.xrs.server.util.MediaTypes;
 
 public class HttpHeadersImpl implements HttpHeaders {
   private final MultivaluedMap<String,String> headers;
