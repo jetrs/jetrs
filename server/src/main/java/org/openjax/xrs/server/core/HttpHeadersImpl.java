@@ -28,8 +28,8 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
-import org.openjax.classic.util.FastCollections;
-import org.openjax.classic.util.Numbers;
+import org.openjax.standard.util.FastCollections;
+import org.openjax.standard.util.Numbers;
 import org.openjax.xrs.server.util.HttpServletRequestUtil;
 import org.openjax.xrs.server.util.MediaTypes;
 

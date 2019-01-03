@@ -41,7 +41,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 
-import org.openjax.classic.util.Locales;
+import org.openjax.standard.util.Locales;
 import org.openjax.xrs.server.ExecutionContext;
 import org.openjax.xrs.server.core.DefaultSecurityContext;
 import org.openjax.xrs.server.core.UriInfoImpl;

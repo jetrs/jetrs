@@ -47,7 +47,7 @@ import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.ParamConverterProvider;
 import javax.ws.rs.ext.Provider;
 
-import org.openjax.classic.lang.PackageLoader;
+import org.openjax.standard.lang.PackageLoader;
 import org.openjax.xrs.server.ext.ProvidersImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

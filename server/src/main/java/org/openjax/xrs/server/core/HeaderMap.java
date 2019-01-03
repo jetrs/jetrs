@@ -31,8 +31,8 @@ import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 
-import org.openjax.classic.util.Locales;
-import org.openjax.classic.util.Numbers;
+import org.openjax.standard.util.Locales;
+import org.openjax.standard.util.Numbers;
 import org.openjax.xrs.server.ext.DateHeaderDelegate;
 import org.openjax.xrs.server.util.MediaTypes;
 import org.openjax.xrs.server.util.MirrorMultivaluedMap;

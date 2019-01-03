@@ -36,7 +36,7 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Variant;
 import javax.ws.rs.ext.RuntimeDelegate;
 
-import org.openjax.classic.util.Locales;
+import org.openjax.standard.util.Locales;
 import org.openjax.xrs.server.util.Responses;
 
 public class ResponseBuilderImpl extends Response.ResponseBuilder implements Cloneable {

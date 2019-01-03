@@ -30,7 +30,7 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
-import org.openjax.classic.io.Readers;
+import org.openjax.standard.io.Readers;
 
 @Provider
 public class StringProvider implements MessageBodyReader<String>, MessageBodyWriter<String> {

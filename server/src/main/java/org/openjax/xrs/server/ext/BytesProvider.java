@@ -30,7 +30,7 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
-import org.openjax.classic.io.Streams;
+import org.openjax.standard.io.Streams;
 
 @Provider
 public class BytesProvider implements MessageBodyReader<byte[]>, MessageBodyWriter<byte[]> {
