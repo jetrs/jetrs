@@ -1,6 +1,8 @@
 # OpenJAX XRS
 
-**jaX REST Server**
+> jaX Rest Server
+
+[![Build Status](https://travis-ci.org/openjax/xrs.png)](https://travis-ci.org/openjax/xrs)
 
 ### Introduction
 
