@@ -3,6 +3,7 @@
 > jaX Rest Server
 
 [![Build Status](https://travis-ci.org/openjax/xrs.png)](https://travis-ci.org/openjax/xrs)
+[![Coverage Status](https://coveralls.io/repos/github/openjax/xrs/badge.svg)](https://coveralls.io/github/openjax/xrs)
 
 ### Introduction
 
