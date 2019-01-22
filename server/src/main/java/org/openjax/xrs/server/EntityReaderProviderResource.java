@@ -24,7 +24,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.MessageBodyReader;
 
 public class EntityReaderProviderResource extends EntityProviderResource<MessageBodyReader<?>> {
-  public EntityReaderProviderResource(final Class<MessageBodyReader<?>> clazz, final MessageBodyReader<?> singleton) throws IllegalAccessException, InstantiationException, InvocationTargetException {
+  EntityReaderProviderResource(final Class<MessageBodyReader<?>> clazz, final MessageBodyReader<?> singleton) throws IllegalAccessException, InstantiationException, InvocationTargetException {
     super(clazz, singleton, MessageBodyReader.class);
   }
 

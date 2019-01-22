@@ -20,11 +20,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
+import org.openjax.standard.util.Classes;
 import org.openjax.xrs.server.core.AnnotationInjector;
 
 public class ProviderResource<T> {
   protected static Class<?> getGenericInterfaceType(final Class<?> interfaceType, final Class<?> cls) {
-    final Type[] genericInterfaces = cls.getGenericInterfaces();
+    // FIXME: This needs to get the entire hierarchy of generic definitions! It's only getting the interfaces now!
+    final Type[] genericInterfaces = Classes.getGenericHierarchy(cls);
     if (genericInterfaces == null || genericInterfaces.length == 0)
       return null;
 

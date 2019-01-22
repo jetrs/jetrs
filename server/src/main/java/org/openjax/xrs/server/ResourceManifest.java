@@ -147,7 +147,7 @@ public class ResourceManifest {
         if (messageBodyReader != null)
           parameterInstances[i] = messageBodyReader.readFrom(parameter.getType(), parameter.getType().getGenericSuperclass(), parameter.getAnnotations(), containerRequestContext.getMediaType(), containerRequestContext.getHeaders(), containerRequestContext.getEntityStream());
         else
-          throw new WebApplicationException("Could not find MessageBodyReader for type: " + parameter.getName());
+          throw new WebApplicationException("Could not find MessageBodyReader for type: " + parameter.getType().getName());
       }
       else {
         try {

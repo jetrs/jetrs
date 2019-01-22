@@ -85,29 +85,23 @@ abstract class RestHttpServlet extends HttpServlet {
       }
     }
     else if (clazz.isAnnotationPresent(Provider.class)) {
-      for (final Class<?> type : clazz.getInterfaces()) {
-        if (type == MessageBodyReader.class) {
-          entityReaders.add(new EntityReaderProviderResource((Class<MessageBodyReader<?>>)clazz, (MessageBodyReader<?>)singleton));
-        }
-        else if (type == MessageBodyWriter.class) {
-          entityWriters.add(new EntityWriterProviderResource((Class<MessageBodyWriter<?>>)clazz, (MessageBodyWriter<?>)singleton));
-        }
-        else if (type == ExceptionMapper.class) {
-          exceptionMappers.add(new ExceptionMappingProviderResource((Class<ExceptionMapper<?>>)clazz, (ExceptionMapper<?>)singleton));
-        }
-        else if (type == ParamConverterProvider.class) {
-          paramConverterProviders.add(new ProviderResource<>((Class<ParamConverterProvider>)clazz, (ParamConverterProvider)singleton));
-        }
-        else if (type == ContainerRequestFilter.class) {
-          requestFilters.add(new ProviderResource<>((Class<ContainerRequestFilter>)clazz, (ContainerRequestFilter)singleton));
-        }
-        else if (type == ContainerResponseFilter.class) {
-          responseFilters.add(new ProviderResource<>((Class<ContainerResponseFilter>)clazz, (ContainerResponseFilter)singleton));
-        }
-        else {
-          throw new UnsupportedOperationException("Unsupported @Provider of type: " + clazz.getName());
-        }
-      }
+      if (MessageBodyReader.class.isAssignableFrom(clazz))
+        entityReaders.add(new EntityReaderProviderResource((Class<MessageBodyReader<?>>)clazz, (MessageBodyReader<?>)singleton));
+
+      if (MessageBodyWriter.class.isAssignableFrom(clazz))
+        entityWriters.add(new EntityWriterProviderResource((Class<MessageBodyWriter<?>>)clazz, (MessageBodyWriter<?>)singleton));
+
+      if (ExceptionMapper.class.isAssignableFrom(clazz))
+        exceptionMappers.add(new ExceptionMappingProviderResource((Class<ExceptionMapper<?>>)clazz, (ExceptionMapper<?>)singleton));
+
+      if (ParamConverterProvider.class.isAssignableFrom(clazz))
+        paramConverterProviders.add(new ProviderResource<>((Class<ParamConverterProvider>)clazz, (ParamConverterProvider)singleton));
+
+      if (ContainerRequestFilter.class.isAssignableFrom(clazz))
+        requestFilters.add(new ProviderResource<>((Class<ContainerRequestFilter>)clazz, (ContainerRequestFilter)singleton));
+
+      if (ContainerResponseFilter.class.isAssignableFrom(clazz))
+        responseFilters.add(new ProviderResource<>((Class<ContainerResponseFilter>)clazz, (ContainerResponseFilter)singleton));
     }
   }
 
