@@ -25,16 +25,23 @@ import org.openjax.xrs.server.core.AnnotationInjector;
 
 public class ProviderResource<T> {
   protected static Class<?> getGenericInterfaceType(final Class<?> interfaceType, final Class<?> cls) {
-    // FIXME: This needs to get the entire hierarchy of generic definitions! It's only getting the interfaces now!
-    final Type[] genericInterfaces = Classes.getGenericHierarchy(cls);
-    if (genericInterfaces == null || genericInterfaces.length == 0)
-      return null;
+    final Class<?>[] type = new Class[1];
+    Classes.getClassHierarchy(cls, c -> {
+      final Type[] genericInterfaces = c.getGenericInterfaces();
+      if (genericInterfaces == null || genericInterfaces.length == 0)
+        return true;
 
-    for (int i = 0; i < genericInterfaces.length; ++i)
-      if (genericInterfaces[i].getTypeName().startsWith(interfaceType.getTypeName() + "<"))
-        return (Class<?>)((ParameterizedType)genericInterfaces[i]).getActualTypeArguments()[0];
+      for (int i = 0; i < genericInterfaces.length; ++i) {
+        if (genericInterfaces[i].getTypeName().startsWith(interfaceType.getTypeName() + "<")) {
+          type[0] = (Class<?>)((ParameterizedType)genericInterfaces[i]).getActualTypeArguments()[0];
+          return false;
+        }
+      }
 
-    return null;
+      return true;
+    });
+
+    return type[0];
   }
 
   private final Class<T> clazz;
