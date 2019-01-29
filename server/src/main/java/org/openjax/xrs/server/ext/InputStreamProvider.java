@@ -76,6 +76,7 @@ public class InputStreamProvider implements MessageBodyReader<InputStream>, Mess
       if (ch == -1)
         break;
 
+      ++total;
       entityStream.write(ch);
     }
 
