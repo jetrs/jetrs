@@ -136,7 +136,7 @@ public class ResourceManifest {
       return null;
 
     final Object[] parameterInstances = new Object[parameters.length];
-    for (int i = 0; i < parameters.length; i++) {
+    for (int i = 0; i < parameters.length; ++i) {
       final Parameter parameter = parameters[i];
       final Type genericParameterType = genericParameterTypes[i];
       final Annotation[] annotations = parameterAnnotations[i];
@@ -213,11 +213,11 @@ public class ResourceManifest {
     final String[] challenges = new String[rolesAllowed.value().length];
     if (containerRequestContext.getSecurityContext().getAuthenticationScheme() != null) {
       final String scheme = containerRequestContext.getSecurityContext().getAuthenticationScheme();
-      for (int i = 0; i < challenges.length; i++)
+      for (int i = 0; i < challenges.length; ++i)
         challenges[i] = scheme + " realm=\"" + rolesAllowed.value()[i] + "\"";
     }
     else {
-      for (int i = 0; i < challenges.length; i++)
+      for (int i = 0; i < challenges.length; ++i)
         challenges[i] = "realm=\"" + rolesAllowed.value()[i] + "\"";
     }
 
