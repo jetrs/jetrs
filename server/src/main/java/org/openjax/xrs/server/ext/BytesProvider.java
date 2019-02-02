@@ -32,6 +32,9 @@ import javax.ws.rs.ext.Provider;
 
 import org.openjax.standard.io.Streams;
 
+/**
+ * JAX-RS 2.1 Section 4.2.4
+ */
 @Provider
 public class BytesProvider implements MessageBodyReader<byte[]>, MessageBodyWriter<byte[]> {
   @Override

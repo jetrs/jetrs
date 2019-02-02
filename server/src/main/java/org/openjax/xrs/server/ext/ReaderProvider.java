@@ -35,6 +35,9 @@ import javax.ws.rs.ext.Provider;
 
 import org.openjax.standard.io.CountingOutputStream;
 
+/**
+ * JAX-RS 2.1 Section 4.2.4
+ */
 @Provider
 public class ReaderProvider implements MessageBodyReader<Reader>, MessageBodyWriter<Reader> {
   private static final int DEFAULT_BUFFER_SIZE = 65536;

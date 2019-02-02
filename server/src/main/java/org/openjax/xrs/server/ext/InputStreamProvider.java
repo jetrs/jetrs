@@ -30,6 +30,9 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
+/**
+ * JAX-RS 2.1 Section 4.2.4
+ */
 @Provider
 public class InputStreamProvider implements MessageBodyReader<InputStream>, MessageBodyWriter<InputStream> {
   private static final int DEFAULT_BUFFER_SIZE = 65536;

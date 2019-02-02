@@ -32,6 +32,9 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
+/**
+ * JAX-RS 2.1 Section 4.2.4
+ */
 @Provider
 public class FileProvider implements MessageBodyReader<File>, MessageBodyWriter<File> {
   @Override
@@ -41,7 +44,7 @@ public class FileProvider implements MessageBodyReader<File>, MessageBodyWriter<
 
   @Override
   public File readFrom(final Class<File> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,String> httpHeaders, final InputStream entityStream) throws IOException {
-    final Path path = Files.createTempFile("xrs", ".tmp");
+    final Path path = Files.createTempFile("xrs", null);
     Files.copy(entityStream, path);
     return path.toFile();
   }

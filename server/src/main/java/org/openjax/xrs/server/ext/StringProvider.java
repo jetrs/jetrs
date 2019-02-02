@@ -33,6 +33,9 @@ import javax.ws.rs.ext.Provider;
 
 import org.openjax.standard.io.Readers;
 
+/**
+ * JAX-RS 2.1 Section 4.2.4
+ */
 @Provider
 public class StringProvider implements MessageBodyReader<String>, MessageBodyWriter<String> {
   @Override
