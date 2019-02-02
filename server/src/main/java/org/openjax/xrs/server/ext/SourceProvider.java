@@ -22,6 +22,8 @@ import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
+import javax.ws.rs.Consumes;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
@@ -39,6 +41,8 @@ import org.openjax.xrs.server.util.MediaTypes;
  * JAX-RS 2.1 Section 4.2.4
  */
 @Provider
+@Consumes({"text/xml", "application/xml", "application/*+xml"})
+@Produces({"text/xml", "application/xml", "application/*+xml"})
 public class SourceProvider implements MessageBodyReader<Source>, MessageBodyWriter<Source> {
   private static final TransformerFactory transformerFactory = TransformerFactory.newInstance();
 

@@ -22,6 +22,8 @@ import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
+import javax.ws.rs.Consumes;
+import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
@@ -37,6 +39,8 @@ import org.openjax.xrs.server.util.MediaTypes;
  * JAX-RS 2.1 Section 4.2.4
  */
 @Provider
+@Consumes("text/plain")
+@Produces("text/plain")
 public class BooleanProvider implements MessageBodyReader<Boolean>, MessageBodyWriter<Boolean> {
   @Override
   public boolean isReadable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {

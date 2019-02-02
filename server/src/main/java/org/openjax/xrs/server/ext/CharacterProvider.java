@@ -24,6 +24,8 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
 import javax.ws.rs.BadRequestException;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
@@ -39,6 +41,8 @@ import org.openjax.xrs.server.util.MediaTypes;
  * JAX-RS 2.1 Section 4.2.4
  */
 @Provider
+@Consumes("text/plain")
+@Produces("text/plain")
 public class CharacterProvider implements MessageBodyReader<Character>, MessageBodyWriter<Character> {
   @Override
   public boolean isReadable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
