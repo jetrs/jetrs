@@ -28,24 +28,17 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Providers;
 
-import org.openjax.xrs.server.EntityProviderResource;
 import org.openjax.xrs.server.EntityReaderProviderResource;
 import org.openjax.xrs.server.EntityWriterProviderResource;
 import org.openjax.xrs.server.ExceptionMappingProviderResource;
+import org.openjax.xrs.server.TypeProviderResource;
 import org.openjax.xrs.server.core.AnnotationInjector;
 
 public class ProvidersImpl implements Providers {
-  private static final Comparator<ExceptionMappingProviderResource> exceptionMapperComparator = Comparator.nullsFirst(new Comparator<ExceptionMappingProviderResource>() {
+  private static final Comparator<TypeProviderResource<?>> providerResourceComparator = Comparator.nullsFirst(new Comparator<TypeProviderResource<?>>() {
     @Override
-    public int compare(final ExceptionMappingProviderResource o1, final ExceptionMappingProviderResource o2) {
-      return o1.getExceptionType() == o2.getExceptionType() ? 0 : o1.getExceptionType().isAssignableFrom(o2.getExceptionType()) ? 1 : -1;
-    }
-  });
-
-  private static final Comparator<EntityProviderResource<?>> messageBodyComparator = Comparator.nullsFirst(new Comparator<EntityProviderResource<?>>() {
-    @Override
-    public int compare(final EntityProviderResource<?> o1, final EntityProviderResource<?> o2) {
-      return o1.getType() == o2.getType() ? 0 : o1.getType().isAssignableFrom(o2.getType()) ? 1 : -1;
+    public int compare(final TypeProviderResource<?> o1, final TypeProviderResource<?> o2) {
+      return o1.getType() == o2.getType() ? Integer.compare(o1.getPriority(), o2.getPriority()) : o1.getType().isAssignableFrom(o2.getType()) ? 1 : -1;
     }
   });
 
@@ -67,9 +60,9 @@ public class ProvidersImpl implements Providers {
     this.writerProviders = writerProviders;
     this.annotationInjector = annotationInjector;
 
-    this.exceptionMappers.sort(exceptionMapperComparator);
-    this.readerProviders.sort(messageBodyComparator);
-    this.writerProviders.sort(messageBodyComparator);
+    this.exceptionMappers.sort(providerResourceComparator);
+    this.readerProviders.sort(providerResourceComparator);
+    this.writerProviders.sort(providerResourceComparator);
   }
 
   @Override
@@ -96,7 +89,7 @@ public class ProvidersImpl implements Providers {
   @SuppressWarnings("unchecked")
   public <T extends Throwable>ExceptionMapper<T> getExceptionMapper(final Class<T> type) {
     for (final ExceptionMappingProviderResource exceptionMapper : exceptionMappers)
-      if (exceptionMapper.getExceptionType().isAssignableFrom(type))
+      if (exceptionMapper.getType().isAssignableFrom(type))
         return (ExceptionMapper<T>)exceptionMapper.getSingletonOrNewInstance(annotationInjector);
 
     return null;

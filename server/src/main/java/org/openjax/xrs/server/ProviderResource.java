@@ -20,6 +20,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
+import javax.annotation.Priority;
+import javax.ws.rs.Priorities;
+
 import org.openjax.standard.util.Classes;
 import org.openjax.xrs.server.core.AnnotationInjector;
 
@@ -46,23 +49,30 @@ public class ProviderResource<T> {
 
   private final Class<T> clazz;
   private final T singleton;
+  private final int priority;
   private final T matchInstance;
 
-  public ProviderResource(final Class<T> clazz, final T singleton) throws IllegalAccessException, InstantiationException, InvocationTargetException {
+  ProviderResource(final Class<T> clazz, final T singleton) throws IllegalAccessException, InstantiationException, InvocationTargetException {
     this.clazz = clazz;
     this.singleton = singleton;
+    final Priority priority = clazz.getAnnotation(Priority.class);
+    this.priority = priority == null ? Priorities.USER : priority.value();
     this.matchInstance = singleton != null ? singleton : AnnotationInjector.CONTEXT_ONLY.newProviderInstance(clazz);
   }
 
-  public Class<T> getProviderClass() {
+  public final Class<T> getProviderClass() {
     return this.clazz;
   }
 
-  public T getMatchInstance() {
+  public final int getPriority() {
+    return this.priority;
+  }
+
+  public final T getMatchInstance() {
     return this.matchInstance;
   }
 
-  public T getSingletonOrNewInstance(final AnnotationInjector annotationInjector) {
+  public final T getSingletonOrNewInstance(final AnnotationInjector annotationInjector) {
     try {
       return annotationInjector.injectFields(singleton != null ? singleton : annotationInjector.newProviderInstance(clazz));
     }

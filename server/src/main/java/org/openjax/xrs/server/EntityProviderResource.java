@@ -25,22 +25,16 @@ import javax.ws.rs.core.MediaType;
 
 import org.openjax.xrs.server.util.MediaTypes;
 
-public abstract class EntityProviderResource<T> extends ProviderResource<T> {
+public abstract class EntityProviderResource<T> extends TypeProviderResource<T> {
   private final MediaType[] allowedTypes;
-  private final Class<?> type;
 
   EntityProviderResource(final Class<T> clazz, final T singleton, final Class<?> interfaceType) throws IllegalAccessException, InstantiationException, InvocationTargetException {
-    super(clazz, singleton);
-    this.type = getGenericInterfaceType(interfaceType, clazz);
+    super(clazz, singleton, getGenericInterfaceType(interfaceType, clazz));
     final Consumes consumes = clazz.getAnnotation(Consumes.class);
     this.allowedTypes = consumes == null ? new MediaType[] {MediaType.WILDCARD_TYPE} : MediaTypes.parse(consumes.value());
   }
 
   public boolean matches(final T instance, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
     return MediaTypes.matches(mediaType, allowedTypes);
-  }
-
-  public Class<?> getType() {
-    return this.type;
   }
 }

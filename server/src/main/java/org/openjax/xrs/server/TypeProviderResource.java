@@ -18,10 +18,18 @@ package org.openjax.xrs.server;
 
 import java.lang.reflect.InvocationTargetException;
 
-import javax.ws.rs.ext.ExceptionMapper;
+import javax.annotation.Priority;
+import javax.ws.rs.Priorities;
 
-public class ExceptionMappingProviderResource extends TypeProviderResource<ExceptionMapper<?>> {
-  ExceptionMappingProviderResource(final Class<ExceptionMapper<?>> clazz, final ExceptionMapper<?> singleton) throws IllegalAccessException, InstantiationException, InvocationTargetException {
-    super(clazz, singleton, getGenericInterfaceType(ExceptionMapper.class, clazz));
+public class TypeProviderResource<T> extends ProviderResource<T> {
+  private final Class<?> type;
+
+  public TypeProviderResource(final Class<T> clazz, final T singleton, final Class<?> type) throws IllegalAccessException, InstantiationException, InvocationTargetException {
+    super(clazz, singleton);
+    this.type = type;
+  }
+
+  public Class<?> getType() {
+    return this.type;
   }
 }

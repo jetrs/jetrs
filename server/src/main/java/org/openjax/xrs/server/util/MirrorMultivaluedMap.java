@@ -32,13 +32,13 @@ import org.openjax.standard.util.ObservableMap;
 public class MirrorMultivaluedMap<K,V,M> extends ObservableMap<K,List<V>> implements MultivaluedMap<K,V>, Cloneable, Serializable {
   private static final long serialVersionUID = -7406535904458617108L;
 
-  private final Supplier<Map> mapSupplier;
-  private final Supplier<List> listSupplier;
+  private final Supplier<? extends Map> mapSupplier;
+  private final Supplier<? extends List> listSupplier;
   private final Function<V,M> mirror;
 
   protected MirrorMultivaluedMap<K,M,V> mirroredMap;
 
-  public MirrorMultivaluedMap(final Supplier<Map> mapSupplier, final Supplier<List> listSupplier, final Function<V,M> mirror1, final Function<M,V> mirror2) {
+  public MirrorMultivaluedMap(final Supplier<? extends Map<K,List<V>>> mapSupplier, final Supplier<List<V>> listSupplier, final Function<V,M> mirror1, final Function<M,V> mirror2) {
     super(mapSupplier.get());
     this.mapSupplier = Objects.requireNonNull(mapSupplier);
     this.listSupplier = Objects.requireNonNull(listSupplier);

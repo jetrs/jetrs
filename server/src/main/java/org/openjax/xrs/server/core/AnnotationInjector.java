@@ -26,6 +26,7 @@ import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
@@ -38,7 +39,10 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
@@ -194,18 +198,26 @@ public class AnnotationInjector {
     }
 
     if (annotation.annotationType() == MatrixParam.class) {
-      // TODO:
-      throw new UnsupportedOperationException();
+      final boolean decode = ParameterUtil.decode(annotations);
+      final List<PathSegment> pathSegments = containerRequestContext.getUriInfo().getPathSegments(decode);
+      // FIXME: Is it the last PathSegment that from which to get the matrix?
+      final PathSegment pathSegment = pathSegments.get(pathSegments.size() - 1);
+      final MultivaluedMap<String,String> matrixParameters = pathSegment.getMatrixParameters();
+      return matrixParameters == null ? null : matrixParameters.get(((MatrixParam)annotation).value());
     }
 
     if (annotation.annotationType() == CookieParam.class) {
-      // TODO:
-      throw new UnsupportedOperationException();
+      final Map<String,Cookie> cookies = containerRequestContext.getCookies();
+      if (cookies == null)
+        return null;
+
+      final String cookieParam = ((CookieParam)annotation).value();
+      return cookies.get(cookieParam);
     }
 
     if (annotation.annotationType() == HeaderParam.class) {
-      // TODO:
-      throw new UnsupportedOperationException();
+      final String headerParam = ((HeaderParam)annotation).value();
+      return containerRequestContext.getHeaderString(headerParam);
     }
 
     if (annotation.annotationType() == Context.class) {

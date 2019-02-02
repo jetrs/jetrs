@@ -1,4 +1,4 @@
-/* Copyright (c) 2016 OpenJAX
+/* Copyright (c) 2019 OpenJAX
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -18,10 +18,12 @@ package org.openjax.xrs.server.ext;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
@@ -30,33 +32,42 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
-import org.openjax.standard.io.Streams;
+import org.openjax.standard.io.Readers;
+import org.openjax.xrs.server.util.MediaTypes;
 
+/**
+ * JAX-RS 2.1 Section 4.2.4
+ */
 @Provider
-public class BytesProvider implements MessageBodyReader<byte[]>, MessageBodyWriter<byte[]> {
+public class CharacterProvider implements MessageBodyReader<Character>, MessageBodyWriter<Character> {
   @Override
   public boolean isReadable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
-    return type == byte[].class;
+    return type == Character.class && MediaTypes.TEXT_PLAIN.isCompatible(mediaType);
   }
 
   @Override
-  public byte[] readFrom(final Class<byte[]> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,String> httpHeaders, final InputStream entityStream) throws IOException, WebApplicationException {
-    return Streams.readBytes(entityStream);
+  public Character readFrom(final Class<Character> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,String> httpHeaders, final InputStream entityStream) throws IOException, WebApplicationException {
+    final String data = Readers.readFully(new InputStreamReader(entityStream));
+    if (data.length() > 1)
+      throw new BadRequestException();
+
+    return data.length() == 0 ? null : data.charAt(0);
   }
 
   @Override
   public boolean isWriteable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
-    return type == byte[].class;
+    return type == Character.class && MediaTypes.TEXT_PLAIN.isCompatible(mediaType);
   }
 
   @Override
-  public long getSize(final byte[] t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
+  public long getSize(final Character t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
     return -1;
   }
 
   @Override
-  public void writeTo(final byte[] t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,Object> httpHeaders, final OutputStream entityStream) throws IOException, WebApplicationException {
-    entityStream.write(t);
-    httpHeaders.putSingle(HttpHeaders.CONTENT_LENGTH, t.length);
+  public void writeTo(final Character t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,Object> httpHeaders, final OutputStream entityStream) throws IOException, WebApplicationException {
+    final byte[] bytes = t.toString().getBytes();
+    entityStream.write(bytes);
+    httpHeaders.putSingle(HttpHeaders.CONTENT_LENGTH, bytes.length);
   }
 }

@@ -1,4 +1,4 @@
-/* Copyright (c) 2016 OpenJAX
+/* Copyright (c) 2019 OpenJAX
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -31,32 +31,38 @@ import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
 import org.openjax.standard.io.Streams;
+import org.openjax.xrs.server.util.MediaTypes;
 
+/**
+ * JAX-RS 2.1 Section 4.2.4
+ */
 @Provider
-public class BytesProvider implements MessageBodyReader<byte[]>, MessageBodyWriter<byte[]> {
+public class BooleanProvider implements MessageBodyReader<Boolean>, MessageBodyWriter<Boolean> {
   @Override
   public boolean isReadable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
-    return type == byte[].class;
+    return type == Boolean.class && MediaTypes.TEXT_PLAIN.isCompatible(mediaType);
   }
 
   @Override
-  public byte[] readFrom(final Class<byte[]> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,String> httpHeaders, final InputStream entityStream) throws IOException, WebApplicationException {
-    return Streams.readBytes(entityStream);
+  public Boolean readFrom(final Class<Boolean> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,String> httpHeaders, final InputStream entityStream) throws IOException, WebApplicationException {
+    final byte[] bytes = Streams.readBytes(entityStream);
+    return Boolean.valueOf(new String(bytes));
   }
 
   @Override
   public boolean isWriteable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
-    return type == byte[].class;
+    return type == Boolean.class && MediaTypes.TEXT_PLAIN.isCompatible(mediaType);
   }
 
   @Override
-  public long getSize(final byte[] t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
+  public long getSize(final Boolean t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
     return -1;
   }
 
   @Override
-  public void writeTo(final byte[] t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,Object> httpHeaders, final OutputStream entityStream) throws IOException, WebApplicationException {
-    entityStream.write(t);
-    httpHeaders.putSingle(HttpHeaders.CONTENT_LENGTH, t.length);
+  public void writeTo(final Boolean t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,Object> httpHeaders, final OutputStream entityStream) throws IOException, WebApplicationException {
+    final byte[] bytes = t.toString().getBytes();
+    entityStream.write(bytes);
+    httpHeaders.putSingle(HttpHeaders.CONTENT_LENGTH, bytes.length);
   }
 }

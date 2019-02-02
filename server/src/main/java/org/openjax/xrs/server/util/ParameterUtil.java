@@ -31,6 +31,7 @@ import javax.ws.rs.ext.ParamConverterProvider;
 
 import org.openjax.standard.util.FastCollections;
 import org.openjax.xrs.server.ProviderResource;
+import org.openjax.xrs.server.TypeProviderResource;
 
 public final class ParameterUtil {
   private static final String[] forEnums = new String[] {"fromString", "valueOf"};
