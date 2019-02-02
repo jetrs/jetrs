@@ -28,6 +28,8 @@ import javax.ws.rs.core.MediaType;
 
 public final class MediaTypes {
   public static final MediaType TEXT_PLAIN = new MediaType("text", "plain");
+  public static final MediaType TEXT_XML = new MediaType("text", "xml");
+  public static final MediaType APPLICATION_XML = new MediaType("application", "xml");
 
   private static final Comparator<MediaType> qComparator = new Comparator<MediaType>() {
     @Override
