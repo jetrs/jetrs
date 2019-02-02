@@ -44,16 +44,7 @@ public class SourceProvider implements MessageBodyReader<Source>, MessageBodyWri
 
   @Override
   public boolean isReadable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
-    if (!Source.class.isAssignableFrom(type))
-      return false;
-
-    if (MediaTypes.TEXT_XML.isCompatible(mediaType))
-      return true;
-
-    if (MediaTypes.APPLICATION_XML.isCompatible(mediaType))
-      return true;
-
-    return mediaType.getType().equals("application") && mediaType.getSubtype().endsWith("+xml");
+    return Source.class.isAssignableFrom(type) && (MediaTypes.TEXT_XML.isCompatible(mediaType) || MediaTypes.APPLICATION_XML.isCompatible(mediaType) || mediaType.getType().equals("application") && mediaType.getSubtype().endsWith("+xml"));
   }
 
   @Override
