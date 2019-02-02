@@ -70,8 +70,6 @@ public class CharacterProvider implements MessageBodyReader<Character>, MessageB
 
   @Override
   public void writeTo(final Character t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,Object> httpHeaders, final OutputStream entityStream) throws IOException, WebApplicationException {
-    final byte[] bytes = t.toString().getBytes();
-    entityStream.write(bytes);
-    httpHeaders.putSingle(HttpHeaders.CONTENT_LENGTH, bytes.length);
+    entityStream.write(t.toString().getBytes());
   }
 }

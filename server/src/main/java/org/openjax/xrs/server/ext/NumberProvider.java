@@ -25,7 +25,6 @@ import java.lang.reflect.Type;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
@@ -67,8 +66,6 @@ public class NumberProvider implements MessageBodyReader<Number>, MessageBodyWri
 
   @Override
   public void writeTo(final Number t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,Object> httpHeaders, final OutputStream entityStream) throws IOException, WebApplicationException {
-    final byte[] bytes = t.toString().getBytes();
-    entityStream.write(bytes);
-    httpHeaders.putSingle(HttpHeaders.CONTENT_LENGTH, bytes.length);
+    entityStream.write(t.toString().getBytes());
   }
 }

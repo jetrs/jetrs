@@ -144,7 +144,7 @@ public class ExecutionContext {
     return httpHeaders;
   }
 
-  private ByteArrayOutputStream outputStream = null;
+  private ByteArrayOutputStream outputStream;
 
   private ByteArrayOutputStream getOutputStream() {
     return outputStream == null ? outputStream = new ByteArrayOutputStream() : outputStream;
@@ -183,8 +183,11 @@ public class ExecutionContext {
     if (httpServletResponse.isCommitted())
       return;
 
-    if (outputStream != null)
-      httpServletResponse.getOutputStream().write(outputStream.toByteArray());
+    if (outputStream != null) {
+      final byte[] bytes = outputStream.toByteArray();
+      httpServletResponse.addHeader(HttpHeaders.CONTENT_LENGTH, String.valueOf(bytes.length));
+      httpServletResponse.getOutputStream().write(bytes);
+    }
 
     // @see ServletResponse#getOutputStream :: "Calling flush() on the ServletOutputStream commits the response."
     httpServletResponse.getOutputStream().flush();

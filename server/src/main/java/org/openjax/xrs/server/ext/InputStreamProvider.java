@@ -23,7 +23,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
@@ -70,20 +69,17 @@ public class InputStreamProvider implements MessageBodyReader<InputStream>, Mess
   @Override
   public void writeTo(final InputStream t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,Object> httpHeaders, final OutputStream entityStream) throws IOException, WebApplicationException {
     final byte[] buffer = new byte[bufferSize];
-    int total = 0;
     while (true) {
-      for (int len; (len = t.read(buffer)) != 0; total += len)
+      for (int len; (len = t.read(buffer)) != 0;)
         entityStream.write(buffer, 0, len);
 
       final int ch = t.read();
       if (ch == -1)
         break;
 
-      ++total;
       entityStream.write(ch);
     }
 
-    httpHeaders.putSingle(HttpHeaders.CONTENT_LENGTH, total);
     t.close();
   }
 }

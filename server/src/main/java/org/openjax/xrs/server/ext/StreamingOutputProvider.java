@@ -22,14 +22,11 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
-
-import org.openjax.standard.io.CountingOutputStream;
 
 /**
  * JAX-RS 2.1 Section 4.2.4
@@ -48,8 +45,6 @@ public class StreamingOutputProvider implements MessageBodyWriter<StreamingOutpu
 
   @Override
   public void writeTo(final StreamingOutput t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,Object> httpHeaders, final OutputStream entityStream) throws IOException, WebApplicationException {
-    final CountingOutputStream out = new CountingOutputStream(entityStream);
-    t.write(out);
-    httpHeaders.putSingle(HttpHeaders.CONTENT_LENGTH, out.getCount());
+    t.write(entityStream);
   }
 }

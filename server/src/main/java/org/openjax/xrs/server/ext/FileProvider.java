@@ -25,7 +25,6 @@ import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
@@ -61,7 +60,6 @@ public class FileProvider implements MessageBodyReader<File>, MessageBodyWriter<
 
   @Override
   public void writeTo(final File t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,Object> httpHeaders, final OutputStream entityStream) throws IOException {
-    final long len = Files.copy(t.toPath(), entityStream);
-    httpHeaders.putSingle(HttpHeaders.CONTENT_LENGTH, len);
+    Files.copy(t.toPath(), entityStream);
   }
 }

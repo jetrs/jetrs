@@ -23,7 +23,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
@@ -60,6 +59,5 @@ public class BytesProvider implements MessageBodyReader<byte[]>, MessageBodyWrit
   @Override
   public void writeTo(final byte[] t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,Object> httpHeaders, final OutputStream entityStream) throws IOException, WebApplicationException {
     entityStream.write(t);
-    httpHeaders.putSingle(HttpHeaders.CONTENT_LENGTH, t.length);
   }
 }
