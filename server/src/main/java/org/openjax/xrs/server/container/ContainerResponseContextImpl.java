@@ -153,6 +153,7 @@ public class ContainerResponseContextImpl extends ContainerContextImpl implement
 
   @Override
   public void setEntity(final Object entity, final Annotation[] annotations, final MediaType mediaType) {
+    // FIXME: What is the getEntityType() method supposed to return???
     this.entity = entity;
     this.annotations = annotations;
     if (mediaType != null)

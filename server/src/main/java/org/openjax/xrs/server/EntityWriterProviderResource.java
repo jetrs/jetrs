@@ -29,7 +29,8 @@ public class EntityWriterProviderResource extends EntityProviderResource<Message
   }
 
   @Override
-  public boolean matches(final MessageBodyWriter<?> instance, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
-    return super.matches(instance, type, genericType, annotations, mediaType) && instance.isWriteable(type, genericType, type.getAnnotations(), mediaType);
+  public MediaType getCompatibleMediaType(final MessageBodyWriter<?> instance, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
+    final MediaType matchedType = super.getCompatibleMediaType(instance, type, genericType, annotations, mediaType);
+    return matchedType != null && instance.isWriteable(type, genericType, type.getAnnotations(), mediaType) ? matchedType : null;
   }
 }

@@ -69,7 +69,7 @@ public class ProvidersImpl implements Providers {
   @SuppressWarnings("unchecked")
   public <T>MessageBodyReader<T> getMessageBodyReader(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
     for (final EntityReaderProviderResource provider : readerProviders)
-      if (provider.matches(provider.getMatchInstance(), type, genericType, annotations, mediaType))
+      if (provider.getCompatibleMediaType(provider.getMatchInstance(), type, genericType, annotations, mediaType) != null)
         return (MessageBodyReader<T>)provider.getSingletonOrNewInstance(annotationInjector);
 
     return null;
@@ -79,7 +79,7 @@ public class ProvidersImpl implements Providers {
   @SuppressWarnings("unchecked")
   public <T>MessageBodyWriter<T> getMessageBodyWriter(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
     for (final EntityWriterProviderResource provider : writerProviders)
-      if (provider.matches(provider.getMatchInstance(), type, genericType, annotations, mediaType))
+      if (provider.getCompatibleMediaType(provider.getMatchInstance(), type, genericType, annotations, mediaType) != null)
         return (MessageBodyWriter<T>)provider.getSingletonOrNewInstance(annotationInjector);
 
     return null;

@@ -22,6 +22,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
+import java.text.ParseException;
 import java.util.List;
 
 import javax.annotation.security.DenyAll;
@@ -115,16 +116,21 @@ public class ResourceManifest {
     if (!pathPattern.matches(path))
       return null;
 
-    final MediaType[] accept = MediaTypes.parse(containerRequestContext.getHeaders().get(HttpHeaders.ACCEPT));
-    final MediaType acceptedType = producesMatcher.matches(accept);
-    if (acceptedType == null)
-      return null;
+    try {
+      final MediaType[] accept = MediaTypes.parse(containerRequestContext.getHeaders().get(HttpHeaders.ACCEPT));
+      final MediaType acceptedType = producesMatcher.getCompatibleMediaType(accept);
+      if (acceptedType == null)
+        return null;
 
-    final MediaType[] contentType = MediaTypes.parse(containerRequestContext.getHeaders().get(HttpHeaders.CONTENT_TYPE));
-    if (consumesMatcher.matches(contentType) == null)
-      return null;
+      final MediaType[] contentType = MediaTypes.parse(containerRequestContext.getHeaders().get(HttpHeaders.CONTENT_TYPE));
+      if (consumesMatcher.getCompatibleMediaType(contentType) == null)
+        return null;
 
-    return acceptedType;
+      return acceptedType;
+    }
+    catch (final ParseException e) {
+      throw new BadRequestException(e);
+    }
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
@@ -180,15 +186,20 @@ public class ResourceManifest {
     if (headerValue == null || headerValue.length() == 0)
       return logMissingHeaderWarning(headerName, annotationClass);
 
-    final String[] headerValueParts = headerValue.split(",");
-    final MediaType[] test = MediaTypes.parse(headerValueParts);
+    try {
+      final String[] headerValueParts = headerValue.split(",");
+      final MediaType[] test = MediaTypes.parse(headerValueParts);
 
-    final String[] annotationValue = annotationClass == Produces.class ? ((Produces)annotation).value() : annotationClass == Consumes.class ? ((Consumes)annotation).value() : null;
-    final MediaType[] required = MediaTypes.parse(annotationValue);
-    if (MediaTypes.matches(required, test) != null)
-      return true;
+      final String[] annotationValue = annotationClass == Produces.class ? ((Produces)annotation).value() : annotationClass == Consumes.class ? ((Consumes)annotation).value() : null;
+      final MediaType[] required = MediaTypes.parse(annotationValue);
+      if (MediaTypes.getCompatible(required, test) != null)
+        return true;
 
-    return logMissingHeaderWarning(headerName, annotationClass);
+      return logMissingHeaderWarning(headerName, annotationClass);
+    }
+    catch (final ParseException e) {
+      throw new BadRequestException(e);
+    }
   }
 
   private static void allow(final Annotation securityAnnotation, final ContainerRequestContext containerRequestContext) {

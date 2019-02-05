@@ -16,6 +16,8 @@
 
 package org.openjax.xrs.server.ext;
 
+import java.text.ParseException;
+
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.RuntimeDelegate;
 
@@ -24,7 +26,12 @@ import org.openjax.xrs.server.util.MediaTypes;
 public class MediaTypeHeaderDelegate implements RuntimeDelegate.HeaderDelegate<MediaType> {
   @Override
   public MediaType fromString(final String value) {
-    return MediaTypes.parse(value);
+    try {
+      return MediaTypes.parse(value);
+    }
+    catch (final ParseException e) {
+      throw new IllegalArgumentException(e);
+    }
   }
 
   @Override

@@ -16,6 +16,7 @@
 
 package org.openjax.xrs.server.core;
 
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -81,7 +82,12 @@ public class HttpHeadersImpl implements HttpHeaders {
 
   @Override
   public MediaType getMediaType() {
-    return MediaTypes.parse(headers.getFirst(HttpHeaders.CONTENT_TYPE));
+    try {
+      return MediaTypes.parse(headers.getFirst(HttpHeaders.CONTENT_TYPE));
+    }
+    catch (final ParseException e) {
+      throw new IllegalStateException(e);
+    }
   }
 
   @Override

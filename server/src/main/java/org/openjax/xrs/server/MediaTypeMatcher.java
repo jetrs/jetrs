@@ -18,6 +18,7 @@ package org.openjax.xrs.server;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.text.ParseException;
 import java.util.Arrays;
 
 import javax.ws.rs.Consumes;
@@ -44,14 +45,19 @@ public class MediaTypeMatcher<T extends Annotation> {
     else
       throw new IllegalArgumentException("Expected @Consumes or @Produces, but got: " + annotationClass.getName());
 
-    this.mediaTypes = annotation == null ? null : MediaTypes.parse(annotation instanceof Consumes ? ((Consumes)annotation).value() : annotation instanceof Produces ? ((Produces)annotation).value() : null);
+    try {
+      this.mediaTypes = annotation == null ? null : MediaTypes.parse(annotation instanceof Consumes ? ((Consumes)annotation).value() : annotation instanceof Produces ? ((Produces)annotation).value() : null);
+    }
+    catch (final ParseException e) {
+      throw new IllegalArgumentException(e);
+    }
   }
 
-  public MediaType matches(final MediaType[] mediaTypes) {
+  public MediaType getCompatibleMediaType(final MediaType[] mediaTypes) {
     if (this.mediaTypes == null)
-      return mediaTypes == null || MediaTypes.matches(MediaType.WILDCARD_TYPE, mediaTypes) ? MediaType.WILDCARD_TYPE : null;
+      return mediaTypes == null ? MediaType.WILDCARD_TYPE : MediaTypes.getCompatible(MediaType.WILDCARD_TYPE, mediaTypes);
 
-    return mediaTypes == null ? this.mediaTypes[0] : MediaTypes.matches(this.mediaTypes, mediaTypes);
+    return mediaTypes == null ? this.mediaTypes[0] : MediaTypes.getCompatible(this.mediaTypes, mediaTypes);
   }
 
   public T getAnnotation() {

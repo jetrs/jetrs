@@ -31,7 +31,8 @@ public class EntityReaderProviderResource extends EntityProviderResource<Message
   }
 
   @Override
-  public boolean matches(final MessageBodyReader<?> instance, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
-    return super.matches(instance, type, genericType, annotations, mediaType) && instance.isReadable(type, genericType, annotations, mediaType);
+  public MediaType getCompatibleMediaType(final MessageBodyReader<?> instance, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
+    final MediaType matchedType = super.getCompatibleMediaType(instance, type, genericType, annotations, mediaType);
+    return matchedType != null && instance.isReadable(type, genericType, annotations, mediaType) ? matchedType : null;
   }
 }

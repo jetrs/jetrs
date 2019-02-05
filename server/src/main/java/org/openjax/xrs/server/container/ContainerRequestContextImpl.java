@@ -19,6 +19,7 @@ package org.openjax.xrs.server.container;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -29,6 +30,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -62,15 +64,19 @@ public class ContainerRequestContextImpl extends ContainerContextImpl implements
     super(httpServletRequest.getLocale());
     this.method = httpServletRequest.getMethod();
     final Enumeration<String> attributes = httpServletRequest.getAttributeNames();
-    String attribute;
-    while (attributes.hasMoreElements())
+    for (String attribute; attributes.hasMoreElements();)
       properties.put(attribute = attributes.nextElement(), httpServletRequest.getAttribute(attribute));
 
-    this.httpServletRequest = httpServletRequest;
-    this.accept = Collections.unmodifiableList(Arrays.asList(MediaTypes.parse(httpServletRequest.getHeaders(HttpHeaders.ACCEPT))));
-    this.acceptLanguages = Collections.unmodifiableList(Arrays.asList(Locales.parse(httpServletRequest.getHeaders(HttpHeaders.ACCEPT_LANGUAGE))));
-    this.headers = executionContext.getHttpHeaders();
-    this.uriInfo = new UriInfoImpl(this, httpServletRequest, executionContext);
+    try {
+      this.httpServletRequest = httpServletRequest;
+      this.accept = Collections.unmodifiableList(Arrays.asList(MediaTypes.parse(httpServletRequest.getHeaders(HttpHeaders.ACCEPT))));
+      this.acceptLanguages = Collections.unmodifiableList(Arrays.asList(Locales.parse(httpServletRequest.getHeaders(HttpHeaders.ACCEPT_LANGUAGE))));
+      this.headers = executionContext.getHttpHeaders();
+      this.uriInfo = new UriInfoImpl(this, httpServletRequest, executionContext);
+    }
+    catch (final ParseException e) {
+      throw new BadRequestException(e);
+    }
   }
 
   @Override

@@ -19,6 +19,7 @@ package org.openjax.xrs.server;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
+import java.text.ParseException;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.core.MediaType;
@@ -31,10 +32,15 @@ public abstract class EntityProviderResource<T> extends TypeProviderResource<T> 
   EntityProviderResource(final Class<T> clazz, final T singleton, final Class<?> interfaceType) throws IllegalAccessException, InstantiationException, InvocationTargetException {
     super(clazz, singleton, getGenericInterfaceType(interfaceType, clazz));
     final Consumes consumes = clazz.getAnnotation(Consumes.class);
-    this.allowedTypes = consumes == null ? new MediaType[] {MediaType.WILDCARD_TYPE} : MediaTypes.parse(consumes.value());
+    try {
+      this.allowedTypes = consumes == null ? null : MediaTypes.parse(consumes.value());
+    }
+    catch (final ParseException e) {
+      throw new IllegalArgumentException(e);
+    }
   }
 
-  public boolean matches(final T instance, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
-    return MediaTypes.matches(mediaType, allowedTypes);
+  public MediaType getCompatibleMediaType(final T instance, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
+    return allowedTypes == null ? MediaTypes.getCompatible(mediaType, MediaType.WILDCARD_TYPE) : MediaTypes.getCompatible(mediaType, allowedTypes);
   }
 }

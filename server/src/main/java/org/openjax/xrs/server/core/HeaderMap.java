@@ -17,6 +17,7 @@
 package org.openjax.xrs.server.core;
 
 import java.net.URI;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -123,7 +124,12 @@ public class HeaderMap extends MirrorMultivaluedMap<String,String,Object> {
   }
 
   public MediaType getMediaType() {
-    return MediaTypes.parse(getFirst(HttpHeaders.CONTENT_TYPE));
+    try {
+      return MediaTypes.parse(getFirst(HttpHeaders.CONTENT_TYPE));
+    }
+    catch (final ParseException e) {
+      throw new IllegalStateException(e);
+    }
   }
 
   @Override
