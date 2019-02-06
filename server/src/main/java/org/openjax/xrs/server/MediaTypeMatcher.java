@@ -22,31 +22,79 @@ import java.text.ParseException;
 import java.util.Arrays;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.CookieParam;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.MatrixParam;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
+import org.openjax.standard.lang.IllegalAnnotationException;
+import org.openjax.standard.util.FastArrays;
 import org.openjax.xrs.server.util.MediaTypes;
 
 public class MediaTypeMatcher<T extends Annotation> {
+  private static final Class<?>[] paramAnnotations = {Context.class, CookieParam.class, HeaderParam.class, MatrixParam.class, PathParam.class, QueryParam.class};
+
   public static <T extends Annotation>T getMethodClassAnnotation(final Class<T> annotationClass, final Method method) {
     T annotation = method.getAnnotation(annotationClass);
     return annotation != null ? annotation : method.getDeclaringClass().getAnnotation(annotationClass);
   }
 
+  /**
+   * Tests whether the specified method contains an entity parameter.
+   *
+   * @param method The {@code Method}.
+   * @return {@code true} if the specified method contains an entity parameter;
+   *         otherwise {@code false}.
+   */
+  private static boolean hasEntityParameter(final Method method) {
+    OUT:
+    for (final Annotation[] annotations : method.getParameterAnnotations()) {
+      for (final Annotation annotation : annotations)
+        for (final Class<?> paramAnnotation : paramAnnotations)
+          if (paramAnnotation.equals(annotation.annotationType()))
+            continue OUT;
+
+      return true;
+    }
+
+    return false;
+  }
+
   private final T annotation;
-  private MediaType[] mediaTypes;
+  private final MediaType[] mediaTypes;
 
   @SuppressWarnings("unchecked")
   public MediaTypeMatcher(final Method method, final Class<T> annotationClass) {
-    if (annotationClass == Consumes.class)
-      annotation = (T)getMethodClassAnnotation((Class<Consumes>)annotationClass, method);
-    else if (annotationClass == Produces.class)
-      annotation = (T)getMethodClassAnnotation((Class<Produces>)annotationClass, method);
-    else
-      throw new IllegalArgumentException("Expected @Consumes or @Produces, but got: " + annotationClass.getName());
-
     try {
-      this.mediaTypes = annotation == null ? null : MediaTypes.parse(annotation instanceof Consumes ? ((Consumes)annotation).value() : annotation instanceof Produces ? ((Produces)annotation).value() : null);
+      if (annotationClass == Consumes.class) {
+        annotation = (T)getMethodClassAnnotation((Class<Consumes>)annotationClass, method);
+        if (!hasEntityParameter(method)) {
+          this.mediaTypes = null;
+          if (annotation != null)
+            throw new IllegalAnnotationException(annotation, method.getDeclaringClass().getName() + "#" + method.getName() + " does not specify entity parameters, and thus cannot declare @Consumes annotation");
+        }
+        else {
+          this.mediaTypes = annotation != null ? MediaTypes.parse(((Consumes)annotation).value()) : new MediaType[] {MediaType.WILDCARD_TYPE};
+        }
+      }
+      else if (annotationClass == Produces.class) {
+        annotation = (T)getMethodClassAnnotation((Class<Produces>)annotationClass, method);
+        if (Void.TYPE.equals(method.getReturnType())) {
+          this.mediaTypes = null;
+          if (annotation != null)
+            throw new IllegalAnnotationException(annotation, method.getDeclaringClass().getName() + "#" + method.getName() + " is void return type, and thus cannot declare @Produces annotation");
+        }
+        else {
+          this.mediaTypes = annotation != null ? MediaTypes.parse(((Produces)annotation).value()) : new MediaType[] {MediaType.WILDCARD_TYPE};
+        }
+      }
+      else {
+        throw new UnsupportedOperationException("Expected @Consumes or @Produces, but got: " + annotationClass.getName());
+      }
     }
     catch (final ParseException e) {
       throw new IllegalArgumentException(e);
@@ -55,7 +103,7 @@ public class MediaTypeMatcher<T extends Annotation> {
 
   public MediaType getCompatibleMediaType(final MediaType[] mediaTypes) {
     if (this.mediaTypes == null)
-      return mediaTypes == null ? MediaType.WILDCARD_TYPE : MediaTypes.getCompatible(MediaType.WILDCARD_TYPE, mediaTypes);
+      return mediaTypes == null || FastArrays.contains(mediaTypes, MediaType.WILDCARD_TYPE) ? MediaType.WILDCARD_TYPE : null;
 
     return mediaTypes == null ? this.mediaTypes[0] : MediaTypes.getCompatible(this.mediaTypes, mediaTypes);
   }
@@ -73,14 +121,18 @@ public class MediaTypeMatcher<T extends Annotation> {
       return false;
 
     final MediaTypeMatcher<?> that = (MediaTypeMatcher<?>)obj;
-    return annotation.equals(that.annotation) && Arrays.equals(mediaTypes, that.mediaTypes);
+    return (annotation != null ? annotation.equals(that.annotation) : that.annotation == null) && mediaTypes != null ? Arrays.equals(mediaTypes, that.mediaTypes) : that.mediaTypes == null;
   }
 
   @Override
   public int hashCode() {
     int hashCode = 1;
-    hashCode *= 31 ^ hashCode + annotation.hashCode();
-    hashCode *= 31 ^ hashCode + mediaTypes.hashCode();
+    if (annotation != null)
+      hashCode *= 31 ^ hashCode + annotation.hashCode();
+
+    if (mediaTypes != null)
+      hashCode *= 31 ^ hashCode + mediaTypes.hashCode();
+
     return hashCode;
   }
 }
