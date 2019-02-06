@@ -35,6 +35,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Providers;
@@ -116,9 +117,11 @@ public class RestApplicationServlet extends RestHttpServlet {
       httpServletRequestContext.setResourceManifest(resource.getManifest());
       getResourceContext().getContainerFilters().filterContainerRequest(containerRequestContext, annotationInjector);
 
-      final Produces produces = resource.getManifest().getMatcher(Produces.class).getAnnotation();
-      if (produces != null)
+      final MediaType[] mediaTypes = resource.getManifest().getMatcher(Produces.class).getMediaTypes();
+      if (mediaTypes != null)
         containerResponseContext.getStringHeaders().putSingle(HttpHeaders.CONTENT_TYPE, resource.getAccept().toString());
+      else
+        containerResponseContext.setStatus(204);
 
       final Object content = resource.getManifest().service(executionContext, containerRequestContext, annotationInjector, getResourceContext().getParamConverterProviders());
       if (content instanceof Response)

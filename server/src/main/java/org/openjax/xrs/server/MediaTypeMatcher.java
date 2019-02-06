@@ -112,6 +112,10 @@ public class MediaTypeMatcher<T extends Annotation> {
     return annotation;
   }
 
+  public MediaType[] getMediaTypes() {
+    return this.mediaTypes;
+  }
+
   @Override
   public boolean equals(final Object obj) {
     if (obj == this)

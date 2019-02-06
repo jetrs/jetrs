@@ -152,7 +152,6 @@ public class ExecutionContext {
 
   private void writeHeader() {
     final MultivaluedMap<String,String> containerResponseHeaders = containerResponseContext.getStringHeaders();
-
     for (final Map.Entry<String,List<String>> entry : containerResponseHeaders.entrySet())
       for (final String header : entry.getValue())
         httpServletResponse.addHeader(entry.getKey(), header);
