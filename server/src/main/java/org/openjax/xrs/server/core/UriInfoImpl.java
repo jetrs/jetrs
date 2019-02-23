@@ -52,11 +52,15 @@ public class UriInfoImpl implements UriInfo {
     return getPath(true);
   }
 
-  private String decodedPath;
+  private String pathDecoded;
+  private String pathEncoded;
 
   @Override
   public String getPath(final boolean decode) {
-    return !decode ? httpServletRequest.getPathInfo() : decodedPath == null ? decodedPath = URLs.decodePath(httpServletRequest.getPathInfo()) : decodedPath;
+    if (decode)
+      return pathDecoded == null ? pathDecoded = URLs.decodePath(httpServletRequest.getRequestURI()) : pathDecoded;
+
+    return pathEncoded == null ? pathEncoded = httpServletRequest.getRequestURI() : pathEncoded;
   }
 
   @Override

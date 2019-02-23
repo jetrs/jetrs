@@ -63,7 +63,7 @@ import org.slf4j.LoggerFactory;
 public class AnnotationInjector {
   private static final Logger logger = LoggerFactory.getLogger(AnnotationInjector.class);
 
-  private static final Class<?>[] contextTypes = new Class<?>[] {
+  private static final Class<?>[] contextTypes = {
     // ResourceContext.class,
     Application.class,
     Providers.class,

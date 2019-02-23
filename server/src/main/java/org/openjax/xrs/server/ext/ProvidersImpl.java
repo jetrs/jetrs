@@ -54,11 +54,11 @@ public class ProvidersImpl implements Providers {
     this.annotationInjector = annotationInjector;
   }
 
-  public ProvidersImpl(final List<ExceptionMappingProviderResource> exceptionMappers, final List<EntityReaderProviderResource> readerProviders, final List<EntityWriterProviderResource> writerProviders, final AnnotationInjector annotationInjector) {
+  public ProvidersImpl(final List<ExceptionMappingProviderResource> exceptionMappers, final List<EntityReaderProviderResource> readerProviders, final List<EntityWriterProviderResource> writerProviders) {
     this.exceptionMappers = exceptionMappers;
     this.readerProviders = readerProviders;
     this.writerProviders = writerProviders;
-    this.annotationInjector = annotationInjector;
+    this.annotationInjector = null;
 
     this.exceptionMappers.sort(providerResourceComparator);
     this.readerProviders.sort(providerResourceComparator);

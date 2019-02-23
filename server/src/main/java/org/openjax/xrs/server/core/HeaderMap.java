@@ -103,9 +103,14 @@ public class HeaderMap extends MirrorMultivaluedMap<String,String,Object> {
     return new HashSet<>(get(HttpHeaders.ALLOW));
   }
 
-  public Date getLastModified() {
-    final String date = getFirst(HttpHeaders.LAST_MODIFIED);
+  public Date getDate() {
+    final String date = getFirst(HttpHeaders.DATE);
     return date == null ? null : DateHeaderDelegate.parse(date);
+  }
+
+  public Date getLastModified() {
+    final String lastModified = getFirst(HttpHeaders.LAST_MODIFIED);
+    return lastModified == null ? null : DateHeaderDelegate.parse(lastModified);
   }
 
   public int getLength() {

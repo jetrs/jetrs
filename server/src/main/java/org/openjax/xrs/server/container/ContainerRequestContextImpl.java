@@ -205,6 +205,7 @@ public class ContainerRequestContextImpl extends ContainerContextImpl implements
 
   @Override
   public void abortWith(final Response response) {
+    // FIXME: throw new IllegalStateException if invoked from response filter
     throw new WebApplicationException(response);
   }
 }

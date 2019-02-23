@@ -80,10 +80,10 @@ public class ResourceManifest {
   private final Object singleton;
   private final Class<?> serviceClass;
   private final PathPattern pathPattern;
-  private final MediaTypeMatcher<Consumes> consumesMatcher;
-  private final MediaTypeMatcher<Produces> producesMatcher;
+  private final ResourceAnnotationProcessor<Consumes> consumesMatcher;
+  private final ResourceAnnotationProcessor<Produces> producesMatcher;
 
-  public ResourceManifest(final HttpMethod httpMethod, final Method method, final Object singleton) {
+  ResourceManifest(final HttpMethod httpMethod, final Method method, final Object singleton) {
     this.httpMethod = httpMethod;
     final Annotation securityAnnotation = findSecurityAnnotation(method);
     this.securityAnnotation = securityAnnotation != null ? securityAnnotation : new PermitAll() {
@@ -96,19 +96,19 @@ public class ResourceManifest {
     this.singleton = singleton;
     this.serviceClass = singleton != null ? singleton.getClass() : method.getDeclaringClass();
     this.pathPattern = new PathPattern(method);
-    this.consumesMatcher = new MediaTypeMatcher<>(method, Consumes.class);
-    this.producesMatcher = new MediaTypeMatcher<>(method, Produces.class);
+    this.consumesMatcher = new ResourceAnnotationProcessor<>(method, Consumes.class);
+    this.producesMatcher = new ResourceAnnotationProcessor<>(method, Produces.class);
   }
 
-  public Object getSingleton() {
+  Object getSingleton() {
     return this.singleton;
   }
 
-  public Class<?> getServiceClass() {
+  Class<?> getServiceClass() {
     return this.serviceClass;
   }
 
-  public MediaType matches(final ContainerRequestContext containerRequestContext) {
+  MediaType getCompatibleAccept(final ContainerRequestContext containerRequestContext) {
     if (!httpMethod.value().toUpperCase().equals(containerRequestContext.getMethod()))
       return null;
 
@@ -172,7 +172,7 @@ public class ResourceManifest {
   }
 
   protected boolean checkHeader(final String headerName, final Class<? extends Annotation> annotationClass, final ContainerRequestContext containerRequestContext) {
-    final Annotation annotation = getMatcher(annotationClass).getAnnotation();
+    final Annotation annotation = getResourceAnnotationProcessor(annotationClass).getAnnotation();
     if (annotation == null) {
       final String message = "@" + annotationClass.getSimpleName() + " annotation missing for " + method.getDeclaringClass().getName() + "." + Identifiers.toClassCase(containerRequestContext.getMethod().toLowerCase()) + "()";
       if (annotationClass == Consumes.class)
@@ -235,7 +235,7 @@ public class ResourceManifest {
     throw new NotAuthorizedException(challenges);
   }
 
-  public Object service(final ExecutionContext executionContext, final ContainerRequestContext containerRequestContext, final AnnotationInjector injectionContext, final List<ProviderResource<ParamConverterProvider>> paramConverterProviders) throws IOException, ServletException {
+  Object service(final ExecutionContext executionContext, final ContainerRequestContext containerRequestContext, final AnnotationInjector injectionContext, final List<ProviderResource<ParamConverterProvider>> paramConverterProviders) throws IOException, ServletException {
     if (executionContext.getMatchedResources() == null)
       throw new IllegalStateException("service() called before filterAndMatch()");
 
@@ -272,7 +272,7 @@ public class ResourceManifest {
     }
   }
 
-  public HttpMethod getHttpMethod() {
+  HttpMethod getHttpMethod() {
     return httpMethod;
   }
 
@@ -281,11 +281,11 @@ public class ResourceManifest {
   }
 
   @SuppressWarnings("unchecked")
-  public <T extends Annotation>MediaTypeMatcher<T> getMatcher(final Class<T> annotationClass) {
-    return annotationClass == Consumes.class ? (MediaTypeMatcher<T>)consumesMatcher : annotationClass == Produces.class ? (MediaTypeMatcher<T>)producesMatcher : null;
+  <T extends Annotation>ResourceAnnotationProcessor<T> getResourceAnnotationProcessor(final Class<T> annotationClass) {
+    return annotationClass == Consumes.class ? (ResourceAnnotationProcessor<T>)consumesMatcher : annotationClass == Produces.class ? (ResourceAnnotationProcessor<T>)producesMatcher : null;
   }
 
-  public boolean isRestricted() {
+  boolean isRestricted() {
     return securityAnnotation instanceof DenyAll || securityAnnotation instanceof RolesAllowed;
   }
 

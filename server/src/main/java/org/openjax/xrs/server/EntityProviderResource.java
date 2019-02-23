@@ -26,7 +26,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.openjax.xrs.server.util.MediaTypes;
 
-public abstract class EntityProviderResource<T> extends TypeProviderResource<T> {
+abstract class EntityProviderResource<T> extends TypeProviderResource<T> {
   private final MediaType[] allowedTypes;
 
   EntityProviderResource(final Class<T> clazz, final T singleton, final Class<?> interfaceType) throws IllegalAccessException, InstantiationException, InvocationTargetException {

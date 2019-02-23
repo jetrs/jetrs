@@ -16,21 +16,21 @@
 
 package org.openjax.xrs.server;
 
-public class ProviderInstantiationException extends RuntimeException {
+class ProviderInstantiationException extends RuntimeException {
   private static final long serialVersionUID = 2780692372789106176L;
 
-  public ProviderInstantiationException() {
+  ProviderInstantiationException() {
   }
 
-  public ProviderInstantiationException(final String message) {
+  ProviderInstantiationException(final String message) {
     super(message);
   }
 
-  public ProviderInstantiationException(final Throwable cause) {
+  ProviderInstantiationException(final Throwable cause) {
     super(cause);
   }
 
-  public ProviderInstantiationException(final String message, final Throwable cause) {
+  ProviderInstantiationException(final String message, final Throwable cause) {
     super(message, cause);
   }
 }

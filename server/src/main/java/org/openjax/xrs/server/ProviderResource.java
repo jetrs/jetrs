@@ -74,9 +74,12 @@ public class ProviderResource<T> {
 
   public final T getSingletonOrNewInstance(final AnnotationInjector annotationInjector) {
     try {
+      if (annotationInjector == null)
+        return singleton != null ? singleton : clazz.getConstructor().newInstance();
+
       return annotationInjector.injectFields(singleton != null ? singleton : annotationInjector.newProviderInstance(clazz));
     }
-    catch (final IllegalAccessException | InstantiationException | InvocationTargetException e) {
+    catch (final IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException e) {
       // This should not happen, because an instance of this class would have already been instantiated once in the constructor for the matchInstance instance
       throw new ProviderInstantiationException(e);
     }

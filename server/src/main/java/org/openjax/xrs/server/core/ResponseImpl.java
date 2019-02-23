@@ -16,6 +16,9 @@
 
 package org.openjax.xrs.server.core;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.net.URI;
 import java.util.Date;
@@ -23,6 +26,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.EntityTag;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.HttpHeaders;
@@ -32,22 +36,31 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.MessageBodyReader;
+import javax.ws.rs.ext.Providers;
+
+import org.openjax.standard.io.Streams;
+import org.openjax.xrs.server.ResourceContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ResponseImpl extends Response {
+  private static final Logger logger = LoggerFactory.getLogger(ResponseImpl.class);
+
+  private final ResourceContext resourceContext;
   private final Response.StatusType status;
   private final HeaderMap headers;
+  private final Map<String,NewCookie> cookies;
   private final Object entity;
   private boolean closed;
 
   // FIXME: annotations are not being used.. there's no API to get them out of this class
-  public ResponseImpl(final Response.StatusType status, final HeaderMap headers, final Object entity, final Annotation[] annotations) {
+  ResponseImpl(final ResourceContext resourceContext, final Response.StatusType status, final HeaderMap headers, final Map<String,NewCookie> cookies, final Object entity, final Annotation[] annotations) {
+    this.resourceContext = resourceContext;
     this.status = status;
     this.headers = headers;
+    this.cookies = cookies;
     this.entity = entity;
-  }
-
-  public ResponseImpl(final Response.Status status, final HeaderMap headers) {
-    this(status, headers, null, null);
   }
 
   @Override
@@ -62,8 +75,7 @@ public class ResponseImpl extends Response {
 
   @Override
   public Object getEntity() {
-    // TODO: Also add: "Previously consumed as an InputStream"
-    if (closed)
+    if (entity instanceof InputStream && closed)
       throw new IllegalStateException("response has been closed");
 
     return entity;
@@ -71,8 +83,7 @@ public class ResponseImpl extends Response {
 
   @Override
   public <T>T readEntity(final Class<T> entityType) {
-    // TODO:
-    throw new UnsupportedOperationException();
+    return readEntity(entityType, null);
   }
 
   @Override
@@ -83,8 +94,26 @@ public class ResponseImpl extends Response {
 
   @Override
   public <T>T readEntity(final Class<T> entityType, final Annotation[] annotations) {
-    // TODO:
-    throw new UnsupportedOperationException();
+    if (!(entity instanceof InputStream))
+      throw new IllegalStateException("Entity is not an instance of InputStream");
+
+    final Providers providers = resourceContext.getProviders(null);
+    final MessageBodyReader<T> messageBodyReader = providers.getMessageBodyReader(entityType, entityType, annotations, null);
+    if (messageBodyReader == null)
+      throw new ProcessingException("Could not find MessageBodyReader for type: " + entityType.getName());
+
+    if (closed && entityBuffer == null)
+      throw new IllegalStateException("Entity InputStream was previously consumed and not buffered");
+
+    try {
+      return messageBodyReader.readFrom(entityType, entityType, annotations, null, null, closed ? new ByteArrayInputStream(entityBuffer) : (InputStream)entity);
+    }
+    catch (final IOException e) {
+      throw new IllegalStateException(e);
+    }
+    finally {
+      close();
+    }
   }
 
   @Override
@@ -95,22 +124,43 @@ public class ResponseImpl extends Response {
 
   @Override
   public boolean hasEntity() {
-    // TODO: Also add: "Previously consumed as an InputStream"
-    if (closed)
-      throw new IllegalStateException("response has been closed");
-
     return entity != null;
   }
 
+  private boolean buffered = false;
+  private byte[] entityBuffer;
+
   @Override
   public boolean bufferEntity() {
-    // TODO:
-    throw new UnsupportedOperationException();
+    if (buffered)
+      return true;
+
+    if (entity instanceof InputStream) {
+      final InputStream in = (InputStream)entity;
+      try {
+        entityBuffer = Streams.readBytes(in);
+      }
+      catch (final IOException e) {
+        return false;
+      }
+
+      close();
+    }
+
+    return buffered = true;
   }
 
   @Override
   public void close() {
-    this.closed = true;
+    if (entity instanceof InputStream) {
+      this.closed = true;
+      try {
+        ((InputStream)entity).close();
+      }
+      catch (final IOException e) {
+        logger.warn("Error closing response", e);
+      }
+    }
   }
 
   @Override
@@ -135,8 +185,7 @@ public class ResponseImpl extends Response {
 
   @Override
   public Map<String,NewCookie> getCookies() {
-    // TODO:
-    throw new UnsupportedOperationException();
+    return cookies;
   }
 
   @Override
@@ -147,8 +196,7 @@ public class ResponseImpl extends Response {
 
   @Override
   public Date getDate() {
-    // TODO:
-    throw new UnsupportedOperationException();
+    return headers.getDate();
   }
 
   @Override

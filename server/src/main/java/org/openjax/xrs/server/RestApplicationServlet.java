@@ -19,6 +19,7 @@ package org.openjax.xrs.server;
 import java.io.BufferedReader;
 import java.io.IOException;
 
+import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletInputStream;
 import javax.servlet.annotation.WebInitParam;
@@ -52,10 +53,6 @@ import org.openjax.xrs.server.util.HttpServletRequestUtil;
 @WebServlet(name="javax.ws.rs.core.Application", urlPatterns="/*")
 public class RestApplicationServlet extends RestHttpServlet {
   private static final long serialVersionUID = 3700080355780006441L;
-
-  static {
-    System.setProperty(RuntimeDelegate.JAXRS_RUNTIME_DELEGATE_PROPERTY, RuntimeDelegateImpl.class.getName());
-  }
 
   private static String getApplicationClassName(final WebServlet webServlet) {
     final WebInitParam[] webInitParams = webServlet.initParams();
@@ -92,6 +89,12 @@ public class RestApplicationServlet extends RestHttpServlet {
     }
   }
 
+  @Override
+  public void init(final ServletConfig config) throws ServletException {
+    super.init(config);
+    RuntimeDelegate.setInstance(new RuntimeDelegateImpl());
+  }
+
   @SuppressWarnings("unchecked")
   private void service(final HttpServletRequestContext httpServletRequestContext, final HttpServletResponse httpServletResponse) throws IOException {
     final StringBuilder accessLogDebug = new StringBuilder();
@@ -108,16 +111,17 @@ public class RestApplicationServlet extends RestHttpServlet {
     try {
       getResourceContext().getContainerFilters().filterPreMatchContainerRequest(containerRequestContext, annotationInjector);
       final ResourceMatch resource = executionContext.filterAndMatch(containerRequestContext, annotationInjector);
+      accessLogDebug.append(", Matched: ");
       if (resource == null) {
-        accessLogDebug.append(", Matched: null");
+        accessLogDebug.append("null");
         throw new NotFoundException();
       }
 
-      accessLogDebug.append(", Matched: ").append(resource.getManifest());
+      accessLogDebug.append(resource.getManifest());
       httpServletRequestContext.setResourceManifest(resource.getManifest());
       getResourceContext().getContainerFilters().filterContainerRequest(containerRequestContext, annotationInjector);
 
-      final MediaType[] mediaTypes = resource.getManifest().getMatcher(Produces.class).getMediaTypes();
+      final MediaType[] mediaTypes = resource.getManifest().getResourceAnnotationProcessor(Produces.class).getMediaTypes();
       if (mediaTypes != null)
         containerResponseContext.getStringHeaders().putSingle(HttpHeaders.CONTENT_TYPE, resource.getAccept().toString());
       else
@@ -130,7 +134,7 @@ public class RestApplicationServlet extends RestHttpServlet {
         containerResponseContext.setEntity(content);
 
       getResourceContext().getContainerFilters().filterContainerResponse(containerRequestContext, containerResponseContext, annotationInjector);
-      executionContext.writeResponse(providers);
+      executionContext.writeResponse(containerRequestContext, providers);
       // FIXME: There's kind of a mixup of when to use the ContainerResponseContext vs Response.
     }
     catch (final IOException | RuntimeException | ServletException e) {
@@ -142,7 +146,7 @@ public class RestApplicationServlet extends RestHttpServlet {
       try {
         executionContext.setResponse(response);
         getResourceContext().getContainerFilters().filterContainerResponse(containerRequestContext, containerResponseContext, annotationInjector);
-        executionContext.writeResponse(providers);
+        executionContext.writeResponse(containerRequestContext, providers);
       }
       catch (final WebApplicationException e2) {
         e2.addSuppressed(e1);

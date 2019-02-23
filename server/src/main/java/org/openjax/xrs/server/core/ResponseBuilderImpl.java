@@ -19,6 +19,7 @@ package org.openjax.xrs.server.core;
 import java.lang.annotation.Annotation;
 import java.net.URI;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -37,20 +38,24 @@ import javax.ws.rs.core.Variant;
 import javax.ws.rs.ext.RuntimeDelegate;
 
 import org.openjax.standard.util.Locales;
+import org.openjax.xrs.server.ResourceContext;
 import org.openjax.xrs.server.util.Responses;
 
 public class ResponseBuilderImpl extends Response.ResponseBuilder implements Cloneable {
+  private final ResourceContext resourceContext;
   private final HeaderMap headers;
   private int status;
   private String reasonPhrase;
   private Object entity;
   private Annotation[] annotations;
 
-  public ResponseBuilderImpl() {
+  public ResponseBuilderImpl(final ResourceContext resourceContext) {
+    this.resourceContext = resourceContext;
     this.headers = new HeaderMap();
   }
 
   private ResponseBuilderImpl(final ResponseBuilderImpl copy) {
+    this.resourceContext = copy.resourceContext;
     this.headers = copy.headers.clone();
     this.status = copy.status;
     this.reasonPhrase = copy.reasonPhrase;
@@ -61,7 +66,7 @@ public class ResponseBuilderImpl extends Response.ResponseBuilder implements Clo
   @Override
   public Response build() {
     final Response.StatusType statusType = reasonPhrase != null ? Responses.fromStatusCode(status, reasonPhrase) : Responses.fromStatusCode(status);
-    return new ResponseImpl(statusType, headers, entity, annotations);
+    return new ResponseImpl(resourceContext, statusType, headers, cookies, entity, annotations);
   }
 
   @Override
@@ -178,10 +183,17 @@ public class ResponseBuilderImpl extends Response.ResponseBuilder implements Clo
     return this;
   }
 
+  private Map<String,NewCookie> cookies;
+
   @Override
   public Response.ResponseBuilder cookie(final NewCookie ... cookies) {
-    // TODO:
-    throw new UnsupportedOperationException();
+    if (this.cookies == null)
+      this.cookies = new HashMap<>();
+
+    for (final NewCookie cookie : cookies)
+      this.cookies.put(cookie.getName(), cookie);
+
+    return this;
   }
 
   @Override

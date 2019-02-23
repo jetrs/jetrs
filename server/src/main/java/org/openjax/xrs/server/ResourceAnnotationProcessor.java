@@ -35,10 +35,11 @@ import org.openjax.standard.lang.IllegalAnnotationException;
 import org.openjax.standard.util.FastArrays;
 import org.openjax.xrs.server.util.MediaTypes;
 
-public class MediaTypeMatcher<T extends Annotation> {
+class ResourceAnnotationProcessor<T extends Annotation> {
   private static final Class<?>[] paramAnnotations = {Context.class, CookieParam.class, HeaderParam.class, MatrixParam.class, PathParam.class, QueryParam.class};
+  private static final MediaType[] wildcard = {MediaType.WILDCARD_TYPE};
 
-  public static <T extends Annotation>T getMethodClassAnnotation(final Class<T> annotationClass, final Method method) {
+  static <T extends Annotation>T getMethodClassAnnotation(final Class<T> annotationClass, final Method method) {
     T annotation = method.getAnnotation(annotationClass);
     return annotation != null ? annotation : method.getDeclaringClass().getAnnotation(annotationClass);
   }
@@ -68,7 +69,7 @@ public class MediaTypeMatcher<T extends Annotation> {
   private final MediaType[] mediaTypes;
 
   @SuppressWarnings("unchecked")
-  public MediaTypeMatcher(final Method method, final Class<T> annotationClass) {
+  ResourceAnnotationProcessor(final Method method, final Class<T> annotationClass) {
     try {
       if (annotationClass == Consumes.class) {
         annotation = (T)getMethodClassAnnotation((Class<Consumes>)annotationClass, method);
@@ -78,7 +79,7 @@ public class MediaTypeMatcher<T extends Annotation> {
             throw new IllegalAnnotationException(annotation, method.getDeclaringClass().getName() + "#" + method.getName() + " does not specify entity parameters, and thus cannot declare @Consumes annotation");
         }
         else {
-          this.mediaTypes = annotation != null ? MediaTypes.parse(((Consumes)annotation).value()) : new MediaType[] {MediaType.WILDCARD_TYPE};
+          this.mediaTypes = annotation != null ? MediaTypes.parse(((Consumes)annotation).value()) : wildcard;
         }
       }
       else if (annotationClass == Produces.class) {
@@ -89,7 +90,7 @@ public class MediaTypeMatcher<T extends Annotation> {
             throw new IllegalAnnotationException(annotation, method.getDeclaringClass().getName() + "#" + method.getName() + " is void return type, and thus cannot declare @Produces annotation");
         }
         else {
-          this.mediaTypes = annotation != null ? MediaTypes.parse(((Produces)annotation).value()) : new MediaType[] {MediaType.WILDCARD_TYPE};
+          this.mediaTypes = annotation != null ? MediaTypes.parse(((Produces)annotation).value()) : wildcard;
         }
       }
       else {
@@ -101,18 +102,18 @@ public class MediaTypeMatcher<T extends Annotation> {
     }
   }
 
-  public MediaType getCompatibleMediaType(final MediaType[] mediaTypes) {
+  MediaType getCompatibleMediaType(final MediaType[] mediaTypes) {
     if (this.mediaTypes == null)
       return mediaTypes == null || FastArrays.contains(mediaTypes, MediaType.WILDCARD_TYPE) ? MediaType.WILDCARD_TYPE : null;
 
     return mediaTypes == null ? this.mediaTypes[0] : MediaTypes.getCompatible(this.mediaTypes, mediaTypes);
   }
 
-  public T getAnnotation() {
+  T getAnnotation() {
     return annotation;
   }
 
-  public MediaType[] getMediaTypes() {
+  MediaType[] getMediaTypes() {
     return this.mediaTypes;
   }
 
@@ -121,10 +122,10 @@ public class MediaTypeMatcher<T extends Annotation> {
     if (obj == this)
       return true;
 
-    if (!(obj instanceof MediaTypeMatcher))
+    if (!(obj instanceof ResourceAnnotationProcessor))
       return false;
 
-    final MediaTypeMatcher<?> that = (MediaTypeMatcher<?>)obj;
+    final ResourceAnnotationProcessor<?> that = (ResourceAnnotationProcessor<?>)obj;
     return (annotation != null ? annotation.equals(that.annotation) : that.annotation == null) && mediaTypes != null ? Arrays.equals(mediaTypes, that.mediaTypes) : that.mediaTypes == null;
   }
 

@@ -27,6 +27,7 @@ import java.util.ListIterator;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.HttpMethod;
 import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -173,9 +174,10 @@ public class ExecutionContext {
       throw new WebApplicationException("Could not find MessageBodyWriter for type: " + entity.getClass().getName());
   }
 
-  protected void writeResponse(final Providers providers) throws IOException {
+  protected void writeResponse(final ContainerRequestContext requestContext, final Providers providers) throws IOException {
     writeHeader();
-    writeBody(providers);
+    if (!HttpMethod.HEAD.equals(requestContext.getMethod()))
+      writeBody(providers);
   }
 
   protected void commit() throws IOException {

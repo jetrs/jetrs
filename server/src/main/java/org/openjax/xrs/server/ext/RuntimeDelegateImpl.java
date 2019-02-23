@@ -19,16 +19,32 @@ package org.openjax.xrs.server.ext;
 import java.util.Date;
 
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.CacheControl;
+import javax.ws.rs.core.Cookie;
+import javax.ws.rs.core.EntityTag;
+import javax.ws.rs.core.Link;
 import javax.ws.rs.core.Link.Builder;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.Variant.VariantListBuilder;
 import javax.ws.rs.ext.RuntimeDelegate;
 
+import org.openjax.xrs.server.ResourceContext;
 import org.openjax.xrs.server.core.ResponseBuilderImpl;
 
 public class RuntimeDelegateImpl extends RuntimeDelegate {
+  private final ResourceContext resourceContext;
+
+  public RuntimeDelegateImpl(final ResourceContext resourceContext) {
+    this.resourceContext = resourceContext;
+  }
+
+  public RuntimeDelegateImpl() {
+    this(null);
+  }
+
   @Override
   public UriBuilder createUriBuilder() {
     // TODO:
@@ -37,7 +53,7 @@ public class RuntimeDelegateImpl extends RuntimeDelegate {
 
   @Override
   public ResponseBuilder createResponseBuilder() {
-    return new ResponseBuilderImpl();
+    return new ResponseBuilderImpl(resourceContext);
   }
 
   @Override
@@ -47,14 +63,14 @@ public class RuntimeDelegateImpl extends RuntimeDelegate {
   }
 
   @Override
-  public <T>T createEndpoint(final Application application, final Class<T> endpointType) throws IllegalArgumentException, UnsupportedOperationException {
+  public <T>T createEndpoint(final Application application, final Class<T> endpointType) {
     // TODO:
     throw new UnsupportedOperationException();
   }
 
   @Override
   @SuppressWarnings("unchecked")
-  public <T>HeaderDelegate<T> createHeaderDelegate(final Class<T> type) throws IllegalArgumentException {
+  public <T>HeaderDelegate<T> createHeaderDelegate(final Class<T> type) {
     if (type == MediaType.class)
       return (HeaderDelegate<T>)new MediaTypeHeaderDelegate();
 
@@ -66,6 +82,21 @@ public class RuntimeDelegateImpl extends RuntimeDelegate {
 
     if (type == String.class)
       return (HeaderDelegate<T>)new StringHeaderDelegate();
+
+    if (type == CacheControl.class)
+      throw new UnsupportedOperationException();
+
+    if (type == Cookie.class)
+      throw new UnsupportedOperationException();
+
+    if (type == NewCookie.class)
+      throw new UnsupportedOperationException();
+
+    if (type == EntityTag.class)
+      throw new UnsupportedOperationException();
+
+    if (type == Link.class)
+      throw new UnsupportedOperationException();
 
     return null;
   }

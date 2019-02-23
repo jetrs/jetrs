@@ -18,9 +18,6 @@ package org.openjax.xrs.server;
 
 import java.lang.reflect.InvocationTargetException;
 
-import javax.annotation.Priority;
-import javax.ws.rs.Priorities;
-
 public class TypeProviderResource<T> extends ProviderResource<T> {
   private final Class<?> type;
 

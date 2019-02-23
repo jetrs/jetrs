@@ -32,7 +32,7 @@ import org.openjax.xrs.server.core.AnnotationInjector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public final class ContainerFilters {
+final class ContainerFilters {
   private static final Logger logger = LoggerFactory.getLogger(ContainerFilters.class);
 
   private final List<ProviderResource<ContainerRequestFilter>> preMatchContainerRequestFilters = new ArrayList<>();
@@ -48,7 +48,7 @@ public final class ContainerFilters {
     }
   });
 
-  public ContainerFilters(final List<ProviderResource<ContainerRequestFilter>> requestFilters, final List<ProviderResource<ContainerResponseFilter>> responseFilters) {
+  ContainerFilters(final List<ProviderResource<ContainerRequestFilter>> requestFilters, final List<ProviderResource<ContainerResponseFilter>> responseFilters) {
     for (final ProviderResource<ContainerRequestFilter> requestFilter : requestFilters)
       (requestFilter.getProviderClass().isAnnotationPresent(PreMatching.class) ? preMatchContainerRequestFilters : containerRequestFilters).add(requestFilter);
 
@@ -64,17 +64,17 @@ public final class ContainerFilters {
     containerResponseFilters.sort(priorityComparator);
   }
 
-  public void filterPreMatchContainerRequest(final ContainerRequestContext requestContext, final AnnotationInjector annotationInjector) throws IOException {
+  void filterPreMatchContainerRequest(final ContainerRequestContext requestContext, final AnnotationInjector annotationInjector) throws IOException {
     for (final ProviderResource<ContainerRequestFilter> preMatchRequestFilter : preMatchContainerRequestFilters)
       preMatchRequestFilter.getSingletonOrNewInstance(annotationInjector).filter(requestContext);
   }
 
-  public void filterContainerRequest(final ContainerRequestContext requestContext, final AnnotationInjector annotationInjector) throws IOException {
+  void filterContainerRequest(final ContainerRequestContext requestContext, final AnnotationInjector annotationInjector) throws IOException {
     for (final ProviderResource<ContainerRequestFilter> containerRequestFilter : containerRequestFilters)
       containerRequestFilter.getSingletonOrNewInstance(annotationInjector).filter(requestContext);
   }
 
-  public void filterContainerResponse(final ContainerRequestContext requestContext, final ContainerResponseContext responseContext, final AnnotationInjector annotationInjector) throws IOException {
+  void filterContainerResponse(final ContainerRequestContext requestContext, final ContainerResponseContext responseContext, final AnnotationInjector annotationInjector) throws IOException {
     for (final ProviderResource<ContainerResponseFilter> containerResponseFilter : containerResponseFilters)
       containerResponseFilter.getSingletonOrNewInstance(annotationInjector).filter(requestContext, responseContext);
   }
