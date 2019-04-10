@@ -21,6 +21,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -46,9 +47,13 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.ParamConverterProvider;
 import javax.ws.rs.ext.Provider;
+import javax.ws.rs.ext.ReaderInterceptor;
+import javax.ws.rs.ext.RuntimeDelegate;
+import javax.ws.rs.ext.WriterInterceptor;
 
 import org.openjax.standard.lang.PackageLoader;
 import org.openjax.xrs.server.ext.ProvidersImpl;
+import org.openjax.xrs.server.ext.RuntimeDelegateImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,7 +71,7 @@ abstract class RestHttpServlet extends HttpServlet {
   }
 
   @SuppressWarnings("unchecked")
-  private static <T>void addResourceOrProvider(final MultivaluedMap<String,ResourceManifest> resources, final List<ExceptionMappingProviderResource> exceptionMappers, final List<EntityReaderProviderResource> entityReaders, final List<EntityWriterProviderResource> entityWriters, final List<ProviderResource<ContainerRequestFilter>> requestFilters, final List<ProviderResource<ContainerResponseFilter>> responseFilters, final List<ProviderResource<ParamConverterProvider>> paramConverterProviders, final Class<? extends T> clazz, T singleton) throws IllegalAccessException, InstantiationException, InvocationTargetException {
+  private static <T>void addResourceOrProvider(final MultivaluedMap<String,ResourceManifest> resources, final List<ExceptionMappingProviderResource> exceptionMappers, final List<EntityReaderProviderResource> entityReaders, final List<EntityWriterProviderResource> entityWriters, final List<ProviderResource<ContainerRequestFilter>> requestFilters, final List<ProviderResource<ContainerResponseFilter>> responseFilters, final List<ReaderInterceptorEntityProviderResource> readerInterceptors, final List<WriterInterceptorEntityProviderResource> writerInterceptors, final List<ProviderResource<ParamConverterProvider>> paramConverterProviders, final Class<? extends T> clazz, T singleton) throws IllegalAccessException, InstantiationException, InvocationTargetException {
     if (isRootResource(clazz)) {
       for (final Method method : clazz.getMethods()) {
         final Set<HttpMethod> httpMethodAnnotations = new HashSet<>(); // FIXME: Can this be done without a Collection?
@@ -90,6 +95,12 @@ abstract class RestHttpServlet extends HttpServlet {
 
       if (MessageBodyWriter.class.isAssignableFrom(clazz))
         entityWriters.add(new EntityWriterProviderResource((Class<MessageBodyWriter<?>>)clazz, (MessageBodyWriter<?>)singleton));
+
+      if (ReaderInterceptor.class.isAssignableFrom(clazz))
+        readerInterceptors.add(new ReaderInterceptorEntityProviderResource((Class<ReaderInterceptor>)clazz, (ReaderInterceptor)singleton));
+
+      if (WriterInterceptor.class.isAssignableFrom(clazz))
+        writerInterceptors.add(new WriterInterceptorEntityProviderResource((Class<WriterInterceptor>)clazz, (WriterInterceptor)singleton));
 
       if (ExceptionMapper.class.isAssignableFrom(clazz))
         exceptionMappers.add(new ExceptionMappingProviderResource((Class<ExceptionMapper<?>>)clazz, (ExceptionMapper<?>)singleton));
@@ -143,12 +154,14 @@ abstract class RestHttpServlet extends HttpServlet {
   public void init(final ServletConfig config) throws ServletException {
     super.init(config);
     final MultivaluedMap<String,ResourceManifest> resources = new MultivaluedHashMap<>();
-    final List<ProviderResource<ParamConverterProvider>> paramConverterProviders = new ArrayList<>();
     final List<ExceptionMappingProviderResource> exceptionMappers = new ArrayList<>();
     final List<EntityReaderProviderResource> entityReaders = new ArrayList<>();
     final List<EntityWriterProviderResource> entityWriters = new ArrayList<>();
     final List<ProviderResource<ContainerRequestFilter>> requestFilters = new ArrayList<>();
     final List<ProviderResource<ContainerResponseFilter>> responseFilters = new ArrayList<>();
+    final List<ReaderInterceptorEntityProviderResource> readerInterceptors = new ArrayList<>();
+    final List<WriterInterceptorEntityProviderResource> writerInterceptors = new ArrayList<>();
+    final List<ProviderResource<ParamConverterProvider>> paramConverterProviders = new ArrayList<>();
 
     try {
       final Application application;
@@ -158,12 +171,12 @@ abstract class RestHttpServlet extends HttpServlet {
         final Set<?> singletons = application.getSingletons();
         if (singletons != null)
           for (final Object singleton : singletons)
-            addResourceOrProvider(resources, exceptionMappers, entityReaders, entityWriters, requestFilters, responseFilters, paramConverterProviders, singleton.getClass(), singleton);
+            addResourceOrProvider(resources, exceptionMappers, entityReaders, entityWriters, requestFilters, responseFilters, readerInterceptors, writerInterceptors, paramConverterProviders, singleton.getClass(), singleton);
 
         final Set<Class<?>> classes = application.getClasses();
         if (classes != null)
           for (final Class<?> cls : classes)
-            addResourceOrProvider(resources, exceptionMappers, entityReaders, entityWriters, requestFilters, responseFilters, paramConverterProviders, cls, null);
+            addResourceOrProvider(resources, exceptionMappers, entityReaders, entityWriters, requestFilters, responseFilters, readerInterceptors, writerInterceptors, paramConverterProviders, cls, null);
       }
       else {
         application = null;
@@ -174,7 +187,7 @@ abstract class RestHttpServlet extends HttpServlet {
           public boolean test(final Class<?> t) {
             if (!Modifier.isAbstract(t.getModifiers()) && !loadedClasses.contains(t)) {
               try {
-                addResourceOrProvider(resources, exceptionMappers, entityReaders, entityWriters, requestFilters, responseFilters, paramConverterProviders, t, null);
+                addResourceOrProvider(resources, exceptionMappers, entityReaders, entityWriters, requestFilters, responseFilters, readerInterceptors, writerInterceptors, paramConverterProviders, t, null);
               }
               catch (final IllegalAccessException | InstantiationException e) {
                 throw new ProviderInstantiationException(e);
@@ -199,7 +212,8 @@ abstract class RestHttpServlet extends HttpServlet {
         }
       }
 
-      this.resourceContext = new ResourceContext(application, resources, new ContainerFilters(requestFilters, responseFilters), new ProvidersImpl(exceptionMappers, entityReaders, entityWriters), paramConverterProviders);
+      this.resourceContext = new ResourceContext(application, resources, new ContainerFilters(requestFilters, responseFilters), new ProvidersImpl(exceptionMappers, entityReaders, entityWriters), readerInterceptors, writerInterceptors, paramConverterProviders);
+      RuntimeDelegate.setInstance(new RuntimeDelegateImpl(this.resourceContext));
     }
     catch (final RuntimeException e) {
       throw e;

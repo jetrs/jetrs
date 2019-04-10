@@ -39,14 +39,36 @@ public class ResourceContext {
   private final MultivaluedMap<String,ResourceManifest> resources;
   private final ContainerFilters containerFilters;
   private final ProvidersImpl providers;
+  private final Object[] readerInterceptors;
+  private final Object[] writerInterceptors;
   private final List<ProviderResource<ParamConverterProvider>> paramConverterProviders;
 
-  public ResourceContext(final Application application, final MultivaluedMap<String,ResourceManifest> resources, final ContainerFilters containerFilters, final ProvidersImpl providers, final List<ProviderResource<ParamConverterProvider>> paramConverterProviders) {
+  public ResourceContext(final Application application, final MultivaluedMap<String,ResourceManifest> resources, final ContainerFilters containerFilters, final ProvidersImpl providers, final List<ReaderInterceptorEntityProviderResource> readerInterceptors, final List<WriterInterceptorEntityProviderResource> writerInterceptors, final List<ProviderResource<ParamConverterProvider>> paramConverterProviders) {
     this.application = application;
     this.resources = resources;
     this.containerFilters = containerFilters;
     this.providers = providers;
     this.paramConverterProviders = paramConverterProviders;
+
+    if (readerInterceptors.size() > 0) {
+      readerInterceptors.sort(ProvidersImpl.providerResourceComparator);
+      this.readerInterceptors = new Object[readerInterceptors.size() + 1];
+      for (int i = 0; i < readerInterceptors.size(); ++i)
+        this.readerInterceptors[i] = readerInterceptors.get(i).getMatchInstance();
+    }
+    else {
+      this.readerInterceptors = null;
+    }
+
+    if (writerInterceptors.size() > 0) {
+      writerInterceptors.sort(ProvidersImpl.providerResourceComparator);
+      this.writerInterceptors = new Object[writerInterceptors.size() + 1];
+      for (int i = 0; i < readerInterceptors.size(); ++i)
+        this.writerInterceptors[i] = readerInterceptors.get(i).getMatchInstance();
+    }
+    else {
+      this.writerInterceptors = null;
+    }
   }
 
   public Application getApplication() {
@@ -59,6 +81,14 @@ public class ResourceContext {
 
   public Providers getProviders(final AnnotationInjector annotationInjector) {
     return annotationInjector == null ? providers : new ProvidersImpl(providers, annotationInjector);
+  }
+
+  public Object[] getReaderInterceptors() {
+    return this.readerInterceptors;
+  }
+
+  public Object[] getWriterInterceptors() {
+    return this.writerInterceptors;
   }
 
   public List<ProviderResource<ParamConverterProvider>> getParamConverterProviders() {

@@ -35,7 +35,7 @@ import org.openjax.xrs.server.TypeProviderResource;
 import org.openjax.xrs.server.core.AnnotationInjector;
 
 public class ProvidersImpl implements Providers {
-  private static final Comparator<TypeProviderResource<?>> providerResourceComparator = Comparator.nullsFirst(new Comparator<TypeProviderResource<?>>() {
+  public static final Comparator<TypeProviderResource<?>> providerResourceComparator = Comparator.nullsFirst(new Comparator<TypeProviderResource<?>>() {
     @Override
     public int compare(final TypeProviderResource<?> o1, final TypeProviderResource<?> o2) {
       return o1.getType() == o2.getType() ? Integer.compare(o1.getPriority(), o2.getPriority()) : o1.getType().isAssignableFrom(o2.getType()) ? 1 : -1;
@@ -43,32 +43,32 @@ public class ProvidersImpl implements Providers {
   });
 
   private final List<ExceptionMappingProviderResource> exceptionMappers;
-  private final List<EntityReaderProviderResource> readerProviders;
-  private final List<EntityWriterProviderResource> writerProviders;
+  private final List<EntityReaderProviderResource> entityReaders;
+  private final List<EntityWriterProviderResource> entityWriters;
   private final AnnotationInjector annotationInjector;
 
   public ProvidersImpl(final ProvidersImpl copy, final AnnotationInjector annotationInjector) {
     this.exceptionMappers = copy.exceptionMappers;
-    this.readerProviders = copy.readerProviders;
-    this.writerProviders = copy.writerProviders;
+    this.entityReaders = copy.entityReaders;
+    this.entityWriters = copy.entityWriters;
     this.annotationInjector = annotationInjector;
   }
 
-  public ProvidersImpl(final List<ExceptionMappingProviderResource> exceptionMappers, final List<EntityReaderProviderResource> readerProviders, final List<EntityWriterProviderResource> writerProviders) {
+  public ProvidersImpl(final List<ExceptionMappingProviderResource> exceptionMappers, final List<EntityReaderProviderResource> entityReaders, final List<EntityWriterProviderResource> entityWriters) {
     this.exceptionMappers = exceptionMappers;
-    this.readerProviders = readerProviders;
-    this.writerProviders = writerProviders;
+    this.entityReaders = entityReaders;
+    this.entityWriters = entityWriters;
     this.annotationInjector = null;
 
     this.exceptionMappers.sort(providerResourceComparator);
-    this.readerProviders.sort(providerResourceComparator);
-    this.writerProviders.sort(providerResourceComparator);
+    this.entityReaders.sort(providerResourceComparator);
+    this.entityWriters.sort(providerResourceComparator);
   }
 
   @Override
   @SuppressWarnings("unchecked")
   public <T>MessageBodyReader<T> getMessageBodyReader(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
-    for (final EntityReaderProviderResource provider : readerProviders)
+    for (final EntityReaderProviderResource provider : entityReaders)
       if (provider.getCompatibleMediaType(provider.getMatchInstance(), type, genericType, annotations, mediaType) != null)
         return (MessageBodyReader<T>)provider.getSingletonOrNewInstance(annotationInjector);
 
@@ -78,7 +78,7 @@ public class ProvidersImpl implements Providers {
   @Override
   @SuppressWarnings("unchecked")
   public <T>MessageBodyWriter<T> getMessageBodyWriter(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
-    for (final EntityWriterProviderResource provider : writerProviders)
+    for (final EntityWriterProviderResource provider : entityWriters)
       if (provider.getCompatibleMediaType(provider.getMatchInstance(), type, genericType, annotations, mediaType) != null)
         return (MessageBodyWriter<T>)provider.getSingletonOrNewInstance(annotationInjector);
 
@@ -97,6 +97,6 @@ public class ProvidersImpl implements Providers {
 
   @Override
   public <T>ContextResolver<T> getContextResolver(final Class<T> contextType, final MediaType mediaType) {
-    return null;
+    throw new UnsupportedOperationException();
   }
 }

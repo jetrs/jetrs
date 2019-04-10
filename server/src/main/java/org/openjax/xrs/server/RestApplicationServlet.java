@@ -18,6 +18,8 @@ package org.openjax.xrs.server;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -33,8 +35,6 @@ import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -48,7 +48,6 @@ import org.openjax.xrs.server.container.ContainerResponseContextImpl;
 import org.openjax.xrs.server.core.AnnotationInjector;
 import org.openjax.xrs.server.core.HttpHeadersImpl;
 import org.openjax.xrs.server.ext.RuntimeDelegateImpl;
-import org.openjax.xrs.server.util.HttpServletRequestUtil;
 
 @WebServlet(name="javax.ws.rs.core.Application", urlPatterns="/*")
 public class RestApplicationServlet extends RestHttpServlet {
@@ -97,16 +96,17 @@ public class RestApplicationServlet extends RestHttpServlet {
 
   @SuppressWarnings("unchecked")
   private void service(final HttpServletRequestContext httpServletRequestContext, final HttpServletResponse httpServletResponse) throws IOException {
+    final Map<String,Object> properties = new HashMap<>();
+    final ContainerResponseContextImpl containerResponseContext = new ContainerResponseContextImpl(httpServletResponse, properties, getResourceContext().getWriterInterceptors().clone());
+    final HttpHeaders requestHeaders = new HttpHeadersImpl(httpServletRequestContext);
     final StringBuilder accessLogDebug = new StringBuilder();
-    accessLogDebug.append("Headers: ").append(HttpServletRequestUtil.getHeaders(httpServletRequestContext));
-    final ContainerResponseContext containerResponseContext = new ContainerResponseContextImpl(httpServletResponse);
-    final HttpHeaders httpHeaders = new HttpHeadersImpl(httpServletRequestContext);
-    final ExecutionContext executionContext = new ExecutionContext(httpHeaders, httpServletResponse, containerResponseContext, getResourceContext());
+    accessLogDebug.append("Headers: ").append(requestHeaders);
+    final ExecutionContext executionContext = new ExecutionContext(requestHeaders, httpServletResponse, containerResponseContext, getResourceContext());
 
-    final ContainerRequestContext containerRequestContext; // NOTE: This weird construct is done this way to at least somehow make the two objects cohesive
-    httpServletRequestContext.setRequestContext(containerRequestContext = new ContainerRequestContextImpl(httpServletRequestContext, executionContext));
+    final ContainerRequestContextImpl containerRequestContext; // NOTE: This weird construct is done this way to at least somehow make the two objects cohesive
+    httpServletRequestContext.setRequestContext(containerRequestContext = new ContainerRequestContextImpl(httpServletRequestContext, properties, executionContext, getResourceContext().getReaderInterceptors().clone()));
 
-    final AnnotationInjector annotationInjector = AnnotationInjector.createAnnotationInjector(containerRequestContext, httpServletRequestContext, httpServletResponse, httpHeaders, getResourceContext());
+    final AnnotationInjector annotationInjector = AnnotationInjector.createAnnotationInjector(containerRequestContext, httpServletRequestContext, httpServletResponse, requestHeaders, getResourceContext());
     final Providers providers = getResourceContext().getProviders(annotationInjector);
     try {
       getResourceContext().getContainerFilters().filterPreMatchContainerRequest(containerRequestContext, annotationInjector);

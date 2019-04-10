@@ -19,6 +19,7 @@ package org.openjax.xrs.server.core;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -31,7 +32,6 @@ import javax.ws.rs.core.MultivaluedMap;
 
 import org.openjax.standard.util.FastCollections;
 import org.openjax.standard.util.Numbers;
-import org.openjax.xrs.server.util.HttpServletRequestUtil;
 import org.openjax.xrs.server.util.MediaTypes;
 
 public class HttpHeadersImpl implements HttpHeaders {
@@ -42,7 +42,14 @@ public class HttpHeadersImpl implements HttpHeaders {
   }
 
   public HttpHeadersImpl(final HttpServletRequest request) {
-    this(HttpServletRequestUtil.getHeaders(request));
+    this(new HeaderMap());
+    final Enumeration<String> headerNames = request.getHeaderNames();
+    while (headerNames.hasMoreElements()) {
+      final String headerName = headerNames.nextElement();
+      final Enumeration<String> enumeration = request.getHeaders(headerName);
+      while (enumeration.hasMoreElements())
+        headers.add(headerName, enumeration.nextElement());
+    }
   }
 
   @Override

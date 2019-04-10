@@ -16,10 +16,12 @@
 
 package org.openjax.xrs.server.container;
 
+import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.net.URI;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 import java.util.Set;
@@ -34,20 +36,31 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.MessageBodyWriter;
+import javax.ws.rs.ext.WriterInterceptor;
+import javax.ws.rs.ext.WriterInterceptorContext;
 
 import org.openjax.xrs.server.core.HeaderMap;
 
-public class ContainerResponseContextImpl extends ContainerContextImpl implements ContainerResponseContext {
+public class ContainerResponseContextImpl extends ContainerContextImpl implements ContainerResponseContext, WriterInterceptorContext {
+  private final Object[] writerInterceptors;
+  private final Map<String,Object> properties;
   private final HeaderMap headers;
   private Response.StatusType status;
 
   private OutputStream outputStream;
   private Object entity;
+  private Annotation[] entityAnnotations;
   private Annotation[] annotations;
 
-  public ContainerResponseContextImpl(final HttpServletResponse response) {
+  private Class<?> type;
+  private Type genericType;
+
+  public ContainerResponseContextImpl(final HttpServletResponse response, final Map<String,Object> properties, final Object[] writerInterceptors) {
     super(response.getLocale());
+    this.properties = properties;
     this.headers = new HeaderMap(response);
+    this.writerInterceptors = writerInterceptors;
     this.status = Response.Status.fromStatusCode(response.getStatus());
   }
 
@@ -138,12 +151,12 @@ public class ContainerResponseContextImpl extends ContainerContextImpl implement
 
   @Override
   public Class<?> getEntityClass() {
-    return entity == null ? null : entity.getClass();
+    return type;
   }
 
   @Override
   public Type getEntityType() {
-    return getEntityClass().getGenericSuperclass();
+    return genericType;
   }
 
   @Override
@@ -155,14 +168,16 @@ public class ContainerResponseContextImpl extends ContainerContextImpl implement
   public void setEntity(final Object entity, final Annotation[] annotations, final MediaType mediaType) {
     // FIXME: What is the getEntityType() method supposed to return???
     this.entity = entity;
-    this.annotations = annotations;
+    this.type = entity.getClass();
+    this.genericType = type.getGenericSuperclass();
+    this.entityAnnotations = annotations;
     if (mediaType != null)
       getHeaders().putSingle(HttpHeaders.CONTENT_TYPE, mediaType);
   }
 
   @Override
   public Annotation[] getEntityAnnotations() {
-    return annotations;
+    return entityAnnotations;
   }
 
   @Override
@@ -183,5 +198,91 @@ public class ContainerResponseContextImpl extends ContainerContextImpl implement
   @Override
   public MediaType getMediaType() {
     return headers.getMediaType();
+  }
+
+
+
+
+
+
+
+  @Override
+  public Object getProperty(final String name) {
+    return properties.get(name);
+  }
+
+  @Override
+  public Collection<String> getPropertyNames() {
+    return properties.keySet();
+  }
+
+  @Override
+  public void setProperty(final String name, final Object object) {
+    properties.put(name, object);
+  }
+
+  @Override
+  public void removeProperty(final String name) {
+    properties.remove(name);
+  }
+
+  @Override
+  public Annotation[] getAnnotations() {
+    return annotations;
+  }
+
+  @Override
+  public void setAnnotations(final Annotation[] annotations) {
+    this.annotations = annotations;
+  }
+
+  @Override
+  public Class<?> getType() {
+    return getEntityClass();
+  }
+
+  @Override
+  public void setType(final Class<?> type) {
+    this.type = type;
+  }
+
+  @Override
+  public Type getGenericType() {
+    return genericType;
+  }
+
+  @Override
+  public void setGenericType(final Type genericType) {
+    this.genericType = genericType;
+  }
+
+  @Override
+  public void setMediaType(final MediaType mediaType) {
+    headers.putSingle(HttpHeaders.CONTENT_TYPE, mediaType == null ? null : mediaType.toString());
+  }
+
+  @Override
+  public OutputStream getOutputStream() {
+    return outputStream;
+  }
+
+  @Override
+  public void setOutputStream(final OutputStream os) {
+    this.outputStream = os;
+  }
+
+  private int interceptorIndex = -1;
+
+  @Override
+  public void proceed() throws IOException {
+    if (writerInterceptors == null || ++interceptorIndex == writerInterceptors.length - 1)
+      ((MessageBodyWriter<Object>)writerInterceptors[interceptorIndex]).writeTo(getEntity(), getEntityClass(), getEntityType(), getEntityAnnotations(), getMediaType(), getHeaders(), getEntityStream());
+    else if (interceptorIndex < writerInterceptors.length)
+      ((WriterInterceptor)writerInterceptors[interceptorIndex]).aroundWriteTo(this);
+  }
+
+  public void writeBody(final MessageBodyWriter<?> messageBodyWriter) throws IOException {
+    writerInterceptors[writerInterceptors.length - 1] = messageBodyWriter;
+    proceed();
   }
 }

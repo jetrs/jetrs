@@ -27,17 +27,20 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.ws.rs.ProcessingException;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.EntityTag;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.Link.Builder;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.Providers;
+import javax.ws.rs.ext.ReaderInterceptor;
 
 import org.openjax.standard.io.Streams;
 import org.openjax.xrs.server.ResourceContext;
@@ -51,7 +54,7 @@ public class ResponseImpl extends Response {
   private final Response.StatusType status;
   private final HeaderMap headers;
   private final Map<String,NewCookie> cookies;
-  private final Object entity;
+  private Object entity;
   private boolean closed;
 
   // FIXME: annotations are not being used.. there's no API to get them out of this class
@@ -106,7 +109,27 @@ public class ResponseImpl extends Response {
       throw new IllegalStateException("Entity InputStream was previously consumed and not buffered");
 
     try {
-      return messageBodyReader.readFrom(entityType, entityType, annotations, null, null, closed ? new ByteArrayInputStream(entityBuffer) : (InputStream)entity);
+      if (resourceContext.getReaderInterceptors() == null)
+        return (T)(entity = messageBodyReader.readFrom(entityType, entityType, annotations, null, null, closed ? new ByteArrayInputStream(entityBuffer) : (InputStream)entity));
+
+      final Object[] readerInterceptors = resourceContext.getReaderInterceptors();
+      final ReaderInterceptorContextImpl readerInterceptorContext = new ReaderInterceptorContextImpl(new MultivaluedHashMap<>()) {
+        private int interceptorIndex = -1;
+        private Object lastProceeded;
+
+        @Override
+        public Object proceed() throws IOException, WebApplicationException {
+          if (readerInterceptors == null || ++interceptorIndex == readerInterceptors.length - 1)
+            return lastProceeded = ((MessageBodyReader)readerInterceptors[interceptorIndex]).readFrom(getType(), getGenericType(), getAnnotations(), getMediaType(), getHeaders(), getInputStream());
+
+          if (interceptorIndex < readerInterceptors.length)
+            return lastProceeded = ((ReaderInterceptor)readerInterceptors[interceptorIndex]).aroundReadFrom(this);
+
+          return lastProceeded;
+        }
+      };
+
+      return (T)(entity = readerInterceptorContext.proceed());
     }
     catch (final IOException e) {
       throw new IllegalStateException(e);

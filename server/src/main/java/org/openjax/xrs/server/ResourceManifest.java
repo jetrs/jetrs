@@ -48,6 +48,7 @@ import javax.ws.rs.ext.ParamConverterProvider;
 import javax.ws.rs.ext.Providers;
 
 import org.openjax.standard.util.Identifiers;
+import org.openjax.xrs.server.container.ContainerRequestContextImpl;
 import org.openjax.xrs.server.core.AnnotationInjector;
 import org.openjax.xrs.server.util.MediaTypes;
 import org.slf4j.Logger;
@@ -134,7 +135,7 @@ public class ResourceManifest {
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
-  private static Object[] getParameters(final Method method, final ContainerRequestContext containerRequestContext, final AnnotationInjector annotationInjector, final List<ProviderResource<ParamConverterProvider>> paramConverterProviders) throws IOException {
+  private static Object[] getParameters(final Method method, final ContainerRequestContextImpl containerRequestContext, final AnnotationInjector annotationInjector, final List<ProviderResource<ParamConverterProvider>> paramConverterProviders) throws IOException {
     final Parameter[] parameters = method.getParameters();
     final Type[] genericParameterTypes = method.getGenericParameterTypes();
     final Annotation[][] parameterAnnotations = method.getParameterAnnotations();
@@ -150,10 +151,14 @@ public class ResourceManifest {
       if (paramAnnotation == null) {
         final Providers providers = annotationInjector.getContextObject(Providers.class);
         final MessageBodyReader messageBodyReader = providers.getMessageBodyReader(parameter.getType(), genericParameterType, annotations, containerRequestContext.getMediaType());
-        if (messageBodyReader != null)
-          parameterInstances[i] = messageBodyReader.readFrom(parameter.getType(), parameter.getType().getGenericSuperclass(), parameter.getAnnotations(), containerRequestContext.getMediaType(), containerRequestContext.getHeaders(), containerRequestContext.getEntityStream());
-        else
+        if (messageBodyReader == null)
           throw new WebApplicationException("Could not find MessageBodyReader for type: " + parameter.getType().getName());
+
+        // FIXME: Why is there a return type for ReaderInterceptorContext#proceed()? And it's of type Object. What type is ReaderInterceptorContext supposed to return? It should be InputStream, but then it makes it redundant.
+        containerRequestContext.setType(parameter.getType());
+        containerRequestContext.setGenericType(parameter.getType().getGenericSuperclass());
+        containerRequestContext.setAnnotations(parameter.getAnnotations());
+        parameterInstances[i] = containerRequestContext.readBody(messageBodyReader);
       }
       else {
         try {
@@ -235,7 +240,7 @@ public class ResourceManifest {
     throw new NotAuthorizedException(challenges);
   }
 
-  Object service(final ExecutionContext executionContext, final ContainerRequestContext containerRequestContext, final AnnotationInjector injectionContext, final List<ProviderResource<ParamConverterProvider>> paramConverterProviders) throws IOException, ServletException {
+  Object service(final ExecutionContext executionContext, final ContainerRequestContextImpl containerRequestContext, final AnnotationInjector injectionContext, final List<ProviderResource<ParamConverterProvider>> paramConverterProviders) throws IOException, ServletException {
     if (executionContext.getMatchedResources() == null)
       throw new IllegalStateException("service() called before filterAndMatch()");
 
