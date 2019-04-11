@@ -1,4 +1,20 @@
-package org.openjax.xrs.server.core;
+/* Copyright (c) 2016 OpenJAX
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * You should have received a copy of The MIT License (MIT) along with this
+ * program. If not, see <http://opensource.org/licenses/MIT/>.
+ */
+
+package org.openjax.xrs.server.ext;
 
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
@@ -13,14 +29,23 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.ReaderInterceptorContext;
 
+import org.openjax.xrs.server.core.HeaderMap;
 import org.openjax.xrs.server.util.MediaTypes;
 
 public abstract class ReaderInterceptorContextImpl implements ReaderInterceptorContext {
-  private final MultivaluedMap<String,String> headers;
+  private final HeaderMap headers;
+  private Class<?> type;
+  private Type genericType;
+  private Annotation[] annotations;
+
   private Map<String,Object> properties;
 
-  public ReaderInterceptorContextImpl(final MultivaluedMap<String,String> headers) {
+  public ReaderInterceptorContextImpl(final Class<?> type, final Type genericType, final Annotation[] annotations, final HeaderMap headers, final InputStream inputStream) {
     this.headers = headers;
+    setType(type);
+    setGenericType(genericType);
+    setAnnotations(annotations);
+    setInputStream(inputStream);
   }
 
   @Override
@@ -46,10 +71,6 @@ public abstract class ReaderInterceptorContextImpl implements ReaderInterceptorC
     if (properties != null)
       properties.remove(name);
   }
-
-  private Class<?> type;
-  private Type genericType;
-  private Annotation[] annotations;
 
   @Override
   public Annotation[] getAnnotations() {
@@ -83,6 +104,7 @@ public abstract class ReaderInterceptorContextImpl implements ReaderInterceptorC
 
   @Override
   public MediaType getMediaType() {
+
     try {
       return MediaTypes.parse(headers.getFirst(HttpHeaders.CONTENT_TYPE));
     }
