@@ -30,7 +30,11 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ParamConverterProvider;
 import javax.ws.rs.ext.Providers;
+import javax.ws.rs.ext.ReaderInterceptor;
+import javax.ws.rs.ext.WriterInterceptor;
 
+import org.openjax.xrs.server.container.ContainerRequestContextImpl;
+import org.openjax.xrs.server.container.ContainerResponseContextImpl;
 import org.openjax.xrs.server.core.AnnotationInjector;
 import org.openjax.xrs.server.ext.ProvidersImpl;
 
@@ -39,8 +43,8 @@ public class ResourceContext {
   private final MultivaluedMap<String,ResourceManifest> resources;
   private final ContainerFilters containerFilters;
   private final ProvidersImpl providers;
-  private final Object[] readerInterceptors;
-  private final Object[] writerInterceptors;
+  private final ReaderInterceptor[] readerInterceptors;
+  private final WriterInterceptor[] writerInterceptors;
   private final List<ProviderResource<ParamConverterProvider>> paramConverterProviders;
 
   public ResourceContext(final Application application, final MultivaluedMap<String,ResourceManifest> resources, final ContainerFilters containerFilters, final ProvidersImpl providers, final List<ReaderInterceptorEntityProviderResource> readerInterceptors, final List<WriterInterceptorEntityProviderResource> writerInterceptors, final List<ProviderResource<ParamConverterProvider>> paramConverterProviders) {
@@ -52,7 +56,7 @@ public class ResourceContext {
 
     if (readerInterceptors.size() > 0) {
       readerInterceptors.sort(ProvidersImpl.providerResourceComparator);
-      this.readerInterceptors = new Object[readerInterceptors.size() + 1];
+      this.readerInterceptors = new ReaderInterceptor[readerInterceptors.size()];
       for (int i = 0; i < readerInterceptors.size(); ++i)
         this.readerInterceptors[i] = readerInterceptors.get(i).getMatchInstance();
     }
@@ -62,9 +66,9 @@ public class ResourceContext {
 
     if (writerInterceptors.size() > 0) {
       writerInterceptors.sort(ProvidersImpl.providerResourceComparator);
-      this.writerInterceptors = new Object[writerInterceptors.size() + 1];
+      this.writerInterceptors = new WriterInterceptor[writerInterceptors.size()];
       for (int i = 0; i < readerInterceptors.size(); ++i)
-        this.writerInterceptors[i] = readerInterceptors.get(i).getMatchInstance();
+        this.writerInterceptors[i] = writerInterceptors.get(i).getMatchInstance();
     }
     else {
       this.writerInterceptors = null;
@@ -83,11 +87,11 @@ public class ResourceContext {
     return annotationInjector == null ? providers : new ProvidersImpl(providers, annotationInjector);
   }
 
-  public Object[] getReaderInterceptors() {
+  public ReaderInterceptor[] getReaderInterceptors() {
     return this.readerInterceptors;
   }
 
-  public Object[] getWriterInterceptors() {
+  public WriterInterceptor[] getWriterInterceptors() {
     return this.writerInterceptors;
   }
 

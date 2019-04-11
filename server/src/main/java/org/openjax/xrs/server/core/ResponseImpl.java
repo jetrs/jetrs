@@ -27,14 +27,12 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.ws.rs.ProcessingException;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.EntityTag;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.Link.Builder;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
@@ -44,6 +42,7 @@ import javax.ws.rs.ext.ReaderInterceptor;
 
 import org.openjax.standard.io.Streams;
 import org.openjax.xrs.server.ResourceContext;
+import org.openjax.xrs.server.ext.ReaderInterceptorContextImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -109,18 +108,19 @@ public class ResponseImpl extends Response {
       throw new IllegalStateException("Entity InputStream was previously consumed and not buffered");
 
     try {
+      final InputStream in = closed ? new ByteArrayInputStream(entityBuffer) : (InputStream)entity;
       if (resourceContext.getReaderInterceptors() == null)
-        return (T)(entity = messageBodyReader.readFrom(entityType, entityType, annotations, null, null, closed ? new ByteArrayInputStream(entityBuffer) : (InputStream)entity));
+        return (T)(entity = messageBodyReader.readFrom(entityType, entityType, annotations, headers.getMediaType(), headers, in));
 
       final Object[] readerInterceptors = resourceContext.getReaderInterceptors();
-      final ReaderInterceptorContextImpl readerInterceptorContext = new ReaderInterceptorContextImpl(new MultivaluedHashMap<>()) {
+      final ReaderInterceptorContextImpl readerInterceptorContext = new ReaderInterceptorContextImpl(entityType, entityType, annotations, headers, in) {
         private int interceptorIndex = -1;
         private Object lastProceeded;
 
         @Override
-        public Object proceed() throws IOException, WebApplicationException {
-          if (readerInterceptors == null || ++interceptorIndex == readerInterceptors.length - 1)
-            return lastProceeded = ((MessageBodyReader)readerInterceptors[interceptorIndex]).readFrom(getType(), getGenericType(), getAnnotations(), getMediaType(), getHeaders(), getInputStream());
+        public Object proceed() throws IOException {
+          if (readerInterceptors == null || ++interceptorIndex == readerInterceptors.length)
+            return lastProceeded = ((MessageBodyReader)messageBodyReader).readFrom(getType(), getGenericType(), getAnnotations(), getMediaType(), getHeaders(), getInputStream());
 
           if (interceptorIndex < readerInterceptors.length)
             return lastProceeded = ((ReaderInterceptor)readerInterceptors[interceptorIndex]).aroundReadFrom(this);

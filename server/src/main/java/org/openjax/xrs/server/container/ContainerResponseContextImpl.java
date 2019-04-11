@@ -21,8 +21,8 @@ import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.net.URI;
-import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -42,23 +42,20 @@ import javax.ws.rs.ext.WriterInterceptorContext;
 
 import org.openjax.xrs.server.core.HeaderMap;
 
-public class ContainerResponseContextImpl extends ContainerContextImpl implements ContainerResponseContext, WriterInterceptorContext {
-  private final Object[] writerInterceptors;
-  private final Map<String,Object> properties;
+public class ContainerResponseContextImpl extends InterceptorContextImpl implements ContainerResponseContext, WriterInterceptorContext {
+  private final WriterInterceptor[] writerInterceptors;
   private final HeaderMap headers;
   private Response.StatusType status;
 
   private OutputStream outputStream;
   private Object entity;
   private Annotation[] entityAnnotations;
-  private Annotation[] annotations;
 
   private Class<?> type;
   private Type genericType;
 
-  public ContainerResponseContextImpl(final HttpServletResponse response, final Map<String,Object> properties, final Object[] writerInterceptors) {
-    super(response.getLocale());
-    this.properties = properties;
+  public ContainerResponseContextImpl(final HttpServletResponse response, final WriterInterceptor[] writerInterceptors) {
+    super(response.getLocale(), new HashMap<String,Object>());
     this.headers = new HeaderMap(response);
     this.writerInterceptors = writerInterceptors;
     this.status = Response.Status.fromStatusCode(response.getStatus());
@@ -196,72 +193,6 @@ public class ContainerResponseContextImpl extends ContainerContextImpl implement
   }
 
   @Override
-  public MediaType getMediaType() {
-    return headers.getMediaType();
-  }
-
-
-
-
-
-
-
-  @Override
-  public Object getProperty(final String name) {
-    return properties.get(name);
-  }
-
-  @Override
-  public Collection<String> getPropertyNames() {
-    return properties.keySet();
-  }
-
-  @Override
-  public void setProperty(final String name, final Object object) {
-    properties.put(name, object);
-  }
-
-  @Override
-  public void removeProperty(final String name) {
-    properties.remove(name);
-  }
-
-  @Override
-  public Annotation[] getAnnotations() {
-    return annotations;
-  }
-
-  @Override
-  public void setAnnotations(final Annotation[] annotations) {
-    this.annotations = annotations;
-  }
-
-  @Override
-  public Class<?> getType() {
-    return getEntityClass();
-  }
-
-  @Override
-  public void setType(final Class<?> type) {
-    this.type = type;
-  }
-
-  @Override
-  public Type getGenericType() {
-    return genericType;
-  }
-
-  @Override
-  public void setGenericType(final Type genericType) {
-    this.genericType = genericType;
-  }
-
-  @Override
-  public void setMediaType(final MediaType mediaType) {
-    headers.putSingle(HttpHeaders.CONTENT_TYPE, mediaType == null ? null : mediaType.toString());
-  }
-
-  @Override
   public OutputStream getOutputStream() {
     return outputStream;
   }
@@ -271,18 +202,22 @@ public class ContainerResponseContextImpl extends ContainerContextImpl implement
     this.outputStream = os;
   }
 
-  private int interceptorIndex = -1;
-
   @Override
+  @SuppressWarnings("unchecked")
   public void proceed() throws IOException {
-    if (writerInterceptors == null || ++interceptorIndex == writerInterceptors.length - 1)
-      ((MessageBodyWriter<Object>)writerInterceptors[interceptorIndex]).writeTo(getEntity(), getEntityClass(), getEntityType(), getEntityAnnotations(), getMediaType(), getHeaders(), getEntityStream());
+    if (writerInterceptors == null || ++interceptorIndex == writerInterceptors.length)
+      messageBodyWriter.writeTo(getEntity(), getEntityClass(), getEntityType(), getEntityAnnotations(), getMediaType(), getHeaders(), getEntityStream());
     else if (interceptorIndex < writerInterceptors.length)
-      ((WriterInterceptor)writerInterceptors[interceptorIndex]).aroundWriteTo(this);
+      writerInterceptors[interceptorIndex].aroundWriteTo(this);
   }
 
+  private int interceptorIndex = -1;
+
+  @SuppressWarnings("rawtypes")
+  private MessageBodyWriter messageBodyWriter;
+
   public void writeBody(final MessageBodyWriter<?> messageBodyWriter) throws IOException {
-    writerInterceptors[writerInterceptors.length - 1] = messageBodyWriter;
+    this.messageBodyWriter = messageBodyWriter;
     proceed();
   }
 }

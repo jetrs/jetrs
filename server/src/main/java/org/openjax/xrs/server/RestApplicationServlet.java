@@ -97,14 +97,14 @@ public class RestApplicationServlet extends RestHttpServlet {
   @SuppressWarnings("unchecked")
   private void service(final HttpServletRequestContext httpServletRequestContext, final HttpServletResponse httpServletResponse) throws IOException {
     final Map<String,Object> properties = new HashMap<>();
-    final ContainerResponseContextImpl containerResponseContext = new ContainerResponseContextImpl(httpServletResponse, properties, getResourceContext().getWriterInterceptors().clone());
+    final ContainerResponseContextImpl containerResponseContext = new ContainerResponseContextImpl(httpServletResponse, getResourceContext().getWriterInterceptors());
     final HttpHeaders requestHeaders = new HttpHeadersImpl(httpServletRequestContext);
     final StringBuilder accessLogDebug = new StringBuilder();
     accessLogDebug.append("Headers: ").append(requestHeaders);
     final ExecutionContext executionContext = new ExecutionContext(requestHeaders, httpServletResponse, containerResponseContext, getResourceContext());
 
     final ContainerRequestContextImpl containerRequestContext; // NOTE: This weird construct is done this way to at least somehow make the two objects cohesive
-    httpServletRequestContext.setRequestContext(containerRequestContext = new ContainerRequestContextImpl(httpServletRequestContext, properties, executionContext, getResourceContext().getReaderInterceptors().clone()));
+    httpServletRequestContext.setRequestContext(containerRequestContext = new ContainerRequestContextImpl(httpServletRequestContext, containerResponseContext, executionContext, getResourceContext().getReaderInterceptors()));
 
     final AnnotationInjector annotationInjector = AnnotationInjector.createAnnotationInjector(containerRequestContext, httpServletRequestContext, httpServletResponse, requestHeaders, getResourceContext());
     final Providers providers = getResourceContext().getProviders(annotationInjector);

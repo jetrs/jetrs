@@ -18,12 +18,9 @@ package org.openjax.xrs.server.container;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
 import java.net.URI;
 import java.text.ParseException;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
@@ -53,9 +50,8 @@ import org.openjax.xrs.server.core.DefaultSecurityContext;
 import org.openjax.xrs.server.core.UriInfoImpl;
 import org.openjax.xrs.server.util.MediaTypes;
 
-public class ContainerRequestContextImpl extends ContainerContextImpl implements ContainerRequestContext, ReaderInterceptorContext {
-  private final Object[] readerInterceptors;
-  private final Map<String,Object> properties;
+public class ContainerRequestContextImpl extends InterceptorContextImpl implements ContainerRequestContext, ReaderInterceptorContext {
+  private final ReaderInterceptor[] readerInterceptors;
   private final HttpServletRequest httpServletRequest;
 
   private String method;
@@ -65,9 +61,8 @@ public class ContainerRequestContextImpl extends ContainerContextImpl implements
   private final List<Locale> acceptLanguages;
   private InputStream entityStream;
 
-  public ContainerRequestContextImpl(final HttpServletRequest httpServletRequest, final Map<String,Object> properties, final ExecutionContext executionContext, final Object[] readerInterceptors) {
-    super(httpServletRequest.getLocale());
-    this.properties = properties;
+  public ContainerRequestContextImpl(final HttpServletRequest httpServletRequest, final ContainerResponseContextImpl containerResponseContext, final ExecutionContext executionContext, final ReaderInterceptor[] readerInterceptors) {
+    super(httpServletRequest.getLocale(), containerResponseContext.properties);
     this.readerInterceptors = readerInterceptors;
     this.method = httpServletRequest.getMethod();
     final Enumeration<String> attributes = httpServletRequest.getAttributeNames();
@@ -87,28 +82,8 @@ public class ContainerRequestContextImpl extends ContainerContextImpl implements
   }
 
   @Override
-  protected MultivaluedMap<String,String> getStringHeaders() {
+  MultivaluedMap<String,String> getStringHeaders() {
     return headers.getRequestHeaders();
-  }
-
-  @Override
-  public Object getProperty(final String name) {
-    return properties.get(name);
-  }
-
-  @Override
-  public Collection<String> getPropertyNames() {
-    return properties.keySet();
-  }
-
-  @Override
-  public void setProperty(final String name, final Object object) {
-    properties.put(name, object);
-  }
-
-  @Override
-  public void removeProperty(final String name) {
-    properties.remove(name);
   }
 
   @Override
@@ -170,11 +145,6 @@ public class ContainerRequestContextImpl extends ContainerContextImpl implements
   }
 
   @Override
-  public MediaType getMediaType() {
-    return headers.getMediaType();
-  }
-
-  @Override
   public boolean hasEntity() {
     return headers.getLength() > 0;
   }
@@ -216,46 +186,6 @@ public class ContainerRequestContextImpl extends ContainerContextImpl implements
     throw new WebApplicationException(response);
   }
 
-
-  private Class<?> type;
-  private Type genericType;
-  private Annotation[] annotations;
-
-  @Override
-  public Annotation[] getAnnotations() {
-    return annotations;
-  }
-
-  @Override
-  public void setAnnotations(final Annotation[] annotations) {
-    this.annotations = annotations;
-  }
-
-  @Override
-  public Class<?> getType() {
-    return type;
-  }
-
-  @Override
-  public void setType(final Class<?> type) {
-    this.type = type;
-  }
-
-  @Override
-  public Type getGenericType() {
-    return genericType;
-  }
-
-  @Override
-  public void setGenericType(final Type genericType) {
-    this.genericType = genericType;
-  }
-
-  @Override
-  public void setMediaType(final MediaType mediaType) {
-    headers.getRequestHeaders().putSingle(HttpHeaders.CONTENT_TYPE, mediaType == null ? null : mediaType.toString());
-  }
-
   @Override
   public InputStream getInputStream() {
     return getEntityStream();
@@ -266,22 +196,26 @@ public class ContainerRequestContextImpl extends ContainerContextImpl implements
     this.entityStream = is;
   }
 
-  private int interceptorIndex = -1;
-  private Object lastProceeded;
-
   @Override
+  @SuppressWarnings("unchecked")
   public Object proceed() throws IOException, WebApplicationException {
-    if (readerInterceptors == null || ++interceptorIndex == readerInterceptors.length - 1)
-      return lastProceeded = ((MessageBodyReader)readerInterceptors[interceptorIndex]).readFrom(getType(), getGenericType(), getAnnotations(), getMediaType(), getHeaders(), getInputStream());
+    if (readerInterceptors == null || ++interceptorIndex == readerInterceptors.length)
+      return lastProceeded = messageBodyReader.readFrom(getType(), getGenericType(), getAnnotations(), getMediaType(), getHeaders(), getInputStream());
 
     if (interceptorIndex < readerInterceptors.length)
-      return lastProceeded = ((ReaderInterceptor)readerInterceptors[interceptorIndex]).aroundReadFrom(this);
+      return lastProceeded = readerInterceptors[interceptorIndex].aroundReadFrom(this);
 
     return lastProceeded;
   }
 
+  private int interceptorIndex = -1;
+  private Object lastProceeded;
+
+  @SuppressWarnings("rawtypes")
+  private MessageBodyReader messageBodyReader;
+
   public Object readBody(final MessageBodyReader<?> messageBodyReader) throws IOException {
-    readerInterceptors[readerInterceptors.length - 1] = messageBodyReader;
+    this.messageBodyReader = messageBodyReader;
     return proceed();
   }
 }
