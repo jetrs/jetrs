@@ -301,7 +301,7 @@ public final class MediaTypes {
     do {
       final int eq = string.indexOf('=', start + 2);
       if (eq == -1)
-        throw new ParseException("Unable to parse parameter", start);
+        throw new ParseException("Unable to parse parameter: " + string, start);
 
       final String key = string.substring(start + 1, eq).trim();
       end = Strings.indexOfUnQuoted(string, ';', eq + 1);
