@@ -18,8 +18,6 @@ package org.openjax.xrs.server;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -96,7 +94,6 @@ public class RestApplicationServlet extends RestHttpServlet {
 
   @SuppressWarnings("unchecked")
   private void service(final HttpServletRequestContext httpServletRequestContext, final HttpServletResponse httpServletResponse) throws IOException {
-    final Map<String,Object> properties = new HashMap<>();
     final ContainerResponseContextImpl containerResponseContext = new ContainerResponseContextImpl(httpServletResponse, getResourceContext().getWriterInterceptors());
     final HttpHeaders requestHeaders = new HttpHeadersImpl(httpServletRequestContext);
     final StringBuilder accessLogDebug = new StringBuilder();

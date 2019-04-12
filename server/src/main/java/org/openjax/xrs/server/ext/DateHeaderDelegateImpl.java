@@ -23,7 +23,7 @@ import java.util.Date;
 
 import javax.ws.rs.ext.RuntimeDelegate;
 
-public class DateHeaderDelegate implements RuntimeDelegate.HeaderDelegate<Date> {
+public class DateHeaderDelegateImpl implements RuntimeDelegate.HeaderDelegate<Date> {
   private static final DateTimeFormatter formatter = DateTimeFormatter.RFC_1123_DATE_TIME;
 
   public static Date parse(final String value) {

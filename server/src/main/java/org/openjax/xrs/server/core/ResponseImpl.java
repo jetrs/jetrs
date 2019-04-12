@@ -51,13 +51,13 @@ public class ResponseImpl extends Response {
 
   private final ResourceContext resourceContext;
   private final Response.StatusType status;
-  private final HeaderMap headers;
+  private final HttpHeadersImpl headers;
   private final Map<String,NewCookie> cookies;
   private Object entity;
   private boolean closed;
 
   // FIXME: annotations are not being used.. there's no API to get them out of this class
-  ResponseImpl(final ResourceContext resourceContext, final Response.StatusType status, final HeaderMap headers, final Map<String,NewCookie> cookies, final Object entity, final Annotation[] annotations) {
+  ResponseImpl(final ResourceContext resourceContext, final Response.StatusType status, final HttpHeadersImpl headers, final Map<String,NewCookie> cookies, final Object entity, final Annotation[] annotations) {
     this.resourceContext = resourceContext;
     this.status = status;
     this.headers = headers;

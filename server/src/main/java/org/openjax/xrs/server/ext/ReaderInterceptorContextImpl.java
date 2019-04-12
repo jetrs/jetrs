@@ -29,18 +29,18 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.ReaderInterceptorContext;
 
-import org.openjax.xrs.server.core.HeaderMap;
+import org.openjax.xrs.server.core.HttpHeadersImpl;
 import org.openjax.xrs.server.util.MediaTypes;
 
 public abstract class ReaderInterceptorContextImpl implements ReaderInterceptorContext {
-  private final HeaderMap headers;
+  private final HttpHeadersImpl headers;
   private Class<?> type;
   private Type genericType;
   private Annotation[] annotations;
 
   private Map<String,Object> properties;
 
-  public ReaderInterceptorContextImpl(final Class<?> type, final Type genericType, final Annotation[] annotations, final HeaderMap headers, final InputStream inputStream) {
+  public ReaderInterceptorContextImpl(final Class<?> type, final Type genericType, final Annotation[] annotations, final HttpHeadersImpl headers, final InputStream inputStream) {
     this.headers = headers;
     setType(type);
     setGenericType(genericType);

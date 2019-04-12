@@ -21,7 +21,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
 import javax.ws.rs.core.MultivaluedMap;
@@ -34,11 +34,11 @@ public class MirrorMultivaluedMap<K,V,M> extends ObservableMap<K,List<V>> implem
 
   private final Supplier<? extends Map> mapSupplier;
   private final Supplier<? extends List> listSupplier;
-  private final Function<V,M> mirror;
+  private final BiFunction<K,V,M> mirror;
 
   protected MirrorMultivaluedMap<K,M,V> mirroredMap;
 
-  public MirrorMultivaluedMap(final Supplier<? extends Map<K,List<V>>> mapSupplier, final Supplier<List<V>> listSupplier, final Function<V,M> mirror1, final Function<M,V> mirror2) {
+  public MirrorMultivaluedMap(final Supplier<? extends Map<K,List<V>>> mapSupplier, final Supplier<List<V>> listSupplier, final BiFunction<K,V,M> mirror1, final BiFunction<K,M,V> mirror2) {
     super(mapSupplier.get());
     this.mapSupplier = Objects.requireNonNull(mapSupplier);
     this.listSupplier = Objects.requireNonNull(listSupplier);
@@ -46,7 +46,7 @@ public class MirrorMultivaluedMap<K,V,M> extends ObservableMap<K,List<V>> implem
     this.mirroredMap = new MirrorMultivaluedMap<>(this, Objects.requireNonNull(mirror2));
   }
 
-  private MirrorMultivaluedMap(final MirrorMultivaluedMap<K,M,V> mirroredMap, final Function<V,M> mirror) {
+  private MirrorMultivaluedMap(final MirrorMultivaluedMap<K,M,V> mirroredMap, final BiFunction<K,V,M> mirror) {
     super(mirroredMap.mapSupplier.get());
     this.mapSupplier = mirroredMap.mapSupplier;
     this.listSupplier = mirroredMap.listSupplier;
@@ -61,7 +61,7 @@ public class MirrorMultivaluedMap<K,V,M> extends ObservableMap<K,List<V>> implem
   protected final List<V> getValues(final K key) {
     List<V> values = get(key);
     if (values == null)
-      put(key, values = new MirrorList<V,M>(listSupplier.get(), listSupplier.get(), mirror, mirroredMap.mirror));
+      put(key, values = new MirrorList<V,M>(listSupplier.get(), listSupplier.get(), (v) -> mirror.apply(key, v),  (v) -> mirroredMap.mirror.apply(key, v)));
 
     return values;
   }
@@ -139,7 +139,7 @@ public class MirrorMultivaluedMap<K,V,M> extends ObservableMap<K,List<V>> implem
       list = (MirrorList<V,M>)value;
     }
     else {
-      list = new MirrorList<>(listSupplier.get(), listSupplier.get(), mirror, mirroredMap.mirror);
+      list = new MirrorList<V,M>(listSupplier.get(), listSupplier.get(), (v) -> mirror.apply(key, v),  (v) -> mirroredMap.mirror.apply(key, v));
       list.addAll(value);
     }
 

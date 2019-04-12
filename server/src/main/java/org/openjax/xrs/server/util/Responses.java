@@ -44,24 +44,43 @@ public final class Responses {
   }
 
   /**
-   * Convert a numerical status code into the corresponding Status.
+   * Convert a numerical status code into the corresponding {@code Status}.
+   *
+   * @param status The status header string.
+   * @return The matching {@link Status} or {@code null} if the specified string
+   *         is null.
+   */
+  public static Response.StatusType from(final String status) {
+    if (status == null)
+      return null;
+
+    final int index = status.indexOf(' ');
+    return index == -1 ? from(Integer.parseInt(status)) : from(Integer.parseInt(status.substring(0, index)), status.substring(index + 1));
+  }
+
+  /**
+   * Convert a numerical status code into the corresponding {@code StatusType}.
    *
    * @param statusCode The numerical status code.
    * @return The matching {@link Status} or null if there is no match.
    */
-  public static Response.Status fromStatusCode(final int statusCode) {
+  public static Response.StatusType from(final int statusCode) {
     final int index = Arrays.binarySearch(statusCodes, statusCode);
     return index < 0 ? null : statuses[index];
   }
 
   /**
-   * Convert a numerical status code into the corresponding Status.
+   * Convert a numerical status code into the corresponding {@code StatusType}.
    *
    * @param statusCode The numerical status code.
    * @param reasonPhrase The reason phrase.
    * @return The matching {@link StatusType} or null if there is no match.
    */
-  public static Response.StatusType fromStatusCode(final int statusCode, final String reasonPhrase) {
+  public static Response.StatusType from(final int statusCode, final String reasonPhrase) {
+    final Response.StatusType statusType = from(statusCode);
+    if (statusType != null && statusType.getReasonPhrase().equals(reasonPhrase))
+      return statusType;
+
     return new Response.StatusType() {
       @Override
       public int getStatusCode() {
@@ -70,7 +89,7 @@ public final class Responses {
 
       @Override
       public Family getFamily() {
-        return fromStatusCode(statusCode).getFamily();
+        return from(statusCode).getFamily();
       }
 
       @Override

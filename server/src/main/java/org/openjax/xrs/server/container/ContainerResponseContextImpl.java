@@ -40,11 +40,11 @@ import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.WriterInterceptor;
 import javax.ws.rs.ext.WriterInterceptorContext;
 
-import org.openjax.xrs.server.core.HeaderMap;
+import org.openjax.xrs.server.core.HttpHeadersImpl;
 
 public class ContainerResponseContextImpl extends InterceptorContextImpl implements ContainerResponseContext, WriterInterceptorContext {
   private final WriterInterceptor[] writerInterceptors;
-  private final HeaderMap headers;
+  private final HttpHeadersImpl headers;
   private Response.StatusType status;
 
   private OutputStream outputStream;
@@ -56,7 +56,7 @@ public class ContainerResponseContextImpl extends InterceptorContextImpl impleme
 
   public ContainerResponseContextImpl(final HttpServletResponse response, final WriterInterceptor[] writerInterceptors) {
     super(response.getLocale(), new HashMap<String,Object>());
-    this.headers = new HeaderMap(response);
+    this.headers = new HttpHeadersImpl(response);
     this.writerInterceptors = writerInterceptors;
     this.status = Response.Status.fromStatusCode(response.getStatus());
   }

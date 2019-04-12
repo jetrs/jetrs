@@ -43,7 +43,7 @@ import org.openjax.xrs.server.util.Responses;
 
 public class ResponseBuilderImpl extends Response.ResponseBuilder implements Cloneable {
   private final ResourceContext resourceContext;
-  private final HeaderMap headers;
+  private final HttpHeadersImpl headers;
   private int status;
   private String reasonPhrase;
   private Object entity;
@@ -51,7 +51,7 @@ public class ResponseBuilderImpl extends Response.ResponseBuilder implements Clo
 
   public ResponseBuilderImpl(final ResourceContext resourceContext) {
     this.resourceContext = resourceContext;
-    this.headers = new HeaderMap();
+    this.headers = new HttpHeadersImpl();
   }
 
   private ResponseBuilderImpl(final ResponseBuilderImpl copy) {
@@ -65,7 +65,7 @@ public class ResponseBuilderImpl extends Response.ResponseBuilder implements Clo
 
   @Override
   public Response build() {
-    final Response.StatusType statusType = reasonPhrase != null ? Responses.fromStatusCode(status, reasonPhrase) : Responses.fromStatusCode(status);
+    final Response.StatusType statusType = reasonPhrase != null ? Responses.from(status, reasonPhrase) : Responses.from(status);
     return new ResponseImpl(resourceContext, statusType, headers, cookies, entity, annotations);
   }
 

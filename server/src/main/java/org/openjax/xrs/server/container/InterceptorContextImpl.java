@@ -29,7 +29,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.InterceptorContext;
 
-import org.openjax.xrs.server.ext.DateHeaderDelegate;
+import org.openjax.xrs.server.ext.DateHeaderDelegateImpl;
 import org.openjax.xrs.server.util.MediaTypes;
 
 abstract class InterceptorContextImpl implements InterceptorContext {
@@ -52,7 +52,7 @@ abstract class InterceptorContextImpl implements InterceptorContext {
 
   public final Date getDate() {
     final String date = getStringHeaders().getFirst(HttpHeaders.DATE);
-    return date == null ? null : DateHeaderDelegate.parse(date);
+    return date == null ? null : DateHeaderDelegateImpl.parse(date);
   }
 
   public final Locale getLanguage() {

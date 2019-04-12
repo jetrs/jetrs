@@ -75,7 +75,7 @@ public class RuntimeDelegateImpl extends RuntimeDelegate {
       return (HeaderDelegate<T>)new MediaTypeHeaderDelegate();
 
     if (type == Date.class)
-      return (HeaderDelegate<T>)new DateHeaderDelegate();
+      return (HeaderDelegate<T>)new DateHeaderDelegateImpl();
 
     if (type == String[].class)
       return (HeaderDelegate<T>)new StringArrayHeaderDelegate();
