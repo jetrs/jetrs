@@ -41,7 +41,7 @@ A common pattern that is used in JAX-RS implementations is dynamic method invoca
 
 1. In your preferred development directory, create a [`maven-archetype-quickstart`][maven-archetype-quickstart] project.
 
-  ```tcsh
+  ```bash
   mvn archetype:generate -DgroupId=com.mycompany.app -DartifactId=my-app -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
   ```
 
