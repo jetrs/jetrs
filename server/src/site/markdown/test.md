@@ -1,7 +1,0 @@
-# Hello
-
-Hi
-
-# World
-
-Order
