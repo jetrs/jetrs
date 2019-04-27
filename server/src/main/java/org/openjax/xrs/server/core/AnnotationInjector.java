@@ -49,8 +49,8 @@ import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.ParamConverterProvider;
 import javax.ws.rs.ext.Providers;
 
-import org.openjax.standard.lang.IllegalAnnotationException;
-import org.openjax.standard.util.Classes;
+import org.openjax.ext.lang.IllegalAnnotationException;
+import org.openjax.ext.util.Classes;
 import org.openjax.xrs.server.ProviderResource;
 import org.openjax.xrs.server.ResourceContext;
 import org.openjax.xrs.server.util.ParameterUtil;

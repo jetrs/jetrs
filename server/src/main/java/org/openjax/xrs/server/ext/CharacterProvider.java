@@ -33,7 +33,7 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
-import org.openjax.standard.io.Readers;
+import org.openjax.ext.io.Readers;
 import org.openjax.xrs.server.util.MediaTypes;
 
 /**

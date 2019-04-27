@@ -51,7 +51,7 @@ import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.RuntimeDelegate;
 import javax.ws.rs.ext.WriterInterceptor;
 
-import org.openjax.standard.lang.PackageLoader;
+import org.openjax.ext.lang.PackageLoader;
 import org.openjax.xrs.server.ext.ProvidersImpl;
 import org.openjax.xrs.server.ext.RuntimeDelegateImpl;
 import org.slf4j.Logger;

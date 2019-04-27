@@ -47,7 +47,7 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.ParamConverterProvider;
 import javax.ws.rs.ext.Providers;
 
-import org.openjax.standard.util.Identifiers;
+import org.openjax.ext.util.Identifiers;
 import org.openjax.xrs.server.container.ContainerRequestContextImpl;
 import org.openjax.xrs.server.core.AnnotationInjector;
 import org.openjax.xrs.server.util.MediaTypes;

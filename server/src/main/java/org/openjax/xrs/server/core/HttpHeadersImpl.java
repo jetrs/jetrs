@@ -40,9 +40,9 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
-import org.openjax.standard.util.FastCollections;
-import org.openjax.standard.util.Locales;
-import org.openjax.standard.util.Numbers;
+import org.openjax.ext.util.FastCollections;
+import org.openjax.ext.util.Locales;
+import org.openjax.ext.util.Numbers;
 import org.openjax.xrs.server.ext.DateHeaderDelegateImpl;
 import org.openjax.xrs.server.util.MediaTypes;
 import org.openjax.xrs.server.util.MirrorMultivaluedMap;

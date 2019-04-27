@@ -40,7 +40,7 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.Providers;
 import javax.ws.rs.ext.ReaderInterceptor;
 
-import org.openjax.standard.io.Streams;
+import org.openjax.ext.io.Streams;
 import org.openjax.xrs.server.ResourceContext;
 import org.openjax.xrs.server.ext.ReaderInterceptorContextImpl;
 import org.slf4j.Logger;

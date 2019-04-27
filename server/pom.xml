@@ -44,17 +44,17 @@
       <version>2.1.1</version>
     </dependency>
     <dependency>
-      <groupId>org.openjax.standard</groupId>
+      <groupId>org.openjax.ext</groupId>
       <artifactId>io</artifactId>
       <version>0.7.5-SNAPSHOT</version>
     </dependency>
     <dependency>
-      <groupId>org.openjax.standard</groupId>
+      <groupId>org.openjax.ext</groupId>
       <artifactId>lang</artifactId>
       <version>0.7.3-SNAPSHOT</version>
     </dependency>
     <dependency>
-      <groupId>org.openjax.standard</groupId>
+      <groupId>org.openjax.ext</groupId>
       <artifactId>net</artifactId>
       <version>0.5.0-SNAPSHOT</version>
     </dependency>

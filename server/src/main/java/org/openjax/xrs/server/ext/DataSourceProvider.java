@@ -37,8 +37,8 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
-import org.openjax.standard.io.Streams;
-import org.openjax.standard.util.Objects;
+import org.openjax.ext.io.Streams;
+import org.openjax.ext.util.Objects;
 
 /**
  * JAX-RS 2.1 Section 4.2.4

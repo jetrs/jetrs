@@ -31,8 +31,8 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
-import org.openjax.standard.lang.IllegalAnnotationException;
-import org.openjax.standard.util.FastArrays;
+import org.openjax.ext.lang.IllegalAnnotationException;
+import org.openjax.ext.util.FastArrays;
 import org.openjax.xrs.server.util.MediaTypes;
 
 class ResourceAnnotationProcessor<T extends Annotation> {

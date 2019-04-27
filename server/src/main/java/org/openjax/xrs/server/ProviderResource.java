@@ -23,7 +23,7 @@ import java.lang.reflect.Type;
 import javax.annotation.Priority;
 import javax.ws.rs.Priorities;
 
-import org.openjax.standard.util.Classes;
+import org.openjax.ext.util.Classes;
 import org.openjax.xrs.server.core.AnnotationInjector;
 
 public class ProviderResource<T> {

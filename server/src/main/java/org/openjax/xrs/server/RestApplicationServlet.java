@@ -40,7 +40,7 @@ import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Providers;
 import javax.ws.rs.ext.RuntimeDelegate;
 
-import org.openjax.standard.util.Classes;
+import org.openjax.ext.util.Classes;
 import org.openjax.xrs.server.container.ContainerRequestContextImpl;
 import org.openjax.xrs.server.container.ContainerResponseContextImpl;
 import org.openjax.xrs.server.core.AnnotationInjector;

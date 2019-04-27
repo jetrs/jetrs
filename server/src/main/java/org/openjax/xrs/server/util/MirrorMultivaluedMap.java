@@ -26,8 +26,8 @@ import java.util.function.Supplier;
 
 import javax.ws.rs.core.MultivaluedMap;
 
-import org.openjax.standard.util.MirrorList;
-import org.openjax.standard.util.ObservableMap;
+import org.openjax.ext.util.MirrorList;
+import org.openjax.ext.util.ObservableMap;
 
 public class MirrorMultivaluedMap<K,V,M> extends ObservableMap<K,List<V>> implements MultivaluedMap<K,V>, Cloneable, Serializable {
   private static final long serialVersionUID = -7406535904458617108L;

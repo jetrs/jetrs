@@ -44,7 +44,7 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.ReaderInterceptorContext;
 
-import org.openjax.standard.util.Locales;
+import org.openjax.ext.util.Locales;
 import org.openjax.xrs.server.ExecutionContext;
 import org.openjax.xrs.server.core.DefaultSecurityContext;
 import org.openjax.xrs.server.core.UriInfoImpl;

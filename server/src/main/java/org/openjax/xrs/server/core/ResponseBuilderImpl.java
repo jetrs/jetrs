@@ -37,7 +37,7 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Variant;
 import javax.ws.rs.ext.RuntimeDelegate;
 
-import org.openjax.standard.util.Locales;
+import org.openjax.ext.util.Locales;
 import org.openjax.xrs.server.ResourceContext;
 import org.openjax.xrs.server.util.Responses;
 
