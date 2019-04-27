@@ -4,6 +4,8 @@
 
 [![Build Status](https://travis-ci.org/openjax/xrs.png)](https://travis-ci.org/openjax/xrs)
 [![Coverage Status](https://coveralls.io/repos/github/openjax/xrs/badge.svg)](https://coveralls.io/github/openjax/xrs)
+[![Javadocs](https://www.javadoc.io/badge/org.openjax.xrs/xrs.svg)](https://www.javadoc.io/doc/org.openjax.xrs/xrs)
+[![Released Version](https://img.shields.io/maven-central/v/org.openjax.xrs/xrs.svg)](https://mvnrepository.com/artifact/org.openjax.xrs/xrs)
 
 ### Introduction
 
@@ -71,13 +73,13 @@ A common pattern that is used in JAX-RS implementations is dynamic method invoca
     <version>2.0.3-SNAPSHOT</version>
   </dependency>
   <!-- Optional dependency for MessageBodyReader and MessageBodyWriter classes of jJB module
-  <dependency> 
+  <dependency>
     <groupId>org.openjax.jjb</groupId>
     <artifactId>jjb-rs</artifactId>
     <version>0.9.8-SNAPSHOT</version>
   </dependency> -->
   ```
-  
+
 4. Create a `javax.ws.rs.core.Application`.
 
   ```java
@@ -108,10 +110,6 @@ A common pattern that is used in JAX-RS implementations is dynamic method invoca
   ```
 
   This will automatically add `RESTServlet` to the application.
-
-### JavaDocs
-
-JavaDocs are available [here](https://xrs.openjax.org/apidocs/).
 
 ## Contributing
 
