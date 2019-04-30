@@ -125,7 +125,7 @@ This project is licensed under the MIT License - see the [LICENSE.txt](LICENSE.t
 [jax-rs-spec]: http://download.oracle.com/otn-pub/jcp/jaxrs-2_0_rev_A-mrel-eval-spec/jsr339-jaxrs-2.0-final-spec.pdf
 [jdk8-download]: http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html
 [jersey]: https://jersey.java.net/
-[jetty]: /../../../../openjax/support-jetty
+[jetty]: /../../../../openjax/std-jetty
 [jetty]: http://www.eclipse.org/jetty/
 [maven-archetype-quickstart]: http://maven.apache.org/archetypes/maven-archetype-quickstart/
 [maven]: https://maven.apache.org/
