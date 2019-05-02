@@ -2,10 +2,10 @@
 
 > jaX Rest Server
 
-[![Build Status](https://travis-ci.org/openjax/xrs.png)](https://travis-ci.org/openjax/xrs)
-[![Coverage Status](https://coveralls.io/repos/github/openjax/xrs/badge.svg)](https://coveralls.io/github/openjax/xrs)
-[![Javadocs](https://www.javadoc.io/badge/org.openjax.xrs/xrs.svg)](https://www.javadoc.io/doc/org.openjax.xrs/xrs)
-[![Released Version](https://img.shields.io/maven-central/v/org.openjax.xrs/xrs.svg)](https://mvnrepository.com/artifact/org.openjax.xrs/xrs)
+[![Build Status](https://travis-ci.org/jetrs/jetrs.png)](https://travis-ci.org/jetrs/jetrs)
+[![Coverage Status](https://coveralls.io/repos/github/jetrs/jetrs/badge.svg)](https://coveralls.io/github/jetrs/jetrs)
+[![Javadocs](https://www.javadoc.io/badge/org.jetrs/jetrs.svg)](https://www.javadoc.io/doc/org.jetrs/jetrs)
+[![Released Version](https://img.shields.io/maven-central/v/org.jetrs/jetrs.svg)](https://mvnrepository.com/artifact/org.jetrs/jetrs)
 
 ### Introduction
 
@@ -64,13 +64,13 @@ A common pattern that is used in JAX-RS implementations is dynamic method invoca
   </pluginRepositories>
   ```
 
-3. Add the `org.openjax.xrs:xrs-server` dependency to the POM.
+3. Add the `org.jetrs:server` dependency to the POM.
 
   ```xml
   <dependency>
-    <groupId>org.openjax.xrs</groupId>
-    <artifactId>xrs-server</artifactId>
-    <version>2.0.3-SNAPSHOT</version>
+    <groupId>org.jetrs</groupId>
+    <artifactId>server</artifactId>
+    <version>2.1.0-SNAPSHOT</version>
   </dependency>
   <!-- Optional dependency for MessageBodyReader and MessageBodyWriter classes of JSONX module
   <dependency>
@@ -94,11 +94,11 @@ A common pattern that is used in JAX-RS implementations is dynamic method invoca
   }
   ```
 
-5. Extend `org.openjax.xrs.server.DefaultRESTServlet`, pointing to `Application`.
+5. Extend `org.jetrs.server.DefaultRESTServlet`, pointing to `Application`.
 
   ```java
   @WebServlet(initParams={@WebInitParam(name="javax.ws.rs.Application", value="Application")})
-  public class RESTServlet extends org.openjax.xrs.server.DefaultRESTServlet {
+  public class RESTServlet extends org.jetrs.server.DefaultRESTServlet {
   }
   ```
 
