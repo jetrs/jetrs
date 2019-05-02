@@ -33,8 +33,8 @@ import javax.ws.rs.core.UriInfo;
 
 import org.jetrs.server.ExecutionContext;
 import org.jetrs.server.ResourceMatch;
-import org.openjax.ext.net.URIComponent;
-import org.openjax.ext.net.URLs;
+import org.openjax.net.URIComponent;
+import org.openjax.net.URLs;
 
 public class UriInfoImpl implements UriInfo {
   private final ContainerRequestContext containerRequestContext;

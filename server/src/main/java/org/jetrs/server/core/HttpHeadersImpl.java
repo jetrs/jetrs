@@ -44,9 +44,9 @@ import org.jetrs.server.ext.DateHeaderDelegateImpl;
 import org.jetrs.server.util.MediaTypes;
 import org.jetrs.server.util.MirrorMultivaluedMap;
 import org.jetrs.server.util.Responses;
-import org.openjax.ext.util.FastCollections;
-import org.openjax.ext.util.Locales;
-import org.openjax.ext.util.Numbers;
+import org.openjax.util.FastCollections;
+import org.openjax.util.Locales;
+import org.openjax.util.Numbers;
 
 public class HttpHeadersImpl extends MirrorMultivaluedMap<String,String,Object> implements HttpHeaders {
   private static final long serialVersionUID = -5881222274060155846L;

@@ -52,8 +52,8 @@ import javax.ws.rs.ext.Providers;
 import org.jetrs.server.ProviderResource;
 import org.jetrs.server.ResourceContext;
 import org.jetrs.server.util.ParameterUtil;
-import org.openjax.ext.lang.IllegalAnnotationException;
-import org.openjax.ext.util.Classes;
+import org.openjax.lang.IllegalAnnotationException;
+import org.openjax.util.Classes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

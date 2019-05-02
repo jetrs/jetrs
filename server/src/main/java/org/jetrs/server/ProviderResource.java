@@ -24,7 +24,7 @@ import javax.annotation.Priority;
 import javax.ws.rs.Priorities;
 
 import org.jetrs.server.core.AnnotationInjector;
-import org.openjax.ext.util.Classes;
+import org.openjax.util.Classes;
 
 public class ProviderResource<T> {
   protected static Class<?> getGenericInterfaceType(final Class<?> interfaceType, final Class<?> cls) {

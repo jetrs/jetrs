@@ -27,8 +27,8 @@ import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
 
-import org.openjax.ext.util.Numbers;
-import org.openjax.ext.util.Strings;
+import org.openjax.util.Numbers;
+import org.openjax.util.Strings;
 
 /**
  * @see <a href=

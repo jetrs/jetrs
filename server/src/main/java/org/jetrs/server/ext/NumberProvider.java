@@ -32,8 +32,8 @@ import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
 import org.jetrs.server.util.MediaTypes;
-import org.openjax.ext.io.Streams;
-import org.openjax.ext.util.Numbers;
+import org.openjax.io.Streams;
+import org.openjax.util.Numbers;
 
 /**
  * JAX-RS 2.1 Section 4.2.4

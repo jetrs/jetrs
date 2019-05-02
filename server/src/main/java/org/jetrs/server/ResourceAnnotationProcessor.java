@@ -32,8 +32,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 import org.jetrs.server.util.MediaTypes;
-import org.openjax.ext.lang.IllegalAnnotationException;
-import org.openjax.ext.util.FastArrays;
+import org.openjax.lang.IllegalAnnotationException;
+import org.openjax.util.FastArrays;
 
 class ResourceAnnotationProcessor<T extends Annotation> {
   private static final Class<?>[] paramAnnotations = {Context.class, CookieParam.class, HeaderParam.class, MatrixParam.class, PathParam.class, QueryParam.class};
