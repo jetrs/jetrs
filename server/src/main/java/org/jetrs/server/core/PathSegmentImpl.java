@@ -21,7 +21,7 @@ import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.PathSegment;
 
-import org.openjax.net.URLs;
+import org.libj.net.URLs;
 
 public class PathSegmentImpl implements PathSegment {
   private final String path;

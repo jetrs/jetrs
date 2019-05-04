@@ -52,7 +52,7 @@ import javax.ws.rs.ext.WriterInterceptor;
 
 import org.jetrs.server.ext.ProvidersImpl;
 import org.jetrs.server.ext.RuntimeDelegateImpl;
-import org.openjax.lang.PackageLoader;
+import org.libj.lang.PackageLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

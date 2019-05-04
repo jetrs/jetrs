@@ -42,7 +42,7 @@ import javax.ws.rs.ext.ReaderInterceptor;
 
 import org.jetrs.server.ResourceContext;
 import org.jetrs.server.ext.ReaderInterceptorContextImpl;
-import org.openjax.io.Streams;
+import org.libj.io.Streams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

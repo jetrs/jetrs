@@ -48,7 +48,7 @@ import org.jetrs.server.ExecutionContext;
 import org.jetrs.server.core.DefaultSecurityContext;
 import org.jetrs.server.core.UriInfoImpl;
 import org.jetrs.server.util.MediaTypes;
-import org.openjax.util.Locales;
+import org.libj.util.Locales;
 
 public class ContainerRequestContextImpl extends InterceptorContextImpl implements ContainerRequestContext, ReaderInterceptorContext {
   private final ReaderInterceptor[] readerInterceptors;

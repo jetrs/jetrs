@@ -34,7 +34,7 @@ import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
 import org.jetrs.server.util.MediaTypes;
-import org.openjax.io.Readers;
+import org.libj.io.Readers;
 
 /**
  * JAX-RS 2.1 Section 4.2.4

@@ -39,7 +39,7 @@ import javax.ws.rs.ext.RuntimeDelegate;
 
 import org.jetrs.server.ResourceContext;
 import org.jetrs.server.util.Responses;
-import org.openjax.util.Locales;
+import org.libj.util.Locales;
 
 public class ResponseBuilderImpl extends Response.ResponseBuilder implements Cloneable {
   private final ResourceContext resourceContext;

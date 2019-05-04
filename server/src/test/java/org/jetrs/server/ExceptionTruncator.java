@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 
-import org.openjax.util.FastCollections;
+import org.libj.util.FastCollections;
 
 public class ExceptionTruncator {
   private static final StackTraceElement[] reflectElements = new StackTraceElement[] {

@@ -39,8 +39,8 @@ import javax.ws.rs.ext.Providers;
 
 import org.jetrs.server.container.ContainerResponseContextImpl;
 import org.jetrs.server.core.AnnotationInjector;
-import org.openjax.util.FastArrays;
-import org.openjax.util.ObservableList;
+import org.libj.util.FastArrays;
+import org.libj.util.ObservableList;
 
 public class ExecutionContext {
   private final HttpHeaders requestHeaders;

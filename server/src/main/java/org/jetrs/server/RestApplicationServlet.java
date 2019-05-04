@@ -45,7 +45,7 @@ import org.jetrs.server.container.ContainerResponseContextImpl;
 import org.jetrs.server.core.AnnotationInjector;
 import org.jetrs.server.core.HttpHeadersImpl;
 import org.jetrs.server.ext.RuntimeDelegateImpl;
-import org.openjax.util.Classes;
+import org.libj.util.Classes;
 
 @WebServlet(name="javax.ws.rs.core.Application", urlPatterns="/*")
 public class RestApplicationServlet extends RestHttpServlet {

@@ -50,7 +50,7 @@ import javax.ws.rs.ext.Providers;
 import org.jetrs.server.container.ContainerRequestContextImpl;
 import org.jetrs.server.core.AnnotationInjector;
 import org.jetrs.server.util.MediaTypes;
-import org.openjax.util.Identifiers;
+import org.libj.util.Identifiers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
