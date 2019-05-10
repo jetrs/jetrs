@@ -39,7 +39,7 @@ import javax.ws.rs.ext.Providers;
 
 import org.jetrs.server.container.ContainerResponseContextImpl;
 import org.jetrs.server.core.AnnotationInjector;
-import org.libj.util.FastArrays;
+import org.libj.util.ArrayUtil;
 import org.libj.util.ObservableList;
 
 public class ExecutionContext {
@@ -161,7 +161,7 @@ public class ExecutionContext {
     if (entity == null)
       return;
 
-    final Annotation[] annotations = containerResponseContext.getEntityAnnotations() != null ? FastArrays.concat(containerResponseContext.getEntityAnnotations(), entity.getClass().getAnnotations()) : entity.getClass().getAnnotations();
+    final Annotation[] annotations = containerResponseContext.getEntityAnnotations() != null ? ArrayUtil.concat(containerResponseContext.getEntityAnnotations(), entity.getClass().getAnnotations()) : entity.getClass().getAnnotations();
     containerResponseContext.setAnnotations(annotations);
 
     final MessageBodyWriter messageBodyWriter = providers.getMessageBodyWriter(containerResponseContext.getEntityClass(), containerResponseContext.getEntityType(), containerResponseContext.getAnnotations(), containerResponseContext.getMediaType());

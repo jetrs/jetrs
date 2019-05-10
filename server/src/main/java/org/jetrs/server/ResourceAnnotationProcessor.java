@@ -33,7 +33,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.jetrs.server.util.MediaTypes;
 import org.libj.lang.IllegalAnnotationException;
-import org.libj.util.FastArrays;
+import org.libj.util.ArrayUtil;
 
 class ResourceAnnotationProcessor<T extends Annotation> {
   private static final Class<?>[] paramAnnotations = {Context.class, CookieParam.class, HeaderParam.class, MatrixParam.class, PathParam.class, QueryParam.class};
@@ -104,7 +104,7 @@ class ResourceAnnotationProcessor<T extends Annotation> {
 
   MediaType getCompatibleMediaType(final MediaType[] mediaTypes) {
     if (this.mediaTypes == null)
-      return mediaTypes == null || FastArrays.contains(mediaTypes, MediaType.WILDCARD_TYPE) ? MediaType.WILDCARD_TYPE : null;
+      return mediaTypes == null || ArrayUtil.contains(mediaTypes, MediaType.WILDCARD_TYPE) ? MediaType.WILDCARD_TYPE : null;
 
     return mediaTypes == null ? this.mediaTypes[0] : MediaTypes.getCompatible(this.mediaTypes, mediaTypes);
   }

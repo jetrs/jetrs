@@ -44,7 +44,7 @@ import org.jetrs.server.ext.DateHeaderDelegateImpl;
 import org.jetrs.server.util.MediaTypes;
 import org.jetrs.server.util.MirrorMultivaluedMap;
 import org.jetrs.server.util.Responses;
-import org.libj.util.FastCollections;
+import org.libj.util.CollectionUtil;
 import org.libj.util.Locales;
 import org.libj.util.Numbers;
 
@@ -607,7 +607,7 @@ public class HttpHeadersImpl extends MirrorMultivaluedMap<String,String,Object> 
 
   @Override
   public String getHeaderString(final String name) {
-    return FastCollections.toString(getRequestHeader(name), ",");
+    return CollectionUtil.toString(getRequestHeader(name), ",");
   }
 
   @Override

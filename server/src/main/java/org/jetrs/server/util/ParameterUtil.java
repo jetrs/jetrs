@@ -30,7 +30,7 @@ import javax.ws.rs.ext.ParamConverter;
 import javax.ws.rs.ext.ParamConverterProvider;
 
 import org.jetrs.server.ProviderResource;
-import org.libj.util.FastCollections;
+import org.libj.util.CollectionUtil;
 
 public final class ParameterUtil {
   private static final String[] forEnums = new String[] {"fromString", "valueOf"};
@@ -65,7 +65,7 @@ public final class ParameterUtil {
 
     final ParamConverter<?> paramConverter = lookupParamConverter(paramConverterProviders, parameterType, genericType, annotations);
     if (paramConverter != null)
-      return paramConverter.fromString(FastCollections.toString(values, ';'));
+      return paramConverter.fromString(CollectionUtil.toString(values, ';'));
 
     if (parameterType == String.class)
       return values.get(0);
@@ -93,7 +93,7 @@ public final class ParameterUtil {
       return Byte.valueOf(values.get(0));
 
     if (parameterType == Set.class || parameterType == List.class || parameterType == SortedSet.class) {
-      final Collection collection = FastCollections.concat(((Class<? extends Collection>)parameterType).getDeclaredConstructor().newInstance(), values);
+      final Collection collection = CollectionUtil.concat(((Class<? extends Collection>)parameterType).getDeclaredConstructor().newInstance(), values);
       final Class<?> type = (Class<?>)((ParameterizedType)parameterType.getGenericInterfaces()[0]).getActualTypeArguments()[0];
       if (type == String.class) {
         collection.addAll(values);
@@ -109,7 +109,7 @@ public final class ParameterUtil {
     }
 
     final Method method = findToString(parameterType);
-    return method.invoke(null, FastCollections.toString(values, ';'));
+    return method.invoke(null, CollectionUtil.toString(values, ';'));
   }
 
   public static boolean decode(final Annotation[] annotations) {
