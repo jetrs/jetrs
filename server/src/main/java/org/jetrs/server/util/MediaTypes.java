@@ -31,6 +31,8 @@ import org.libj.util.Numbers;
 import org.libj.util.Strings;
 
 /**
+ * Utility class with convenience functions for the {@link MediaType} class.
+ *
  * @see <a href=
  *      "https://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.7">rfc2616</a>
  */
@@ -50,7 +52,23 @@ public final class MediaTypes {
   };
 
   /**
-   * This method expects the {@code MediaType} arrays are sorted on the "q" parameter in descending order.
+   * Returns the first compatible {@code MediaType} that is encountered by
+   * evaluating the two specified arrays of {@code MediaType}s, or {@code null}
+   * if there not compatible {@code MediaType} is found.
+   * <p>
+   * <i><b>Note:</b> The {@code MediaType} arrays must be sorted on the "q"
+   * parameter in descending order.</i>
+   * <p>
+   * <i><b>Note:</b> A null {@code MediaType} is considered to be equivalent to
+   * {@link MediaType#WILDCARD}.</i>
+   *
+   * @param mediaTypes1 The first {@code MediaType} array sorted on the "q"
+   *          parameter in descending order.
+   * @param mediaTypes2 The second {@code MediaType} array sorted on the "q"
+   *          parameter in descending order.
+   * @return The first compatible {@code MediaType} that is encountered by
+   *         evaluating the two specified arrays of {@code MediaType}s, or
+   *         {@code null} if there not compatible {@code MediaType} is found.
    */
   public static MediaType getCompatible(final MediaType[] mediaTypes1, final MediaType[] mediaTypes2) {
     for (final MediaType mediaType2 : mediaTypes2) {
@@ -63,7 +81,24 @@ public final class MediaTypes {
   }
 
   /**
-   * This method expects the {@code MediaType} array is sorted on the "q" parameter in descending order.
+   * Returns the first compatible {@code MediaType} that is encountered by
+   * evaluating the specified {@code MediaType} and provided arrays of
+   * {@code MediaType}s, or {@code null} if there not compatible
+   * {@code MediaType} is found.
+   * <p>
+   * <i><b>Note:</b> The provided {@code MediaType} array must be sorted on the
+   * "q" parameter in descending order.</i>
+   * <p>
+   * <i><b>Note:</b> A null {@code MediaType} is considered to be equivalent to
+   * {@link MediaType#WILDCARD}.</i>
+   *
+   * @param mediaType1 The first {@code MediaType}.
+   * @param mediaTypes2 The second {@code MediaType} array sorted on the "q"
+   *          parameter in descending order.
+   * @return The first compatible {@code MediaType} that is encountered by
+   *         evaluating the specified {@code MediaType} and provided arrays of
+   *         {@code MediaType}s, or {@code null} if there not compatible
+   *         {@code MediaType} is found.
    */
   public static MediaType getCompatible(final MediaType mediaType1, final MediaType[] mediaTypes2) {
     Arrays.sort(mediaTypes2, qComparator);
@@ -134,6 +169,20 @@ public final class MediaTypes {
     return new MediaType(mediaType.getType(), mediaType.getSubtype(), parameters);
   }
 
+  /**
+   * Returns the compatible {@code MediaType} by evaluating the two specified
+   * {@code MediaType}s, or {@code null} if the {@code MediaType}s are not
+   * compatible.
+   * <p>
+   * <i><b>Note:</b> A null {@code MediaType} is considered to be equivalent to
+   * {@link MediaType#WILDCARD}.</i>
+   *
+   * @param mediaType1 The first {@code MediaType}.
+   * @param mediaType2 The second {@code MediaType}.
+   * @return The compatible {@code MediaType} by evaluating the two specified
+   *         {@code MediaType}s, or {@code null} if the {@code MediaType}s are
+   *         not compatible.
+   */
   public static MediaType getCompatible(final MediaType mediaType1, final MediaType mediaType2) {
     if (mediaType1 == null)
       return mediaType2;
@@ -244,6 +293,15 @@ public final class MediaTypes {
     return mediaTypes;
   }
 
+  /**
+   * Parses the specified enumeration of strings and returns an array of
+   * {@code MediaType} objects.
+   *
+   * @param enumeration The enumeration of strings.
+   * @return An array of {@code MediaType} objects.
+   * @throws ParseException If a parse error has occurred.
+   * @throws NullPointerException If {@code enumeration} is null.
+   */
   public static MediaType[] parse(final Enumeration<String> enumeration) throws ParseException {
     final MediaType[] mediaTypes = parse(enumeration, 0);
     Arrays.sort(mediaTypes, qComparator);
@@ -262,6 +320,15 @@ public final class MediaTypes {
     return mediaTypes;
   }
 
+  /**
+   * Parses the specified array of strings and returns an array of
+   * {@code MediaType} objects.
+   *
+   * @param strings The the strings array.
+   * @return An array of {@code MediaType} objects.
+   * @throws ParseException If a parse error has occurred.
+   * @throws NullPointerException If {@code strings} is null.
+   */
   public static MediaType[] parse(final String ... strings) throws ParseException {
     final MediaType[] mediaTypes = parse(strings, 0, 0);
     Arrays.sort(mediaTypes, qComparator);
@@ -280,6 +347,15 @@ public final class MediaTypes {
     return mediaTypes;
   }
 
+  /**
+   * Parses the specified string and returns an the corresponding
+   * {@code MediaType} objects, or {@code null} if the specified string is null.
+   *
+   * @param string The the string.
+   * @return The corresponding {@code MediaType} object, or {@code null} if the
+   *         specified string is null.
+   * @throws ParseException If a parse error has occurred.
+   */
   public static MediaType parse(String string) throws ParseException {
     if (string == null)
       return null;
@@ -316,6 +392,13 @@ public final class MediaTypes {
     return new MediaType(type, subtype, parameters);
   }
 
+  /**
+   * Returns the string representation of the specified {@code MediaType}.
+   *
+   * @param mediaType The {@code MediaType}.
+   * @return The string representation of the specified {@code MediaType}.
+   * @throws NullPointerException If {@code mediaType} is null.
+   */
   public static String toString(final MediaType mediaType) {
     final StringBuilder builder = new StringBuilder();
     builder.append(mediaType.getType()).append('/').append(mediaType.getSubtype());
