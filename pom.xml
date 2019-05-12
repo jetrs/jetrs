@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.safris.maven</groupId>
     <artifactId>rootpom</artifactId>
-    <version>1.0.3-SNAPSHOT</version>
+    <version>1.0.3</version>
   </parent>
   <groupId>org.jetrs</groupId>
   <artifactId>jetrs</artifactId>
@@ -35,6 +35,30 @@
     Servlet Container. This project was inspired with the goal to create a better, simpler, easier
     to use, reliable, and debugable JAX-RS implementation using the CohesionFirst approach.
   </description>
+  <organization>
+    <name>JetRS</name>
+    <url>https://www.jetrs.org/</url>
+  </organization>
+  <scm>
+    <url>https://github.com/jetrs/jetrs</url>
+    <connection>scm:git:https://github.com/jetrs/jetrs.git</connection>
+    <developerConnection>scm:git:https://github.com/jetrs/jetrs.git</developerConnection>
+    <tag>HEAD</tag>
+  </scm>
+  <licenses>
+    <license>
+      <name>The MIT License (MIT)</name>
+      <url>https://opensource.org/licenses/MIT/</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <id>sevasafris</id>
+      <name>Seva Safris</name>
+      <email>seva@safris.org</email>
+    </developer>
+  </developers>
   <modules>
     <module>server</module>
   </modules>
