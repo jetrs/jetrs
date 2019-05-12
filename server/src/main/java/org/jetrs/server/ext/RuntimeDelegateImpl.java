@@ -84,13 +84,13 @@ public class RuntimeDelegateImpl extends RuntimeDelegate {
       return (HeaderDelegate<T>)new StringHeaderDelegate();
 
     if (type == CacheControl.class)
-      throw new UnsupportedOperationException();
+      return (HeaderDelegate<T>)new CacheControlHeaderDelegate();
 
     if (type == Cookie.class)
-      throw new UnsupportedOperationException();
+      return (HeaderDelegate<T>)new CookieHeaderDelegate();
 
     if (type == NewCookie.class)
-      throw new UnsupportedOperationException();
+      return (HeaderDelegate<T>)new NewCookieHeaderDelegate();
 
     if (type == EntityTag.class)
       throw new UnsupportedOperationException();

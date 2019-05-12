@@ -39,7 +39,9 @@ import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.NewCookie;
 
+import org.jetrs.server.ext.CookieHeaderDelegate;
 import org.jetrs.server.ext.DateHeaderDelegateImpl;
 import org.jetrs.server.util.MediaTypes;
 import org.jetrs.server.util.MirrorMultivaluedMap;
@@ -117,7 +119,7 @@ public class HttpHeadersImpl extends MirrorMultivaluedMap<String,String,Object> 
     }
 
     if (HttpHeaders.COOKIE.equalsIgnoreCase(key))
-      return Cookie.valueOf(value);
+      return CookieHeaderDelegate.parse(value.split(";"));
 
     if (HttpHeaders.DATE.equalsIgnoreCase(key))
       return DateHeaderDelegateImpl.parse(value);
@@ -413,7 +415,7 @@ public class HttpHeadersImpl extends MirrorMultivaluedMap<String,String,Object> 
     }
 
     if (HttpHeaders.SET_COOKIE.equalsIgnoreCase(key))
-      return Cookie.valueOf(value);
+      return NewCookie.valueOf(value);
 
     if ("Strict-Transport-Security".equalsIgnoreCase(key)) {
       // FIXME: Does this have a strong type?
@@ -595,6 +597,21 @@ public class HttpHeadersImpl extends MirrorMultivaluedMap<String,String,Object> 
         if (value instanceof CacheControl)
           return value.toString();
 
+        if (value instanceof NewCookie)
+          return value.toString();
+
+        // NOTE: It is assumed that the only Map in here is a Map of cookies
+        if (value instanceof Map) {
+          final StringBuilder builder = new StringBuilder();
+          for (final Cookie cookie : ((Map<String,Cookie>)value).values())
+            builder.append(cookie).append(';');
+
+          if (builder.length() > 0)
+            builder.setLength(builder.length() - 1);
+
+          return builder.toString();
+        }
+
         throw new UnsupportedOperationException("Unsupported type: " + value.getClass());
       }
     });
@@ -653,8 +670,8 @@ public class HttpHeadersImpl extends MirrorMultivaluedMap<String,String,Object> 
 
   @Override
   public Map<String,Cookie> getCookies() {
-    // TODO:
-    throw new UnsupportedOperationException();
+    final List<String> cookies = get(HttpHeaders.COOKIE);
+    return cookies == null || cookies.size() == 0 ? null : CookieHeaderDelegate.parse(cookies.toArray(new String[cookies.size()]));
   }
 
   @Override
