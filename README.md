@@ -53,13 +53,13 @@ A common pattern that is used in JAX-RS implementations is dynamic method invoca
   <dependency>
     <groupId>org.jetrs</groupId>
     <artifactId>server</artifactId>
-    <version>2.1.0-SNAPSHOT</version>
+    <version>2.1.0</version>
   </dependency>
   <!-- Optional dependency for MessageBodyReader and MessageBodyWriter classes of JSONX module
   <dependency>
     <groupId>org.jsonx</groupId>
     <artifactId>jsonx-rs</artifactId>
-    <version>0.2.2-SNAPSHOT</version>
+    <version>0.2.2</version>
   </dependency> -->
   ```
 
