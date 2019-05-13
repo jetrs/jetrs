@@ -41,13 +41,7 @@ A common pattern that is used in JAX-RS implementations is dynamic method invoca
 
 ### Example
 
-1. In your preferred development directory, create a [`maven-archetype-quickstart`][maven-archetype-quickstart] project.
-
-  ```bash
-  mvn archetype:generate -DgroupId=com.mycompany.app -DartifactId=my-app -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
-  ```
-
-2. Add the `org.jetrs:server` dependency to the POM.
+1. Add the `org.jetrs:server` dependency to the POM.
 
   ```xml
   <dependency>
@@ -63,7 +57,7 @@ A common pattern that is used in JAX-RS implementations is dynamic method invoca
   </dependency> -->
   ```
 
-3. Create a `javax.ws.rs.core.Application`.
+1. Create a `javax.ws.rs.core.Application`.
 
   ```java
   @javax.ws.rs.ApplicationPath("/*")
@@ -77,7 +71,7 @@ A common pattern that is used in JAX-RS implementations is dynamic method invoca
   }
   ```
 
-4. Extend `org.jetrs.server.DefaultRESTServlet`, pointing to `Application`.
+1. Extend `org.jetrs.server.DefaultRESTServlet`, pointing to `Application`.
 
   ```java
   @WebServlet(initParams={@WebInitParam(name="javax.ws.rs.Application", value="Application")})
@@ -85,7 +79,7 @@ A common pattern that is used in JAX-RS implementations is dynamic method invoca
   }
   ```
 
-5. Deploy the servlet to a Servlet Container. For an easy embedded servlet container solution, [see here][jetty] for a solution based on [Jetty][jetty]. In the arguments to `new Server(8080, ...)` add `RESTServlet.class` as such:
+1. Deploy the servlet to a Servlet Container. For an easy embedded servlet container solution, [see here][jetty] for a solution based on [Jetty][jetty]. In the arguments to `new Server(8080, ...)` add `RESTServlet.class` as such:
 
   ```java
   new Server(8080, null, null, true, null, RESTServlet.class);
@@ -95,7 +89,7 @@ A common pattern that is used in JAX-RS implementations is dynamic method invoca
 
 ## Contributing
 
-Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
+Pull requests are welcome. For major changes, please [open an issue](../../issues) first to discuss what you would like to change.
 
 Please make sure to update tests as appropriate.
 
