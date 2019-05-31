@@ -2,10 +2,10 @@
 
 **NOTE: This README it outdated!**
 
-[![Build Status](https://travis-ci.org/jetrs/jetrs.png)](https://travis-ci.org/jetrs/jetrs)
-[![Coverage Status](https://coveralls.io/repos/github/jetrs/jetrs/badge.svg)](https://coveralls.io/github/jetrs/jetrs)
-[![Javadocs](https://www.javadoc.io/badge/org.jetrs/jetrs.svg)](https://www.javadoc.io/doc/org.jetrs/jetrs)
-[![Released Version](https://img.shields.io/maven-central/v/org.jetrs/jetrs.svg)](https://mvnrepository.com/artifact/org.jetrs/jetrs)
+[![Build Status](https://travis-ci.org/jetrs/jetrs.svg?1)](https://travis-ci.org/jetrs/jetrs)
+[![Coverage Status](https://coveralls.io/repos/github/jetrs/jetrs/badge.svg?1)](https://coveralls.io/github/jetrs/jetrs)
+[![Javadocs](https://www.javadoc.io/badge/org.jetrs/jetrs.svg?1)](https://www.javadoc.io/doc/org.jetrs/jetrs)
+[![Released Version](https://img.shields.io/maven-central/v/org.jetrs/jetrs.svg?1)](https://mvnrepository.com/artifact/org.jetrs/jetrs)
 
 ## Introduction
 
