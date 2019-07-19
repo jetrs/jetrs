@@ -31,7 +31,7 @@
    </dependency>
    ```
 
-1. Optionally, you can add the dependency for the `MessageBodyReader` and `MessageBodyWriter` provider to integrate the [JSONx RS module](https://github.com/jsonxorg/jsonx/tree/master/rs).
+1. Optionally, you can add the dependency for the `MessageBodyReader` and `MessageBodyWriter` provider to integrate the [JSONx RS module](https://github.com/jsonx-org/jsonx/tree/master/rs).
 
    ```xml
    <dependency>
