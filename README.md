@@ -37,7 +37,7 @@
    <dependency>
      <groupId>org.jsonx</groupId>
      <artifactId>jsonx-rs</artifactId>
-     <version>0.2.2</version>
+     <version>0.3.1</version>
    </dependency>
    ```
 
