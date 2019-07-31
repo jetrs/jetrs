@@ -176,7 +176,7 @@ public class MirrorMultivaluedMap<K,V,M> extends ObservableMap<K,List<V>> implem
       return (MirrorMultivaluedMap<K,V,M>)super.clone();
     }
     catch (final CloneNotSupportedException e) {
-      throw new UnsupportedOperationException(e);
+      throw new IllegalStateException(e);
     }
   }
 
