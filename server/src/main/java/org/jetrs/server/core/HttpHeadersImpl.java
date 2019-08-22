@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.BiFunction;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -557,63 +556,57 @@ public class HttpHeadersImpl extends MirrorMultivaluedMap<String,String,Object> 
   }
 
   public HttpHeadersImpl() {
-    super(HashMap::new, ArrayList::new, new BiFunction<String,String,Object>() {
-      @Override
-      public Object apply(final String key, final String value) {
-        if (value == null)
-          return null;
+    super(HashMap::new, ArrayList::new, (key, value) -> {
+      if (value == null)
+        return null;
 
-        final Object requestHeader = parseRequestHeader(key, value);
-        if (requestHeader != null)
-          return requestHeader;
+      final Object requestHeader = parseRequestHeader(key, value);
+      if (requestHeader != null)
+        return requestHeader;
 
-        final Object responseHeader = parseResponseHeader(key, value);
-        if (responseHeader != null)
-          return responseHeader;
+      final Object responseHeader = parseResponseHeader(key, value);
+      if (responseHeader != null)
+        return responseHeader;
 
-        return parseHeaderByType(value);
+      return parseHeaderByType(value);
+    }, (key, value) -> {
+      if (value == null)
+        return null;
+
+      if (value instanceof String)
+        return (String)value;
+
+      if (value instanceof MediaType)
+        return value.toString();
+
+      if (value instanceof Locale)
+        return value.toString();
+
+      if (value instanceof Date)
+        return DateHeaderDelegateImpl.format((Date)value);
+
+      if (value instanceof URI)
+        return value.toString();
+
+      if (value instanceof CacheControl)
+        return value.toString();
+
+      if (value instanceof NewCookie)
+        return value.toString();
+
+      // NOTE: It is assumed that the only Map in here is a Map of cookies
+      if (value instanceof Map) {
+        final StringBuilder builder = new StringBuilder();
+        for (final Cookie cookie : ((Map<String,Cookie>)value).values())
+          builder.append(cookie).append(';');
+
+        if (builder.length() > 0)
+          builder.setLength(builder.length() - 1);
+
+        return builder.toString();
       }
-    }, new BiFunction<String,Object,String>() {
-      @Override
-      public String apply(final String key, final Object value) {
-        if (value == null)
-          return null;
 
-        if (value instanceof String)
-          return (String)value;
-
-        if (value instanceof MediaType)
-          return value.toString();
-
-        if (value instanceof Locale)
-          return value.toString();
-
-        if (value instanceof Date)
-          return DateHeaderDelegateImpl.format((Date)value);
-
-        if (value instanceof URI)
-          return value.toString();
-
-        if (value instanceof CacheControl)
-          return value.toString();
-
-        if (value instanceof NewCookie)
-          return value.toString();
-
-        // NOTE: It is assumed that the only Map in here is a Map of cookies
-        if (value instanceof Map) {
-          final StringBuilder builder = new StringBuilder();
-          for (final Cookie cookie : ((Map<String,Cookie>)value).values())
-            builder.append(cookie).append(';');
-
-          if (builder.length() > 0)
-            builder.setLength(builder.length() - 1);
-
-          return builder.toString();
-        }
-
-        throw new UnsupportedOperationException("Unsupported type: " + value.getClass());
-      }
+      throw new UnsupportedOperationException("Unsupported type: " + value.getClass());
     });
   }
 

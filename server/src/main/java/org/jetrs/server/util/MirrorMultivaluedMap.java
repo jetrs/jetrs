@@ -41,7 +41,7 @@ public class MirrorMultivaluedMap<K,V,M> extends ObservableMap<K,List<V>> implem
     }
 
     public KeyMirrorList(final KeyMirrorList<A,B> copy, final K key, final BiFunction<K,A,B> forward, final BiFunction<K,B,A> reverse) {
-      super(cloneList((List<A>)copy), cloneList((List<B>)copy.getMirror()), (v) -> forward.apply(key, v), (v) -> reverse.apply(key, v));
+      super(cloneList(copy), cloneList(copy.getMirror()), (v) -> forward.apply(key, v), (v) -> reverse.apply(key, v));
       this.key = key;
     }
   }

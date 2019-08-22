@@ -113,7 +113,7 @@ abstract class InterceptorContextImpl implements InterceptorContext {
   public final MediaType getMediaType() {
     try {
       final String mediaType = getStringHeaders().getFirst(HttpHeaders.CONTENT_TYPE);
-      return mediaType == null ? null : MediaTypes.parse(mediaType.toString());
+      return mediaType == null ? null : MediaTypes.parse(mediaType);
     }
     catch (final ParseException e) {
       throw new IllegalStateException(e);

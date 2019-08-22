@@ -42,13 +42,10 @@ public final class MediaTypes {
   public static final MediaType APPLICATION_XML = new MediaType("application", "xml");
   public static final MediaType APPLICATION_JSON = new MediaType("application", "json");
 
-  private static final Comparator<MediaType> qComparator = new Comparator<MediaType>() {
-    @Override
-    public int compare(final MediaType o1, final MediaType o2) {
-      final Double s1 = o1 == null ? null : Numbers.parseDouble(o1.getParameters().get("q"));
-      final Double s2 = o2 == null ? null : Numbers.parseDouble(o2.getParameters().get("q"));
-      return Double.compare(s2 == null ? 1 : s2, s1 == null ? 1 : s1);
-    }
+  private static final Comparator<MediaType> qComparator = (o1, o2) -> {
+    final Double s1 = o1 == null ? null : Numbers.parseDouble(o1.getParameters().get("q"));
+    final Double s2 = o2 == null ? null : Numbers.parseDouble(o2.getParameters().get("q"));
+    return Double.compare(s2 == null ? 1 : s2, s1 == null ? 1 : s1);
   };
 
   /**

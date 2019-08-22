@@ -32,12 +32,7 @@ public final class Responses {
   private static final int[] statusCodes = new int[statuses.length];
 
   static {
-    Arrays.sort(statuses, new Comparator<Response.Status>() {
-      @Override
-      public int compare(final Status o1, final Status o2) {
-        return Integer.compare(o1.getStatusCode(), o2.getStatusCode());
-      }
-    });
+    Arrays.sort(statuses, (o1, o2) -> Integer.compare(o1.getStatusCode(), o2.getStatusCode()));
 
     for (int i = 0; i < statuses.length; ++i)
       statusCodes[i] = statuses[i].getStatusCode();

@@ -39,13 +39,10 @@ final class ContainerFilters {
   private final List<ProviderResource<ContainerRequestFilter>> containerRequestFilters = new ArrayList<>();
   private final List<ProviderResource<ContainerResponseFilter>> containerResponseFilters = new ArrayList<>();
 
-  private static final Comparator<Object> priorityComparator = Comparator.nullsFirst(new Comparator<Object>() {
-    @Override
-    public int compare(final Object o1, final Object o2) {
-      final Priority p1 = o1.getClass().getAnnotation(Priority.class);
-      final Priority p2 = o1.getClass().getAnnotation(Priority.class);
-      return p1 == null ? p2 == null ? 0 : 1 : p2 == null ? -1 : Integer.compare(p1.value(), p2.value());
-    }
+  private static final Comparator<Object> priorityComparator = Comparator.nullsFirst((o1, o2) -> {
+    final Priority p1 = o1.getClass().getAnnotation(Priority.class);
+    final Priority p2 = o1.getClass().getAnnotation(Priority.class);
+    return p1 == null ? p2 == null ? 0 : 1 : p2 == null ? -1 : Integer.compare(p1.value(), p2.value());
   });
 
   ContainerFilters(final List<ProviderResource<ContainerRequestFilter>> requestFilters, final List<ProviderResource<ContainerResponseFilter>> responseFilters) {
