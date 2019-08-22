@@ -134,7 +134,7 @@ public class ResourceManifest {
     }
   }
 
-  @SuppressWarnings({"rawtypes", "unchecked"})
+  @SuppressWarnings("rawtypes")
   private static Object[] getParameters(final Method method, final ContainerRequestContextImpl containerRequestContext, final AnnotationInjector annotationInjector, final List<ProviderResource<ParamConverterProvider>> paramConverterProviders) throws IOException {
     final Parameter[] parameters = method.getParameters();
     final Type[] genericParameterTypes = method.getGenericParameterTypes();

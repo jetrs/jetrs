@@ -17,7 +17,6 @@
 package org.jetrs.server.util;
 
 import java.util.Arrays;
-import java.util.Comparator;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;

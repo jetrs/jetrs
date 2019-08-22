@@ -597,7 +597,7 @@ public class HttpHeadersImpl extends MirrorMultivaluedMap<String,String,Object> 
       // NOTE: It is assumed that the only Map in here is a Map of cookies
       if (value instanceof Map) {
         final StringBuilder builder = new StringBuilder();
-        for (final Cookie cookie : ((Map<String,Cookie>)value).values())
+        for (final Object cookie : ((Map<?,?>)value).values())
           builder.append(cookie).append(';');
 
         if (builder.length() > 0)

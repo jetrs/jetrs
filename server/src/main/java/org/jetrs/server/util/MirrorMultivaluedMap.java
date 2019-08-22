@@ -29,6 +29,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import org.libj.util.MirrorList;
 import org.libj.util.ObservableMap;
 
+@SuppressWarnings("rawtypes")
 public class MirrorMultivaluedMap<K,V,M> extends ObservableMap<K,List<V>> implements MultivaluedMap<K,V>, Cloneable, Serializable {
   private static final long serialVersionUID = -7406535904458617108L;
 
