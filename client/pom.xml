@@ -31,9 +31,9 @@
   </description>
   <dependencies>
     <dependency>
-      <groupId>com.google.http-client</groupId>
-      <artifactId>google-http-client</artifactId>
-      <version>1.31.0</version>
+      <groupId>org.jetrs</groupId>
+      <artifactId>common</artifactId>
+      <version>${project.version}</version>
     </dependency>
   </dependencies>
 </project>

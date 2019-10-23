@@ -19,7 +19,6 @@ package org.jetrs.server;
 import java.io.BufferedReader;
 import java.io.IOException;
 
-import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletInputStream;
 import javax.servlet.annotation.WebInitParam;
@@ -33,18 +32,18 @@ import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Providers;
-import javax.ws.rs.ext.RuntimeDelegate;
 
+import org.jetrs.common.core.AnnotationInjector;
+import org.jetrs.common.core.HttpHeadersImpl;
 import org.jetrs.server.container.ContainerRequestContextImpl;
 import org.jetrs.server.container.ContainerResponseContextImpl;
-import org.jetrs.server.core.AnnotationInjector;
-import org.jetrs.server.core.HttpHeadersImpl;
-import org.jetrs.server.ext.RuntimeDelegateImpl;
+import org.jetrs.server.core.RequestImpl;
 import org.libj.util.Classes;
 
 @WebServlet(name="javax.ws.rs.core.Application", urlPatterns="/*")
@@ -86,10 +85,10 @@ public class RestApplicationServlet extends RestHttpServlet {
     }
   }
 
-  @Override
-  public void init(final ServletConfig config) throws ServletException {
-    super.init(config);
-    RuntimeDelegate.setInstance(new RuntimeDelegateImpl());
+  public static AnnotationInjector createAnnotationInjector(final ContainerRequestContext containerRequestContext, final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse, final HttpHeaders headers, final ResourceContext resourceContext) {
+    final AnnotationInjector annotationInjector = new AnnotationInjector(containerRequestContext, new RequestImpl(httpServletRequest.getMethod()), httpServletRequest, httpServletResponse, headers, resourceContext.getApplication());
+    annotationInjector.setProviders(resourceContext.getProviders(annotationInjector));
+    return annotationInjector;
   }
 
   @SuppressWarnings("unchecked")
@@ -103,7 +102,7 @@ public class RestApplicationServlet extends RestHttpServlet {
     final ContainerRequestContextImpl containerRequestContext; // NOTE: This weird construct is done this way to at least somehow make the two objects cohesive
     httpServletRequestContext.setRequestContext(containerRequestContext = new ContainerRequestContextImpl(httpServletRequestContext, containerResponseContext, executionContext, getResourceContext().getReaderInterceptors()));
 
-    final AnnotationInjector annotationInjector = AnnotationInjector.createAnnotationInjector(containerRequestContext, httpServletRequestContext, httpServletResponse, requestHeaders, getResourceContext());
+    final AnnotationInjector annotationInjector = createAnnotationInjector(containerRequestContext, httpServletRequestContext, httpServletResponse, requestHeaders, getResourceContext());
     final Providers providers = getResourceContext().getProviders(annotationInjector);
     try {
       getResourceContext().getContainerFilters().filterPreMatchContainerRequest(containerRequestContext, annotationInjector);

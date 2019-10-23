@@ -2,7 +2,7 @@ package org.jetrs.server.ext;
 
 import static org.junit.Assert.*;
 
-import org.jetrs.server.ext.StringArrayHeaderDelegate;
+import org.jetrs.common.ext.StringArrayHeaderDelegate;
 import org.junit.Test;
 
 public class StringArrayHeaderDelegateTest {

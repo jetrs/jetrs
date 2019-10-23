@@ -37,8 +37,10 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Variant;
 import javax.ws.rs.ext.RuntimeDelegate;
 
+import org.jetrs.common.core.HttpHeadersImpl;
+import org.jetrs.common.core.ResponseImpl;
+import org.jetrs.common.util.Responses;
 import org.jetrs.server.ResourceContext;
-import org.jetrs.server.util.Responses;
 import org.libj.util.Locales;
 
 public class ResponseBuilderImpl extends Response.ResponseBuilder implements Cloneable {
@@ -66,7 +68,7 @@ public class ResponseBuilderImpl extends Response.ResponseBuilder implements Clo
   @Override
   public Response build() {
     final Response.StatusType statusType = reasonPhrase != null ? Responses.from(status, reasonPhrase) : Responses.from(status);
-    return new ResponseImpl(resourceContext, statusType, headers, cookies, entity, annotations);
+    return new ResponseImpl(resourceContext.getProviders(null), resourceContext.getReaderInterceptors(), statusType, headers, cookies, entity, annotations);
   }
 
   @Override

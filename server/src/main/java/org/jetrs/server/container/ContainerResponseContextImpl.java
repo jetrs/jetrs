@@ -40,7 +40,7 @@ import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.WriterInterceptor;
 import javax.ws.rs.ext.WriterInterceptorContext;
 
-import org.jetrs.server.core.HttpHeadersImpl;
+import org.jetrs.common.core.HttpHeadersImpl;
 
 public class ContainerResponseContextImpl extends InterceptorContextImpl implements ContainerResponseContext, WriterInterceptorContext {
   private final WriterInterceptor[] writerInterceptors;
@@ -164,9 +164,12 @@ public class ContainerResponseContextImpl extends InterceptorContextImpl impleme
   @Override
   public void setEntity(final Object entity, final Annotation[] annotations, final MediaType mediaType) {
     // FIXME: What is the getEntityType() method supposed to return???
-    this.entity = entity;
-    this.type = entity.getClass();
-    this.genericType = type.getGenericSuperclass();
+    if (entity != null) {
+      this.entity = entity;
+      this.type = entity.getClass();
+      this.genericType = type.getGenericSuperclass();
+    }
+
     this.entityAnnotations = annotations;
     if (mediaType != null)
       getHeaders().putSingle(HttpHeaders.CONTENT_TYPE, mediaType);

@@ -33,8 +33,11 @@ import javax.ws.rs.ext.Providers;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
 
-import org.jetrs.server.core.AnnotationInjector;
-import org.jetrs.server.ext.ProvidersImpl;
+import org.jetrs.common.ProviderResource;
+import org.jetrs.common.ReaderInterceptorEntityProviderResource;
+import org.jetrs.common.WriterInterceptorEntityProviderResource;
+import org.jetrs.common.core.AnnotationInjector;
+import org.jetrs.common.ext.ProvidersImpl;
 
 public class ResourceContext {
   private final Application application;

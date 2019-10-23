@@ -47,9 +47,10 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.ParamConverterProvider;
 import javax.ws.rs.ext.Providers;
 
+import org.jetrs.common.ProviderResource;
+import org.jetrs.common.core.AnnotationInjector;
+import org.jetrs.common.util.MediaTypes;
 import org.jetrs.server.container.ContainerRequestContextImpl;
-import org.jetrs.server.core.AnnotationInjector;
-import org.jetrs.server.util.MediaTypes;
 import org.libj.util.Identifiers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -29,8 +29,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.InterceptorContext;
 
-import org.jetrs.server.ext.DateHeaderDelegateImpl;
-import org.jetrs.server.util.MediaTypes;
+import org.jetrs.common.ext.DateHeaderDelegateImpl;
+import org.jetrs.common.util.MediaTypes;
 
 abstract class InterceptorContextImpl implements InterceptorContext {
   private final Locale locale;

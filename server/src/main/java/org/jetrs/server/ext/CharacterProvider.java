@@ -33,7 +33,7 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
-import org.jetrs.server.util.MediaTypes;
+import org.jetrs.common.util.MediaTypes;
 import org.libj.io.Readers;
 
 /**

@@ -37,8 +37,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Providers;
 
+import org.jetrs.common.core.AnnotationInjector;
 import org.jetrs.server.container.ContainerResponseContextImpl;
-import org.jetrs.server.core.AnnotationInjector;
 import org.libj.util.ArrayUtil;
 import org.libj.util.ObservableList;
 

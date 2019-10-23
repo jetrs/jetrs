@@ -28,7 +28,8 @@ import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.container.PreMatching;
 
-import org.jetrs.server.core.AnnotationInjector;
+import org.jetrs.common.ProviderResource;
+import org.jetrs.common.core.AnnotationInjector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

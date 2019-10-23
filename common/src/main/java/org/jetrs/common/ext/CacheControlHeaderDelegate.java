@@ -1,0 +1,162 @@
+/* Copyright (c) 2019 JetRS
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * You should have received a copy of The MIT License (MIT) along with this
+ * program. If not, see <http://opensource.org/licenses/MIT/>.
+ */
+
+package org.jetrs.common.ext;
+
+import java.util.Map;
+
+import javax.ws.rs.core.CacheControl;
+import javax.ws.rs.ext.RuntimeDelegate;
+
+public class CacheControlHeaderDelegate implements RuntimeDelegate.HeaderDelegate<CacheControl> {
+  private static String parseField(final String value) {
+    final int index = value.indexOf('=');
+    if (index == -1)
+      return null;
+
+      final String field = value.substring(index + 1).trim();
+      return field.startsWith("\"") && field.endsWith("\"") ? field.substring(1, field.length() - 1).trim() : field;
+  }
+
+  private static String fieldToString(String field) {
+    if (field == null)
+      return null;
+
+    field = field.trim();
+    return field.length() == 0 ? null : "\"" + field + "\"";
+  }
+
+  private static void parseValue(final CacheControl cacheControl, final String value) {
+    if (value.startsWith("max-age")) {
+      final int index = value.indexOf('=');
+      if (index != -1)
+        cacheControl.setMaxAge(Integer.parseInt(value.substring(index + 1).trim()));
+    }
+    if (value.startsWith("s-maxage")) {
+      final int index = value.indexOf('=');
+      if (index != -1)
+        cacheControl.setSMaxAge(Integer.parseInt(value.substring(index + 1).trim()));
+    }
+    else if (value.startsWith("no-cache")) {
+      final String field = parseField(value);
+      if (field == null)
+        cacheControl.setNoCache(true);
+      else
+        cacheControl.getNoCacheFields().add(field);
+    }
+    else if (value.equals("no-store")) {
+      cacheControl.setNoStore(true);
+    }
+    else if (value.equals("no-transform")) {
+      cacheControl.setNoTransform(true);
+    }
+    else if (value.equals("must-revalidate")) {
+      cacheControl.setMustRevalidate(true);
+    }
+    else if (value.equals("private")) {
+      final String field = parseField(value);
+      if (field == null)
+        cacheControl.setPrivate(true);
+      else
+        cacheControl.getPrivateFields().add(field);
+    }
+    else if (value.equals("proxy-revalidate")) {
+      cacheControl.setProxyRevalidate(true);
+    }
+    else {
+      final int index = value.indexOf('=');
+      if (index == -1)
+        cacheControl.getCacheExtension().put(value, null);
+      else
+        cacheControl.getCacheExtension().put(value.substring(0, index).trim(), value.substring(index + 1).trim());
+    }
+  }
+
+  @Override
+  public CacheControl fromString(final String value) {
+    final String[] values = value.split(",");
+    for (int i = 0; i < values.length; ++i)
+      values[i] = values[i].trim();
+
+    final CacheControl cacheControl = new CacheControl();
+    for (int i = 0; i < values.length; ++i)
+      parseValue(cacheControl, values[i]);
+
+    return cacheControl;
+  }
+
+  @Override
+  public String toString(final CacheControl value) {
+    final StringBuilder builder = new StringBuilder();
+
+    if (value.isMustRevalidate())
+      builder.append("must-revalidate,");
+
+    if (value.isNoStore())
+      builder.append("no-store,");
+
+    if (value.isNoTransform())
+      builder.append("no-transform,");
+
+    if (value.isNoTransform())
+      builder.append("no-transform,");
+
+    if (value.getPrivateFields().size() > 0) {
+      for (String field : value.getPrivateFields()) {
+        field = fieldToString(field);
+        if (field != null)
+          builder.append("private=").append(field).append(',');
+      }
+    }
+    else if (value.isPrivate()) {
+      builder.append("private,");
+    }
+
+    if (value.getNoCacheFields().size() > 0) {
+      for (String field : value.getNoCacheFields()) {
+        field = fieldToString(field);
+        if (field != null)
+          builder.append("no-cache=").append(field).append(',');
+      }
+    }
+    else if (value.isNoCache()) {
+      builder.append("no-cache,");
+    }
+
+    if (value.getMaxAge() == Integer.MAX_VALUE)
+      builder.append("max-age,");
+    else if (value.getMaxAge() != -1)
+      builder.append("max-age=").append(value.getMaxAge());
+
+    if (value.getSMaxAge() == Integer.MAX_VALUE)
+      builder.append("s-maxage,");
+    else if (value.getMaxAge() != -1)
+      builder.append("s-maxage=").append(value.getMaxAge());
+
+    for (final Map.Entry<String,String> entry : value.getCacheExtension().entrySet()) {
+      builder.append(entry.getKey());
+      if (entry.getValue() != null)
+        builder.append('=').append(entry.getValue());
+
+      builder.append(',');
+    }
+
+    if (builder.length() > 0)
+      builder.setLength(builder.length() - 1);
+
+    return builder.toString();
+  }
+}

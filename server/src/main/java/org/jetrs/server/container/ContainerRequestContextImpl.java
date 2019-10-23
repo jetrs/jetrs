@@ -44,10 +44,10 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.ReaderInterceptorContext;
 
+import org.jetrs.common.util.MediaTypes;
 import org.jetrs.server.ExecutionContext;
 import org.jetrs.server.core.DefaultSecurityContext;
 import org.jetrs.server.core.UriInfoImpl;
-import org.jetrs.server.util.MediaTypes;
 import org.libj.util.Locales;
 
 public class ContainerRequestContextImpl extends InterceptorContextImpl implements ContainerRequestContext, ReaderInterceptorContext {

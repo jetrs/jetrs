@@ -25,13 +25,13 @@ import java.util.Map;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.RuntimeDelegate;
 
-import org.jetrs.server.ext.RuntimeDelegateImpl;
-import org.jetrs.server.util.MediaTypes;
+import org.jetrs.common.util.MediaTypes;
+import org.jetrs.server.ext.ServerRuntimeDelegate;
 import org.junit.Test;
 
 public class MediaTypesTest {
   static {
-    System.setProperty(RuntimeDelegate.JAXRS_RUNTIME_DELEGATE_PROPERTY, RuntimeDelegateImpl.class.getName());
+    System.setProperty(RuntimeDelegate.JAXRS_RUNTIME_DELEGATE_PROPERTY, ServerRuntimeDelegate.class.getName());
   }
 
   @Test
