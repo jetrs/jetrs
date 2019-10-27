@@ -30,25 +30,25 @@ public interface ClientConfigurable<C extends Configurable<? super C>> extends C
 
   @Override
   public default C register(final Object component) {
-    ((ClientConfiguration)getConfiguration()).components().add(new Component(component.getClass(), component));
+    ((ClientConfiguration)getConfiguration()).components().add(new Component(null, component));
     return (C)this;
   }
 
   @Override
   public default C register(final Object component, final int priority) {
-    ((ClientConfiguration)getConfiguration()).components().add(new Component(component.getClass(), component, priority));
+    ((ClientConfiguration)getConfiguration()).components().add(new Component(null, component, priority));
     return (C)this;
   }
 
   @Override
   public default C register(final Object component, final Class<?> ... contracts) {
-    ((ClientConfiguration)getConfiguration()).components().add(new Component(component.getClass(), component, contracts));
+    ((ClientConfiguration)getConfiguration()).components().add(new Component(null, component, contracts));
     return (C)this;
   }
 
   @Override
   public default C register(final Object component, final Map<Class<?>,Integer> contracts) {
-    ((ClientConfiguration)getConfiguration()).components().add(new Component(component.getClass(), component, contracts));
+    ((ClientConfiguration)getConfiguration()).components().add(new Component(null, component, contracts));
     return (C)this;
   }
 

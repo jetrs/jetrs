@@ -545,6 +545,12 @@ public class HttpHeadersImpl extends MirrorMultivaluedMap<String,String,Object> 
       addAll(entry.getKey(), entry.getValue());
   }
 
+  public HttpHeadersImpl(final MultivaluedMap<String,Object> headers) {
+    this();
+    for (final Map.Entry<String,List<Object>> entry : headers.entrySet())
+      mirroredMap.addAll(entry.getKey(), entry.getValue());
+  }
+
   public HttpHeadersImpl(final HttpServletRequest request) {
     this();
     if (request != null) {

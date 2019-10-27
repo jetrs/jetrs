@@ -104,7 +104,7 @@ class ResourceAnnotationProcessor<T extends Annotation> {
 
   MediaType getCompatibleMediaType(final MediaType[] mediaTypes) {
     if (this.mediaTypes == null)
-      return mediaTypes == null || ArrayUtil.contains(mediaTypes, MediaType.WILDCARD_TYPE) ? MediaType.WILDCARD_TYPE : null;
+      return mediaTypes == null ? MediaType.WILDCARD_TYPE : MediaTypes.getCompatible(MediaType.WILDCARD_TYPE, mediaTypes);
 
     return mediaTypes == null ? this.mediaTypes[0] : MediaTypes.getCompatible(this.mediaTypes, mediaTypes);
   }

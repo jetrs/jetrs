@@ -51,7 +51,6 @@ import org.jetrs.common.ext.ProvidersImpl;
 import org.libj.lang.PackageNotFoundException;
 
 public class ClientImpl implements Client, ClientConfigurable<Client> {
-  private final Providers providers;
   private final Configuration config;
   private final SSLContext sslContext;
   private final HostnameVerifier verifier;
@@ -63,6 +62,19 @@ public class ClientImpl implements Client, ClientConfigurable<Client> {
   private final TimeUnit readUnit;
 
   public ClientImpl(final Configuration config, final SSLContext sslContext, final HostnameVerifier verifier, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final long connectTimeout, final TimeUnit connectUnit, final long readTimeout, final TimeUnit readUnit) {
+    this.config = config;
+    this.sslContext = sslContext;
+    this.verifier = verifier;
+    this.executorService = executorService;
+    this.scheduledExecutorService = scheduledExecutorService;
+    this.connectTimeout = connectTimeout;
+    this.connectUnit = connectUnit;
+    this.readTimeout = readTimeout;
+    this.readUnit = readUnit;
+  }
+
+  // TODO: This should only rebuild providers if config has changed!
+  private Providers buildProviders() {
     try {
       final List<ExceptionMappingProviderResource> exceptionMappers = new ArrayList<>();
       final List<EntityReaderProviderResource> entityReaders = new ArrayList<>();
@@ -75,21 +87,11 @@ public class ClientImpl implements Client, ClientConfigurable<Client> {
 
       final Bootstrap<Void> bootstrap = new Bootstrap<>();
       bootstrap.init(config.getInstances(), config.getClasses(), null, exceptionMappers, entityReaders, entityWriters, requestFilters, responseFilters, readerInterceptors, writerInterceptors, paramConverterProviders);
-      this.providers = new ProvidersImpl(exceptionMappers, entityReaders, entityWriters);
+      return new ProvidersImpl(exceptionMappers, entityReaders, entityWriters);
     }
     catch (final IllegalAccessException | InstantiationException | InvocationTargetException | PackageNotFoundException | IOException e) {
       throw new IllegalStateException(e);
     }
-
-    this.config = config;
-    this.sslContext = sslContext;
-    this.verifier = verifier;
-    this.executorService = executorService;
-    this.scheduledExecutorService = scheduledExecutorService;
-    this.connectTimeout = connectTimeout;
-    this.connectUnit = connectUnit;
-    this.readTimeout = readTimeout;
-    this.readUnit = readUnit;
   }
 
   @Override
@@ -109,28 +111,28 @@ public class ClientImpl implements Client, ClientConfigurable<Client> {
 
   @Override
   public WebTarget target(final String uri) {
-    return new WebTargetImpl(providers, config, UriBuilder.fromUri(uri));
+    return new WebTargetImpl(buildProviders(), config, UriBuilder.fromUri(uri));
   }
 
   @Override
   public WebTarget target(final URI uri) {
-    return new WebTargetImpl(providers, config, UriBuilder.fromUri(uri));
+    return new WebTargetImpl(buildProviders(), config, UriBuilder.fromUri(uri));
   }
 
   @Override
   public WebTarget target(final UriBuilder uriBuilder) {
-    return new WebTargetImpl(providers, config, uriBuilder);
+    return new WebTargetImpl(buildProviders(), config, uriBuilder);
   }
 
   @Override
   public WebTarget target(final Link link) {
-    return new WebTargetImpl(providers, config, UriBuilder.fromLink(link));
+    return new WebTargetImpl(buildProviders(), config, UriBuilder.fromLink(link));
   }
 
   @Override
   public Invocation.Builder invocation(final Link link) {
     try {
-      return new InvocationImpl.BuilderImpl(providers, link.getUri().toURL());
+      return new InvocationImpl.BuilderImpl(buildProviders(), link.getUri().toURL());
     }
     catch (final MalformedURLException e) {
       throw new ProcessingException(e);

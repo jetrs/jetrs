@@ -1,6 +1,7 @@
 package org.jetrs.client;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.net.CookieHandler;
 import java.net.CookieManager;
 import java.net.HttpCookie;
@@ -40,6 +41,7 @@ import javax.ws.rs.ext.Providers;
 
 import org.jetrs.common.core.HttpHeadersImpl;
 import org.jetrs.common.core.ResponseImpl;
+import org.jetrs.common.util.MirrorMultivaluedMap;
 import org.jetrs.common.util.Responses;
 import org.libj.util.CollectionUtil;
 import org.libj.util.Dates;
@@ -84,6 +86,7 @@ public class InvocationImpl implements Invocation {
       // TODO: cacheControl
 
       if (entity != null) {
+        connection.setDoOutput(true);
         final MessageBodyWriter messageBodyWriter = providers.getMessageBodyWriter(entity.getEntity().getClass(), null, entity.getAnnotations(), entity.getMediaType());
         messageBodyWriter.writeTo(entity.getEntity(), entity.getEntity().getClass(), null, entity.getAnnotations(), entity.getMediaType(), null, connection.getOutputStream());
       }
@@ -96,16 +99,22 @@ public class InvocationImpl implements Invocation {
       final CookieManager cookieManager = new CookieManager();
       CookieHandler.setDefault(cookieManager);
 
-      final List<HttpCookie> httpCookies = cookieManager.getCookieStore().getCookies();
       final List<String> setCookies = headers.get(HttpHeaders.SET_COOKIE);
-      final Map<String,NewCookie> cookies = new HashMap<>();
-      for (final String setCookie : setCookies) {
-        cookieManager.getCookieStore().add(null, HttpCookie.parse(setCookie).get(0));
-        for (final HttpCookie httpCookie : httpCookies) {
-          final Date expiry = Dates.addTime(headers.getDate(), 0, 0, (int)httpCookie.getMaxAge());
-          final NewCookie cookie = new NewCookie(httpCookie.getName(), httpCookie.getValue(), httpCookie.getPath(), httpCookie.getDomain(), httpCookie.getVersion(), httpCookie.getComment(), (int)httpCookie.getMaxAge(), expiry, httpCookie.getSecure(), httpCookie.isHttpOnly());
-          cookies.put(cookie.getName(), cookie);
+      final Map<String,NewCookie> cookies;
+      if (setCookies != null) {
+        cookies = new HashMap<>();
+        final List<HttpCookie> httpCookies = cookieManager.getCookieStore().getCookies();
+        for (final String setCookie : setCookies) {
+          cookieManager.getCookieStore().add(null, HttpCookie.parse(setCookie).get(0));
+          for (final HttpCookie httpCookie : httpCookies) {
+            final Date expiry = Dates.addTime(headers.getDate(), 0, 0, (int)httpCookie.getMaxAge());
+            final NewCookie cookie = new NewCookie(httpCookie.getName(), httpCookie.getValue(), httpCookie.getPath(), httpCookie.getDomain(), httpCookie.getVersion(), httpCookie.getComment(), (int)httpCookie.getMaxAge(), expiry, httpCookie.getSecure(), httpCookie.isHttpOnly());
+            cookies.put(cookie.getName(), cookie);
+          }
         }
+      }
+      else {
+        cookies = null;
       }
 
       return new ResponseImpl(null, null, status, headers, cookies, connection.getInputStream(), null);
@@ -330,7 +339,11 @@ public class InvocationImpl implements Invocation {
 
     @Override
     public Invocation build(final String method, final Entity<?> entity) {
-      return new InvocationImpl(providers, url, method, entity, requestHeaders, cookies, cacheControl);
+      final MultivaluedMap<String,Object> headers = requestHeaders == null ? new HttpHeadersImpl().getMirror() : requestHeaders instanceof MirrorMultivaluedMap ? ((MirrorMultivaluedMap<String,Object,String>)requestHeaders).clone() : new HttpHeadersImpl(requestHeaders).getMirror();
+      if (entity != null && entity.getMediaType() != null)
+        headers.add(HttpHeaders.CONTENT_TYPE, entity.getMediaType());
+
+      return new InvocationImpl(providers, url, method, entity, headers, cookies, cacheControl);
     }
 
     @Override
@@ -361,31 +374,31 @@ public class InvocationImpl implements Invocation {
 
     @Override
     public Invocation.Builder accept(final String ... mediaTypes) {
-      requestHeaders.put(HttpHeaders.ACCEPT, Arrays.asList(mediaTypes));
+      getHeaders().put(HttpHeaders.ACCEPT, Arrays.asList(mediaTypes));
       return this;
     }
 
     @Override
     public Invocation.Builder accept(final MediaType ... mediaTypes) {
-      requestHeaders.put(HttpHeaders.ACCEPT, Arrays.asList(mediaTypes));
+      getHeaders().put(HttpHeaders.ACCEPT, Arrays.asList(mediaTypes));
       return this;
     }
 
     @Override
     public Invocation.Builder acceptLanguage(final Locale ... locales) {
-      requestHeaders.put(HttpHeaders.ACCEPT_LANGUAGE, Arrays.asList(locales));
+      getHeaders().put(HttpHeaders.ACCEPT_LANGUAGE, Arrays.asList(locales));
       return this;
     }
 
     @Override
     public Invocation.Builder acceptLanguage(final String ... locales) {
-      requestHeaders.put(HttpHeaders.ACCEPT_LANGUAGE, Arrays.asList(locales));
+      getHeaders().put(HttpHeaders.ACCEPT_LANGUAGE, Arrays.asList(locales));
       return this;
     }
 
     @Override
     public Invocation.Builder acceptEncoding(final String ... encodings) {
-      requestHeaders.put(HttpHeaders.ACCEPT_LANGUAGE, Arrays.asList(encodings));
+      getHeaders().put(HttpHeaders.ACCEPT_LANGUAGE, Arrays.asList(encodings));
       return this;
     }
 
@@ -407,9 +420,13 @@ public class InvocationImpl implements Invocation {
       return this;
     }
 
+    private MultivaluedMap<String,Object> getHeaders() {
+      return requestHeaders == null ? requestHeaders = new HttpHeadersImpl().getMirror() : requestHeaders;
+    }
+
     @Override
     public Invocation.Builder header(final String name, final Object value) {
-      requestHeaders.put(name, Collections.singletonList(value));
+      getHeaders().put(name, Collections.singletonList(value));
       return this;
     }
 

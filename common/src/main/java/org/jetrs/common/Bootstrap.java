@@ -85,11 +85,13 @@ public class Bootstrap<R> {
     if (singletons != null || classes != null) {
       if (singletons != null)
         for (final Object singleton : singletons)
-          addResourceOrProvider(resources, exceptionMappers, entityReaders, entityWriters, requestFilters, responseFilters, readerInterceptors, writerInterceptors, paramConverterProviders, singleton.getClass(), singleton);
+          if (singleton != null)
+            addResourceOrProvider(resources, exceptionMappers, entityReaders, entityWriters, requestFilters, responseFilters, readerInterceptors, writerInterceptors, paramConverterProviders, singleton.getClass(), singleton);
 
       if (classes != null)
         for (final Class<?> cls : classes)
-          addResourceOrProvider(resources, exceptionMappers, entityReaders, entityWriters, requestFilters, responseFilters, readerInterceptors, writerInterceptors, paramConverterProviders, cls, null);
+          if (cls != null)
+            addResourceOrProvider(resources, exceptionMappers, entityReaders, entityWriters, requestFilters, responseFilters, readerInterceptors, writerInterceptors, paramConverterProviders, cls, null);
     }
     else {
       final Predicate<Class<?>> initialize = new Predicate<Class<?>>() {
