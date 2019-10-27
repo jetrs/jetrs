@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.ws.rs.ProcessingException;
+import javax.ws.rs.client.ResponseProcessingException;
 import javax.ws.rs.core.EntityTag;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.HttpHeaders;
@@ -85,18 +86,18 @@ public class ResponseImpl extends Response {
   }
 
   @Override
-  public <T>T readEntity(final Class<T> entityType) {
+  public <T>T readEntity(final Class<T> entityType) throws IllegalStateException, ResponseProcessingException {
     return readEntity(entityType, null);
   }
 
   @Override
-  public <T>T readEntity(final GenericType<T> entityType) {
+  public <T>T readEntity(final GenericType<T> entityType) throws IllegalStateException, ResponseProcessingException {
     // TODO:
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public <T>T readEntity(final Class<T> entityType, final Annotation[] annotations) {
+  public <T>T readEntity(final Class<T> entityType, final Annotation[] annotations) throws IllegalStateException, ResponseProcessingException {
     if (!(entity instanceof InputStream))
       throw new IllegalStateException("Entity is not an instance of InputStream");
 
@@ -131,7 +132,7 @@ public class ResponseImpl extends Response {
       return (T)(entity = readerInterceptorContext.proceed());
     }
     catch (final IOException e) {
-      throw new IllegalStateException(e);
+      throw new ResponseProcessingException(this, e);
     }
     finally {
       close();
@@ -139,7 +140,7 @@ public class ResponseImpl extends Response {
   }
 
   @Override
-  public <T>T readEntity(final GenericType<T> entityType, final Annotation[] annotations) {
+  public <T>T readEntity(final GenericType<T> entityType, final Annotation[] annotations) throws IllegalStateException, ResponseProcessingException {
     // TODO:
     throw new UnsupportedOperationException();
   }
