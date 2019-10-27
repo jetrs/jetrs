@@ -22,9 +22,8 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
@@ -55,26 +54,26 @@ public class ClientImpl implements Client, ClientConfigurable<Client> {
   private final SSLContext sslContext;
   private final HostnameVerifier verifier;
   private final ExecutorService executorService;
-  private final ScheduledExecutorService scheduledExecutorService;
   private final long connectTimeout;
-  private final TimeUnit connectUnit;
   private final long readTimeout;
-  private final TimeUnit readUnit;
 
-  public ClientImpl(final Configuration config, final SSLContext sslContext, final HostnameVerifier verifier, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final long connectTimeout, final TimeUnit connectUnit, final long readTimeout, final TimeUnit readUnit) {
+  public ClientImpl(final Configuration config, final SSLContext sslContext, final HostnameVerifier verifier, final ExecutorService executorService, final long connectTimeout, final long readTimeout) {
     this.config = config;
     this.sslContext = sslContext;
     this.verifier = verifier;
     this.executorService = executorService;
-    this.scheduledExecutorService = scheduledExecutorService;
     this.connectTimeout = connectTimeout;
-    this.connectUnit = connectUnit;
     this.readTimeout = readTimeout;
-    this.readUnit = readUnit;
   }
 
-  // TODO: This should only rebuild providers if config has changed!
+  private Providers providers;
+  private Set<?> singletons;
+  private Set<Class<?>> classes;
+
   private Providers buildProviders() {
+    if (providers != null && (singletons != null ? singletons.equals(config.getInstances()) : config.getInstances() == null) && (classes != null ? classes.equals(config.getClasses()) : config.getClasses() == null))
+      return providers;
+
     try {
       final List<ExceptionMappingProviderResource> exceptionMappers = new ArrayList<>();
       final List<EntityReaderProviderResource> entityReaders = new ArrayList<>();
@@ -87,10 +86,15 @@ public class ClientImpl implements Client, ClientConfigurable<Client> {
 
       final Bootstrap<Void> bootstrap = new Bootstrap<>();
       bootstrap.init(config.getInstances(), config.getClasses(), null, exceptionMappers, entityReaders, entityWriters, requestFilters, responseFilters, readerInterceptors, writerInterceptors, paramConverterProviders);
-      return new ProvidersImpl(exceptionMappers, entityReaders, entityWriters);
+      this.singletons = config.getInstances();
+      this.classes = config.getClasses();
+      return providers = new ProvidersImpl(exceptionMappers, entityReaders, entityWriters);
     }
-    catch (final IllegalAccessException | InstantiationException | InvocationTargetException | PackageNotFoundException | IOException e) {
+    catch (final IllegalAccessException | PackageNotFoundException e) {
       throw new IllegalStateException(e);
+    }
+    catch (final InstantiationException | InvocationTargetException | IOException e) {
+      throw new ProcessingException(e);
     }
   }
 
@@ -111,31 +115,31 @@ public class ClientImpl implements Client, ClientConfigurable<Client> {
 
   @Override
   public WebTarget target(final String uri) {
-    return new WebTargetImpl(buildProviders(), config, UriBuilder.fromUri(uri));
+    return new WebTargetImpl(buildProviders(), config, UriBuilder.fromUri(uri), executorService, connectTimeout, readTimeout);
   }
 
   @Override
   public WebTarget target(final URI uri) {
-    return new WebTargetImpl(buildProviders(), config, UriBuilder.fromUri(uri));
+    return new WebTargetImpl(buildProviders(), config, UriBuilder.fromUri(uri), executorService, connectTimeout, readTimeout);
   }
 
   @Override
   public WebTarget target(final UriBuilder uriBuilder) {
-    return new WebTargetImpl(buildProviders(), config, uriBuilder);
+    return new WebTargetImpl(buildProviders(), config, uriBuilder, executorService, connectTimeout, readTimeout);
   }
 
   @Override
   public WebTarget target(final Link link) {
-    return new WebTargetImpl(buildProviders(), config, UriBuilder.fromLink(link));
+    return new WebTargetImpl(buildProviders(), config, UriBuilder.fromLink(link), executorService, connectTimeout, readTimeout);
   }
 
   @Override
   public Invocation.Builder invocation(final Link link) {
     try {
-      return new InvocationImpl.BuilderImpl(buildProviders(), link.getUri().toURL());
+      return new InvocationImpl.BuilderImpl(buildProviders(), link.getUri().toURL(), executorService, connectTimeout, readTimeout);
     }
     catch (final MalformedURLException e) {
-      throw new ProcessingException(e);
+      throw new IllegalArgumentException(e);
     }
   }
 

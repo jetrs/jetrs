@@ -29,6 +29,7 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Configuration;
@@ -41,30 +42,27 @@ public class ClientBuilderImpl extends ClientBuilder implements ClientConfigurab
   private KeyStore trustStore;
   private HostnameVerifier verifier;
   private ExecutorService executorService;
-  private ScheduledExecutorService scheduledExecutorService;
   private long connectTimeout;
-  private TimeUnit connectUnit;
   private long readTimeout;
-  private TimeUnit readUnit;
 
   private SSLContext newSSLContext()  {
     try {
       // Get a KeyManager and initialize it
-      final KeyManagerFactory kmf = KeyManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-      kmf.init(keyStore, password);
+      final KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+      keyManagerFactory.init(keyStore, password);
 
       // Get a TrustManagerFactory with the DEFAULT KEYSTORE, so we have all the
       // certificates in cacerts trusted
-      final TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-      tmf.init(trustStore);
+      final TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+      trustManagerFactory.init(trustStore);
 
       // Get the SSLContext to help create SSLSocketFactory
       final SSLContext sslContext = SSLContext.getInstance("TLS");
-      sslContext.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
+      sslContext.init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), null);
       return sslContext;
     }
     catch (final KeyManagementException | KeyStoreException | NoSuchAlgorithmException | UnrecoverableKeyException e) {
-      throw new IllegalStateException(e);
+      throw new ProcessingException(e);
     }
   }
 
@@ -118,26 +116,24 @@ public class ClientBuilderImpl extends ClientBuilder implements ClientConfigurab
 
   @Override
   public ClientBuilder scheduledExecutorService(final ScheduledExecutorService scheduledExecutorService) {
-    this.scheduledExecutorService = scheduledExecutorService;
+    this.executorService = scheduledExecutorService;
     return this;
   }
 
   @Override
   public ClientBuilder connectTimeout(final long timeout, final TimeUnit unit) {
-    this.connectTimeout = timeout;
-    this.connectUnit = unit;
+    this.connectTimeout = TimeUnit.MILLISECONDS.convert(timeout, unit);
     return this;
   }
 
   @Override
   public ClientBuilder readTimeout(final long timeout, final TimeUnit unit) {
-    this.readTimeout = timeout;
-    this.readUnit = unit;
+    this.readTimeout = TimeUnit.MILLISECONDS.convert(timeout, unit);
     return this;
   }
 
   @Override
   public Client build() {
-    return new ClientImpl(config == null ? new ClientConfiguration() : ((ClientConfiguration)getConfiguration()).clone(), sslContext == null ? sslContext = newSSLContext() : sslContext, verifier, executorService, scheduledExecutorService, connectTimeout, connectUnit, readTimeout, readUnit);
+    return new ClientImpl(config == null ? new ClientConfiguration() : ((ClientConfiguration)getConfiguration()).clone(), sslContext == null ? sslContext = newSSLContext() : sslContext, verifier, executorService, connectTimeout, readTimeout);
   }
 }

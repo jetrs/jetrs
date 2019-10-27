@@ -20,6 +20,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
 
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Invocation;
@@ -33,11 +34,17 @@ public class WebTargetImpl implements WebTarget, ClientConfigurable<WebTarget> {
   private final Providers providers;
   private final Configuration config;
   private final UriBuilder builder;
+  private final ExecutorService executorService;
+  private final long connectTimeout;
+  private final long readTimeout;
 
-  WebTargetImpl(final Providers providers, final Configuration config, final UriBuilder builder) {
+  WebTargetImpl(final Providers providers, final Configuration config, final UriBuilder builder, final ExecutorService executorService, final long connectTimeout, final long readTimeout) {
     this.providers = providers;
     this.config = config;
     this.builder = builder;
+    this.executorService = executorService;
+    this.connectTimeout = connectTimeout;
+    this.readTimeout = readTimeout;
   }
 
   @Override
@@ -112,7 +119,7 @@ public class WebTargetImpl implements WebTarget, ClientConfigurable<WebTarget> {
   @Override
   public Invocation.Builder request() {
     try {
-      return new InvocationImpl.BuilderImpl(providers, getUri().toURL());
+      return new InvocationImpl.BuilderImpl(providers, getUri().toURL(), executorService, connectTimeout, readTimeout);
     }
     catch (final MalformedURLException e) {
       throw new ProcessingException(e);
@@ -122,7 +129,7 @@ public class WebTargetImpl implements WebTarget, ClientConfigurable<WebTarget> {
   @Override
   public Invocation.Builder request(final String ... acceptedResponseTypes) {
     try {
-      return new InvocationImpl.BuilderImpl(providers, getUri().toURL(), acceptedResponseTypes);
+      return new InvocationImpl.BuilderImpl(providers, getUri().toURL(), executorService, connectTimeout, readTimeout, acceptedResponseTypes);
     }
     catch (final MalformedURLException e) {
       throw new ProcessingException(e);
@@ -132,7 +139,7 @@ public class WebTargetImpl implements WebTarget, ClientConfigurable<WebTarget> {
   @Override
   public Invocation.Builder request(final MediaType ... acceptedResponseTypes) {
     try {
-      return new InvocationImpl.BuilderImpl(providers, getUri().toURL(), acceptedResponseTypes);
+      return new InvocationImpl.BuilderImpl(providers, getUri().toURL(), executorService, connectTimeout, readTimeout, acceptedResponseTypes);
     }
     catch (final MalformedURLException e) {
       throw new ProcessingException(e);

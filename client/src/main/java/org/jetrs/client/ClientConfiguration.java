@@ -124,7 +124,7 @@ public class ClientConfiguration implements Cloneable, Configuration, Serializab
       return clone;
     }
     catch (final CloneNotSupportedException e) {
-      throw new IllegalStateException(e);
+      throw new RuntimeException(e);
     }
   }
 }

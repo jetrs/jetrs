@@ -29,10 +29,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.ProcessingException;
@@ -56,7 +55,6 @@ import javax.ws.rs.ext.Providers;
 
 import org.jetrs.common.core.HttpHeadersImpl;
 import org.jetrs.common.core.ResponseImpl;
-import org.jetrs.common.util.MirrorMultivaluedMap;
 import org.jetrs.common.util.Responses;
 import org.libj.util.CollectionUtil;
 import org.libj.util.Dates;
@@ -69,8 +67,11 @@ public class InvocationImpl implements Invocation {
   private final MultivaluedMap<String,Object> headers;
   private final List<Cookie> cookies;
   private final CacheControl cacheControl;
+  private final ExecutorService executorService;
+  private final long connectTimeout;
+  private final long readTimeout;
 
-  InvocationImpl(final Providers providers, final URL url, final String method, final Entity<?> entity, final MultivaluedMap<String,Object> headers, final List<Cookie> cookies, final CacheControl cacheControl) {
+  InvocationImpl(final Providers providers, final URL url, final String method, final Entity<?> entity, final MultivaluedMap<String,Object> headers, final List<Cookie> cookies, final CacheControl cacheControl, final ExecutorService executorService, final long connectTimeout, final long readTimeout) {
     this.providers = providers;
     this.url = url;
     this.method = method;
@@ -78,6 +79,9 @@ public class InvocationImpl implements Invocation {
     this.headers = headers;
     this.cookies = cookies;
     this.cacheControl = cacheControl;
+    this.executorService = executorService;
+    this.connectTimeout = connectTimeout;
+    this.readTimeout = readTimeout;
   }
 
   @Override
@@ -87,10 +91,14 @@ public class InvocationImpl implements Invocation {
   }
 
   @Override
+  @SuppressWarnings({"rawtypes", "unchecked"})
   public Response invoke() {
     try {
       final HttpURLConnection connection = (HttpURLConnection)url.openConnection();
       connection.setRequestMethod(method);
+      // FIXME: Casting long to int here
+      connection.setConnectTimeout((int)connectTimeout);
+      connection.setReadTimeout((int)readTimeout);
       if (headers != null)
         for (final Map.Entry<String,List<Object>> entry : headers.entrySet())
           connection.setRequestProperty(entry.getKey(), CollectionUtil.toString(entry.getValue(), ','));
@@ -98,7 +106,10 @@ public class InvocationImpl implements Invocation {
       if (cookies != null)
         connection.setRequestProperty(HttpHeaders.COOKIE, CollectionUtil.toString(cookies, ';'));
 
-      // TODO: cacheControl
+      if (cacheControl != null)
+        connection.setRequestProperty(HttpHeaders.CACHE_CONTROL, cacheControl.toString());
+      else
+        connection.setUseCaches(false);
 
       if (entity != null) {
         connection.setDoOutput(true);
@@ -149,82 +160,79 @@ public class InvocationImpl implements Invocation {
     return invoke().readEntity(responseType);
   }
 
+  private ExecutorService getExecutorService() {
+    if (executorService == null)
+      throw new ProcessingException("ExecutorService was not provided");
+
+    return executorService;
+  }
+
   @Override
   public Future<Response> submit() {
-    return new FutureResponse<Response>() {
+    return getExecutorService().submit(new Callable<Response>() {
       @Override
-      public Response get(final long timeout, final TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+      public Response call() {
         return invoke();
       }
-    };
+    });
   }
 
   @Override
   public <T>Future<T> submit(final Class<T> responseType) {
-    return new FutureResponse<T>() {
+    return getExecutorService().submit(new Callable<T>() {
       @Override
-      public T get(final long timeout, final TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+      public T call() {
         return invoke().readEntity(responseType);
       }
-    };
+    });
   }
 
   @Override
   public <T>Future<T> submit(final GenericType<T> responseType) {
-    return new FutureResponse<T>() {
+    return getExecutorService().submit(new Callable<T>() {
       @Override
-      public T get(final long timeout, final TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+      public T call() {
         return invoke().readEntity(responseType);
       }
-    };
+    });
   }
 
   @Override
   public <T>Future<T> submit(final InvocationCallback<T> callback) {
-    return new FutureResponse<T>() {
+    return getExecutorService().submit(new Callable<T>() {
       @Override
-      public T get(final long timeout, final TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+      public T call() {
         try {
+          // FIXME: How do I know the type of entity from the InvocationCallback<T>?
           final T entity = (T)invoke().getEntity();
           callback.completed(entity);
           return entity;
         }
-        catch (final Throwable e) {
-          callback.failed(e);
-          throw e;
+        catch (final Throwable t) {
+          callback.failed(t);
+          throw t;
         }
       }
-    };
+    });
   }
 
-  public static class BuilderImpl implements Invocation.Builder {
-    private final URL url;
-    private final Providers providers;
-
+  public static class BuilderImpl extends Invoker<Response> implements Invocation.Builder {
     private MultivaluedMap<String,Object> requestHeaders;
     private List<Cookie> cookies;
     private CacheControl cacheControl;
 
-    BuilderImpl(final Providers providers, final URL url) {
-      this.providers = providers;
-      this.url = url;
+    BuilderImpl(final Providers providers, final URL url, final ExecutorService executorService, final long connectTimeout, final long readTimeout) {
+      super(providers, url, executorService, connectTimeout, readTimeout);
     }
 
-    BuilderImpl(final Providers providers, final URL url, final String ... acceptedResponseTypes) {
-      this.providers = providers;
-      this.url = url;
+    BuilderImpl(final Providers providers, final URL url, final ExecutorService executorService, final long connectTimeout, final long readTimeout, final String ... acceptedResponseTypes) {
+      this(providers, url, executorService, connectTimeout, readTimeout);
       accept(acceptedResponseTypes);
     }
 
-    BuilderImpl(final Providers providers, final URL url, final MediaType ... acceptedResponseTypes) {
-      this.providers = providers;
-      this.url = url;
+    BuilderImpl(final Providers providers, final URL url, final ExecutorService executorService, final long connectTimeout, final long readTimeout, final MediaType ... acceptedResponseTypes) {
+      this(providers, url, executorService, connectTimeout, readTimeout);
       accept(acceptedResponseTypes);
-    }
-
-    @Override
-    public Response get() {
-      return method(HttpMethod.GET, (Entity<?>)null);
     }
 
     @Override
@@ -238,11 +246,6 @@ public class InvocationImpl implements Invocation {
     }
 
     @Override
-    public Response put(final Entity<?> entity) {
-      return method(HttpMethod.PUT, (Entity<?>)null);
-    }
-
-    @Override
     public <T>T put(final Entity<?> entity, final Class<T> responseType) {
       return put(entity).readEntity(responseType);
     }
@@ -250,11 +253,6 @@ public class InvocationImpl implements Invocation {
     @Override
     public <T>T put(final Entity<?> entity, final GenericType<T> responseType) {
       return put(entity).readEntity(responseType);
-    }
-
-    @Override
-    public Response post(final Entity<?> entity) {
-      return method(HttpMethod.POST, (Entity<?>)null);
     }
 
     @Override
@@ -268,11 +266,6 @@ public class InvocationImpl implements Invocation {
     }
 
     @Override
-    public Response delete() {
-      return method(HttpMethod.DELETE, (Entity<?>)null);
-    }
-
-    @Override
     public <T>T delete(final Class<T> responseType) {
       return delete().readEntity(responseType);
     }
@@ -283,16 +276,6 @@ public class InvocationImpl implements Invocation {
     }
 
     @Override
-    public Response head() {
-      return method(HttpMethod.HEAD, (Entity<?>)null);
-    }
-
-    @Override
-    public Response options() {
-      return method(HttpMethod.OPTIONS, (Entity<?>)null);
-    }
-
-    @Override
     public <T>T options(final Class<T> responseType) {
       return options().readEntity(responseType);
     }
@@ -300,11 +283,6 @@ public class InvocationImpl implements Invocation {
     @Override
     public <T>T options(final GenericType<T> responseType) {
       return options().readEntity(responseType);
-    }
-
-    @Override
-    public Response trace() {
-      return method("TRACE", (Entity<?>)null);
     }
 
     @Override
@@ -354,11 +332,7 @@ public class InvocationImpl implements Invocation {
 
     @Override
     public Invocation build(final String method, final Entity<?> entity) {
-      final MultivaluedMap<String,Object> headers = requestHeaders == null ? new HttpHeadersImpl().getMirror() : requestHeaders instanceof MirrorMultivaluedMap ? ((MirrorMultivaluedMap<String,Object,String>)requestHeaders).clone() : new HttpHeadersImpl(requestHeaders).getMirror();
-      if (entity != null && entity.getMediaType() != null)
-        headers.add(HttpHeaders.CONTENT_TYPE, entity.getMediaType());
-
-      return new InvocationImpl(providers, url, method, entity, headers, cookies, cacheControl);
+      return super.build(method, entity, requestHeaders, cookies, cacheControl);
     }
 
     @Override
@@ -383,37 +357,36 @@ public class InvocationImpl implements Invocation {
 
     @Override
     public AsyncInvoker async() {
-      // TODO
-      return null;
+      return new AsyncInvokerImpl(providers, url, requestHeaders, cookies, cacheControl, executorService, connectTimeout, readTimeout);
     }
 
     @Override
     public Invocation.Builder accept(final String ... mediaTypes) {
-      getHeaders().put(HttpHeaders.ACCEPT, Arrays.asList(mediaTypes));
+      getHeaders().put(HttpHeaders.ACCEPT, Arrays.asList((Object[])mediaTypes));
       return this;
     }
 
     @Override
     public Invocation.Builder accept(final MediaType ... mediaTypes) {
-      getHeaders().put(HttpHeaders.ACCEPT, Arrays.asList(mediaTypes));
+      getHeaders().put(HttpHeaders.ACCEPT, Arrays.asList((Object[])mediaTypes));
       return this;
     }
 
     @Override
     public Invocation.Builder acceptLanguage(final Locale ... locales) {
-      getHeaders().put(HttpHeaders.ACCEPT_LANGUAGE, Arrays.asList(locales));
+      getHeaders().put(HttpHeaders.ACCEPT_LANGUAGE, Arrays.asList((Object[])locales));
       return this;
     }
 
     @Override
     public Invocation.Builder acceptLanguage(final String ... locales) {
-      getHeaders().put(HttpHeaders.ACCEPT_LANGUAGE, Arrays.asList(locales));
+      getHeaders().put(HttpHeaders.ACCEPT_LANGUAGE, Arrays.asList((Object[])locales));
       return this;
     }
 
     @Override
     public Invocation.Builder acceptEncoding(final String ... encodings) {
-      getHeaders().put(HttpHeaders.ACCEPT_LANGUAGE, Arrays.asList(encodings));
+      getHeaders().put(HttpHeaders.ACCEPT_LANGUAGE, Arrays.asList((Object[])encodings));
       return this;
     }
 
