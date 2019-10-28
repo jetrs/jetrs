@@ -14,8 +14,9 @@
  * program. If not, see <http://opensource.org/licenses/MIT/>.
  */
 
-package org.jetrs.client;
+package org.jetrs.common.core;
 
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Set;
@@ -61,7 +62,7 @@ class ComponentSet implements Cloneable {
       if (componentClass.equals(component.cls))
         return component.contracts;
 
-    return null;
+    return Collections.EMPTY_MAP;
   }
 
   @Override

@@ -86,7 +86,7 @@ public class RestApplicationServlet extends RestHttpServlet {
   }
 
   public static AnnotationInjector createAnnotationInjector(final ContainerRequestContext containerRequestContext, final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse, final HttpHeaders headers, final ResourceContext resourceContext) {
-    final AnnotationInjector annotationInjector = new AnnotationInjector(containerRequestContext, new RequestImpl(httpServletRequest.getMethod()), httpServletRequest, httpServletResponse, headers, resourceContext.getApplication());
+    final AnnotationInjector annotationInjector = new AnnotationInjector(containerRequestContext, new RequestImpl(httpServletRequest.getMethod()), httpServletRequest, httpServletResponse, headers, resourceContext.getConfiguration(), resourceContext.getApplication());
     annotationInjector.setProviders(resourceContext.getProviders(annotationInjector));
     return annotationInjector;
   }

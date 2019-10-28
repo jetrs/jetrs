@@ -14,14 +14,14 @@
  * program. If not, see <http://opensource.org/licenses/MIT/>.
  */
 
-package org.jetrs.client;
+package org.jetrs.common.core;
 
 import java.util.Map;
 
 import javax.ws.rs.core.Configurable;
 
 @SuppressWarnings("unchecked")
-public interface ClientConfigurable<C extends Configurable<? super C>> extends Configurable<C> {
+public interface ConfigurableImpl<C extends Configurable<? super C>> extends Configurable<C> {
   @Override
   public default C property(final String name, final Object value) {
     getConfiguration().getProperties().put(name, value);
@@ -30,49 +30,49 @@ public interface ClientConfigurable<C extends Configurable<? super C>> extends C
 
   @Override
   public default C register(final Object component) {
-    ((ClientConfiguration)getConfiguration()).components().add(new Component(null, component));
+    ((ConfigurationImpl)getConfiguration()).components().add(new Component(null, component));
     return (C)this;
   }
 
   @Override
   public default C register(final Object component, final int priority) {
-    ((ClientConfiguration)getConfiguration()).components().add(new Component(null, component, priority));
+    ((ConfigurationImpl)getConfiguration()).components().add(new Component(null, component, priority));
     return (C)this;
   }
 
   @Override
   public default C register(final Object component, final Class<?> ... contracts) {
-    ((ClientConfiguration)getConfiguration()).components().add(new Component(null, component, contracts));
+    ((ConfigurationImpl)getConfiguration()).components().add(new Component(null, component, contracts));
     return (C)this;
   }
 
   @Override
   public default C register(final Object component, final Map<Class<?>,Integer> contracts) {
-    ((ClientConfiguration)getConfiguration()).components().add(new Component(null, component, contracts));
+    ((ConfigurationImpl)getConfiguration()).components().add(new Component(null, component, contracts));
     return (C)this;
   }
 
   @Override
   public default C register(final Class<?> componentClass) {
-    ((ClientConfiguration)getConfiguration()).components().add(new Component(componentClass, null));
+    ((ConfigurationImpl)getConfiguration()).components().add(new Component(componentClass, null));
     return (C)this;
   }
 
   @Override
   public default C register(final Class<?> componentClass, final int priority) {
-    ((ClientConfiguration)getConfiguration()).components().add(new Component(componentClass, null, priority));
+    ((ConfigurationImpl)getConfiguration()).components().add(new Component(componentClass, null, priority));
     return (C)this;
   }
 
   @Override
   public default C register(final Class<?> componentClass, final Class<?> ... contracts) {
-    ((ClientConfiguration)getConfiguration()).components().add(new Component(componentClass, null, contracts));
+    ((ConfigurationImpl)getConfiguration()).components().add(new Component(componentClass, null, contracts));
     return (C)this;
   }
 
   @Override
   public default C register(final Class<?> componentClass, final Map<Class<?>,Integer> contracts) {
-    ((ClientConfiguration)getConfiguration()).components().add(new Component(componentClass, null, contracts));
+    ((ConfigurationImpl)getConfiguration()).components().add(new Component(componentClass, null, contracts));
     return (C)this;
   }
 }

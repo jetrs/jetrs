@@ -23,7 +23,6 @@ import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.EntityTag;
 import javax.ws.rs.core.Link;
-import javax.ws.rs.core.Link.Builder;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response.ResponseBuilder;
@@ -90,7 +89,7 @@ public class RuntimeDelegateImpl extends RuntimeDelegate {
   }
 
   @Override
-  public Builder createLinkBuilder() {
+  public Link.Builder createLinkBuilder() {
     // TODO:
     throw new UnsupportedOperationException();
   }

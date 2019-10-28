@@ -39,8 +39,8 @@ public class AsyncInvokerImpl extends Invoker<Future<Response>> implements Async
   private final List<Cookie> cookies;
   private final CacheControl cacheControl;
 
-  AsyncInvokerImpl(final Providers providers, final URL url, final MultivaluedMap<String,Object> requestHeaders, final List<Cookie> cookies, final CacheControl cacheControl, final ExecutorService executorService, final long connectTimeout, final long readTimeout) {
-    super(providers, url, executorService, connectTimeout, readTimeout);
+  AsyncInvokerImpl(final ClientImpl client, final Providers providers, final URL url, final MultivaluedMap<String,Object> requestHeaders, final List<Cookie> cookies, final CacheControl cacheControl, final ExecutorService executorService, final long connectTimeout, final long readTimeout) {
+    super(client, providers, url, executorService, connectTimeout, readTimeout);
     this.requestHeaders = requestHeaders;
     this.cookies = cookies;
     this.cacheControl = cacheControl;
@@ -175,6 +175,7 @@ public class AsyncInvokerImpl extends Invoker<Future<Response>> implements Async
 
   @Override
   public <T>Future<T> method(final String name, final Entity<?> entity, final Class<T> responseType) {
+    client.assertNotClosed();
     return getExecutorService().submit(new Callable<T>() {
       @Override
       public T call() throws Exception {
@@ -185,6 +186,7 @@ public class AsyncInvokerImpl extends Invoker<Future<Response>> implements Async
 
   @Override
   public <T>Future<T> method(final String name, final Entity<?> entity, final GenericType<T> responseType) {
+    client.assertNotClosed();
     return getExecutorService().submit(new Callable<T>() {
       @Override
       public T call() throws Exception {
@@ -195,6 +197,7 @@ public class AsyncInvokerImpl extends Invoker<Future<Response>> implements Async
 
   @Override
   public <T>Future<T> method(final String name, final Entity<?> entity, final InvocationCallback<T> callback) {
+    client.assertNotClosed();
     return getExecutorService().submit(new Callable<T>() {
       @Override
       public T call() throws Exception {

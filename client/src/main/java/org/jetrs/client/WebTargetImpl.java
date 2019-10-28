@@ -30,18 +30,22 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.ext.Providers;
 
-public class WebTargetImpl implements WebTarget, ClientConfigurable<WebTarget> {
+import org.jetrs.common.core.ConfigurableImpl;
+
+public class WebTargetImpl implements ConfigurableImpl<WebTarget>, WebTarget {
+  private final ClientImpl client;
   private final Providers providers;
   private final Configuration config;
-  private final UriBuilder builder;
+  private final UriBuilder uriBuilder;
   private final ExecutorService executorService;
   private final long connectTimeout;
   private final long readTimeout;
 
-  WebTargetImpl(final Providers providers, final Configuration config, final UriBuilder builder, final ExecutorService executorService, final long connectTimeout, final long readTimeout) {
+  WebTargetImpl(final ClientImpl client, final Providers providers, final Configuration config, final UriBuilder uriBuilder, final ExecutorService executorService, final long connectTimeout, final long readTimeout) {
+    this.client = client;
     this.providers = providers;
     this.config = config;
-    this.builder = builder;
+    this.uriBuilder = uriBuilder;
     this.executorService = executorService;
     this.connectTimeout = connectTimeout;
     this.readTimeout = readTimeout;
@@ -54,72 +58,73 @@ public class WebTargetImpl implements WebTarget, ClientConfigurable<WebTarget> {
 
   @Override
   public URI getUri() {
-    return builder.build();
+    return uriBuilder.build();
   }
 
   @Override
   public UriBuilder getUriBuilder() {
-    return builder;
+    return uriBuilder;
   }
 
   @Override
   public WebTarget path(final String path) {
-    builder.path(path);
+    uriBuilder.path(path);
     return this;
   }
 
   @Override
   public WebTarget resolveTemplate(final String name, final Object value) {
-    builder.resolveTemplate(Objects.requireNonNull(name), value);
+    uriBuilder.resolveTemplate(Objects.requireNonNull(name), value);
     return this;
   }
 
   @Override
   public WebTarget resolveTemplate(final String name, final Object value, final boolean encodeSlashInPath) {
-    builder.resolveTemplate(Objects.requireNonNull(name), value, encodeSlashInPath);
+    uriBuilder.resolveTemplate(Objects.requireNonNull(name), value, encodeSlashInPath);
     return this;
   }
 
   @Override
   public WebTarget resolveTemplateFromEncoded(final String name, final Object value) {
-    builder.resolveTemplate(Objects.requireNonNull(name), value);
+    uriBuilder.resolveTemplate(Objects.requireNonNull(name), value);
     return this;
   }
 
   @Override
   public WebTarget resolveTemplates(final Map<String,Object> templateValues) {
-    builder.resolveTemplates(templateValues);
+    uriBuilder.resolveTemplates(templateValues);
     return this;
   }
 
   @Override
   public WebTarget resolveTemplates(final Map<String,Object> templateValues, final boolean encodeSlashInPath) {
-    builder.resolveTemplates(templateValues, encodeSlashInPath);
+    uriBuilder.resolveTemplates(templateValues, encodeSlashInPath);
     return this;
   }
 
   @Override
   public WebTarget resolveTemplatesFromEncoded(final Map<String,Object> templateValues) {
-    builder.resolveTemplatesFromEncoded(templateValues);
+    uriBuilder.resolveTemplatesFromEncoded(templateValues);
     return this;
   }
 
   @Override
   public WebTarget matrixParam(final String name, final Object ... values) {
-    builder.matrixParam(name, values);
+    uriBuilder.matrixParam(name, values);
     return this;
   }
 
   @Override
   public WebTarget queryParam(final String name, final Object ... values) {
-    builder.queryParam(name, values);
+    uriBuilder.queryParam(name, values);
     return this;
   }
 
   @Override
   public Invocation.Builder request() {
+    client.assertNotClosed();
     try {
-      return new InvocationImpl.BuilderImpl(providers, getUri().toURL(), executorService, connectTimeout, readTimeout);
+      return new InvocationImpl.BuilderImpl(client, providers, getUri().toURL(), executorService, connectTimeout, readTimeout);
     }
     catch (final MalformedURLException e) {
       throw new ProcessingException(e);
@@ -128,8 +133,9 @@ public class WebTargetImpl implements WebTarget, ClientConfigurable<WebTarget> {
 
   @Override
   public Invocation.Builder request(final String ... acceptedResponseTypes) {
+    client.assertNotClosed();
     try {
-      return new InvocationImpl.BuilderImpl(providers, getUri().toURL(), executorService, connectTimeout, readTimeout, acceptedResponseTypes);
+      return new InvocationImpl.BuilderImpl(client, providers, getUri().toURL(), executorService, connectTimeout, readTimeout, acceptedResponseTypes);
     }
     catch (final MalformedURLException e) {
       throw new ProcessingException(e);
@@ -138,8 +144,9 @@ public class WebTargetImpl implements WebTarget, ClientConfigurable<WebTarget> {
 
   @Override
   public Invocation.Builder request(final MediaType ... acceptedResponseTypes) {
+    client.assertNotClosed();
     try {
-      return new InvocationImpl.BuilderImpl(providers, getUri().toURL(), executorService, connectTimeout, readTimeout, acceptedResponseTypes);
+      return new InvocationImpl.BuilderImpl(client, providers, getUri().toURL(), executorService, connectTimeout, readTimeout, acceptedResponseTypes);
     }
     catch (final MalformedURLException e) {
       throw new ProcessingException(e);

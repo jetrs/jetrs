@@ -38,6 +38,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.HttpHeaders;
@@ -65,6 +66,7 @@ public class AnnotationInjector {
   private static final Class<?>[] contextTypes = {
     // ResourceContext.class,
     Application.class,
+    Configuration.class,
     Providers.class,
     SecurityContext.class,
     UriInfo.class,
@@ -84,7 +86,7 @@ public class AnnotationInjector {
 
   private static final Comparator<Constructor<?>> parameterCountComparator = (o1, o2) -> o1.getParameterCount() < o2.getParameterCount() ? -1 : 1;
 
-  public static AnnotationInjector CONTEXT_ONLY = new AnnotationInjector(null, null, null, null, null, null);
+  public static final AnnotationInjector CONTEXT_ONLY = new AnnotationInjector(null, null, null, null, null, null, null);
 
   @SuppressWarnings("unchecked")
   private static final Class<Annotation>[] paramAnnotationTypes = new Class[] {QueryParam.class, PathParam.class, MatrixParam.class, CookieParam.class, HeaderParam.class};
@@ -127,16 +129,18 @@ public class AnnotationInjector {
   private final HttpHeaders httpHeaders;
   private final HttpServletRequest httpServletRequest;
   private final HttpServletResponse httpServletResponse;
+  private final Configuration configuration;
   private final Application application;
   // NOTE: Have to leave this non-final because there is a circular reference in the createAnnotationInjector() factory method
   private Providers providers;
 
-  public AnnotationInjector(final ContainerRequestContext containerRequestContext, final Request request, final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse, final HttpHeaders httpHeaders, final Application application) {
+  public AnnotationInjector(final ContainerRequestContext containerRequestContext, final Request request, final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse, final HttpHeaders httpHeaders, final Configuration configuration, final Application application) {
     this.containerRequestContext = containerRequestContext;
     this.request = request;
     this.httpHeaders = httpHeaders;
     this.httpServletRequest = httpServletRequest;
     this.httpServletResponse = httpServletResponse;
+    this.configuration = configuration;
     this.application = application;
   }
 
@@ -164,6 +168,9 @@ public class AnnotationInjector {
 
     if (contextClass == UriInfo.class)
       return (T)containerRequestContext.getUriInfo();
+
+    if (contextClass == Configuration.class)
+      return (T)configuration;
 
     if (contextClass == Application.class)
       return (T)application;

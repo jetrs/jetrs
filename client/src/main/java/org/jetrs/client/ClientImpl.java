@@ -46,10 +46,11 @@ import org.jetrs.common.ExceptionMappingProviderResource;
 import org.jetrs.common.ProviderResource;
 import org.jetrs.common.ReaderInterceptorEntityProviderResource;
 import org.jetrs.common.WriterInterceptorEntityProviderResource;
+import org.jetrs.common.core.ConfigurableImpl;
 import org.jetrs.common.ext.ProvidersImpl;
 import org.libj.lang.PackageNotFoundException;
 
-public class ClientImpl implements Client, ClientConfigurable<Client> {
+public class ClientImpl implements Client, ConfigurableImpl<Client> {
   private final Configuration config;
   private final SSLContext sslContext;
   private final HostnameVerifier verifier;
@@ -98,6 +99,19 @@ public class ClientImpl implements Client, ClientConfigurable<Client> {
     }
   }
 
+  private boolean closed;
+
+  void assertNotClosed() {
+    if (closed)
+      throw new IllegalStateException("Client is closed");
+  }
+
+  @Override
+  public void close() {
+    // FIXME: Are there any resources to release?
+    closed = true;
+  }
+
   @Override
   public Configuration getConfiguration() {
     return config;
@@ -115,36 +129,36 @@ public class ClientImpl implements Client, ClientConfigurable<Client> {
 
   @Override
   public WebTarget target(final String uri) {
-    return new WebTargetImpl(buildProviders(), config, UriBuilder.fromUri(uri), executorService, connectTimeout, readTimeout);
+    assertNotClosed();
+    return new WebTargetImpl(this, buildProviders(), config, UriBuilder.fromUri(uri), executorService, connectTimeout, readTimeout);
   }
 
   @Override
   public WebTarget target(final URI uri) {
-    return new WebTargetImpl(buildProviders(), config, UriBuilder.fromUri(uri), executorService, connectTimeout, readTimeout);
+    assertNotClosed();
+    return new WebTargetImpl(this, buildProviders(), config, UriBuilder.fromUri(uri), executorService, connectTimeout, readTimeout);
   }
 
   @Override
   public WebTarget target(final UriBuilder uriBuilder) {
-    return new WebTargetImpl(buildProviders(), config, uriBuilder, executorService, connectTimeout, readTimeout);
+    assertNotClosed();
+    return new WebTargetImpl(this, buildProviders(), config, uriBuilder, executorService, connectTimeout, readTimeout);
   }
 
   @Override
   public WebTarget target(final Link link) {
-    return new WebTargetImpl(buildProviders(), config, UriBuilder.fromLink(link), executorService, connectTimeout, readTimeout);
+    assertNotClosed();
+    return new WebTargetImpl(this, buildProviders(), config, UriBuilder.fromLink(link), executorService, connectTimeout, readTimeout);
   }
 
   @Override
   public Invocation.Builder invocation(final Link link) {
+    assertNotClosed();
     try {
-      return new InvocationImpl.BuilderImpl(buildProviders(), link.getUri().toURL(), executorService, connectTimeout, readTimeout);
+      return new InvocationImpl.BuilderImpl(this, buildProviders(), link.getUri().toURL(), executorService, connectTimeout, readTimeout);
     }
     catch (final MalformedURLException e) {
       throw new IllegalArgumentException(e);
     }
-  }
-
-  @Override
-  public void close() {
-    // TODO
   }
 }

@@ -14,8 +14,9 @@
  * program. If not, see <http://opensource.org/licenses/MIT/>.
  */
 
-package org.jetrs.client;
+package org.jetrs.common.core;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -48,14 +49,7 @@ class Component {
     this.cls = cls;
     this.instance = instance;
     this.priority = getPriority(cls != null ? cls : instance.getClass());
-    if (contracts != null) {
-      this.contracts = new HashMap<>(contracts.size());
-      for (final Map.Entry<Class<?>,Integer> entry : contracts.entrySet())
-        this.contracts.put(entry.getKey(), entry.getValue());
-    }
-    else {
-      this.contracts = null;
-    }
+    this.contracts = contracts == null ? null : Collections.unmodifiableMap(contracts);
   }
 
   Component(final Class<?> cls, final Object instance, final Class<?>[] contracts) {
@@ -63,9 +57,11 @@ class Component {
     this.instance = instance;
     this.priority = getPriority(cls != null ? cls : instance.getClass());
     if (contracts != null) {
-      this.contracts = new HashMap<>(contracts.length);
+      final Map<Class<?>,Integer> map = new HashMap<>(contracts.length);
       for (final Class<?> contract : contracts)
-        this.contracts.put(contract, getPriority(contract));
+        map.put(contract, getPriority(contract));
+
+      this.contracts = Collections.unmodifiableMap(map);
     }
     else {
       this.contracts = null;

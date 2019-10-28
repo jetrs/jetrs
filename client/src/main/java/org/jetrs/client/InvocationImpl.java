@@ -60,6 +60,7 @@ import org.libj.util.CollectionUtil;
 import org.libj.util.Dates;
 
 public class InvocationImpl implements Invocation {
+  private final ClientImpl client;
   private final Providers providers;
   private final URL url;
   private final String method;
@@ -71,7 +72,8 @@ public class InvocationImpl implements Invocation {
   private final long connectTimeout;
   private final long readTimeout;
 
-  InvocationImpl(final Providers providers, final URL url, final String method, final Entity<?> entity, final MultivaluedMap<String,Object> headers, final List<Cookie> cookies, final CacheControl cacheControl, final ExecutorService executorService, final long connectTimeout, final long readTimeout) {
+  InvocationImpl(final ClientImpl client, final Providers providers, final URL url, final String method, final Entity<?> entity, final MultivaluedMap<String,Object> headers, final List<Cookie> cookies, final CacheControl cacheControl, final ExecutorService executorService, final long connectTimeout, final long readTimeout) {
+    this.client = client;
     this.providers = providers;
     this.url = url;
     this.method = method;
@@ -199,6 +201,7 @@ public class InvocationImpl implements Invocation {
 
   @Override
   public <T>Future<T> submit(final InvocationCallback<T> callback) {
+    client.assertNotClosed();
     return getExecutorService().submit(new Callable<T>() {
       @Override
       public T call() {
@@ -221,18 +224,101 @@ public class InvocationImpl implements Invocation {
     private List<Cookie> cookies;
     private CacheControl cacheControl;
 
-    BuilderImpl(final Providers providers, final URL url, final ExecutorService executorService, final long connectTimeout, final long readTimeout) {
-      super(providers, url, executorService, connectTimeout, readTimeout);
+    BuilderImpl(final ClientImpl client, final Providers providers, final URL url, final ExecutorService executorService, final long connectTimeout, final long readTimeout) {
+      super(client, providers, url, executorService, connectTimeout, readTimeout);
     }
 
-    BuilderImpl(final Providers providers, final URL url, final ExecutorService executorService, final long connectTimeout, final long readTimeout, final String ... acceptedResponseTypes) {
-      this(providers, url, executorService, connectTimeout, readTimeout);
+    BuilderImpl(final ClientImpl client, final Providers providers, final URL url, final ExecutorService executorService, final long connectTimeout, final long readTimeout, final String ... acceptedResponseTypes) {
+      this(client, providers, url, executorService, connectTimeout, readTimeout);
       accept(acceptedResponseTypes);
     }
 
-    BuilderImpl(final Providers providers, final URL url, final ExecutorService executorService, final long connectTimeout, final long readTimeout, final MediaType ... acceptedResponseTypes) {
-      this(providers, url, executorService, connectTimeout, readTimeout);
+    BuilderImpl(final ClientImpl client, final Providers providers, final URL url, final ExecutorService executorService, final long connectTimeout, final long readTimeout, final MediaType ... acceptedResponseTypes) {
+      this(client, providers, url, executorService, connectTimeout, readTimeout);
       accept(acceptedResponseTypes);
+    }
+
+    @Override
+    public Invocation.Builder accept(final String ... mediaTypes) {
+      getHeaders().put(HttpHeaders.ACCEPT, Arrays.asList((Object[])mediaTypes));
+      return this;
+    }
+
+    @Override
+    public Invocation.Builder accept(final MediaType ... mediaTypes) {
+      getHeaders().put(HttpHeaders.ACCEPT, Arrays.asList((Object[])mediaTypes));
+      return this;
+    }
+
+    @Override
+    public Invocation.Builder acceptLanguage(final Locale ... locales) {
+      getHeaders().put(HttpHeaders.ACCEPT_LANGUAGE, Arrays.asList((Object[])locales));
+      return this;
+    }
+
+    @Override
+    public Invocation.Builder acceptLanguage(final String ... locales) {
+      getHeaders().put(HttpHeaders.ACCEPT_LANGUAGE, Arrays.asList((Object[])locales));
+      return this;
+    }
+
+    @Override
+    public Invocation.Builder acceptEncoding(final String ... encodings) {
+      getHeaders().put(HttpHeaders.ACCEPT_LANGUAGE, Arrays.asList((Object[])encodings));
+      return this;
+    }
+
+    @Override
+    public Invocation.Builder cookie(final Cookie cookie) {
+      cookies.add(cookie);
+      return this;
+    }
+
+    @Override
+    public Invocation.Builder cookie(final String name, final String value) {
+      cookies.add(new Cookie(name, value));
+      return this;
+    }
+
+    @Override
+    public Invocation.Builder cacheControl(final CacheControl cacheControl) {
+      this.cacheControl = cacheControl;
+      return this;
+    }
+
+    private MultivaluedMap<String,Object> getHeaders() {
+      return requestHeaders == null ? requestHeaders = new HttpHeadersImpl().getMirror() : requestHeaders;
+    }
+
+    @Override
+    public Invocation.Builder header(final String name, final Object value) {
+      getHeaders().put(name, Collections.singletonList(value));
+      return this;
+    }
+
+    @Override
+    public Invocation.Builder headers(final MultivaluedMap<String,Object> headers) {
+      requestHeaders = headers;
+      return this;
+    }
+
+    @Override
+    public Invocation.Builder property(final String name, final Object value) {
+      // TODO
+      return this;
+    }
+
+    @Override
+    public CompletionStageRxInvoker rx() {
+      // TODO
+      return null;
+    }
+
+    @Override
+    @SuppressWarnings("rawtypes")
+    public <T extends RxInvoker>T rx(final Class<T> clazz) {
+      // TODO
+      return null;
     }
 
     @Override
@@ -357,90 +443,8 @@ public class InvocationImpl implements Invocation {
 
     @Override
     public AsyncInvoker async() {
-      return new AsyncInvokerImpl(providers, url, requestHeaders, cookies, cacheControl, executorService, connectTimeout, readTimeout);
-    }
-
-    @Override
-    public Invocation.Builder accept(final String ... mediaTypes) {
-      getHeaders().put(HttpHeaders.ACCEPT, Arrays.asList((Object[])mediaTypes));
-      return this;
-    }
-
-    @Override
-    public Invocation.Builder accept(final MediaType ... mediaTypes) {
-      getHeaders().put(HttpHeaders.ACCEPT, Arrays.asList((Object[])mediaTypes));
-      return this;
-    }
-
-    @Override
-    public Invocation.Builder acceptLanguage(final Locale ... locales) {
-      getHeaders().put(HttpHeaders.ACCEPT_LANGUAGE, Arrays.asList((Object[])locales));
-      return this;
-    }
-
-    @Override
-    public Invocation.Builder acceptLanguage(final String ... locales) {
-      getHeaders().put(HttpHeaders.ACCEPT_LANGUAGE, Arrays.asList((Object[])locales));
-      return this;
-    }
-
-    @Override
-    public Invocation.Builder acceptEncoding(final String ... encodings) {
-      getHeaders().put(HttpHeaders.ACCEPT_LANGUAGE, Arrays.asList((Object[])encodings));
-      return this;
-    }
-
-    @Override
-    public Invocation.Builder cookie(final Cookie cookie) {
-      cookies.add(cookie);
-      return this;
-    }
-
-    @Override
-    public Invocation.Builder cookie(final String name, final String value) {
-      cookies.add(new Cookie(name, value));
-      return this;
-    }
-
-    @Override
-    public Invocation.Builder cacheControl(final CacheControl cacheControl) {
-      this.cacheControl = cacheControl;
-      return this;
-    }
-
-    private MultivaluedMap<String,Object> getHeaders() {
-      return requestHeaders == null ? requestHeaders = new HttpHeadersImpl().getMirror() : requestHeaders;
-    }
-
-    @Override
-    public Invocation.Builder header(final String name, final Object value) {
-      getHeaders().put(name, Collections.singletonList(value));
-      return this;
-    }
-
-    @Override
-    public Invocation.Builder headers(final MultivaluedMap<String,Object> headers) {
-      requestHeaders = headers;
-      return this;
-    }
-
-    @Override
-    public Invocation.Builder property(final String name, final Object value) {
-      // TODO
-      return this;
-    }
-
-    @Override
-    public CompletionStageRxInvoker rx() {
-      // TODO
-      return null;
-    }
-
-    @Override
-    @SuppressWarnings("rawtypes")
-    public <T extends RxInvoker>T rx(final Class<T> clazz) {
-      // TODO
-      return null;
+      client.assertNotClosed();
+      return new AsyncInvokerImpl(client, providers, url, requestHeaders, cookies, cacheControl, executorService, connectTimeout, readTimeout);
     }
   }
 }

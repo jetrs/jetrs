@@ -14,22 +14,27 @@
  * program. If not, see <http://opensource.org/licenses/MIT/>.
  */
 
-package org.jetrs.client;
+package org.jetrs.server.core;
 
 import javax.ws.rs.RuntimeType;
+import javax.ws.rs.core.Application;
 
 import org.jetrs.common.core.ConfigurationImpl;
 
-public class ClientConfiguration extends ConfigurationImpl {
-  private static final long serialVersionUID = -1380692486865663993L;
+public class ServerConfiguration extends ConfigurationImpl {
+  private static final long serialVersionUID = 6312216374129609540L;
 
-  @Override
-  public RuntimeType getRuntimeType() {
-    return RuntimeType.CLIENT;
+  public ServerConfiguration(final Application application) {
+    super(application);
   }
 
   @Override
-  public ClientConfiguration clone() {
-    return (ClientConfiguration)super.clone();
+  public RuntimeType getRuntimeType() {
+    return RuntimeType.SERVER;
+  }
+
+  @Override
+  public ServerConfiguration clone() {
+    return (ServerConfiguration)super.clone();
   }
 }

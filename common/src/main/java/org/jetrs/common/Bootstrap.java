@@ -42,11 +42,11 @@ import org.slf4j.LoggerFactory;
 
 public class Bootstrap<R> {
   protected static final Logger logger = LoggerFactory.getLogger(Bootstrap.class);
-  private static final String[] excludeStartsWith = {"jdk", "java", "javax", "com.sun", "sun", "org.w3c", "org.xml", "org.jvnet", "org.joda", "org.jcp", "apple.security"};
+  private static final String[] excludeStartsWith = {"jdk.", "java.", "javax.", "com.sun.", "sun.", "org.w3c.", "org.xml.", "org.jvnet.", "org.joda.", "org.jcp.", "apple.security."};
 
   private static boolean acceptPackage(final Package pkg) {
     for (int i = 0; i < excludeStartsWith.length; ++i)
-      if (pkg.getName().startsWith(excludeStartsWith[i] + "."))
+      if (pkg.getName().startsWith(excludeStartsWith[i]))
         return false;
 
     return true;

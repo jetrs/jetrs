@@ -24,6 +24,7 @@ import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Produces;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
@@ -38,9 +39,11 @@ import org.jetrs.common.ReaderInterceptorEntityProviderResource;
 import org.jetrs.common.WriterInterceptorEntityProviderResource;
 import org.jetrs.common.core.AnnotationInjector;
 import org.jetrs.common.ext.ProvidersImpl;
+import org.jetrs.server.core.ServerConfiguration;
 
 public class ResourceContext {
   private final Application application;
+  private final Configuration configuration;
   private final MultivaluedMap<String,ResourceManifest> resources;
   private final ContainerFilters containerFilters;
   private final ProvidersImpl providers;
@@ -50,6 +53,7 @@ public class ResourceContext {
 
   public ResourceContext(final Application application, final MultivaluedMap<String,ResourceManifest> resources, final ContainerFilters containerFilters, final ProvidersImpl providers, final List<ReaderInterceptorEntityProviderResource> readerInterceptors, final List<WriterInterceptorEntityProviderResource> writerInterceptors, final List<ProviderResource<ParamConverterProvider>> paramConverterProviders) {
     this.application = application;
+    this.configuration = new ServerConfiguration(application);
     this.resources = resources;
     this.containerFilters = containerFilters;
     this.providers = providers;
@@ -78,6 +82,10 @@ public class ResourceContext {
 
   public Application getApplication() {
     return this.application;
+  }
+
+  public Configuration getConfiguration() {
+    return configuration;
   }
 
   public ContainerFilters getContainerFilters() {

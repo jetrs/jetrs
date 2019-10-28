@@ -34,7 +34,9 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Configuration;
 
-public class ClientBuilderImpl extends ClientBuilder implements ClientConfigurable<ClientBuilder> {
+import org.jetrs.common.core.ConfigurableImpl;
+
+public class ClientBuilderImpl extends ClientBuilder implements ConfigurableImpl<ClientBuilder> {
   private ClientConfiguration config;
   private SSLContext sslContext;
   private KeyStore keyStore;
