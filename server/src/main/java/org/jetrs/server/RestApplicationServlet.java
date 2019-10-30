@@ -33,6 +33,7 @@ import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.core.Application;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -46,8 +47,7 @@ import org.jetrs.server.container.ContainerResponseContextImpl;
 import org.jetrs.server.core.RequestImpl;
 import org.libj.util.Classes;
 
-@WebServlet(name="javax.ws.rs.core.Application", urlPatterns="/*")
-public class RestApplicationServlet extends RestHttpServlet {
+abstract class RestApplicationServlet extends RestHttpServlet {
   private static final long serialVersionUID = 3700080355780006441L;
 
   private static String getApplicationClassName(final WebServlet webServlet) {
@@ -60,29 +60,35 @@ public class RestApplicationServlet extends RestHttpServlet {
     return null;
   }
 
-  public RestApplicationServlet() {
+  public RestApplicationServlet(final Application application) {
+    super(application);
+    final Class<?> applicationClass;
+    final ApplicationPath applicationPath;
     final WebServlet webServlet = getClass().getAnnotation(WebServlet.class);
-    if (webServlet == null)
-      return;
-
-    final String applicationClassName = getApplicationClassName(webServlet);
-    if (applicationClassName == null)
-      return;
-
-    Classes.setAnnotationValue(RestApplicationServlet.class.getAnnotation(WebServlet.class), "urlPatterns", new String[0]);
-    Classes.setAnnotationValue(webServlet, "name", applicationClassName);
-    if (webServlet.urlPatterns().length > 0 || webServlet.value().length > 0)
-      return;
-
-    try {
-      final Class<?> applicationClass = Class.forName(applicationClassName);
-      final ApplicationPath applicationPath = applicationClass.getAnnotation(ApplicationPath.class);
-      if (applicationPath != null)
-        Classes.setAnnotationValue(webServlet, "urlPatterns", new String[] {applicationPath.value()});
+    if (application != null) {
+      applicationClass = application.getClass();
+      if (webServlet == null)
+        throw new UnsupportedOperationException("@WebServlet annotation is missing");
     }
-    catch (final ClassNotFoundException e) {
-      throw new ExceptionInInitializerError(e);
+    else {
+      if (webServlet == null)
+        return;
+
+      final String applicationClassName = getApplicationClassName(webServlet);
+      if (applicationClassName == null || webServlet.urlPatterns().length > 0 || webServlet.value().length > 0)
+        return;
+
+      try {
+        applicationClass = Class.forName(applicationClassName);
+      }
+      catch (final ClassNotFoundException e) {
+        throw new IllegalArgumentException(e);
+      }
     }
+
+    applicationPath = applicationClass.getAnnotation(ApplicationPath.class);
+    if (applicationPath != null && (webServlet.urlPatterns().length != 1 || !applicationPath.value().equals(webServlet.urlPatterns()[0])))
+      Classes.setAnnotationValue(webServlet, "urlPatterns", new String[] {applicationPath.value()});
   }
 
   public static AnnotationInjector createAnnotationInjector(final ContainerRequestContext containerRequestContext, final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse, final HttpHeaders headers, final ResourceContext resourceContext) {

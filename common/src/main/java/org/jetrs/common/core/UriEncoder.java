@@ -48,13 +48,7 @@ final class UriEncoder {
      * ";" / "=" pchar = unreserved / pct-encoded / sub-delims / ":" / "@"
      */
     for (int i = 0; i < 128; ++i) {
-      if (i >= 'a' && i <= 'z')
-        continue;
-
-      if (i >= 'A' && i <= 'Z')
-        continue;
-
-      if (i >= '0' && i <= '9')
+      if ('a' <= i && i <= 'z' || 'A' <= i && i <= 'Z' || '0' <= i && i <= '9')
         continue;
 
       switch (i) {
@@ -94,13 +88,7 @@ final class UriEncoder {
      * unreserved = ALPHA / DIGIT / "-" / "." / "_" / "~" space encoded as '+'
      */
     for (int i = 0; i < 128; ++i) {
-      if (i >= 'a' && i <= 'z')
-        continue;
-
-      if (i >= 'A' && i <= 'Z')
-        continue;
-
-      if (i >= '0' && i <= '9')
+      if ('a' <= i && i <= 'z' || 'A' <= i && i <= 'Z' || '0' <= i && i <= '9')
         continue;
 
       switch (i) {
@@ -118,17 +106,9 @@ final class UriEncoder {
       queryNameValueEncoding[i] = URLs.encode(String.valueOf((char)i));
     }
 
-    /*
-     * query = *( pchar / "/" / "?" )
-     */
+    // query = *( pchar / "/" / "?" )
     for (int i = 0; i < 128; ++i) {
-      if (i >= 'a' && i <= 'z')
-        continue;
-
-      if (i >= 'A' && i <= 'Z')
-        continue;
-
-      if (i >= '0' && i <= '9')
+      if ('a' <= i && i <= 'z' || 'A' <= i && i <= 'Z' || '0' <= i && i <= '9')
         continue;
 
       switch ((char)i) {
@@ -167,8 +147,7 @@ final class UriEncoder {
     PATH_SEGMENT = new UriEncoder(pathSegmentEncoding);
   }
 
-  // private static final Pattern nonCodes =
-  // Pattern.compile("%([^a-fA-F0-9]|$)");
+  // private static final Pattern nonCodes = Pattern.compile("%([^a-fA-F0-9]|$)");
   private static final Pattern nonCodes = Pattern.compile("%([^a-fA-F0-9]|[a-fA-F0-9]$|$|[a-fA-F0-9][^a-fA-F0-9])");
 
   /**
@@ -238,19 +217,19 @@ final class UriEncoder {
   }
 
   private static String encodeFromArray(final String segment, final String[] encodingMap, final boolean encodePercent) {
-    final StringBuilder result = new StringBuilder();
+    final StringBuilder builder = new StringBuilder();
     for (int i = 0; i < segment.length(); ++i) {
       final char ch = segment.charAt(i);
       if (encodePercent || ch != '%') {
         final String encoding = encode(ch, encodingMap);
-        result.append(encoding != null ? encoding : ch);
+        builder.append(encoding != null ? encoding : ch);
       }
       else {
-        result.append(ch);
+        builder.append(ch);
       }
     }
 
-    return result.toString();
+    return builder.toString();
   }
 
   /**
@@ -263,18 +242,18 @@ final class UriEncoder {
   }
 
   private static String pathParamReplacement(final String segment, final List<String> params) {
-    final StringBuilder newSegment = new StringBuilder();
+    final StringBuilder builder = new StringBuilder();
     final Matcher matcher = PARAM_REPLACEMENT.matcher(segment);
     int start = 0;
     for (int i = 0; matcher.find(); ++i) {
-      newSegment.append(segment, start, matcher.start());
+      builder.append(segment, start, matcher.start());
       final String replacement = params.get(i);
-      newSegment.append(replacement);
+      builder.append(replacement);
       start = matcher.end();
     }
 
-    newSegment.append(segment, start, segment.length());
-    return newSegment.toString();
+    builder.append(segment, start, segment.length());
+    return builder.toString();
   }
 
   /**

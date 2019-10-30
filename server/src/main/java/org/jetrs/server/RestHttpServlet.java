@@ -49,6 +49,12 @@ abstract class RestHttpServlet extends HttpServlet {
     return resourceContext;
   }
 
+  private final Application application;
+
+  public RestHttpServlet(final Application application) {
+    this.application = application;
+  }
+
   @Override
   public void init(final ServletConfig config) throws ServletException {
     super.init(config);
@@ -65,16 +71,21 @@ abstract class RestHttpServlet extends HttpServlet {
     final ServerBootstrap bootstrap = new ServerBootstrap();
     try {
       final Application application;
+      if (this.application != null) {
+        application = this.application;
+      }
+      else {
+        final String applicationSpec = getInitParameter("javax.ws.rs.Application");
+        application = applicationSpec == null ? null : (Application)Class.forName(applicationSpec).getDeclaredConstructor().newInstance();
+      }
+
       final Set<?> singletons;
       final Set<Class<?>> classes;
-      final String applicationSpec = getInitParameter("javax.ws.rs.Application");
-      if (applicationSpec != null) {
-        application = (Application)Class.forName(applicationSpec).getDeclaredConstructor().newInstance();
+      if (application != null) {
         singletons = application.getSingletons();
         classes = application.getClasses();
       }
       else {
-        application = null;
         singletons = null;
         classes = null;
       }

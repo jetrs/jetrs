@@ -16,9 +16,12 @@
 
 package org.jetrs.server.ext;
 
+import javax.servlet.http.HttpServlet;
+import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
 import org.jetrs.common.ext.RuntimeDelegateImpl;
+import org.jetrs.server.EndpointFactory;
 import org.jetrs.server.ResourceContext;
 import org.jetrs.server.core.ResponseBuilderImpl;
 
@@ -31,6 +34,14 @@ public class ServerRuntimeDelegate extends RuntimeDelegateImpl {
 
   public ServerRuntimeDelegate() {
     this(null);
+  }
+
+  @Override
+  public <T>T createEndpoint(final Application application, final Class<T> endpointType) {
+    if (!HttpServlet.class.equals(endpointType))
+      throw new IllegalArgumentException("Only " + HttpServlet.class.getName() + " endpoint type is supported");
+
+    return (T)EndpointFactory.createEndpoint(application);
   }
 
   @Override
