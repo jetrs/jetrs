@@ -154,31 +154,31 @@ public class AnnotationInjector {
     if (contextClass == null)
       throw new IllegalArgumentException(getClass().getSimpleName() + " configuration does not allow injection of object of class " + clazz.getName());
 
-    if (contextClass == Request.class)
+    if (Request.class.isAssignableFrom(contextClass))
       return (T)request;
 
-    if (contextClass == HttpHeaders.class)
+    if (HttpHeaders.class.isAssignableFrom(contextClass))
       return (T)httpHeaders;
 
-    if (contextClass == HttpServletRequest.class)
+    if (HttpServletRequest.class.isAssignableFrom(contextClass))
       return (T)httpServletRequest;
 
-    if (contextClass == HttpServletResponse.class)
+    if (HttpServletResponse.class.isAssignableFrom(contextClass))
       return (T)httpServletResponse;
 
-    if (contextClass == UriInfo.class)
+    if (UriInfo.class.isAssignableFrom(contextClass))
       return (T)containerRequestContext.getUriInfo();
 
-    if (contextClass == Configuration.class)
+    if (Configuration.class.isAssignableFrom(contextClass))
       return (T)configuration;
 
-    if (contextClass == Application.class)
+    if (Application.class.isAssignableFrom(contextClass))
       return (T)application;
 
-    if (contextClass == SecurityContext.class)
+    if (SecurityContext.class.isAssignableFrom(contextClass))
       return (T)containerRequestContext.getSecurityContext();
 
-    if (contextClass == Providers.class)
+    if (Providers.class.isAssignableFrom(contextClass))
       return (T)providers;
 
     throw new IllegalStateException("Should have returned a @Context object");
