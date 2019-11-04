@@ -14,25 +14,21 @@
  * program. If not, see <http://opensource.org/licenses/MIT/>.
  */
 
-package org.jetrs.client;
+package org.jetrs.common.util;
 
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.RuntimeDelegate;
+import java.io.BufferedOutputStream;
+import java.io.OutputStream;
 
-import org.jetrs.client.ext.ClientRuntimeDelegate;
-import org.junit.Test;
-
-public class ClientTest {
-  static {
-    System.setProperty(ClientBuilder.JAXRS_DEFAULT_CLIENT_BUILDER_PROPERTY, ClientBuilderImpl.class.getName());
-    System.setProperty(RuntimeDelegate.JAXRS_RUNTIME_DELEGATE_PROPERTY, ClientRuntimeDelegate.class.getName());
+public class CountingBufferedOutputStream extends BufferedOutputStream {
+  public CountingBufferedOutputStream(final OutputStream out) {
+    super(out);
   }
 
-  @Test
-  public void test() {
-    final Client client = ClientBuilder.newClient();
-    final Response response = client.target("https://www.google.com/").request().buildGet().invoke();
+  public CountingBufferedOutputStream(final OutputStream out, final int size) {
+    super(out, size);
+  }
+
+  public int getCount() {
+    return count;
   }
 }

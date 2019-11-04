@@ -1,4 +1,4 @@
-/* Copyright (c) 2016 OpenJAX
+/* Copyright (c) 2019 OpenJAX
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -14,7 +14,7 @@
  * program. If not, see <http://opensource.org/licenses/MIT/>.
  */
 
-package org.jetrs.server.ext;
+package org.jetrs.common.ext.provider;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,6 +22,8 @@ import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
+import javax.ws.rs.Consumes;
+import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
@@ -29,57 +31,38 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
+import org.jetrs.common.util.ProviderUtil;
+import org.libj.util.Numbers;
+
 /**
  * JAX-RS 2.1 Section 4.2.4
  */
 @Provider
-public class InputStreamProvider implements MessageBodyReader<InputStream>, MessageBodyWriter<InputStream> {
-  private static final int DEFAULT_BUFFER_SIZE = 65536;
-
-  private final int bufferSize;
-
-  public InputStreamProvider(final int bufferSize) {
-    this.bufferSize = bufferSize;
-  }
-
-  public InputStreamProvider() {
-    this(DEFAULT_BUFFER_SIZE);
-  }
-
+@Consumes("text/plain")
+@Produces("text/plain")
+public class NumberProvider implements MessageBodyReader<Number>, MessageBodyWriter<Number> {
   @Override
   public boolean isReadable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
-    return InputStream.class.isAssignableFrom(type);
+    return Number.class.isAssignableFrom(type);
   }
 
   @Override
-  public InputStream readFrom(final Class<InputStream> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,String> httpHeaders, final InputStream entityStream) throws IOException, WebApplicationException {
-    return entityStream;
+  public Number readFrom(final Class<Number> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,String> httpHeaders, final InputStream entityStream) throws IOException, WebApplicationException {
+    return Numbers.parseNumber(ProviderUtil.toString(entityStream, mediaType.getParameters().get(MediaType.CHARSET_PARAMETER)));
   }
 
   @Override
   public boolean isWriteable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
-    return InputStream.class.isAssignableFrom(type);
+    return Number.class.isAssignableFrom(type);
   }
 
   @Override
-  public long getSize(final InputStream t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
+  public long getSize(final Number t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
     return -1;
   }
 
   @Override
-  public void writeTo(final InputStream t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,Object> httpHeaders, final OutputStream entityStream) throws IOException, WebApplicationException {
-    final byte[] buffer = new byte[bufferSize];
-    while (true) {
-      for (int len; (len = t.read(buffer)) != 0;)
-        entityStream.write(buffer, 0, len);
-
-      final int ch = t.read();
-      if (ch == -1)
-        break;
-
-      entityStream.write(ch);
-    }
-
-    t.close();
+  public void writeTo(final Number t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,Object> httpHeaders, final OutputStream entityStream) throws IOException, WebApplicationException {
+    entityStream.write(ProviderUtil.toBytes(t, mediaType));
   }
 }

@@ -14,7 +14,7 @@
  * program. If not, see <http://opensource.org/licenses/MIT/>.
  */
 
-package org.jetrs.common;
+package org.jetrs;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -35,6 +35,13 @@ import javax.ws.rs.ext.Provider;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
 
+import org.jetrs.common.EntityReaderProviderResource;
+import org.jetrs.common.EntityWriterProviderResource;
+import org.jetrs.common.ExceptionMappingProviderResource;
+import org.jetrs.common.ProviderInstantiationException;
+import org.jetrs.common.ProviderResource;
+import org.jetrs.common.ReaderInterceptorEntityProviderResource;
+import org.jetrs.common.WriterInterceptorEntityProviderResource;
 import org.libj.lang.PackageLoader;
 import org.libj.lang.PackageNotFoundException;
 import org.slf4j.Logger;

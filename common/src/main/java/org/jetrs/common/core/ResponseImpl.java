@@ -20,6 +20,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.Date;
 import java.util.Locale;
@@ -92,18 +93,26 @@ public class ResponseImpl extends Response {
 
   @Override
   public <T>T readEntity(final GenericType<T> entityType) throws IllegalStateException, ResponseProcessingException {
-    // TODO:
-    throw new UnsupportedOperationException();
+    return (T)readEntity(entityType.getRawType(), entityType.getType(), null);
   }
 
   @Override
   public <T>T readEntity(final Class<T> entityType, final Annotation[] annotations) throws IllegalStateException, ResponseProcessingException {
+    return readEntity(entityType, null, annotations);
+  }
+
+  @Override
+  public <T>T readEntity(final GenericType<T> entityType, final Annotation[] annotations) throws IllegalStateException, ResponseProcessingException {
+    return (T)readEntity(entityType.getRawType(), entityType.getType(), annotations);
+  }
+
+  private <T>T readEntity(final Class<T> rawType, final Type genericType, final Annotation[] annotations) throws IllegalStateException, ResponseProcessingException {
     if (!(entity instanceof InputStream))
       throw new IllegalStateException("Entity is not an instance of InputStream");
 
-    final MessageBodyReader<T> messageBodyReader = providers.getMessageBodyReader(entityType, entityType, annotations, null);
+    final MessageBodyReader<T> messageBodyReader = providers.getMessageBodyReader(rawType, genericType, annotations, null);
     if (messageBodyReader == null)
-      throw new ProcessingException("Could not find MessageBodyReader for type: " + entityType.getName());
+      throw new ProcessingException("Could not find MessageBodyReader for type: " + rawType.getName());
 
     if (closed && entityBuffer == null)
       throw new IllegalStateException("Entity InputStream was previously consumed and not buffered");
@@ -111,9 +120,9 @@ public class ResponseImpl extends Response {
     try {
       final InputStream in = closed ? new ByteArrayInputStream(entityBuffer) : (InputStream)entity;
       if (readerInterceptors == null)
-        return (T)(entity = messageBodyReader.readFrom(entityType, entityType, annotations, headers.getMediaType(), headers, in));
+        return (T)(entity = messageBodyReader.readFrom(rawType, genericType, annotations, headers.getMediaType(), headers, in));
 
-      final ReaderInterceptorContextImpl readerInterceptorContext = new ReaderInterceptorContextImpl(entityType, entityType, annotations, headers, in) {
+      final ReaderInterceptorContextImpl readerInterceptorContext = new ReaderInterceptorContextImpl(rawType, genericType, annotations, headers, in) {
         private int interceptorIndex = -1;
         private Object lastProceeded;
 
@@ -137,12 +146,6 @@ public class ResponseImpl extends Response {
     finally {
       close();
     }
-  }
-
-  @Override
-  public <T>T readEntity(final GenericType<T> entityType, final Annotation[] annotations) throws IllegalStateException, ResponseProcessingException {
-    // TODO:
-    throw new UnsupportedOperationException();
   }
 
   @Override

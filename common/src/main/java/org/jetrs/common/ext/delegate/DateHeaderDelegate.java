@@ -14,7 +14,7 @@
  * program. If not, see <http://opensource.org/licenses/MIT/>.
  */
 
-package org.jetrs.common.ext;
+package org.jetrs.common.ext.delegate;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -23,7 +23,7 @@ import java.util.Date;
 
 import javax.ws.rs.ext.RuntimeDelegate;
 
-public class DateHeaderDelegateImpl implements RuntimeDelegate.HeaderDelegate<Date> {
+public class DateHeaderDelegate implements RuntimeDelegate.HeaderDelegate<Date> {
   private static final DateTimeFormatter formatter = DateTimeFormatter.RFC_1123_DATE_TIME;
 
   public static Date parse(final String value) {

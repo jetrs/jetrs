@@ -14,7 +14,7 @@
  * program. If not, see <http://opensource.org/licenses/MIT/>.
  */
 
-package org.jetrs.server.ext;
+package org.jetrs.server.ext.mapper;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;

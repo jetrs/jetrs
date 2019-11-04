@@ -14,7 +14,7 @@
  * program. If not, see <http://opensource.org/licenses/MIT/>.
  */
 
-package org.jetrs.server.ext;
+package org.jetrs.common.ext.provider;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,35 +29,34 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
-import org.libj.io.Streams;
-
 /**
  * JAX-RS 2.1 Section 4.2.4
  */
 @Provider
-public class BytesProvider implements MessageBodyReader<byte[]>, MessageBodyWriter<byte[]> {
+public class InputStreamProvider implements MessageBodyReader<InputStream>, MessageBodyWriter<InputStream> {
   @Override
   public boolean isReadable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
-    return type == byte[].class;
+    return InputStream.class.isAssignableFrom(type);
   }
 
   @Override
-  public byte[] readFrom(final Class<byte[]> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,String> httpHeaders, final InputStream entityStream) throws IOException, WebApplicationException {
-    return Streams.readBytes(entityStream);
+  public InputStream readFrom(final Class<InputStream> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,String> httpHeaders, final InputStream entityStream) throws IOException, WebApplicationException {
+    return entityStream;
   }
 
   @Override
   public boolean isWriteable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
-    return type == byte[].class;
+    return InputStream.class.isAssignableFrom(type);
   }
 
   @Override
-  public long getSize(final byte[] t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
+  public long getSize(final InputStream t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
     return -1;
   }
 
   @Override
-  public void writeTo(final byte[] t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,Object> httpHeaders, final OutputStream entityStream) throws IOException, WebApplicationException {
-    entityStream.write(t);
+  public void writeTo(final InputStream t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,Object> httpHeaders, final OutputStream entityStream) throws IOException, WebApplicationException {
+    for (int ch; (ch = t.read()) != -1; entityStream.write(ch));
+    t.close();
   }
 }

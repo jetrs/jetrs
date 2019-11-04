@@ -55,6 +55,8 @@ import javax.ws.rs.ext.Providers;
 
 import org.jetrs.common.core.HttpHeadersImpl;
 import org.jetrs.common.core.ResponseImpl;
+import org.jetrs.common.util.MirrorMultivaluedMap;
+import org.jetrs.common.util.ProviderUtil;
 import org.jetrs.common.util.Responses;
 import org.libj.util.CollectionUtil;
 import org.libj.util.Dates;
@@ -65,14 +67,14 @@ public class InvocationImpl implements Invocation {
   private final URL url;
   private final String method;
   private final Entity<?> entity;
-  private final MultivaluedMap<String,Object> headers;
+  private final MirrorMultivaluedMap<String,String,Object> headers;
   private final List<Cookie> cookies;
   private final CacheControl cacheControl;
   private final ExecutorService executorService;
   private final long connectTimeout;
   private final long readTimeout;
 
-  InvocationImpl(final ClientImpl client, final Providers providers, final URL url, final String method, final Entity<?> entity, final MultivaluedMap<String,Object> headers, final List<Cookie> cookies, final CacheControl cacheControl, final ExecutorService executorService, final long connectTimeout, final long readTimeout) {
+  InvocationImpl(final ClientImpl client, final Providers providers, final URL url, final String method, final Entity<?> entity, final MirrorMultivaluedMap<String,String,Object> headers, final List<Cookie> cookies, final CacheControl cacheControl, final ExecutorService executorService, final long connectTimeout, final long readTimeout) {
     this.client = client;
     this.providers = providers;
     this.url = url;
@@ -102,7 +104,7 @@ public class InvocationImpl implements Invocation {
       connection.setConnectTimeout((int)connectTimeout);
       connection.setReadTimeout((int)readTimeout);
       if (headers != null)
-        for (final Map.Entry<String,List<Object>> entry : headers.entrySet())
+        for (final Map.Entry<String,List<String>> entry : headers.entrySet())
           connection.setRequestProperty(entry.getKey(), CollectionUtil.toString(entry.getValue(), ','));
 
       if (cookies != null)
@@ -116,7 +118,7 @@ public class InvocationImpl implements Invocation {
       if (entity != null) {
         connection.setDoOutput(true);
         final MessageBodyWriter messageBodyWriter = providers.getMessageBodyWriter(entity.getEntity().getClass(), null, entity.getAnnotations(), entity.getMediaType());
-        messageBodyWriter.writeTo(entity.getEntity(), entity.getEntity().getClass(), null, entity.getAnnotations(), entity.getMediaType(), null, connection.getOutputStream());
+        ProviderUtil.writeTo(messageBodyWriter, entity.getEntity(), entity.getEntity().getClass(), null, entity.getAnnotations(), entity.getMediaType(), headers.getMirror(), connection.getOutputStream());
       }
 
       final int responseCode = connection.getResponseCode();

@@ -14,52 +14,55 @@
  * program. If not, see <http://opensource.org/licenses/MIT/>.
  */
 
-package org.jetrs.server.ext;
+package org.jetrs.common.ext.provider;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.nio.charset.Charset;
 
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
+import org.jetrs.common.util.ProviderUtil;
+import org.libj.io.Readers;
+
 /**
  * JAX-RS 2.1 Section 4.2.4
  */
 @Provider
-public class FileProvider implements MessageBodyReader<File>, MessageBodyWriter<File> {
+public class StringProvider implements MessageBodyReader<String>, MessageBodyWriter<String> {
   @Override
   public boolean isReadable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
-    return File.class.isAssignableFrom(type);
+    return type == String.class;
   }
 
   @Override
-  public File readFrom(final Class<File> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,String> httpHeaders, final InputStream entityStream) throws IOException {
-    final Path path = Files.createTempFile("jetrs", null);
-    Files.copy(entityStream, path);
-    return path.toFile();
+  public String readFrom(final Class<String> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,String> httpHeaders, final InputStream entityStream) throws IOException, WebApplicationException {
+    final Charset charset = ProviderUtil.getCharset(mediaType);
+    return Readers.readFully(new InputStreamReader(entityStream, charset));
   }
 
   @Override
   public boolean isWriteable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
-    return File.class.isAssignableFrom(type);
+    return type == String.class;
   }
 
   @Override
-  public long getSize(final File t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
+  public long getSize(final String t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
     return -1;
   }
 
   @Override
-  public void writeTo(final File t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,Object> httpHeaders, final OutputStream entityStream) throws IOException {
-    Files.copy(t.toPath(), entityStream);
+  public void writeTo(final String t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,Object> httpHeaders, final OutputStream entityStream) throws IOException, WebApplicationException {
+    final Charset charset = ProviderUtil.getCharset(mediaType);
+    entityStream.write(t.getBytes(charset));
   }
 }

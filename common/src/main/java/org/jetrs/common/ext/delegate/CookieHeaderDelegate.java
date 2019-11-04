@@ -14,7 +14,7 @@
  * program. If not, see <http://opensource.org/licenses/MIT/>.
  */
 
-package org.jetrs.common.ext;
+package org.jetrs.common.ext.delegate;
 
 import java.util.Collections;
 import java.util.HashMap;

@@ -17,6 +17,7 @@
 package org.jetrs.common.ext;
 
 import java.util.Date;
+import java.util.ServiceConfigurationError;
 
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.CacheControl;
@@ -31,8 +32,73 @@ import javax.ws.rs.core.Variant.VariantListBuilder;
 import javax.ws.rs.ext.RuntimeDelegate;
 
 import org.jetrs.common.core.UriBuilderImpl;
+import org.jetrs.common.ext.delegate.CacheControlHeaderDelegate;
+import org.jetrs.common.ext.delegate.CookieHeaderDelegate;
+import org.jetrs.common.ext.delegate.DateHeaderDelegate;
+import org.jetrs.common.ext.delegate.MediaTypeHeaderDelegate;
+import org.jetrs.common.ext.delegate.NewCookieHeaderDelegate;
+import org.jetrs.common.ext.delegate.StringArrayHeaderDelegate;
+import org.jetrs.common.ext.delegate.StringHeaderDelegate;
 
-public class RuntimeDelegateImpl extends RuntimeDelegate {
+public abstract class RuntimeDelegateImpl extends RuntimeDelegate {
+  private static final String serverRuntimeDelegateClassName = "org.jetrs.server.ext.ServerRuntimeDelegate";
+
+  private static boolean isServerPresent(final ClassLoader classLoader) {
+    return classLoader.getResource(serverRuntimeDelegateClassName.replace('.', '/').concat(".class")) != null;
+  }
+
+  public RuntimeDelegateImpl() {
+    if (!serverRuntimeDelegateClassName.equals(getClass().getName()) && (isServerPresent(Thread.currentThread().getContextClassLoader()) || isServerPresent(getClass().getClassLoader()))) {
+      System.setProperty(RuntimeDelegate.JAXRS_RUNTIME_DELEGATE_PROPERTY, serverRuntimeDelegateClassName);
+      throw new ServiceConfigurationError("Server is present and should be loaded instead");
+    }
+  }
+
+  @Override
+  public <T>T createEndpoint(final Application application, final Class<T> endpointType) {
+    // TODO:
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
+  public <T>HeaderDelegate<T> createHeaderDelegate(final Class<T> type) {
+    if (MediaType.class.isAssignableFrom(type))
+      return (HeaderDelegate<T>)new MediaTypeHeaderDelegate();
+
+    if (Date.class.isAssignableFrom(type))
+      return (HeaderDelegate<T>)new DateHeaderDelegate();
+
+    if (String[].class.isAssignableFrom(type))
+      return (HeaderDelegate<T>)new StringArrayHeaderDelegate();
+
+    if (String.class.isAssignableFrom(type))
+      return (HeaderDelegate<T>)new StringHeaderDelegate();
+
+    if (CacheControl.class.isAssignableFrom(type))
+      return (HeaderDelegate<T>)new CacheControlHeaderDelegate();
+
+    if (NewCookie.class.isAssignableFrom(type))
+      return (HeaderDelegate<T>)new NewCookieHeaderDelegate();
+
+    if (Cookie.class.isAssignableFrom(type))
+      return (HeaderDelegate<T>)new CookieHeaderDelegate();
+
+    if (EntityTag.class.isAssignableFrom(type))
+      throw new UnsupportedOperationException();
+
+    if (Link.class.isAssignableFrom(type))
+      throw new UnsupportedOperationException();
+
+    return null;
+  }
+
+  @Override
+  public Link.Builder createLinkBuilder() {
+    // TODO:
+    throw new UnsupportedOperationException();
+  }
+
   @Override
   public ResponseBuilder createResponseBuilder() {
     throw new UnsupportedOperationException();
@@ -45,51 +111,6 @@ public class RuntimeDelegateImpl extends RuntimeDelegate {
 
   @Override
   public VariantListBuilder createVariantListBuilder() {
-    // TODO:
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public <T>T createEndpoint(final Application application, final Class<T> endpointType) {
-    // TODO:
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  @SuppressWarnings("unchecked")
-  public <T>HeaderDelegate<T> createHeaderDelegate(final Class<T> type) {
-    if (type == MediaType.class)
-      return (HeaderDelegate<T>)new MediaTypeHeaderDelegate();
-
-    if (type == Date.class)
-      return (HeaderDelegate<T>)new DateHeaderDelegateImpl();
-
-    if (type == String[].class)
-      return (HeaderDelegate<T>)new StringArrayHeaderDelegate();
-
-    if (type == String.class)
-      return (HeaderDelegate<T>)new StringHeaderDelegate();
-
-    if (type == CacheControl.class)
-      return (HeaderDelegate<T>)new CacheControlHeaderDelegate();
-
-    if (type == Cookie.class)
-      return (HeaderDelegate<T>)new CookieHeaderDelegate();
-
-    if (type == NewCookie.class)
-      return (HeaderDelegate<T>)new NewCookieHeaderDelegate();
-
-    if (type == EntityTag.class)
-      throw new UnsupportedOperationException();
-
-    if (type == Link.class)
-      throw new UnsupportedOperationException();
-
-    return null;
-  }
-
-  @Override
-  public Link.Builder createLinkBuilder() {
     // TODO:
     throw new UnsupportedOperationException();
   }

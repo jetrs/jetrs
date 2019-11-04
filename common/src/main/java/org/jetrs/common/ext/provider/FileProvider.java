@@ -1,4 +1,4 @@
-/* Copyright (c) 2019 OpenJAX
+/* Copyright (c) 2016 OpenJAX
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -14,56 +14,52 @@
  * program. If not, see <http://opensource.org/licenses/MIT/>.
  */
 
-package org.jetrs.server.ext;
+package org.jetrs.common.ext.provider;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.Produces;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
-import org.jetrs.common.util.MediaTypes;
-import org.libj.io.Streams;
-
 /**
  * JAX-RS 2.1 Section 4.2.4
  */
 @Provider
-@Consumes("text/plain")
-@Produces("text/plain")
-public class BooleanProvider implements MessageBodyReader<Boolean>, MessageBodyWriter<Boolean> {
+public class FileProvider implements MessageBodyReader<File>, MessageBodyWriter<File> {
   @Override
   public boolean isReadable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
-    return type == Boolean.class && MediaTypes.TEXT_PLAIN.isCompatible(mediaType);
+    return File.class.isAssignableFrom(type);
   }
 
   @Override
-  public Boolean readFrom(final Class<Boolean> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,String> httpHeaders, final InputStream entityStream) throws IOException, WebApplicationException {
-    final byte[] bytes = Streams.readBytes(entityStream);
-    return Boolean.valueOf(new String(bytes));
+  public File readFrom(final Class<File> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,String> httpHeaders, final InputStream entityStream) throws IOException {
+    final Path path = Files.createTempFile("jetrs", null);
+    Files.copy(entityStream, path);
+    return path.toFile();
   }
 
   @Override
   public boolean isWriteable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
-    return type == Boolean.class && MediaTypes.TEXT_PLAIN.isCompatible(mediaType);
+    return File.class.isAssignableFrom(type);
   }
 
   @Override
-  public long getSize(final Boolean t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
+  public long getSize(final File t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
     return -1;
   }
 
   @Override
-  public void writeTo(final Boolean t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,Object> httpHeaders, final OutputStream entityStream) throws IOException, WebApplicationException {
-    entityStream.write(t.toString().getBytes());
+  public void writeTo(final File t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,Object> httpHeaders, final OutputStream entityStream) throws IOException {
+    Files.copy(t.toPath(), entityStream);
   }
 }

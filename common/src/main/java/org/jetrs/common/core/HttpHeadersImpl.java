@@ -40,8 +40,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.NewCookie;
 
-import org.jetrs.common.ext.CookieHeaderDelegate;
-import org.jetrs.common.ext.DateHeaderDelegateImpl;
+import org.jetrs.common.ext.delegate.CookieHeaderDelegate;
+import org.jetrs.common.ext.delegate.DateHeaderDelegate;
 import org.jetrs.common.util.MediaTypes;
 import org.jetrs.common.util.MirrorMultivaluedMap;
 import org.jetrs.common.util.Responses;
@@ -80,7 +80,7 @@ public class HttpHeadersImpl extends MirrorMultivaluedMap<String,String,Object> 
     }
 
     if ("Accept-Datetime".equalsIgnoreCase(key))
-      return DateHeaderDelegateImpl.parse(value);
+      return DateHeaderDelegate.parse(value);
 
     if ("Access-Control-Request-Method".equalsIgnoreCase(key)) {
       // FIXME: Does this have a strong type?
@@ -121,7 +121,7 @@ public class HttpHeadersImpl extends MirrorMultivaluedMap<String,String,Object> 
       return CookieHeaderDelegate.parse(value.split(";"));
 
     if (HttpHeaders.DATE.equalsIgnoreCase(key))
-      return DateHeaderDelegateImpl.parse(value);
+      return DateHeaderDelegate.parse(value);
 
     if ("Expect".equalsIgnoreCase(key)) {
       // FIXME: Does this have a strong type?
@@ -154,7 +154,7 @@ public class HttpHeadersImpl extends MirrorMultivaluedMap<String,String,Object> 
     }
 
     if (HttpHeaders.IF_MODIFIED_SINCE.equalsIgnoreCase(key))
-      return DateHeaderDelegateImpl.parse(value);
+      return DateHeaderDelegate.parse(value);
 
     if (HttpHeaders.IF_NONE_MATCH.equalsIgnoreCase(key)) {
       // FIXME: Does this have a strong type?
@@ -162,7 +162,7 @@ public class HttpHeadersImpl extends MirrorMultivaluedMap<String,String,Object> 
     }
 
     if (HttpHeaders.IF_UNMODIFIED_SINCE.equalsIgnoreCase(key))
-      return DateHeaderDelegateImpl.parse(value);
+      return DateHeaderDelegate.parse(value);
 
     if ("Max-Forwards".equalsIgnoreCase(key))
       return Integer.valueOf(value);
@@ -373,7 +373,7 @@ public class HttpHeadersImpl extends MirrorMultivaluedMap<String,String,Object> 
       if (Numbers.isNumber(value))
         return new Date(System.currentTimeMillis() + 1000 * Integer.parseInt(value));
 
-      return DateHeaderDelegateImpl.parse(value);
+      return DateHeaderDelegate.parse(value);
     }
 
     if ("IM".equalsIgnoreCase(key)) {
@@ -382,7 +382,7 @@ public class HttpHeadersImpl extends MirrorMultivaluedMap<String,String,Object> 
     }
 
     if (HttpHeaders.LAST_MODIFIED.equalsIgnoreCase(key))
-      return DateHeaderDelegateImpl.parse(value);
+      return DateHeaderDelegate.parse(value);
 
     if (HttpHeaders.LINK.equalsIgnoreCase(key)) {
       // FIXME: Does this have a strong type?
@@ -509,7 +509,7 @@ public class HttpHeadersImpl extends MirrorMultivaluedMap<String,String,Object> 
       return null;
 
     try {
-      return DateHeaderDelegateImpl.parse(value);
+      return DateHeaderDelegate.parse(value);
     }
     catch (final DateTimeParseException e) {
     }
@@ -599,7 +599,7 @@ public class HttpHeadersImpl extends MirrorMultivaluedMap<String,String,Object> 
         return value.toString();
 
       if (value instanceof Date)
-        return DateHeaderDelegateImpl.format((Date)value);
+        return DateHeaderDelegate.format((Date)value);
 
       if (value instanceof URI)
         return value.toString();
@@ -686,7 +686,7 @@ public class HttpHeadersImpl extends MirrorMultivaluedMap<String,String,Object> 
   @Override
   public Date getDate() {
     final String date = getFirst(HttpHeaders.DATE);
-    return date == null ? null : DateHeaderDelegateImpl.parse(date);
+    return date == null ? null : DateHeaderDelegate.parse(date);
   }
 
   @Override
@@ -701,7 +701,7 @@ public class HttpHeadersImpl extends MirrorMultivaluedMap<String,String,Object> 
 
   public Date getLastModified() {
     final String lastModified = getFirst(HttpHeaders.LAST_MODIFIED);
-    return lastModified == null ? null : DateHeaderDelegateImpl.parse(lastModified);
+    return lastModified == null ? null : DateHeaderDelegate.parse(lastModified);
   }
 
   public URI getLocation() {

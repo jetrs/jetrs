@@ -41,6 +41,7 @@ import javax.ws.rs.ext.WriterInterceptor;
 import javax.ws.rs.ext.WriterInterceptorContext;
 
 import org.jetrs.common.core.HttpHeadersImpl;
+import org.jetrs.common.util.ProviderUtil;
 
 public class ContainerResponseContextImpl extends InterceptorContextImpl implements ContainerResponseContext, WriterInterceptorContext {
   private final WriterInterceptor[] writerInterceptors;
@@ -208,10 +209,12 @@ public class ContainerResponseContextImpl extends InterceptorContextImpl impleme
   @Override
   @SuppressWarnings("unchecked")
   public void proceed() throws IOException {
-    if (writerInterceptors == null || ++interceptorIndex == writerInterceptors.length)
-      messageBodyWriter.writeTo(getEntity(), getEntityClass(), getEntityType(), getEntityAnnotations(), getMediaType(), getHeaders(), getEntityStream());
-    else if (interceptorIndex < writerInterceptors.length)
+    if (writerInterceptors == null || ++interceptorIndex == writerInterceptors.length) {
+      ProviderUtil.writeTo(messageBodyWriter, getEntity(), getEntityClass(), getEntityType(), getEntityAnnotations(), getMediaType(), getHeaders(), getEntityStream());
+    }
+    else if (interceptorIndex < writerInterceptors.length) {
       writerInterceptors[interceptorIndex].aroundWriteTo(this);
+    }
   }
 
   private int interceptorIndex = -1;

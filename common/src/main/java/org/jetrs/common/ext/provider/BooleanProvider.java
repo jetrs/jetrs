@@ -14,7 +14,7 @@
  * program. If not, see <http://opensource.org/licenses/MIT/>.
  */
 
-package org.jetrs.server.ext;
+package org.jetrs.common.ext.provider;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,9 +31,7 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
-import org.jetrs.common.util.MediaTypes;
-import org.libj.io.Streams;
-import org.libj.util.Numbers;
+import org.jetrs.common.util.ProviderUtil;
 
 /**
  * JAX-RS 2.1 Section 4.2.4
@@ -41,31 +39,29 @@ import org.libj.util.Numbers;
 @Provider
 @Consumes("text/plain")
 @Produces("text/plain")
-public class NumberProvider implements MessageBodyReader<Number>, MessageBodyWriter<Number> {
+public class BooleanProvider implements MessageBodyReader<Boolean>, MessageBodyWriter<Boolean> {
   @Override
   public boolean isReadable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
-    return type == Number.class && MediaTypes.TEXT_PLAIN.isCompatible(mediaType);
+    return type == Boolean.class;
   }
 
   @Override
-  public Number readFrom(final Class<Number> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,String> httpHeaders, final InputStream entityStream) throws IOException, WebApplicationException {
-    final byte[] bytes = Streams.readBytes(entityStream);
-    // FIXME: Is this right?
-    return Numbers.parseNumber(new String(bytes));
+  public Boolean readFrom(final Class<Boolean> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,String> httpHeaders, final InputStream entityStream) throws IOException, WebApplicationException {
+    return Boolean.valueOf(ProviderUtil.toString(entityStream, mediaType.getParameters().get(MediaType.CHARSET_PARAMETER)));
   }
 
   @Override
   public boolean isWriteable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
-    return type == Number.class && MediaTypes.TEXT_PLAIN.isCompatible(mediaType);
+    return type == Boolean.class;
   }
 
   @Override
-  public long getSize(final Number t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
+  public long getSize(final Boolean t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
     return -1;
   }
 
   @Override
-  public void writeTo(final Number t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,Object> httpHeaders, final OutputStream entityStream) throws IOException, WebApplicationException {
-    entityStream.write(t.toString().getBytes());
+  public void writeTo(final Boolean t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,Object> httpHeaders, final OutputStream entityStream) throws IOException, WebApplicationException {
+    entityStream.write(ProviderUtil.toBytes(t, mediaType));
   }
 }

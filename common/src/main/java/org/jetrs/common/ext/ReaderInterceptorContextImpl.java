@@ -104,7 +104,6 @@ public abstract class ReaderInterceptorContextImpl implements ReaderInterceptorC
 
   @Override
   public MediaType getMediaType() {
-
     try {
       return MediaTypes.parse(headers.getFirst(HttpHeaders.CONTENT_TYPE));
     }
@@ -115,7 +114,7 @@ public abstract class ReaderInterceptorContextImpl implements ReaderInterceptorC
 
   @Override
   public void setMediaType(final MediaType mediaType) {
-    headers.putSingle(HttpHeaders.CONTENT_TYPE, mediaType == null ? null : mediaType.toString());
+    headers.putSingle(HttpHeaders.CONTENT_TYPE, mediaType.toString());
   }
 
   private InputStream is;

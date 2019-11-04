@@ -1,4 +1,4 @@
-/* Copyright (c) 2019 JetRS
+/* Copyright (c) 2016 JetRS
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -14,25 +14,23 @@
  * program. If not, see <http://opensource.org/licenses/MIT/>.
  */
 
-package org.jetrs.client;
+package org.jetrs.common.util;
 
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.RuntimeDelegate;
+import java.util.function.Function;
 
-import org.jetrs.client.ext.ClientRuntimeDelegate;
-import org.junit.Test;
+import javax.ws.rs.core.MultivaluedMap;
 
-public class ClientTest {
-  static {
-    System.setProperty(ClientBuilder.JAXRS_DEFAULT_CLIENT_BUILDER_PROPERTY, ClientBuilderImpl.class.getName());
-    System.setProperty(RuntimeDelegate.JAXRS_RUNTIME_DELEGATE_PROPERTY, ClientRuntimeDelegate.class.getName());
+public final class MultivaluedMaps {
+  public static <K,V>V getFirstOrDefault(final MultivaluedMap<K,V> headers, final K key, final V defaultValue) {
+    final V value = headers.getFirst(key);
+    return value != null ? value : defaultValue;
   }
 
-  @Test
-  public void test() {
-    final Client client = ClientBuilder.newClient();
-    final Response response = client.target("https://www.google.com/").request().buildGet().invoke();
+  public static <K,V,W>W getFirstOrDefault(final MultivaluedMap<K,V> headers, final K key, final W defaultValue, final Function<V,W> function) {
+    final V value = headers.getFirst(key);
+    return value != null ? function.apply(value) : defaultValue;
+  }
+
+  private MultivaluedMaps() {
   }
 }

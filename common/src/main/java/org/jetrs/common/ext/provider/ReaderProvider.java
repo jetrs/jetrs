@@ -14,16 +14,16 @@
  * program. If not, see <http://opensource.org/licenses/MIT/>.
  */
 
-package org.jetrs.server.ext;
+package org.jetrs.common.ext.provider;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.nio.charset.Charset;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
@@ -32,23 +32,14 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
+import org.jetrs.common.util.ProviderUtil;
+import org.libj.io.ReaderInputStream;
+
 /**
  * JAX-RS 2.1 Section 4.2.4
  */
 @Provider
 public class ReaderProvider implements MessageBodyReader<Reader>, MessageBodyWriter<Reader> {
-  private static final int DEFAULT_BUFFER_SIZE = 65536;
-
-  private final int bufferSize;
-
-  public ReaderProvider(final int bufferSize) {
-    this.bufferSize = bufferSize;
-  }
-
-  public ReaderProvider() {
-    this(DEFAULT_BUFFER_SIZE);
-  }
-
   @Override
   public boolean isReadable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
     return Reader.class.isAssignableFrom(type);
@@ -71,19 +62,16 @@ public class ReaderProvider implements MessageBodyReader<Reader>, MessageBodyWri
 
   @Override
   public void writeTo(final Reader t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,Object> httpHeaders, final OutputStream entityStream) throws IOException, WebApplicationException {
-    final OutputStreamWriter out = new OutputStreamWriter(entityStream);
-    final char[] buffer = new char[bufferSize];
-    while (true) {
-      for (int len; (len = t.read(buffer)) != 0;)
-        out.write(buffer, 0, len);
+    int ch = t.read();
+    if (ch == -1)
+      return;
 
-      final int ch = t.read();
-      if (ch == -1)
-        break;
-
-      entityStream.write(ch);
+    final Charset charset = ProviderUtil.getCharset(mediaType);
+    entityStream.write(String.valueOf(ch).getBytes(charset));
+    try (final InputStream in = new ReaderInputStream(t, charset)) {
+      while ((ch = in.read()) != -1) {
+        entityStream.write(ch);
+      }
     }
-
-    t.close();
   }
 }

@@ -39,7 +39,7 @@ import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.ext.ParamConverterProvider;
 import javax.ws.rs.ext.Providers;
 
-import org.jetrs.common.Bootstrap;
+import org.jetrs.Bootstrap;
 import org.jetrs.common.EntityReaderProviderResource;
 import org.jetrs.common.EntityWriterProviderResource;
 import org.jetrs.common.ExceptionMappingProviderResource;

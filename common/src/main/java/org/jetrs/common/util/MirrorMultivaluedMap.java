@@ -75,7 +75,7 @@ public class MirrorMultivaluedMap<K,V,M> extends ObservableMap<K,List<V>> implem
     this.mirroredMap = mirroredMap;
   }
 
-  public MultivaluedMap<K,M> getMirror() {
+  public MirrorMultivaluedMap<K,M,V> getMirror() {
     return mirroredMap;
   }
 

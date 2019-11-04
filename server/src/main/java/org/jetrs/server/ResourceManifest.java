@@ -57,6 +57,12 @@ import org.slf4j.LoggerFactory;
 
 public class ResourceManifest {
   private static final Logger logger = LoggerFactory.getLogger(ResourceManifest.class);
+  private static final PermitAll permitAll = new PermitAll() {
+    @Override
+    public Class<? extends Annotation> annotationType() {
+      return getClass();
+    }
+  };
 
   private static boolean logMissingHeaderWarning(final String headerName, final Class<?> type) {
     logger.warn("Unmatched @" + type.getSimpleName() + " for " + headerName);
@@ -88,12 +94,7 @@ public class ResourceManifest {
   ResourceManifest(final HttpMethod httpMethod, final Method method, final Object singleton) {
     this.httpMethod = httpMethod;
     final Annotation securityAnnotation = findSecurityAnnotation(method);
-    this.securityAnnotation = securityAnnotation != null ? securityAnnotation : new PermitAll() {
-      @Override
-      public Class<? extends Annotation> annotationType() {
-        return getClass();
-      }
-    };
+    this.securityAnnotation = securityAnnotation != null ? securityAnnotation : permitAll;
     this.method = method;
     this.singleton = singleton;
     this.serviceClass = singleton != null ? singleton.getClass() : method.getDeclaringClass();

@@ -1,4 +1,4 @@
-/* Copyright (c) 2019 JetRS
+/* Copyright (c) 2016 JetRS
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -14,25 +14,28 @@
  * program. If not, see <http://opensource.org/licenses/MIT/>.
  */
 
-package org.jetrs.client;
+package org.jetrs.common.ext.delegate;
 
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.core.Response;
+import java.text.ParseException;
+
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.RuntimeDelegate;
 
-import org.jetrs.client.ext.ClientRuntimeDelegate;
-import org.junit.Test;
+import org.jetrs.common.util.MediaTypes;
 
-public class ClientTest {
-  static {
-    System.setProperty(ClientBuilder.JAXRS_DEFAULT_CLIENT_BUILDER_PROPERTY, ClientBuilderImpl.class.getName());
-    System.setProperty(RuntimeDelegate.JAXRS_RUNTIME_DELEGATE_PROPERTY, ClientRuntimeDelegate.class.getName());
+public class MediaTypeHeaderDelegate implements RuntimeDelegate.HeaderDelegate<MediaType> {
+  @Override
+  public MediaType fromString(final String value) {
+    try {
+      return MediaTypes.parse(value);
+    }
+    catch (final ParseException e) {
+      throw new IllegalArgumentException(e);
+    }
   }
 
-  @Test
-  public void test() {
-    final Client client = ClientBuilder.newClient();
-    final Response response = client.target("https://www.google.com/").request().buildGet().invoke();
+  @Override
+  public String toString(final MediaType value) {
+    return MediaTypes.toString(value);
   }
 }

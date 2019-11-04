@@ -29,7 +29,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.InterceptorContext;
 
-import org.jetrs.common.ext.DateHeaderDelegateImpl;
+import org.jetrs.common.ext.delegate.DateHeaderDelegate;
 import org.jetrs.common.util.MediaTypes;
 
 abstract class InterceptorContextImpl implements InterceptorContext {
@@ -52,7 +52,7 @@ abstract class InterceptorContextImpl implements InterceptorContext {
 
   public final Date getDate() {
     final String date = getStringHeaders().getFirst(HttpHeaders.DATE);
-    return date == null ? null : DateHeaderDelegateImpl.parse(date);
+    return date == null ? null : DateHeaderDelegate.parse(date);
   }
 
   public final Locale getLanguage() {
@@ -113,7 +113,7 @@ abstract class InterceptorContextImpl implements InterceptorContext {
   public final MediaType getMediaType() {
     try {
       final String mediaType = getStringHeaders().getFirst(HttpHeaders.CONTENT_TYPE);
-      return mediaType == null ? null : MediaTypes.parse(mediaType);
+      return mediaType == null ? MediaType.WILDCARD_TYPE : MediaTypes.parse(mediaType);
     }
     catch (final ParseException e) {
       throw new IllegalStateException(e);
@@ -122,6 +122,6 @@ abstract class InterceptorContextImpl implements InterceptorContext {
 
   @Override
   public final void setMediaType(final MediaType mediaType) {
-    getStringHeaders().putSingle(HttpHeaders.CONTENT_TYPE, mediaType == null ? null : mediaType.toString());
+    getStringHeaders().putSingle(HttpHeaders.CONTENT_TYPE, mediaType.toString());
   }
 }

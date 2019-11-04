@@ -31,14 +31,12 @@ import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriBuilderException;
 import javax.ws.rs.ext.RuntimeDelegate;
 
-import org.jetrs.common.core.UriBuilderImpl;
-import org.jetrs.common.ext.RuntimeDelegateImpl;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class UriBuilderTest {
   static {
-    System.setProperty(RuntimeDelegate.JAXRS_RUNTIME_DELEGATE_PROPERTY, RuntimeDelegateImpl.class.getName());
+    System.setProperty(RuntimeDelegate.JAXRS_RUNTIME_DELEGATE_PROPERTY, TestRuntimeDelegate.class.getName());
   }
 
   @Test

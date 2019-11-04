@@ -14,11 +14,10 @@
  * program. If not, see <http://opensource.org/licenses/MIT/>.
  */
 
-package org.jetrs.server.ext;
+package org.jetrs.common.ext.provider;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
@@ -27,6 +26,7 @@ import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
@@ -34,7 +34,8 @@ import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
 import org.jetrs.common.util.MediaTypes;
-import org.libj.io.Readers;
+import org.jetrs.common.util.MultivaluedMaps;
+import org.jetrs.common.util.ProviderUtil;
 
 /**
  * JAX-RS 2.1 Section 4.2.4
@@ -50,7 +51,10 @@ public class CharacterProvider implements MessageBodyReader<Character>, MessageB
 
   @Override
   public Character readFrom(final Class<Character> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,String> httpHeaders, final InputStream entityStream) throws IOException, WebApplicationException {
-    final String data = Readers.readFully(new InputStreamReader(entityStream));
+    if (MultivaluedMaps.getFirstOrDefault(httpHeaders, HttpHeaders.CONTENT_LENGTH, Long.MAX_VALUE, Long::parseLong) == 0)
+      return null;
+
+    final String data = ProviderUtil.toString(entityStream, mediaType.getParameters().get(MediaType.CHARSET_PARAMETER));
     if (data.length() > 1)
       throw new BadRequestException();
 
@@ -59,7 +63,7 @@ public class CharacterProvider implements MessageBodyReader<Character>, MessageB
 
   @Override
   public boolean isWriteable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
-    return type == Character.class && MediaTypes.TEXT_PLAIN.isCompatible(mediaType);
+    return type == Character.class;
   }
 
   @Override
@@ -69,6 +73,6 @@ public class CharacterProvider implements MessageBodyReader<Character>, MessageB
 
   @Override
   public void writeTo(final Character t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,Object> httpHeaders, final OutputStream entityStream) throws IOException, WebApplicationException {
-    entityStream.write(t.toString().getBytes());
+    entityStream.write(ProviderUtil.toBytes(t, mediaType));
   }
 }
