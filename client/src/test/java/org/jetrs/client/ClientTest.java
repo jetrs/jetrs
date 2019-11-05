@@ -19,17 +19,10 @@ package org.jetrs.client;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.RuntimeDelegate;
 
-import org.jetrs.client.ext.ClientRuntimeDelegate;
 import org.junit.Test;
 
 public class ClientTest {
-  static {
-    System.setProperty(ClientBuilder.JAXRS_DEFAULT_CLIENT_BUILDER_PROPERTY, ClientBuilderImpl.class.getName());
-    System.setProperty(RuntimeDelegate.JAXRS_RUNTIME_DELEGATE_PROPERTY, ClientRuntimeDelegate.class.getName());
-  }
-
   @Test
   public void test() {
     final Client client = ClientBuilder.newClient();
