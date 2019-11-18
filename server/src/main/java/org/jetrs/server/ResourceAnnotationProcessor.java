@@ -33,7 +33,6 @@ import javax.ws.rs.core.MediaType;
 
 import org.jetrs.common.util.MediaTypes;
 import org.libj.lang.IllegalAnnotationException;
-import org.libj.util.ArrayUtil;
 
 class ResourceAnnotationProcessor<T extends Annotation> {
   private static final Class<?>[] paramAnnotations = {Context.class, CookieParam.class, HeaderParam.class, MatrixParam.class, PathParam.class, QueryParam.class};
@@ -47,7 +46,7 @@ class ResourceAnnotationProcessor<T extends Annotation> {
   /**
    * Tests whether the specified method contains an entity parameter.
    *
-   * @param method The {@code Method}.
+   * @param method The {@link Method}.
    * @return {@code true} if the specified method contains an entity parameter;
    *         otherwise {@code false}.
    */

@@ -37,6 +37,7 @@ public class ServerRuntimeDelegate extends RuntimeDelegateImpl {
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public <T>T createEndpoint(final Application application, final Class<T> endpointType) {
     if (!HttpServlet.class.equals(endpointType))
       throw new IllegalArgumentException("Only " + HttpServlet.class.getName() + " endpoint type is supported");

@@ -37,7 +37,7 @@ public final class Responses {
   }
 
   /**
-   * Convert a numerical status code into the corresponding {@code Status}.
+   * Convert a numerical status code into the corresponding {@link Status}.
    *
    * @param status The status header string.
    * @return The matching {@link Status} or {@code null} if the specified string
@@ -52,7 +52,7 @@ public final class Responses {
   }
 
   /**
-   * Convert a numerical status code into the corresponding {@code StatusType}.
+   * Convert a numerical status code into the corresponding {@link StatusType}.
    *
    * @param statusCode The numerical status code.
    * @return The matching {@link Status} or null if there is no match.
@@ -63,7 +63,7 @@ public final class Responses {
   }
 
   /**
-   * Convert a numerical status code into the corresponding {@code StatusType}.
+   * Convert a numerical status code into the corresponding {@link StatusType}.
    *
    * @param statusCode The numerical status code.
    * @param reasonPhrase The reason phrase.

@@ -233,9 +233,12 @@ final class UriEncoder {
   }
 
   /**
-   * @param zhar integer representation of character
-   * @param encodingMap encoding map
-   * @return URL encoded character
+   * Returns the URL-encoded representation of the specified character, via the
+   * provided encoding map.
+   *
+   * @param zhar Integer representation of character.
+   * @param encodingMap Encoding map.
+   * @return The URL-encoded character.
    */
   private static String encode(final int zhar, final String[] encodingMap) {
     return zhar < encodingMap.length ? encodingMap[zhar] : URLs.encode(String.valueOf((char)zhar));

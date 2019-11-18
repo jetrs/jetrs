@@ -49,23 +49,23 @@ public final class MediaTypes {
   };
 
   /**
-   * Returns the first compatible {@code MediaType} that is encountered by
-   * evaluating the two specified arrays of {@code MediaType}s, or {@code null}
-   * if there not compatible {@code MediaType} is found.
+   * Returns the first compatible {@link MediaType} that is encountered by
+   * evaluating the two specified arrays of {@link MediaType}s, or {@code null}
+   * if there not compatible {@link MediaType} is found.
    * <p>
-   * <i><b>Note:</b> The {@code MediaType} arrays must be sorted on the "q"
+   * <i><b>Note:</b> The {@link MediaType} arrays must be sorted on the "q"
    * parameter in descending order.</i>
    * <p>
-   * <i><b>Note:</b> A null {@code MediaType} is considered to be equivalent to
+   * <i><b>Note:</b> A null {@link MediaType} is considered to be equivalent to
    * {@link MediaType#WILDCARD}.</i>
    *
-   * @param mediaTypes1 The first {@code MediaType} array sorted on the "q"
+   * @param mediaTypes1 The first {@link MediaType} array sorted on the "q"
    *          parameter in descending order.
-   * @param mediaTypes2 The second {@code MediaType} array sorted on the "q"
+   * @param mediaTypes2 The second {@link MediaType} array sorted on the "q"
    *          parameter in descending order.
-   * @return The first compatible {@code MediaType} that is encountered by
-   *         evaluating the two specified arrays of {@code MediaType}s, or
-   *         {@code null} if there not compatible {@code MediaType} is found.
+   * @return The first compatible {@link MediaType} that is encountered by
+   *         evaluating the two specified arrays of {@link MediaType}s, or
+   *         {@code null} if there not compatible {@link MediaType} is found.
    */
   public static MediaType getCompatible(final MediaType[] mediaTypes1, final MediaType[] mediaTypes2) {
     for (final MediaType mediaType2 : mediaTypes2) {
@@ -78,24 +78,24 @@ public final class MediaTypes {
   }
 
   /**
-   * Returns the first compatible {@code MediaType} that is encountered by
-   * evaluating the specified {@code MediaType} and provided arrays of
-   * {@code MediaType}s, or {@code null} if there not compatible
-   * {@code MediaType} is found.
+   * Returns the first compatible {@link MediaType} that is encountered by
+   * evaluating the specified {@link MediaType} and provided arrays of
+   * {@link MediaType}s, or {@code null} if there not compatible
+   * {@link MediaType} is found.
    * <p>
-   * <i><b>Note:</b> The provided {@code MediaType} array must be sorted on the
+   * <i><b>Note:</b> The provided {@link MediaType} array must be sorted on the
    * "q" parameter in descending order.</i>
    * <p>
-   * <i><b>Note:</b> A null {@code MediaType} is considered to be equivalent to
+   * <i><b>Note:</b> A null {@link MediaType} is considered to be equivalent to
    * {@link MediaType#WILDCARD}.</i>
    *
-   * @param mediaType1 The first {@code MediaType}.
-   * @param mediaTypes2 The second {@code MediaType} array sorted on the "q"
+   * @param mediaType1 The first {@link MediaType}.
+   * @param mediaTypes2 The second {@link MediaType} array sorted on the "q"
    *          parameter in descending order.
-   * @return The first compatible {@code MediaType} that is encountered by
-   *         evaluating the specified {@code MediaType} and provided arrays of
-   *         {@code MediaType}s, or {@code null} if there not compatible
-   *         {@code MediaType} is found.
+   * @return The first compatible {@link MediaType} that is encountered by
+   *         evaluating the specified {@link MediaType} and provided arrays of
+   *         {@link MediaType}s, or {@code null} if there not compatible
+   *         {@link MediaType} is found.
    */
   public static MediaType getCompatible(final MediaType mediaType1, final MediaType[] mediaTypes2) {
     Arrays.sort(mediaTypes2, qComparator);
@@ -167,17 +167,17 @@ public final class MediaTypes {
   }
 
   /**
-   * Returns the compatible {@code MediaType} by evaluating the two specified
-   * {@code MediaType}s, or {@code null} if the {@code MediaType}s are not
+   * Returns the compatible {@link MediaType} by evaluating the two specified
+   * {@link MediaType}s, or {@code null} if the {@link MediaType}s are not
    * compatible.
    * <p>
-   * <i><b>Note:</b> A null {@code MediaType} is considered to be equivalent to
+   * <i><b>Note:</b> A null {@link MediaType} is considered to be equivalent to
    * {@link MediaType#WILDCARD}.</i>
    *
-   * @param mediaType1 The first {@code MediaType}.
-   * @param mediaType2 The second {@code MediaType}.
-   * @return The compatible {@code MediaType} by evaluating the two specified
-   *         {@code MediaType}s, or {@code null} if the {@code MediaType}s are
+   * @param mediaType1 The first {@link MediaType}.
+   * @param mediaType2 The second {@link MediaType}.
+   * @return The compatible {@link MediaType} by evaluating the two specified
+   *         {@link MediaType}s, or {@code null} if the {@link MediaType}s are
    *         not compatible.
    */
   public static MediaType getCompatible(final MediaType mediaType1, final MediaType mediaType2) {
@@ -292,10 +292,10 @@ public final class MediaTypes {
 
   /**
    * Parses the specified enumeration of strings and returns an array of
-   * {@code MediaType} objects.
+   * {@link MediaType} objects.
    *
    * @param enumeration The enumeration of strings.
-   * @return An array of {@code MediaType} objects.
+   * @return An array of {@link MediaType} objects.
    * @throws ParseException If a parse error has occurred.
    * @throws NullPointerException If {@code enumeration} is null.
    */
@@ -319,10 +319,10 @@ public final class MediaTypes {
 
   /**
    * Parses the specified array of strings and returns an array of
-   * {@code MediaType} objects.
+   * {@link MediaType} objects.
    *
    * @param strings The the strings array.
-   * @return An array of {@code MediaType} objects.
+   * @return An array of {@link MediaType} objects.
    * @throws ParseException If a parse error has occurred.
    * @throws NullPointerException If {@code strings} is null.
    */
@@ -346,10 +346,10 @@ public final class MediaTypes {
 
   /**
    * Parses the specified string and returns an the corresponding
-   * {@code MediaType} objects, or {@code null} if the specified string is null.
+   * {@link MediaType} objects, or {@code null} if the specified string is null.
    *
    * @param string The the string.
-   * @return The corresponding {@code MediaType} object, or {@code null} if the
+   * @return The corresponding {@link MediaType} object, or {@code null} if the
    *         specified string is null.
    * @throws ParseException If a parse error has occurred.
    */
@@ -390,10 +390,10 @@ public final class MediaTypes {
   }
 
   /**
-   * Returns the string representation of the specified {@code MediaType}.
+   * Returns the string representation of the specified {@link MediaType}.
    *
-   * @param mediaType The {@code MediaType}.
-   * @return The string representation of the specified {@code MediaType}.
+   * @param mediaType The {@link MediaType}.
+   * @return The string representation of the specified {@link MediaType}.
    * @throws NullPointerException If {@code mediaType} is null.
    */
   public static String toString(final MediaType mediaType) {
