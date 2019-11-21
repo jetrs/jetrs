@@ -93,6 +93,7 @@ public class ResponseImpl extends Response {
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public <T>T readEntity(final GenericType<T> entityType) throws IllegalStateException, ResponseProcessingException {
     return (T)readEntity(entityType.getRawType(), entityType.getType(), null);
   }
@@ -103,10 +104,12 @@ public class ResponseImpl extends Response {
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public <T>T readEntity(final GenericType<T> entityType, final Annotation[] annotations) throws IllegalStateException, ResponseProcessingException {
     return (T)readEntity(entityType.getRawType(), entityType.getType(), annotations);
   }
 
+  @SuppressWarnings({"rawtypes", "unchecked"})
   private <T>T readEntity(final Class<T> rawType, final Type genericType, final Annotation[] annotations) throws IllegalStateException, ResponseProcessingException {
     if (!(entity instanceof InputStream))
       throw new IllegalStateException("Entity is not an instance of InputStream");

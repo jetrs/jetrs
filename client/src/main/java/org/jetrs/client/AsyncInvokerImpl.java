@@ -196,13 +196,13 @@ public class AsyncInvokerImpl extends Invoker<Future<Response>> implements Async
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public <T>Future<T> method(final String name, final Entity<?> entity, final InvocationCallback<T> callback) {
     client.assertNotClosed();
     return getExecutorService().submit(new Callable<T>() {
       @Override
       public T call() throws Exception {
         try {
-          // FIXME: How do I know the type of entity from the InvocationCallback<T>?
           final T response = (T)build(name, entity, requestHeaders, cookies, cacheControl).invoke().getEntity();
           callback.completed(response);
           return response;

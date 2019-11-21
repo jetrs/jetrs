@@ -202,13 +202,13 @@ public class InvocationImpl implements Invocation {
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public <T>Future<T> submit(final InvocationCallback<T> callback) {
     client.assertNotClosed();
     return getExecutorService().submit(new Callable<T>() {
       @Override
       public T call() {
         try {
-          // FIXME: How do I know the type of entity from the InvocationCallback<T>?
           final T entity = (T)invoke().getEntity();
           callback.completed(entity);
           return entity;
