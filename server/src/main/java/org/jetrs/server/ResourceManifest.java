@@ -111,6 +111,10 @@ public class ResourceManifest {
     return this.serviceClass;
   }
 
+  Annotation[] getMethodAnnotations() {
+    return method.getAnnotations();
+  }
+
   MediaType getCompatibleAccept(final ContainerRequestContext containerRequestContext) {
     if (!httpMethod.value().toUpperCase().equals(containerRequestContext.getMethod()))
       return null;
@@ -242,7 +246,7 @@ public class ResourceManifest {
     throw new NotAuthorizedException(challenges);
   }
 
-  Object service(final ExecutionContext executionContext, final ContainerRequestContextImpl containerRequestContext, final AnnotationInjector injectionContext, final List<ProviderResource<ParamConverterProvider>> paramConverterProviders) throws IOException, ServletException {
+  Object service(final ExecutionContext executionContext, final ContainerRequestContextImpl containerRequestContext, final AnnotationInjector annotationInjector, final List<ProviderResource<ParamConverterProvider>> paramConverterProviders) throws IOException, ServletException {
     if (executionContext.getMatchedResources() == null)
       throw new IllegalStateException("service() called before filterAndMatch()");
 
@@ -255,7 +259,7 @@ public class ResourceManifest {
     allow(securityAnnotation, containerRequestContext);
 
     try {
-      final Object[] parameters = getParameters(method, containerRequestContext, injectionContext, paramConverterProviders);
+      final Object[] parameters = getParameters(method, containerRequestContext, annotationInjector, paramConverterProviders);
       return parameters != null ? method.invoke(serviceResource, parameters) : method.invoke(serviceResource);
     }
     catch (final IllegalAccessException e) {
@@ -323,6 +327,6 @@ public class ResourceManifest {
 
   @Override
   public String toString() {
-    return serviceClass.getName() + '#' + method.getName();
+    return httpMethod.value() + " " + String.valueOf(pathPattern.getPattern());
   }
 }

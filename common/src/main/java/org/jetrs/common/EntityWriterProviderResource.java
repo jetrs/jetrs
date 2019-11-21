@@ -31,6 +31,6 @@ public class EntityWriterProviderResource extends EntityProviderResource<Message
   @Override
   public MediaType getCompatibleMediaType(final MessageBodyWriter<?> instance, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
     final MediaType matchedType = super.getCompatibleMediaType(instance, type, genericType, annotations, mediaType);
-    return matchedType != null && instance.isWriteable(type, genericType, type.getAnnotations(), mediaType) ? matchedType : null;
+    return matchedType != null && instance.isWriteable(type, genericType, annotations, mediaType) ? matchedType : null;
   }
 }

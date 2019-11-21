@@ -56,9 +56,9 @@ public class ResponseImpl extends Response {
   private final HttpHeadersImpl headers;
   private final Map<String,NewCookie> cookies;
   private Object entity;
+  public final Annotation[] annotations; // FIXME: annotations are not being used, but they need to be used by the MessageBodyWriter.. there's no API to get them out of this class
   private boolean closed;
 
-  // FIXME: annotations are not being used.. there's no API to get them out of this class
   public ResponseImpl(final Providers providers, final Object[] readerInterceptors, final Response.StatusType status, final HttpHeadersImpl headers, final Map<String,NewCookie> cookies, final Object entity, final Annotation[] annotations) {
     this.providers = providers;
     this.readerInterceptors = readerInterceptors;
@@ -66,6 +66,7 @@ public class ResponseImpl extends Response {
     this.headers = headers;
     this.cookies = cookies;
     this.entity = entity;
+    this.annotations = annotations;
   }
 
   @Override

@@ -26,18 +26,24 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.InternalServerErrorException;
+import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Providers;
 
 import org.jetrs.common.core.AnnotationInjector;
+import org.jetrs.common.core.ResponseImpl;
+import org.jetrs.server.container.ContainerRequestContextImpl;
 import org.jetrs.server.container.ContainerResponseContextImpl;
 import org.libj.util.ArrayUtil;
 import org.libj.util.ObservableList;
@@ -64,7 +70,7 @@ public class ExecutionContext {
     return resourceContext.filterAndMatch(containerRequestContext);
   }
 
-  public ResourceMatch filterAndMatch(final ContainerRequestContext containerRequestContext, final AnnotationInjector annotationInjector) {
+  ResourceMatch filterAndMatch(final ContainerRequestContext containerRequestContext, final AnnotationInjector annotationInjector) {
     final ResourceMatch[] resources = filterAndMatch(containerRequestContext);
     if (resources == null)
       return null;
@@ -111,19 +117,60 @@ public class ExecutionContext {
     return this.matchedResources;
   }
 
-  private Response response;
+  public HttpHeaders getRequestHeaders() {
+    return requestHeaders;
+  }
 
-  Response getResponse() {
+  void filterPreMatchContainerRequest(final ContainerRequestContextImpl containerRequestContext, final AnnotationInjector annotationInjector) throws IOException {
+    resourceContext.getContainerFilters().filterPreMatchContainerRequest(containerRequestContext, annotationInjector);
+  }
+
+  void filterContainerRequest(final ContainerRequestContextImpl containerRequestContext, final AnnotationInjector annotationInjector) throws IOException {
+    resourceContext.getContainerFilters().filterContainerRequest(containerRequestContext, annotationInjector);
+  }
+
+  void filterContainerResponse(final ContainerRequestContextImpl containerRequestContext, final AnnotationInjector annotationInjector) throws IOException {
+    resourceContext.getContainerFilters().filterContainerResponse(containerRequestContext, containerResponseContext, annotationInjector);
+  }
+
+  private void setContentType(final ResourceMatch resource) {
+    final MediaType[] mediaTypes = resource.getManifest().getResourceAnnotationProcessor(Produces.class).getMediaTypes();
+    if (mediaTypes != null)
+      containerResponseContext.getStringHeaders().putSingle(HttpHeaders.CONTENT_TYPE, resource.getAccept().toString());
+    else
+      containerResponseContext.setStatus(Response.Status.NO_CONTENT.getStatusCode());
+  }
+
+  void service(final ResourceMatch resource, final ContainerRequestContextImpl containerRequestContext, final AnnotationInjector annotationInjector) throws IOException, ServletException {
+    setContentType(resource);
+
+    final ResourceManifest manifest = resource.getManifest();
+    final Object content = manifest.service(this, containerRequestContext, annotationInjector, resourceContext.getParamConverterProviders());
+    if (content instanceof Response) {
+      setResponse((Response)content, manifest.getMethodAnnotations(), resource.getAccept());
+    }
+    else if (content != null) {
+      setEntity(content, manifest.getMethodAnnotations(), resource.getAccept());
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  Response error(final Providers providers, final WebApplicationException e1) throws WebApplicationException {
+    final ExceptionMapper<WebApplicationException> exceptionMapper = providers.getExceptionMapper((Class<WebApplicationException>)e1.getClass());
+    final Response response = exceptionMapper != null ? exceptionMapper.toResponse(e1) : e1.getResponse();
+    setResponse(response, null, null);
     return response;
   }
 
-  void setResponse(final Response response) {
-    if (this.response != null)
-      throw new IllegalStateException("Response has already been set");
-
-    this.response = response;
+  private void setResponse(final Response response, final Annotation[] annotations, final MediaType mediaType) {
     containerResponseContext.setEntityStream(null);
-    containerResponseContext.setEntity(response.hasEntity() ? response.getEntity() : null);
+
+    // FIXME: Have to hack getting the annotations out of the Response
+    final Annotation[] responseAnnotations = ((ResponseImpl)response).annotations;
+    final Annotation[] entityAnnotations = annotations == null ? responseAnnotations : responseAnnotations == null ? annotations : ArrayUtil.concat(responseAnnotations, annotations);
+
+    // FIXME: Assuming that if the response has a MediaType that's set, it overrides the method's Produces annotation?!
+    containerResponseContext.setEntity(response.hasEntity() ? response.getEntity() : null, entityAnnotations, response.getMediaType() != null ? response.getMediaType() : mediaType);
 
     if (response.getStatusInfo() != null) {
       containerResponseContext.setStatusInfo(response.getStatusInfo());
@@ -142,8 +189,8 @@ public class ExecutionContext {
         containerResponseHeaders.add(entry.getKey(), header);
   }
 
-  public HttpHeaders getRequestHeaders() {
-    return requestHeaders;
+  private void setEntity(final Object entity, final Annotation[] annotations, final MediaType mediaType) {
+    containerResponseContext.setEntity(entity, annotations, mediaType);
   }
 
   private void writeHeader() {
@@ -161,15 +208,13 @@ public class ExecutionContext {
     if (entity == null)
       return;
 
-    final Annotation[] annotations = containerResponseContext.getEntityAnnotations() != null ? ArrayUtil.concat(containerResponseContext.getEntityAnnotations(), entity.getClass().getAnnotations()) : entity.getClass().getAnnotations();
-    containerResponseContext.setAnnotations(annotations);
-
-    final MessageBodyWriter messageBodyWriter = providers.getMessageBodyWriter(containerResponseContext.getEntityClass(), containerResponseContext.getEntityType(), containerResponseContext.getAnnotations(), containerResponseContext.getMediaType());
+    final MessageBodyWriter messageBodyWriter = providers.getMessageBodyWriter(containerResponseContext.getEntityClass(), containerResponseContext.getEntityType(), containerResponseContext.getEntityAnnotations(), containerResponseContext.getMediaType());
     if (messageBodyWriter == null)
       throw new WebApplicationException("Could not find MessageBodyWriter for type: " + entity.getClass().getName());
 
-    entityStream = new ByteArrayOutputStream();
-    containerResponseContext.setEntityStream(entityStream);
+    if (containerResponseContext.getOutputStream() == null)
+      containerResponseContext.setEntityStream(entityStream = new ByteArrayOutputStream());
+
     // Start WriterInterceptor process chain
     containerResponseContext.writeBody(messageBodyWriter);
   }
@@ -180,11 +225,11 @@ public class ExecutionContext {
       writeBody(providers);
   }
 
-  void commit() throws IOException {
+  void commitResponse() throws IOException {
     if (httpServletResponse.isCommitted())
       return;
 
-    if (entityStream != null) {
+    if (entityStream != null && entityStream == containerResponseContext.getOutputStream()) {
       final byte[] bytes = entityStream.toByteArray();
       httpServletResponse.addHeader(HttpHeaders.CONTENT_LENGTH, String.valueOf(bytes.length));
       httpServletResponse.getOutputStream().write(bytes);

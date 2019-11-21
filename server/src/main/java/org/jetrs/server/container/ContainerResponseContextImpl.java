@@ -29,6 +29,7 @@ import java.util.Set;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.core.EntityTag;
+import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.Link.Builder;
@@ -50,7 +51,6 @@ public class ContainerResponseContextImpl extends InterceptorContextImpl impleme
 
   private OutputStream outputStream;
   private Object entity;
-  private Annotation[] entityAnnotations;
 
   private Class<?> type;
   private Type genericType;
@@ -164,21 +164,26 @@ public class ContainerResponseContextImpl extends InterceptorContextImpl impleme
 
   @Override
   public void setEntity(final Object entity, final Annotation[] annotations, final MediaType mediaType) {
-    // FIXME: What is the getEntityType() method supposed to return???
     if (entity != null) {
-      this.entity = entity;
-      this.type = entity.getClass();
-      this.genericType = type.getGenericSuperclass();
+      if (entity instanceof GenericEntity) {
+        this.entity = ((GenericEntity<?>)entity).getEntity();
+        this.genericType = ((GenericEntity<?>)entity).getType();
+        this.type = ((GenericEntity<?>)entity).getRawType();
+      }
+      else {
+        this.entity = entity;
+        this.type = entity.getClass();
+      }
     }
 
-    this.entityAnnotations = annotations;
+    setAnnotations(annotations);
     if (mediaType != null)
       getHeaders().putSingle(HttpHeaders.CONTENT_TYPE, mediaType);
   }
 
   @Override
   public Annotation[] getEntityAnnotations() {
-    return entityAnnotations;
+    return getAnnotations();
   }
 
   @Override
@@ -211,6 +216,7 @@ public class ContainerResponseContextImpl extends InterceptorContextImpl impleme
   public void proceed() throws IOException {
     if (writerInterceptors == null || ++interceptorIndex == writerInterceptors.length) {
       ProviderUtil.writeTo(messageBodyWriter, getEntity(), getEntityClass(), getEntityType(), getEntityAnnotations(), getMediaType(), getHeaders(), getEntityStream());
+      getEntityStream().close();
     }
     else if (interceptorIndex < writerInterceptors.length) {
       writerInterceptors[interceptorIndex].aroundWriteTo(this);

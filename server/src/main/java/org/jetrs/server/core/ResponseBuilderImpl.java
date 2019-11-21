@@ -67,6 +67,7 @@ public class ResponseBuilderImpl extends Response.ResponseBuilder implements Clo
 
   @Override
   public Response build() {
+    // FIXME: Need to reset the builder to a "blank state", as is documented in the javadocs of this method
     final Response.StatusType statusType = reasonPhrase != null ? Responses.from(status, reasonPhrase) : Responses.from(status);
     return new ResponseImpl(resourceContext.getProviders(null), resourceContext.getReaderInterceptors(), statusType, headers, cookies, entity, annotations);
   }

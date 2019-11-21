@@ -28,6 +28,7 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Providers;
 
+import org.jetrs.common.EntityProviderResource;
 import org.jetrs.common.EntityReaderProviderResource;
 import org.jetrs.common.EntityWriterProviderResource;
 import org.jetrs.common.ExceptionMappingProviderResource;
@@ -60,24 +61,23 @@ public class ProvidersImpl implements Providers {
     this.entityWriters.sort(providerResourceComparator);
   }
 
-  @Override
-  @SuppressWarnings("unchecked")
-  public <T>MessageBodyReader<T> getMessageBodyReader(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
-    for (final EntityReaderProviderResource provider : entityReaders)
+  @SuppressWarnings({"rawtypes", "unchecked"})
+  private <T,M>M getProvider(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final List<? extends EntityProviderResource<?>> providers) {
+    for (final EntityProviderResource provider : providers)
       if (provider.getCompatibleMediaType(provider.getMatchInstance(), type, genericType, annotations, mediaType) != null)
-        return (MessageBodyReader<T>)provider.getSingletonOrNewInstance(annotationInjector);
+        return (M)provider.getSingletonOrNewInstance(annotationInjector);
 
     return null;
   }
 
   @Override
-  @SuppressWarnings("unchecked")
-  public <T>MessageBodyWriter<T> getMessageBodyWriter(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
-    for (final EntityWriterProviderResource provider : entityWriters)
-      if (provider.getCompatibleMediaType(provider.getMatchInstance(), type, genericType, annotations, mediaType) != null)
-        return (MessageBodyWriter<T>)provider.getSingletonOrNewInstance(annotationInjector);
+  public <T>MessageBodyReader<T> getMessageBodyReader(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
+    return getProvider(type, genericType, annotations, mediaType, entityReaders);
+  }
 
-    return null;
+  @Override
+  public <T>MessageBodyWriter<T> getMessageBodyWriter(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
+    return getProvider(type, genericType, annotations, mediaType, entityWriters);
   }
 
   @Override

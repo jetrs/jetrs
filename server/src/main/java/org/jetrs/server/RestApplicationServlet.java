@@ -30,14 +30,11 @@ import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.NotFoundException;
-import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Providers;
 
 import org.jetrs.common.core.AnnotationInjector;
@@ -58,6 +55,77 @@ abstract class RestApplicationServlet extends RestHttpServlet {
           return webInitParam.value();
 
     return null;
+  }
+
+  private static AnnotationInjector createAnnotationInjector(final ContainerRequestContext containerRequestContext, final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse, final HttpHeaders headers, final ResourceContext resourceContext) {
+    final AnnotationInjector annotationInjector = new AnnotationInjector(containerRequestContext, new RequestImpl(httpServletRequest.getMethod()), httpServletRequest, httpServletResponse, headers, resourceContext.getConfiguration(), resourceContext.getApplication());
+    annotationInjector.setProviders(resourceContext.getProviders(annotationInjector));
+    return annotationInjector;
+  }
+
+  private static void service(final ResourceContext resourceContext, final HttpServletRequestContext httpServletRequestContext, final HttpServletResponse httpServletResponse) throws IOException {
+    final ContainerResponseContextImpl containerResponseContext = new ContainerResponseContextImpl(httpServletResponse, resourceContext.getWriterInterceptors());
+    final HttpHeaders requestHeaders = new HttpHeadersImpl(httpServletRequestContext);
+    final ExecutionContext executionContext = new ExecutionContext(requestHeaders, httpServletResponse, containerResponseContext, resourceContext);
+
+    final ContainerRequestContextImpl containerRequestContext; // NOTE: This weird construct is done this way to at least somehow make the two objects cohesive
+    httpServletRequestContext.setRequestContext(containerRequestContext = new ContainerRequestContextImpl(httpServletRequestContext, containerResponseContext, executionContext, resourceContext.getReaderInterceptors()));
+
+    final AnnotationInjector annotationInjector = createAnnotationInjector(containerRequestContext, httpServletRequestContext, httpServletResponse, requestHeaders, resourceContext);
+    final Providers providers = resourceContext.getProviders(annotationInjector);
+    try {
+      // (1) Filter Request (Pre-Match)
+      executionContext.filterPreMatchContainerRequest(containerRequestContext, annotationInjector);
+
+      // (2) Match
+      final ResourceMatch resource = executionContext.filterAndMatch(containerRequestContext, annotationInjector);
+      if (resource == null)
+        throw new NotFoundException();
+
+      httpServletRequestContext.setResourceManifest(resource.getManifest());
+
+      // (3) Filter Request
+      executionContext.filterContainerRequest(containerRequestContext, annotationInjector);
+
+      // (4a) Service
+      executionContext.service(resource, containerRequestContext, annotationInjector);
+
+      // (5a) Filter Response
+      executionContext.filterContainerResponse(containerRequestContext, annotationInjector);
+
+      // (6a) Write Response
+      executionContext.writeResponse(containerRequestContext, providers);
+    }
+    catch (final IOException | RuntimeException | ServletException e) {
+      final WebApplicationException e1 = e instanceof WebApplicationException ? (WebApplicationException)e : new InternalServerErrorException(e);
+      final Response response;
+      try {
+        // (4b) Error
+        response = executionContext.error(providers, e1);
+
+        // (5b) Filter Response
+        executionContext.filterContainerResponse(containerRequestContext, annotationInjector);
+
+        // (6b) Write Response
+        executionContext.writeResponse(containerRequestContext, providers);
+      }
+      catch (final WebApplicationException e2) {
+        e2.addSuppressed(e1);
+        throw e2;
+      }
+      catch (final IOException | RuntimeException e2) {
+        httpServletResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        e2.addSuppressed(e1);
+        throw e2;
+      }
+
+      if (response.getStatusInfo().getFamily() == Response.Status.Family.SERVER_ERROR)
+        throw e1;
+    }
+    finally {
+      // (7) Commit Response
+      executionContext.commitResponse();
+    }
   }
 
   public RestApplicationServlet(final Application application) {
@@ -91,87 +159,10 @@ abstract class RestApplicationServlet extends RestHttpServlet {
       Classes.setAnnotationValue(webServlet, "urlPatterns", new String[] {applicationPath.value()});
   }
 
-  public static AnnotationInjector createAnnotationInjector(final ContainerRequestContext containerRequestContext, final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse, final HttpHeaders headers, final ResourceContext resourceContext) {
-    final AnnotationInjector annotationInjector = new AnnotationInjector(containerRequestContext, new RequestImpl(httpServletRequest.getMethod()), httpServletRequest, httpServletResponse, headers, resourceContext.getConfiguration(), resourceContext.getApplication());
-    annotationInjector.setProviders(resourceContext.getProviders(annotationInjector));
-    return annotationInjector;
-  }
-
-  @SuppressWarnings("unchecked")
-  private void service(final HttpServletRequestContext httpServletRequestContext, final HttpServletResponse httpServletResponse) throws IOException {
-    final ContainerResponseContextImpl containerResponseContext = new ContainerResponseContextImpl(httpServletResponse, getResourceContext().getWriterInterceptors());
-    final HttpHeaders requestHeaders = new HttpHeadersImpl(httpServletRequestContext);
-    final StringBuilder accessLogDebug = new StringBuilder();
-    accessLogDebug.append("Headers: ").append(requestHeaders);
-    final ExecutionContext executionContext = new ExecutionContext(requestHeaders, httpServletResponse, containerResponseContext, getResourceContext());
-
-    final ContainerRequestContextImpl containerRequestContext; // NOTE: This weird construct is done this way to at least somehow make the two objects cohesive
-    httpServletRequestContext.setRequestContext(containerRequestContext = new ContainerRequestContextImpl(httpServletRequestContext, containerResponseContext, executionContext, getResourceContext().getReaderInterceptors()));
-
-    final AnnotationInjector annotationInjector = createAnnotationInjector(containerRequestContext, httpServletRequestContext, httpServletResponse, requestHeaders, getResourceContext());
-    final Providers providers = getResourceContext().getProviders(annotationInjector);
-    try {
-      getResourceContext().getContainerFilters().filterPreMatchContainerRequest(containerRequestContext, annotationInjector);
-      final ResourceMatch resource = executionContext.filterAndMatch(containerRequestContext, annotationInjector);
-      accessLogDebug.append(", Matched: ");
-      if (resource == null) {
-        accessLogDebug.append("null");
-        throw new NotFoundException();
-      }
-
-      accessLogDebug.append(resource.getManifest());
-      httpServletRequestContext.setResourceManifest(resource.getManifest());
-      getResourceContext().getContainerFilters().filterContainerRequest(containerRequestContext, annotationInjector);
-
-      final MediaType[] mediaTypes = resource.getManifest().getResourceAnnotationProcessor(Produces.class).getMediaTypes();
-      if (mediaTypes != null)
-        containerResponseContext.getStringHeaders().putSingle(HttpHeaders.CONTENT_TYPE, resource.getAccept().toString());
-      else
-        containerResponseContext.setStatus(204);
-
-      final Object content = resource.getManifest().service(executionContext, containerRequestContext, annotationInjector, getResourceContext().getParamConverterProviders());
-      if (content instanceof Response)
-        executionContext.setResponse((Response)content);
-      else if (content != null)
-        containerResponseContext.setEntity(content);
-
-      getResourceContext().getContainerFilters().filterContainerResponse(containerRequestContext, containerResponseContext, annotationInjector);
-      executionContext.writeResponse(containerRequestContext, providers);
-      // FIXME: There's kind of a mixup of when to use the ContainerResponseContext vs Response.
-    }
-    catch (final IOException | RuntimeException | ServletException e) {
-      final WebApplicationException e1 = e instanceof WebApplicationException ? (WebApplicationException)e : new InternalServerErrorException(e);
-
-      final ExceptionMapper<WebApplicationException> exceptionMapper = providers.getExceptionMapper((Class<WebApplicationException>)e1.getClass());
-      final Response response = exceptionMapper != null ? exceptionMapper.toResponse(e1) : e1.getResponse();
-
-      try {
-        executionContext.setResponse(response);
-        getResourceContext().getContainerFilters().filterContainerResponse(containerRequestContext, containerResponseContext, annotationInjector);
-        executionContext.writeResponse(containerRequestContext, providers);
-      }
-      catch (final WebApplicationException e2) {
-        e2.addSuppressed(e1);
-        throw e2;
-      }
-      catch (final IOException | RuntimeException e2) {
-        httpServletResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-        e2.addSuppressed(e1);
-        throw e2;
-      }
-
-      if (response.getStatusInfo().getFamily() == Response.Status.Family.SERVER_ERROR)
-        throw e1;
-    }
-    finally {
-      executionContext.commit();
-    }
-  }
-
   @Override
   protected final void service(final HttpServletRequest request, final HttpServletResponse response) throws IOException, ServletException {
     try {
-      service(new HttpServletRequestContext(request) {
+      service(getResourceContext(), new HttpServletRequestContext(request) {
         // NOTE: Check for the existence of the @Consumes header, and subsequently the Content-Type header in the request,
         // NOTE: only if data is expected (i.e. GET, HEAD, DELETE, OPTIONS methods will not have a body and should thus not
         // NOTE: expect a Content-Type header from the request)
