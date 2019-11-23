@@ -16,6 +16,8 @@
 
 package org.jetrs.client;
 
+import static org.junit.Assert.*;
+
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Response;
@@ -27,5 +29,6 @@ public class ClientTest {
   public void test() {
     final Client client = ClientBuilder.newClient();
     final Response response = client.target("https://www.google.com/").request().buildGet().invoke();
+    assertEquals(Response.Status.OK, response.getStatusInfo());
   }
 }

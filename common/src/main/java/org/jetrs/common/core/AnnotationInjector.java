@@ -227,15 +227,15 @@ public class AnnotationInjector {
   }
 
   public <T>T newResourceInstance(final Class<T> clazz) throws IllegalAccessException, InstantiationException, InvocationTargetException {
-    return newInstance(clazz, true, true);
+    return newInstance(clazz, true);
   }
 
   public <T>T newProviderInstance(final Class<T> clazz) throws IllegalAccessException, InstantiationException, InvocationTargetException {
-    return newInstance(clazz, false, true);
+    return newInstance(clazz, false);
   }
 
   @SuppressWarnings("unchecked")
-  private <T>T newInstance(final Class<T> clazz, final boolean isResource, final boolean inject) throws IllegalAccessException, InstantiationException, InvocationTargetException {
+  private <T>T newInstance(final Class<T> clazz, final boolean isResource) throws IllegalAccessException, InstantiationException, InvocationTargetException {
     final Constructor<?>[] constructors = clazz.getConstructors();
     Arrays.sort(constructors, parameterCountComparator);
     outer:

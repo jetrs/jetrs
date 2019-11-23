@@ -31,7 +31,11 @@ public class EntityReaderProviderResource extends EntityProviderResource<Message
   }
 
   @Override
-  public MediaType getCompatibleMediaType(final MessageBodyReader<?> instance, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
+  public MediaType getCompatibleMediaType(final MessageBodyReader<?> instance, final Class<?> type, final Type genericType, final Annotation[] annotations, MediaType mediaType) {
+    // SPEC: 4.2.1 Message Body Reader
+    if (mediaType == null)
+      mediaType = MediaType.APPLICATION_OCTET_STREAM_TYPE;
+
     final MediaType matchedType = super.getCompatibleMediaType(instance, type, genericType, annotations, mediaType);
     return matchedType != null && instance.isReadable(type, genericType, annotations, mediaType) ? matchedType : null;
   }

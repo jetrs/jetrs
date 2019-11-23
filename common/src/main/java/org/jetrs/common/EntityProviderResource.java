@@ -40,7 +40,19 @@ public abstract class EntityProviderResource<T> extends TypeProviderResource<T> 
     }
   }
 
-  public MediaType getCompatibleMediaType(final T instance, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
+  /**
+   * Returns a compatible {@link MediaType} for the specified {@code provider}
+   * and the entity of the given parameters, if one exists.
+   *
+   * @param provider The provider instance.
+   * @param type The {@link Class} of the entity.
+   * @param genericType The generic {@link Type} of the entity.
+   * @param annotations The annotations attached to the entity.
+   * @param mediaType The {@link MediaType} of the entity.
+   * @return A compatible {@link MediaType} for the specified {@code provider}
+   *         and the entity of the given parameters, if one exists.
+   */
+  public MediaType getCompatibleMediaType(final T provider, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
     return allowedTypes == null ? MediaTypes.getCompatible(mediaType, MediaType.WILDCARD_TYPE) : MediaTypes.getCompatible(mediaType, allowedTypes);
   }
 }

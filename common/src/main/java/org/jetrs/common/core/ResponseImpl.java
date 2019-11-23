@@ -114,7 +114,8 @@ public class ResponseImpl extends Response {
     if (!(entity instanceof InputStream))
       throw new IllegalStateException("Entity is not an instance of InputStream");
 
-    final MessageBodyReader<T> messageBodyReader = providers.getMessageBodyReader(rawType, genericType, annotations, null);
+    final MediaType mediaType = headers.getMediaType();
+    final MessageBodyReader<T> messageBodyReader = providers.getMessageBodyReader(rawType, genericType, annotations, mediaType);
     if (messageBodyReader == null)
       throw new ProcessingException("Could not find MessageBodyReader for type: " + rawType.getName());
 
@@ -124,7 +125,7 @@ public class ResponseImpl extends Response {
     try {
       final InputStream in = closed ? new ByteArrayInputStream(entityBuffer) : (InputStream)entity;
       if (readerInterceptors == null)
-        return (T)(entity = messageBodyReader.readFrom(rawType, genericType, annotations, headers.getMediaType(), headers, in));
+        return (T)(entity = messageBodyReader.readFrom(rawType, genericType, annotations, mediaType, headers, in));
 
       final ReaderInterceptorContextImpl readerInterceptorContext = new ReaderInterceptorContextImpl(rawType, genericType, annotations, headers, in) {
         private int interceptorIndex = -1;
