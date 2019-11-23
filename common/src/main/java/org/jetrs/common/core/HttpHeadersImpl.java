@@ -22,6 +22,7 @@ import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -45,8 +46,10 @@ import org.jetrs.common.ext.delegate.DateHeaderDelegate;
 import org.jetrs.common.util.MediaTypes;
 import org.jetrs.common.util.MirrorMultivaluedMap;
 import org.jetrs.common.util.Responses;
+import org.libj.util.ArrayDoubleList;
 import org.libj.util.CollectionUtil;
 import org.libj.util.Locales;
+import org.libj.util.Matched;
 import org.libj.util.Numbers;
 
 public class HttpHeadersImpl extends MirrorMultivaluedMap<String,String,Object> implements HttpHeaders {
@@ -655,10 +658,60 @@ public class HttpHeadersImpl extends MirrorMultivaluedMap<String,String,Object> 
     return mediaTypes;
   }
 
+  private static final Locale WILDCARD_LOCALE = new Locale("*");
+
+  private static Locale getLocale(final String value) {
+    if (value == null)
+      return null;
+
+    final int dash = value.indexOf('-');
+    if (dash == 0 || dash == value.length() - 1)
+      throw new IllegalArgumentException("Illegal  locale: " + value);
+
+    return dash == -1 ? new Locale(value) : new Locale(value.substring(0, dash), value.substring(dash + 1));
+  }
+
   @Override
   public List<Locale> getAcceptableLanguages() {
-    // TODO:
-    throw new UnsupportedOperationException();
+    final List<String> acceptLanguages = getRequestHeader(HttpHeaders.ACCEPT_LANGUAGE);
+    if (acceptLanguages == null || acceptLanguages.isEmpty())
+      return Collections.singletonList(WILDCARD_LOCALE);
+
+    final List<Locale> languages = new ArrayList<>();
+    final ArrayDoubleList qualities = new ArrayDoubleList();
+    for (final String accepterLanguage : acceptLanguages) {
+      final int sc = accepterLanguage.indexOf(';');
+
+      final double quality;
+      final String language;
+      if (sc > 0) {
+        language = accepterLanguage.substring(0, sc).trim();
+        final int len = accepterLanguage.length();
+        boolean qSeen = false;
+        int i = sc + 1;
+        for (char ch; i < len; ++i) {
+          ch = accepterLanguage.charAt(i);
+          if (ch == 'q')
+            qSeen = true;
+          else if (ch == '=')
+            break;
+          else if (ch != ' ')
+            throw new IllegalArgumentException("Illegal language: " + accepterLanguage);
+        }
+
+        quality = qSeen ? Numbers.parseDouble(accepterLanguage.substring(i + 1).trim(), 1d) : 1d;
+      }
+      else {
+        language = accepterLanguage;
+        quality = 1d;
+      }
+
+      languages.add(getLocale(language));
+      qualities.add(1 - quality);
+    }
+
+    Matched.sort(languages, qualities);
+    return languages;
   }
 
   @Override

@@ -40,16 +40,16 @@ import org.libj.util.function.Throwing;
  */
 @Provider
 public class FileProvider implements MessageBodyReader<File>, MessageBodyWriter<File> {
-  static void writeTo(final Object header, final File file, final OutputStream out, final BiObjBiLongConsumer<RandomAccessFile,OutputStream> consumer) throws IOException {
-    final String range;
+  static void writeTo(final Object range, final File file, final OutputStream out, final BiObjBiLongConsumer<RandomAccessFile,OutputStream> consumer) throws IOException {
+    final String rangeString;
     final int start;
-    if (header == null || (range = String.valueOf(header).trim()).length() == 0 || (start = range.indexOf("bytes=")) == -1) {
+    if (range == null || (rangeString = String.valueOf(range).trim()).length() == 0 || (start = rangeString.indexOf("bytes=")) == -1) {
       Files.copy(file.toPath(), out);
       return;
     }
 
     try (final RandomAccessFile raf = new RandomAccessFile(file, "r")) {
-      parseRange(range, start + 6, raf, out, consumer);
+      parseRange(rangeString, start + 6, raf, out, consumer);
     }
   }
 
@@ -86,6 +86,9 @@ public class FileProvider implements MessageBodyReader<File>, MessageBodyWriter<
       }
       else if (Character.isDigit(ch)) {
         builder.append(ch);
+      }
+      else if (ch != ' ') {
+        return;
       }
     }
   }
