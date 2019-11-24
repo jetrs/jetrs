@@ -48,6 +48,7 @@ import org.jetrs.common.util.MirrorMultivaluedMap;
 import org.jetrs.common.util.Responses;
 import org.libj.util.ArrayDoubleList;
 import org.libj.util.CollectionUtil;
+import org.libj.util.DoubleComparator;
 import org.libj.util.Locales;
 import org.libj.util.Matched;
 import org.libj.util.Numbers;
@@ -707,10 +708,11 @@ public class HttpHeadersImpl extends MirrorMultivaluedMap<String,String,Object> 
       }
 
       languages.add(getLocale(language));
-      qualities.add(1 - quality);
+      qualities.add(quality);
     }
 
-    Matched.sort(languages, qualities);
+    // Reverse sort, because we want q=1 at the head of the list.
+    Matched.sort(languages, qualities, DoubleComparator.REVERSE);
     return languages;
   }
 
