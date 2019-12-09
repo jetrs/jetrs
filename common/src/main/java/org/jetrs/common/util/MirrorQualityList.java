@@ -103,7 +103,7 @@ public class MirrorQualityList<V,R> extends MirrorList<V,R> implements Cloneable
 
   /**
    * Casts the specified {@code list} of type <b>{@link List List&lt;T&gt;}</b>
-   * to type <b>{@link List List&lt;T&gt;} & {@link Cloneable}</b>.
+   * to type <b>{@link List List&lt;T&gt;} &amp; {@link Cloneable}</b>.
    *
    * @param <C> The type parameter for {@link List List&lt;T&gt;} &
    *          {@link Cloneable}.
@@ -144,9 +144,9 @@ public class MirrorQualityList<V,R> extends MirrorList<V,R> implements Cloneable
    * values.
    *
    * @param <CloneableValues> The type parameter constraining the {@code values}
-   *          argument to {@link List List&lt;V&gt;} & {@link Cloneable}.
+   *          argument to {@link List List&lt;V&gt;} &amp; {@link Cloneable}.
    * @param <CloneableReflections> The type parameter constraining the
-   *          {@code values} argument to {@link List List&lt;R&gt;} &
+   *          {@code values} argument to {@link List List&lt;R&gt;} &amp;
    *          {@link Cloneable}.
    * @param values The underlying {@link Cloneable} list of type {@code <V>}.
    * @param reflections The underlying {@link Cloneable} list of type

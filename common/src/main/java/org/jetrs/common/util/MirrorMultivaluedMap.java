@@ -67,7 +67,7 @@ public class MirrorMultivaluedMap<K,V,R> extends MirrorMap<K,List<V>,List<R>> im
 
   /**
    * Casts the specified {@code map} of type <b>{@link Map Map&lt;K,E&gt;}</b>
-   * to type <b>{@link Map Map&lt;K,E&gt;} & {@link Cloneable}</b>.
+   * to type <b>{@link Map Map&lt;K,E&gt;} &amp; {@link Cloneable}</b>.
    *
    * @param <C> The type parameter for {@link Map Map&lt;K,E&gt;} &
    *          {@link Cloneable}.
@@ -79,7 +79,8 @@ public class MirrorMultivaluedMap<K,V,R> extends MirrorMap<K,List<V>,List<R>> im
    *          cast to type <b>{@link Map Map&lt;K,E&gt;} &
    *          {@link Cloneable}</b>.
    * @return The specified {@code map} of type <b>{@link Map Map&lt;K,E&gt;}</b>
-   *         cast to type <b>{@link Map Map&lt;K,E&gt;} & {@link Cloneable}</b>.
+   *         cast to type <b>{@link Map Map&lt;K,E&gt;} &amp;
+   *         {@link Cloneable}</b>.
    */
   @SuppressWarnings("unchecked")
   static <C extends Map<K,V> & Cloneable,K,V>C toCloneable(final Map<K,V> map) {
@@ -99,9 +100,9 @@ public class MirrorMultivaluedMap<K,V,R> extends MirrorMap<K,List<V>,List<R>> im
    * other.
    *
    * @param <CloneableValues> The type parameter constraining the {@code values}
-   *          argument to {@link Map Map&lt;K,V&gt;} & {@link Cloneable}.
+   *          argument to {@link Map Map&lt;K,V&gt;} &amp; {@link Cloneable}.
    * @param <CloneableReflections> The type parameter constraining the
-   *          {@code values} argument to {@link Map Map&lt;K,R&gt;} &
+   *          {@code values} argument to {@link Map Map&lt;K,R&gt;} &amp;
    *          {@link Cloneable}.
    * @param values The underlying map of type {@code <K,List<V>> & Cloneable}.
    * @param reflections The underlying map of type
