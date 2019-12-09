@@ -266,7 +266,7 @@ public class ResponseImpl extends Response {
 
   @Override
   public MultivaluedMap<String,Object> getMetadata() {
-    return headers.getMirror();
+    return headers.getMirrorMap();
   }
 
   @Override

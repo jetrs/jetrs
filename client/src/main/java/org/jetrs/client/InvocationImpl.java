@@ -118,7 +118,7 @@ public class InvocationImpl implements Invocation {
       if (entity != null) {
         connection.setDoOutput(true);
         final MessageBodyWriter messageBodyWriter = providers.getMessageBodyWriter(entity.getEntity().getClass(), null, entity.getAnnotations(), entity.getMediaType());
-        ProviderUtil.writeTo(messageBodyWriter, entity.getEntity(), entity.getEntity().getClass(), null, entity.getAnnotations(), entity.getMediaType(), headers.getMirror(), connection.getOutputStream());
+        ProviderUtil.writeTo(messageBodyWriter, entity.getEntity(), entity.getEntity().getClass(), null, entity.getAnnotations(), entity.getMediaType(), headers.getMirrorMap(), connection.getOutputStream());
       }
 
       final int responseCode = connection.getResponseCode();
@@ -289,7 +289,7 @@ public class InvocationImpl implements Invocation {
     }
 
     private MultivaluedMap<String,Object> getHeaders() {
-      return requestHeaders == null ? requestHeaders = new HttpHeadersImpl().getMirror() : requestHeaders;
+      return requestHeaders == null ? requestHeaders = new HttpHeadersImpl().getMirrorMap() : requestHeaders;
     }
 
     @Override

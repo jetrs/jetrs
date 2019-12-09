@@ -16,106 +16,217 @@
 
 package org.jetrs.common.util;
 
-import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.function.BiFunction;
-import java.util.function.Supplier;
 
 import javax.ws.rs.core.MultivaluedMap;
 
 import org.libj.util.MirrorList;
-import org.libj.util.ObservableMap;
+import org.libj.util.MirrorMap;
+import org.libj.util.ObjectUtil;
 
-@SuppressWarnings("rawtypes")
-public class MirrorMultivaluedMap<K,V,M> extends ObservableMap<K,List<V>> implements MultivaluedMap<K,V>, Cloneable, Serializable {
-  private static final long serialVersionUID = -7406535904458617108L;
+/**
+ * A {@link MirrorMap} that implements the {@link MultivaluedMap} interface.
+ *
+ * @param <K> The type of keys maintained by this map.
+ * @param <V> The type of value elements in this map.
+ * @param <R> The type of reflected value elements in the mirror map.
+ */
+public class MirrorMultivaluedMap<K,V,R> extends MirrorMap<K,List<V>,List<R>> implements MultivaluedMap<K,V>, Cloneable {
+  /**
+   * Interface providing methods for the reflection of one type of object to
+   * another, and vice-versa.
+   *
+   * @param <K> The type of key object of this {@link Mirror}.
+   * @param <V> The type of value object of this {@link Mirror}.
+   * @param <R> The type of reflected value object of this {@link Mirror}.
+   */
+  public interface Mirror<K,V,R> extends MirrorMap.Mirror<K,List<V>,List<R>> {
+    @Override
+    MirrorList<R,V> valueToReflection(K key, List<V> value);
 
-  private class KeyMirrorList<A,B> extends MirrorList<A,B> {
-    private final K key;
+    @Override
+    MirrorList<V,R> reflectionToValue(K key, List<R> reflection);
 
-    public KeyMirrorList(final List<A> a, final List<B> b, final K key, final BiFunction<K,A,B> forward, final BiFunction<K,B,A> reverse) {
-      super(a, b, (v) -> forward.apply(key, v), (v) -> reverse.apply(key, v));
-      this.key = key;
+    @Override
+    default Mirror<K,R,V> reverse() {
+      return new Mirror<K,R,V>() {
+        @Override
+        public MirrorList<V,R> valueToReflection(final K key, final List<R> value) {
+          return Mirror.this.reflectionToValue(key, value);
+        }
+
+        @Override
+        public MirrorList<R,V> reflectionToValue(final K key, final List<V> reflection) {
+          return Mirror.this.valueToReflection(key, reflection);
+        }
+      };
     }
-
-    public KeyMirrorList(final KeyMirrorList<A,B> copy, final K key, final BiFunction<K,A,B> forward, final BiFunction<K,B,A> reverse) {
-      super(cloneList(copy), cloneList(copy.getMirror()), (v) -> forward.apply(key, v), (v) -> reverse.apply(key, v));
-      this.key = key;
-    }
   }
 
-  private <E>List<E> cloneList(final List<E> list) {
-    final List<E> clone = listSupplier.get();
-    clone.addAll(list);
-    return clone;
+  /**
+   * Casts the specified {@code map} of type <b>{@link Map Map&lt;K,E&gt;}</b>
+   * to type <b>{@link Map Map&lt;K,E&gt;} & {@link Cloneable}</b>.
+   *
+   * @param <C> The type parameter for {@link Map Map&lt;K,E&gt;} &
+   *          {@link Cloneable}.
+   * @param <K> The type of keys maintained by the specified {@link Map
+   *          Map&lt;K,E&gt;}.
+   * @param <V> The type of mapped values in the specified {@link Map
+   *          Map&lt;K,E&gt;}.
+   * @param map The {@code map} of type <b>{@link Map Map&lt;K,E&gt;}</b> to
+   *          cast to type <b>{@link Map Map&lt;K,E&gt;} &
+   *          {@link Cloneable}</b>.
+   * @return The specified {@code map} of type <b>{@link Map Map&lt;K,E&gt;}</b>
+   *         cast to type <b>{@link Map Map&lt;K,E&gt;} & {@link Cloneable}</b>.
+   */
+  @SuppressWarnings("unchecked")
+  static <C extends Map<K,V> & Cloneable,K,V>C toCloneable(final Map<K,V> map) {
+    return (C)map;
   }
 
-  private final Supplier<? extends Map> mapSupplier;
-  private final Supplier<? extends List> listSupplier;
-  private final BiFunction<K,V,M> mirror;
+  protected Mirror<K,R,V> reverse;
 
-  protected MirrorMultivaluedMap<K,M,V> mirroredMap;
-
-  public MirrorMultivaluedMap(final Supplier<? extends Map<K,List<V>>> mapSupplier, final Supplier<List<V>> listSupplier, final BiFunction<K,V,M> mirror1, final BiFunction<K,M,V> mirror2) {
-    super(mapSupplier.get());
-    this.mapSupplier = Objects.requireNonNull(mapSupplier);
-    this.listSupplier = Objects.requireNonNull(listSupplier);
-    this.mirror = Objects.requireNonNull(mirror1);
-    this.mirroredMap = new MirrorMultivaluedMap<>(this, Objects.requireNonNull(mirror2));
+  /**
+   * Creates a new {@link MirrorMultivaluedMap} with the specified target maps
+   * and {@link Mirror}. The specified target maps are meant to be empty, as
+   * they become the underlying maps of the new {@link MirrorMultivaluedMap}
+   * instance. The specified {@link Mirror} provides the
+   * {@link Mirror#valueToReflection(Object,Object) V -> R} and
+   * {@link Mirror#reflectionToValue(Object,Object) R -> V} methods, which are
+   * used to reflect object values from one {@link MirrorMultivaluedMap} to the
+   * other.
+   *
+   * @param <CloneableValues> The type parameter constraining the {@code values}
+   *          argument to {@link Map Map&lt;K,V&gt;} & {@link Cloneable}.
+   * @param <CloneableReflections> The type parameter constraining the
+   *          {@code values} argument to {@link Map Map&lt;K,R&gt;} &
+   *          {@link Cloneable}.
+   * @param values The underlying map of type {@code <K,List<V>> & Cloneable}.
+   * @param reflections The underlying map of type
+   *          {@code <K,List<R>> & Cloneable}.
+   * @param mirror The {@link Mirror} specifying the
+   *          {@link Mirror#valueToReflection(Object,Object) V -> R} and
+   *          {@link Mirror#reflectionToValue(Object,Object) R -> V} methods.
+   * @throws NullPointerException If any of the specified parameters is null.
+   */
+  public <CloneableValues extends Map<K,List<V>> & Cloneable,CloneableReflections extends Map<K,List<R>> & Cloneable>MirrorMultivaluedMap(final CloneableValues values, final CloneableReflections reflections, final Mirror<K,V,R> mirror) {
+    super(values, reflections, mirror);
   }
 
-  private MirrorMultivaluedMap(final MirrorMultivaluedMap<K,M,V> mirroredMap, final BiFunction<K,V,M> mirror) {
-    super(mirroredMap.mapSupplier.get());
-    this.mapSupplier = mirroredMap.mapSupplier;
-    this.listSupplier = mirroredMap.listSupplier;
-    this.mirror = mirror;
-    this.mirroredMap = mirroredMap;
+  /**
+   * Creates a new {@link MirrorMultivaluedMap} with the specified maps and
+   * mirror. This method is specific for the construction of a reflected
+   * {@link MirrorMultivaluedMap} instance.
+   *
+   * @param mirrorMap The {@link MirrorMultivaluedMap} for which {@code this}
+   *          map will be a reflection. Likewise, {@code this} map will be a
+   *          reflection for {@code mirrorMap}.
+   * @param values The underlying map of type {@code <K,List<V>>}, which is
+   *          implicitly assumed to also be {@link Cloneable}.
+   * @param mirror The {@link Mirror} specifying the
+   *          {@link Mirror#valueToReflection(Object,Object) V -> R} and
+   *          {@link Mirror#reflectionToValue(Object,Object) R -> V} methods.
+   */
+  protected MirrorMultivaluedMap(final MirrorMultivaluedMap<K,R,V> mirrorMap, final Map<K,List<V>> values, final Mirror<K,V,R> mirror) {
+    super(mirrorMap, values, mirror);
   }
 
-  public MirrorMultivaluedMap<K,M,V> getMirror() {
-    return mirroredMap;
+  @Override
+  protected MirrorMap<K,List<V>,List<R>> newInstance(final Map<K,List<V>> values, final Map<K,List<R>> reflections) {
+    return new MirrorMultivaluedMap<>(toCloneable(values), toCloneable(reflections), getMirror());
   }
 
-  protected final List<V> getValues(final K key) {
-    List<V> values = get(key);
+  @Override
+  protected MirrorMap<K,List<R>,List<V>> newMirrorInstance(final Map<K,List<R>> values) {
+    return new MirrorMultivaluedMap<>(this, values, getReverseMirror());
+  }
+
+  @Override
+  public MirrorMultivaluedMap<K,R,V> getMirrorMap() {
+    return (MirrorMultivaluedMap<K,R,V>)super.getMirrorMap();
+  }
+
+  @Override
+  public Mirror<K,V,R> getMirror() {
+    return (Mirror<K,V,R>)super.getMirror();
+  }
+
+  /**
+   * Returns the reverse {@link Mirror}, and caches it for subsequent retrieval,
+   * avoiding reinstantiation.
+   *
+   * @return The reverse {@link Mirror}.
+   */
+  @Override
+  protected Mirror<K,R,V> getReverseMirror() {
+    return reverse == null ? reverse = getMirror().reverse() : reverse;
+  }
+
+  @Override
+  @SuppressWarnings({"unchecked", "unlikely-arg-type"})
+  public MirrorList<V,R> get(final Object key) {
+    return (MirrorList<V,R>)super.get(key);
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
+  public MirrorList<V,R> put(final K key, final List<V> value) {
+    return (MirrorList<V,R>)super.put(key, value);
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
+  public MirrorList<V,R> putIfAbsent(final K key, final List<V> value) {
+    return (MirrorList<V,R>)super.putIfAbsent(key, value);
+  }
+
+  @Override
+  @SuppressWarnings({"unchecked", "unlikely-arg-type"})
+  public MirrorList<V,R> remove(final Object key) {
+    return (MirrorList<V,R>)super.remove(key);
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
+  public MirrorList<V,R> replace(final K key, final List<V> value) {
+    return (MirrorList<V,R>)super.replace(key, value);
+  }
+
+  /**
+   * Returns the list associated to the specified key, creating one via
+   * {@link Mirror#reflectionToValue(Object,List)} if a list does not exist.
+   *
+   * @param key The key.
+   * @return The list associated to the specified key, creating one via
+   *         {@link Mirror#reflectionToValue(Object,List)} if a list does not
+   *         exist.
+   */
+  protected final MirrorList<V,R> getValues(final K key) {
+    MirrorList<V,R> values = get(key);
     if (values == null)
-      put(key, values = new KeyMirrorList<V,M>(listSupplier.get(), listSupplier.get(), key, mirror, mirroredMap.mirror));
+      put(key, values, values = getMirror().reflectionToValue(key, null));
 
     return values;
   }
 
   @Override
-  @SuppressWarnings("unchecked")
-  protected void afterPut(final K key, final List<V> oldValue, final List<V> newValue, final RuntimeException re) {
-    final KeyMirrorList<V,M> list = (KeyMirrorList<V,M>)get(key);
-    mirroredMap.target.put(key, list == null ? null : list.getMirror());
-  }
-
-  @Override
-  protected boolean beforeRemove(final Object key, final List<V> value) {
-    mirroredMap.target.remove(key);
-    return true;
+  public V getFirst(final K key) {
+    final List<V> value = get(key);
+    return value == null || value.size() == 0 ? null : value.get(0);
   }
 
   @Override
   public void putSingle(final K key, final V value) {
-    final List<V> values = getValues(key);
-    values.clear();
+    MirrorList<V,R> values = get(key);
+    put(key, values, values = getMirror().reflectionToValue(key, null));
     values.add(value);
   }
 
   @Override
   public void add(final K key, final V value) {
     getValues(key).add(value);
-  }
-
-  @Override
-  public V getFirst(final K key) {
-    final List<V> value = get(key);
-    return value != null ? value.get(0) : null;
   }
 
   @Override
@@ -152,29 +263,34 @@ public class MirrorMultivaluedMap<K,V,M> extends ObservableMap<K,List<V>> implem
     return true;
   }
 
-  @Override
   @SuppressWarnings("unchecked")
-  public List<V> put(final K key, final List<V> value) {
-    final KeyMirrorList<V,M> mirrorList;
-    if (!(value instanceof KeyMirrorList)) {
-      mirrorList = new KeyMirrorList<V,M>(listSupplier.get(), listSupplier.get(), key, mirror, mirroredMap.mirror);
-      mirrorList.addAll(value);
+  private MirrorList<V,R> ensureMirrorList(final K key, final List<V> value) {
+    final MirrorList<V,R> mirrorList;
+    if (value instanceof MirrorList) {
+      mirrorList = (MirrorList<V,R>)value;
     }
     else {
-      final KeyMirrorList<V,M> list = (KeyMirrorList<V,M>)value;
-      if (key == null ? list.key == null : key.equals(list.key))
-        mirrorList = list;
-      else
-        mirrorList = new KeyMirrorList<>(list, key, mirror, mirroredMap.mirror);
+      mirrorList = getMirror().valueToReflection(key, value).reverse();
     }
 
-    return super.put(key, mirrorList);
+    return mirrorList;
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
+  protected MirrorList<V,R> put(final K key, List<V> oldValue, final List<V> newValue) {
+    return (MirrorList<V,R>)super.put(key, oldValue, ensureMirrorList(key, newValue));
   }
 
   @SuppressWarnings("unchecked")
-  private MirrorMultivaluedMap<K,V,M> superClone() {
+  private MirrorMultivaluedMap<K,V,R> superClone() {
     try {
-      return (MirrorMultivaluedMap<K,V,M>)super.clone();
+      final MirrorMultivaluedMap<K,V,R> clone = (MirrorMultivaluedMap<K,V,R>)super.clone();
+      clone.entrySet = null;
+      clone.keySet = null;
+      clone.values = null;
+      clone.target = (Map<?,?>)ObjectUtil.clone((Cloneable)target);
+      return clone;
     }
     catch (final CloneNotSupportedException e) {
       throw new RuntimeException(e);
@@ -182,10 +298,10 @@ public class MirrorMultivaluedMap<K,V,M> extends ObservableMap<K,List<V>> implem
   }
 
   @Override
-  public MirrorMultivaluedMap<K,V,M> clone() {
-    final MirrorMultivaluedMap<K,V,M> clone = superClone();
-    clone.mirroredMap = mirroredMap.superClone();
-    clone.mirroredMap.mirroredMap = clone;
+  public MirrorMultivaluedMap<K,V,R> clone() {
+    final MirrorMultivaluedMap<K,V,R> clone = superClone();
+    clone.mirrorMap = getMirrorMap().superClone();
+    clone.getMirrorMap().mirrorMap = clone;
     return clone;
   }
 }

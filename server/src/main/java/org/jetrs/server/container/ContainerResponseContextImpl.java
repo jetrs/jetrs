@@ -84,7 +84,7 @@ public class ContainerResponseContextImpl extends InterceptorContextImpl impleme
 
   @Override
   public MultivaluedMap<String,Object> getHeaders() {
-    return headers.getMirror();
+    return headers.getMirrorMap();
   }
 
   @Override

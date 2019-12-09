@@ -116,7 +116,7 @@ public class ResponseBuilderImpl extends Response.ResponseBuilder implements Clo
 
   @Override
   public Response.ResponseBuilder cacheControl(final CacheControl cacheControl) {
-    headers.getMirror().putSingle(HttpHeaders.CACHE_CONTROL, cacheControl);
+    headers.getMirrorMap().putSingle(HttpHeaders.CACHE_CONTROL, cacheControl);
     return this;
   }
 
@@ -130,41 +130,41 @@ public class ResponseBuilderImpl extends Response.ResponseBuilder implements Clo
   @SuppressWarnings("unchecked")
   public Response.ResponseBuilder header(final String name, final Object value) {
     if (value == null) {
-      headers.getMirror().add(name, null);
+      headers.getMirrorMap().add(name, null);
       return this;
     }
 
     final RuntimeDelegate.HeaderDelegate<Object> headerDelegate = (RuntimeDelegate.HeaderDelegate<Object>)RuntimeDelegate.getInstance().createHeaderDelegate(value.getClass());
-    headers.getMirror().add(name, headerDelegate != null ? headerDelegate.toString(value) : value.toString());
+    headers.getMirrorMap().add(name, headerDelegate != null ? headerDelegate.toString(value) : value.toString());
     return this;
   }
 
   @Override
   public Response.ResponseBuilder replaceAll(final MultivaluedMap<String,Object> headers) {
-    final MultivaluedMap<String,Object> mirroredMap = this.headers.getMirror();
-    mirroredMap.clear();
+    final MultivaluedMap<String,Object> mirrorMap = this.headers.getMirrorMap();
+    mirrorMap.clear();
     for (final Map.Entry<String,List<Object>> entry : headers.entrySet())
-      mirroredMap.addAll(entry.getKey(), entry.getValue());
+      mirrorMap.addAll(entry.getKey(), entry.getValue());
 
     return this;
   }
 
   @Override
   public Response.ResponseBuilder language(final String language) {
-    headers.getMirror().putSingle(HttpHeaders.CONTENT_LANGUAGE, Locales.parse(language));
+    headers.getMirrorMap().putSingle(HttpHeaders.CONTENT_LANGUAGE, Locales.parse(language));
     headers.putSingle(HttpHeaders.CONTENT_LANGUAGE, language);
     return this;
   }
 
   @Override
   public Response.ResponseBuilder language(final Locale language) {
-    headers.getMirror().putSingle(HttpHeaders.CONTENT_LANGUAGE, language);
+    headers.getMirrorMap().putSingle(HttpHeaders.CONTENT_LANGUAGE, language);
     return this;
   }
 
   @Override
   public Response.ResponseBuilder type(final MediaType type) {
-    headers.getMirror().putSingle(HttpHeaders.CONTENT_TYPE, type);
+    headers.getMirrorMap().putSingle(HttpHeaders.CONTENT_TYPE, type);
     return this;
   }
 
@@ -182,7 +182,7 @@ public class ResponseBuilderImpl extends Response.ResponseBuilder implements Clo
 
   @Override
   public Response.ResponseBuilder contentLocation(final URI location) {
-    headers.getMirror().putSingle(HttpHeaders.CONTENT_LOCATION, location);
+    headers.getMirrorMap().putSingle(HttpHeaders.CONTENT_LOCATION, location);
     return this;
   }
 
@@ -201,19 +201,19 @@ public class ResponseBuilderImpl extends Response.ResponseBuilder implements Clo
 
   @Override
   public Response.ResponseBuilder expires(final Date expires) {
-    headers.getMirror().putSingle(HttpHeaders.EXPIRES, expires);
+    headers.getMirrorMap().putSingle(HttpHeaders.EXPIRES, expires);
     return this;
   }
 
   @Override
   public Response.ResponseBuilder lastModified(final Date lastModified) {
-    headers.getMirror().putSingle(HttpHeaders.LAST_MODIFIED, lastModified);
+    headers.getMirrorMap().putSingle(HttpHeaders.LAST_MODIFIED, lastModified);
     return this;
   }
 
   @Override
   public Response.ResponseBuilder location(final URI location) {
-    headers.getMirror().putSingle(HttpHeaders.LOCATION, location);
+    headers.getMirrorMap().putSingle(HttpHeaders.LOCATION, location);
     return this;
   }
 

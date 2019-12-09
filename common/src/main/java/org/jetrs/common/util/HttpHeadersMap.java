@@ -14,773 +14,190 @@
  * program. If not, see <http://opensource.org/licenses/MIT/>.
  */
 
-package org.jetrs.common.core;
+package org.jetrs.common.util;
 
-import java.math.BigDecimal;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.text.ParseException;
-import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
+import java.util.Objects;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.core.CacheControl;
-import javax.ws.rs.core.Cookie;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.NewCookie;
+import org.jetrs.common.util.MirrorQualityList.Qualifier;
+import org.libj.util.MirrorList;
+import org.libj.util.MirrorMap;
 
-import org.jetrs.common.ext.delegate.CookieHeaderDelegate;
-import org.jetrs.common.ext.delegate.DateHeaderDelegate;
-import org.jetrs.common.util.MediaTypes;
-import org.jetrs.common.util.MirrorMultivaluedMap;
-import org.jetrs.common.util.Responses;
-import org.libj.util.ArrayDoubleList;
-import org.libj.util.CollectionUtil;
-import org.libj.util.DoubleComparator;
-import org.libj.util.Locales;
-import org.libj.util.Matched;
-import org.libj.util.Numbers;
+/**
+ * A {@link MirrorMultivaluedMap} that uses lists of type
+ * {@link MirrorQualityList}, which automatically sort header values based on
+ * quality (i.e. {@code "q=0.2"}).
+ *
+ * @param <K> The type of keys maintained by this map.
+ * @param <V> The type of value elements in this map.
+ * @param <R> The type of reflected value elements in the mirror map.
+ */
+public class HttpHeadersMap<K,V,R> extends MirrorMultivaluedMap<K,V,R> {
+  @SuppressWarnings("unchecked")
+  private static <C extends List<T> & Cloneable,T>C ensureCloneable(final List<T> list) {
+    if (list == null)
+      return (C)new ArrayList<>();
 
-public class HttpHeadersImpl extends MirrorMultivaluedMap<String,String,Object> implements HttpHeaders {
-  private static final long serialVersionUID = -5881222274060155846L;
+    if (list instanceof Cloneable)
+      return (C)list;
 
-  // https://en.wikipedia.org/wiki/List_of_HTTP_header_fields
-  private static Object parseRequestHeader(final String key, final String value) {
-    // Standard Headers...
-    if (HttpHeaders.ACCEPT.equalsIgnoreCase(key)) {
-      try {
-        return MediaTypes.parse(value);
-      }
-      catch (final ParseException e) {
-        throw new IllegalArgumentException(e);
-      }
-    }
-
-    if (HttpHeaders.ACCEPT_CHARSET.equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if (HttpHeaders.ACCEPT_ENCODING.equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if (HttpHeaders.ACCEPT_LANGUAGE.equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if ("Accept-Datetime".equalsIgnoreCase(key))
-      return DateHeaderDelegate.parse(value);
-
-    if ("Access-Control-Request-Method".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if (HttpHeaders.AUTHORIZATION.equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if (HttpHeaders.CACHE_CONTROL.equalsIgnoreCase(key))
-      return CacheControl.valueOf(value);
-
-    if ("Connection".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if (HttpHeaders.CONTENT_LENGTH.equalsIgnoreCase(key))
-      return Integer.valueOf(value);
-
-    if ("Content-MD5".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if (HttpHeaders.CONTENT_TYPE.equalsIgnoreCase(key)) {
-      try {
-        return MediaTypes.parse(value);
-      }
-      catch (final ParseException e) {
-        throw new IllegalArgumentException(e);
-      }
-    }
-
-    if (HttpHeaders.COOKIE.equalsIgnoreCase(key))
-      return CookieHeaderDelegate.parse(value.split(";"));
-
-    if (HttpHeaders.DATE.equalsIgnoreCase(key))
-      return DateHeaderDelegate.parse(value);
-
-    if ("Expect".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if ("Forwarded".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if ("From".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if (HttpHeaders.HOST.equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if ("HTTP2-Settings".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if (HttpHeaders.IF_MATCH.equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if (HttpHeaders.IF_MODIFIED_SINCE.equalsIgnoreCase(key))
-      return DateHeaderDelegate.parse(value);
-
-    if (HttpHeaders.IF_NONE_MATCH.equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if (HttpHeaders.IF_UNMODIFIED_SINCE.equalsIgnoreCase(key))
-      return DateHeaderDelegate.parse(value);
-
-    if ("Max-Forwards".equalsIgnoreCase(key))
-      return Integer.valueOf(value);
-
-    if ("Origin".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if ("Pragma".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if ("Proxy-Authorization".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if ("Range".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if ("Referrer".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if ("TE".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if (HttpHeaders.USER_AGENT.equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if ("Upgrade".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if ("Via".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if ("Warning".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    // Non-standard headers...
-
-    if ("Upgrade-Insecure-Requests".equalsIgnoreCase(key))
-      return Integer.parseInt(value);
-
-    if ("X-Requested-With".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if ("DNT".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if ("X-Forwarded-For".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if ("X-Forwarded-Host".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if ("X-Forwarded-Proto".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if ("Front-End-Https".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if ("X-Http-Method-Override".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if ("X-ATT-DeviceId".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if ("X-Wap-Profile".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if ("Proxy-Connection".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if ("X-UIDH".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if ("X-Csrf-Token".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if ("X-Request-ID".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if ("X-Correlation-ID".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if ("Save-Data".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    return null;
+    return (C)new ArrayList<>(list);
   }
 
-  private static Object parseResponseHeader(final String key, final String value) {
-    if ("Access-Control-Allow-Origin".equalsIgnoreCase(key) || "Access-Control-Allow-Credentials".equalsIgnoreCase(key) || "Access-Control-Expose-Headers".equalsIgnoreCase(key) || "Access-Control-Max-Age".equalsIgnoreCase(key) || "Access-Control-Allow-Methods".equalsIgnoreCase(key) || "Access-Control-Allow-Headers".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if ("Accept-Patch".equalsIgnoreCase(key)) {
-      try {
-        return MediaTypes.parse(value);
-      }
-      catch (final ParseException e) {
-        throw new IllegalArgumentException(e);
-      }
-    }
-
-    if ("Accept-Ranges".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if ("Age".equalsIgnoreCase(key))
-      return Integer.parseInt(value);
-
-    if (HttpHeaders.ALLOW.equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if ("Alt-Svc".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if (HttpHeaders.CONTENT_DISPOSITION.equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if (HttpHeaders.CONTENT_ENCODING.equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if (HttpHeaders.CONTENT_LANGUAGE.equalsIgnoreCase(key))
-      return Locales.parse(value);
-
-    if (HttpHeaders.CONTENT_LENGTH.equalsIgnoreCase(key))
-      return Integer.parseInt(value);
-
-    if (HttpHeaders.CONTENT_LOCATION.equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if ("Content-Range".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if ("Delta-Base".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if (HttpHeaders.ETAG.equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if (HttpHeaders.EXPIRES.equalsIgnoreCase(key)) {
-      if (Numbers.isNumber(value))
-        return new Date(System.currentTimeMillis() + 1000 * Integer.parseInt(value));
-
-      return DateHeaderDelegate.parse(value);
-    }
-
-    if ("IM".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if (HttpHeaders.LAST_MODIFIED.equalsIgnoreCase(key))
-      return DateHeaderDelegate.parse(value);
-
-    if (HttpHeaders.LINK.equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if (HttpHeaders.LOCATION.equalsIgnoreCase(key))
-      return URI.create(value);
-
-    if ("P3P".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if ("Proxy-Authenticate".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if ("Public-Key-Pins".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if (HttpHeaders.RETRY_AFTER.equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if ("Server".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if (HttpHeaders.SET_COOKIE.equalsIgnoreCase(key))
-      return NewCookie.valueOf(value);
-
-    if ("Strict-Transport-Security".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if ("Trailer".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if ("Transfer-Encoding".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if ("Tk".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if (HttpHeaders.VARY.equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if (HttpHeaders.WWW_AUTHENTICATE.equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if ("X-Frame-Options".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if ("Content-Security-Policy".equalsIgnoreCase(key) || "X-Content-Security-Policy".equalsIgnoreCase(key) || "X-WebKit-CSP".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if ("Refresh".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if ("Status".equalsIgnoreCase(key))
-      return Responses.from(value);
-
-    if ("Timing-Allow-Origin".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if ("X-Content-Duration".equalsIgnoreCase(key))
-      return new BigDecimal(value);
-
-    if ("X-Content-Type-Options".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if ("X-Powered-By".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if ("X-Request-ID".equalsIgnoreCase(key) || "X-Correlation-ID".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if ("X-UA-Compatible".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    if ("X-XSS-Protection".equalsIgnoreCase(key)) {
-      // FIXME: Does this have a strong type?
-      return value;
-    }
-
-    return null;
-  }
-
-  private static Object parseHeaderByType(final String value) {
-    if (value == null)
-      return null;
-
-    try {
-      return DateHeaderDelegate.parse(value);
-    }
-    catch (final DateTimeParseException e) {
-    }
-
-    try {
-      return MediaType.valueOf(value);
-    }
-    catch (final IllegalArgumentException e) {
-    }
-
-    try {
-      return CacheControl.valueOf(value);
-    }
-    catch (final IllegalArgumentException e) {
-    }
-
-    final Locale locale = Locales.parse(value);
-    if (Locales.isIso(locale))
-      return locale;
-
-    try {
-      return new URI(value);
-    }
-    catch (final URISyntaxException e) {
-    }
-
-    return value;
-  }
-
-  public HttpHeadersImpl(final Map<String,List<String>> headers) {
-    this();
-    for (final Map.Entry<String,List<String>> entry : headers.entrySet())
-      addAll(entry.getKey(), entry.getValue());
-  }
-
-  public HttpHeadersImpl(final MultivaluedMap<String,Object> headers) {
-    this();
-    for (final Map.Entry<String,List<Object>> entry : headers.entrySet())
-      mirroredMap.addAll(entry.getKey(), entry.getValue());
-  }
-
-  public HttpHeadersImpl(final HttpServletRequest request) {
-    this();
-    if (request != null) {
-      final Enumeration<String> headerNames = request.getHeaderNames();
-      while (headerNames.hasMoreElements()) {
-        final String headerName = headerNames.nextElement();
-        final Enumeration<String> enumeration = request.getHeaders(headerName);
-        while (enumeration.hasMoreElements())
-          add(headerName, enumeration.nextElement());
-      }
-    }
-  }
-
-  public HttpHeadersImpl(final HttpServletResponse response) {
-    this();
-    if (response != null)
-      for (final String header : response.getHeaders(HttpHeaders.ALLOW))
-        add(HttpHeaders.ALLOW, header);
-  }
-
-  public HttpHeadersImpl() {
-    super(HashMap::new, ArrayList::new, (key, value) -> {
-      if (value == null)
-        return null;
-
-      final Object requestHeader = parseRequestHeader(key, value);
-      if (requestHeader != null)
-        return requestHeader;
-
-      final Object responseHeader = parseResponseHeader(key, value);
-      if (responseHeader != null)
-        return responseHeader;
-
-      return parseHeaderByType(value);
-    }, (key, value) -> {
-      if (value == null)
-        return null;
-
-      if (value instanceof String)
-        return (String)value;
-
-      if (value instanceof MediaType)
-        return value.toString();
-
-      if (value instanceof Locale)
-        return value.toString();
-
-      if (value instanceof Date)
-        return DateHeaderDelegate.format((Date)value);
-
-      if (value instanceof URI)
-        return value.toString();
-
-      if (value instanceof CacheControl)
-        return value.toString();
-
-      if (value instanceof NewCookie)
-        return value.toString();
-
-      // NOTE: It is assumed that the only Map in here is a Map of cookies
-      if (value instanceof Map) {
-        final StringBuilder builder = new StringBuilder();
-        for (final Object cookie : ((Map<?,?>)value).values())
-          builder.append(cookie).append(';');
-
-        if (builder.length() > 0)
-          builder.setLength(builder.length() - 1);
-
-        return builder.toString();
+  /**
+   * Creates a new {@link HttpHeadersMap} with a default
+   * {@link org.jetrs.common.util.MirrorMultivaluedMap.Mirror} that instantiates
+   * lists of type {@link MirrorQualityList}.
+   *
+   * @param mirror The {@link org.libj.util.MirrorMap.Mirror} specifying the
+   *          {@link org.libj.util.MirrorMap.Mirror#valueToReflection(Object,Object)
+   *          V -> R} and
+   *          {@link org.libj.util.MirrorMap.Mirror#reflectionToValue(Object,Object)
+   *          R -> V} methods.
+   * @param qualifier {@link Qualifier} providing methods for the determination
+   *          of quality from value objects.
+   * @throws NullPointerException If any of the specified parameters is null.
+   */
+  public HttpHeadersMap(final MirrorMap.Mirror<K,V,R> mirror, final Qualifier<V,R> qualifier) {
+    super(new HashMap<>(), new HashMap<>(), new MirrorMultivaluedMap.Mirror<K,V,R>() {
+      @Override
+      @SuppressWarnings("unchecked")
+      public MirrorQualityList<R,V> valueToReflection(final K key, final List<V> value) {
+        if (value instanceof MirrorQualityList)
+          return ((MirrorQualityList<V,R>)value).getMirrorList();
+
+        return new MirrorQualityList<>(new ArrayList<>(), ensureCloneable(value), new MirrorList.Mirror<R,V>() {
+          @Override
+          public V valueToReflection(final R value) {
+            return mirror.reflectionToValue(key, value);
+          }
+
+          @Override
+          public R reflectionToValue(final V reflection) {
+            return mirror.reverse().reflectionToValue(key, reflection);
+          }
+        }, qualifier.reverse());
       }
 
-      throw new UnsupportedOperationException("Unsupported type: " + value.getClass());
+      @Override
+      @SuppressWarnings("unchecked")
+      public MirrorQualityList<V,R> reflectionToValue(final K key, List<R> reflection) {
+        if (reflection instanceof MirrorQualityList)
+          return ((MirrorQualityList<R,V>)reflection).getMirrorList();
+
+        return new MirrorQualityList<>(new ArrayList<>(), ensureCloneable(reflection), new MirrorList.Mirror<V,R>() {
+          @Override
+          public R valueToReflection(final V value) {
+            return mirror.valueToReflection(key, value);
+          }
+
+          @Override
+          public V reflectionToValue(final R reflection) {
+            return mirror.reflectionToValue(key, reflection);
+          }
+        }, qualifier);
+      }
     });
+    Objects.requireNonNull(mirror);
+    Objects.requireNonNull(qualifier);
+  }
+
+  /**
+   * Creates a new {@link HttpHeadersMap} with the specified maps and mirror.
+   * This method is specific for the construction of a reflected
+   * {@link HttpHeadersMap} instance.
+   *
+   * @param mirrorMap The {@link HttpHeadersMap} for which {@code this} map will
+   *          be a reflection. Likewise, {@code this} map will be a reflection
+   *          for {@code mirrorMap}.
+   * @param values The underlying map of type {@code <K,List<V>>}, which is
+   *          implicitly assumed to also be {@link Cloneable}.
+   * @param mirror The {@link org.jetrs.common.util.MirrorMultivaluedMap.Mirror}
+   *          specifying the
+   *          {@link org.jetrs.common.util.MirrorMultivaluedMap.Mirror#valueToReflection(Object,Object)
+   *          V -> R} and
+   *          {@link org.jetrs.common.util.MirrorMultivaluedMap.Mirror#reflectionToValue(Object,Object)
+   *          R -> V} methods.
+   */
+  protected HttpHeadersMap(final HttpHeadersMap<K,R,V> mirrorMap, final Map<K,List<V>> values, final HttpHeadersMap.Mirror<K,V,R> mirror) {
+    super(mirrorMap, values, mirror);
+  }
+
+  /**
+   * Creates a new {@link HttpHeadersMap} with the specified target maps and
+   * {@link org.jetrs.common.util.MirrorMultivaluedMap.Mirror}. The specified
+   * target maps are meant to be empty, as they become the underlying maps of
+   * the new {@link HttpHeadersMap} instance. The specified
+   * {@link org.jetrs.common.util.MirrorMultivaluedMap.Mirror} provides the
+   * {@link org.jetrs.common.util.MirrorMultivaluedMap.Mirror#valueToReflection(Object,Object)
+   * V -> R} and
+   * {@link org.jetrs.common.util.MirrorMultivaluedMap.Mirror#reflectionToValue(Object,Object)
+   * R -> V} methods, which are used to reflect object values from one
+   * {@link HttpHeadersMap} to the other.
+   *
+   * @param values The underlying map of type {@code <K,List<V>>}, which is
+   *          implicitly assumed to also be {@link Cloneable}.
+   * @param reflections The underlying map of type {@code <K,List<R>>}, which is
+   *          implicitly assumed to also be {@link Cloneable}.
+   * @param mirror The {@link org.jetrs.common.util.MirrorMultivaluedMap.Mirror}
+   *          specifying the
+   *          {@link org.jetrs.common.util.MirrorMultivaluedMap.Mirror#valueToReflection(Object,Object)
+   *          V -> R} and
+   *          {@link org.jetrs.common.util.MirrorMultivaluedMap.Mirror#reflectionToValue(Object,Object)
+   *          R -> V} methods.
+   * @throws NullPointerException If any of the specified parameters is null.
+   */
+  private HttpHeadersMap(final Map<K,List<V>> values, final Map<K,List<R>> reflections, final Mirror<K,V,R> mirror) {
+    super(toCloneable(values), toCloneable(reflections), mirror);
   }
 
   @Override
-  public List<String> getRequestHeader(final String name) {
-    return get(name);
+  protected final HttpHeadersMap<K,V,R> newInstance(final Map<K,List<V>> values, final Map<K,List<R>> reflections) {
+    return new HttpHeadersMap<>(values, reflections, getMirror());
   }
 
   @Override
-  public String getHeaderString(final String name) {
-    return CollectionUtil.toString(getRequestHeader(name), ",");
+  protected final HttpHeadersMap<K,R,V> newMirrorInstance(final Map<K,List<R>> values) {
+    return new HttpHeadersMap<>(this, values, getReverseMirror());
   }
 
   @Override
-  public MultivaluedMap<String,String> getRequestHeaders() {
-    return this;
+  public final HttpHeadersMap<K,R,V> getMirrorMap() {
+    return (HttpHeadersMap<K,R,V>)super.getMirrorMap();
   }
 
   @Override
-  public List<MediaType> getAcceptableMediaTypes() {
-    final List<String> accepts = getRequestHeader(HttpHeaders.ACCEPT);
-    if (accepts == null)
-      return java.util.Collections.unmodifiableList(java.util.Collections.singletonList(MediaType.WILDCARD_TYPE));
-
-    final List<MediaType> mediaTypes = new ArrayList<>();
-    // FIXME: MediaType.valueOf(), subtype, charset
-    for (final String accept : accepts)
-      mediaTypes.add(new MediaType(accept, null));
-
-    return mediaTypes;
-  }
-
-  private static final Locale WILDCARD_LOCALE = new Locale("*");
-
-  private static Locale getLocale(final String value) {
-    if (value == null)
-      return null;
-
-    final int dash = value.indexOf('-');
-    if (dash == 0 || dash == value.length() - 1)
-      throw new IllegalArgumentException("Illegal  locale: " + value);
-
-    return dash == -1 ? new Locale(value) : new Locale(value.substring(0, dash), value.substring(dash + 1));
+  @SuppressWarnings("unlikely-arg-type")
+  public MirrorQualityList<V,R> get(final Object key) {
+    return (MirrorQualityList<V,R>)super.get(key);
   }
 
   @Override
-  public List<Locale> getAcceptableLanguages() {
-    final List<String> acceptLanguages = getRequestHeader(HttpHeaders.ACCEPT_LANGUAGE);
-    if (acceptLanguages == null || acceptLanguages.isEmpty())
-      return Collections.singletonList(WILDCARD_LOCALE);
-
-    final List<Locale> languages = new ArrayList<>();
-    final ArrayDoubleList qualities = new ArrayDoubleList();
-    for (final String accepterLanguage : acceptLanguages) {
-      final int sc = accepterLanguage.indexOf(';');
-
-      final double quality;
-      final String language;
-      if (sc > 0) {
-        language = accepterLanguage.substring(0, sc).trim();
-        final int len = accepterLanguage.length();
-        boolean qSeen = false;
-        int i = sc + 1;
-        for (char ch; i < len; ++i) {
-          ch = accepterLanguage.charAt(i);
-          if (ch == 'q')
-            qSeen = true;
-          else if (ch == '=')
-            break;
-          else if (ch != ' ')
-            throw new IllegalArgumentException("Illegal language: " + accepterLanguage);
-        }
-
-        quality = qSeen ? Numbers.parseDouble(accepterLanguage.substring(i + 1).trim(), 1d) : 1d;
-      }
-      else {
-        language = accepterLanguage;
-        quality = 1d;
-      }
-
-      languages.add(getLocale(language));
-      qualities.add(quality);
-    }
-
-    // Reverse sort, because we want q=1 at the head of the list.
-    Matched.sort(languages, qualities, DoubleComparator.REVERSE);
-    return languages;
+  public MirrorQualityList<V,R> put(final K key, final List<V> value) {
+    return (MirrorQualityList<V,R>)super.put(key, value);
   }
 
   @Override
-  public MediaType getMediaType() {
-    try {
-      return MediaTypes.parse(getFirst(HttpHeaders.CONTENT_TYPE));
-    }
-    catch (final ParseException e) {
-      throw new IllegalStateException(e);
-    }
+  public MirrorQualityList<V,R> putIfAbsent(final K key, final List<V> value) {
+    return (MirrorQualityList<V,R>)super.putIfAbsent(key, value);
   }
 
   @Override
-  public Locale getLanguage() {
-    final String language = getFirst(HttpHeaders.CONTENT_LANGUAGE);
-    return language == null ? null : Locales.parse(language);
+  @SuppressWarnings("unlikely-arg-type")
+  public MirrorQualityList<V,R> remove(final Object key) {
+    return (MirrorQualityList<V,R>)super.remove(key);
   }
 
   @Override
-  public Map<String,Cookie> getCookies() {
-    final List<String> cookies = get(HttpHeaders.COOKIE);
-    return cookies == null || cookies.size() == 0 ? null : CookieHeaderDelegate.parse(cookies.toArray(new String[cookies.size()]));
+  public MirrorQualityList<V,R> replace(final K key, final List<V> value) {
+    return (MirrorQualityList<V,R>)super.replace(key, value);
   }
 
   @Override
-  public Date getDate() {
-    final String date = getFirst(HttpHeaders.DATE);
-    return date == null ? null : DateHeaderDelegate.parse(date);
-  }
-
-  @Override
-  public int getLength() {
-    final String contentLength = getFirst(HttpHeaders.CONTENT_LENGTH);
-    return Numbers.isNumber(contentLength) ? Integer.parseInt(contentLength) : null;
-  }
-
-  public Set<String> getAllowedMethods() {
-    return new HashSet<>(get(HttpHeaders.ALLOW));
-  }
-
-  public Date getLastModified() {
-    final String lastModified = getFirst(HttpHeaders.LAST_MODIFIED);
-    return lastModified == null ? null : DateHeaderDelegate.parse(lastModified);
-  }
-
-  public URI getLocation() {
-    final String location = getFirst(HttpHeaders.LOCATION);
-    return location == null ? null : URI.create(location);
-  }
-
-  public String getString(final String header) {
-    final List<String> values = get(header);
-    if (values == null)
-      return null;
-
-    if (values.size() == 0)
-      return "";
-
-    final StringBuilder builder = new StringBuilder();
-    for (final String value : values)
-      builder.append(',').append(value);
-
-    return builder.substring(1);
-  }
-
-  @Override
-  public HttpHeadersImpl clone() {
-    return (HttpHeadersImpl)super.clone();
+  public HttpHeadersMap<K,V,R> clone() {
+    return (HttpHeadersMap<K,V,R>)super.clone();
   }
 }
