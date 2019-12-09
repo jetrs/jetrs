@@ -26,6 +26,8 @@ import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
@@ -40,24 +42,25 @@ import org.libj.util.function.Throwing;
  */
 @Provider
 public class FileProvider implements MessageBodyReader<File>, MessageBodyWriter<File> {
-  static void writeTo(final Object range, final File file, final OutputStream out, final BiObjBiLongConsumer<RandomAccessFile,OutputStream> consumer) throws IOException {
+  static long writeTo(final Object range, final File file, final OutputStream out, final BiObjBiLongConsumer<RandomAccessFile,OutputStream> consumer) throws IOException {
     final String rangeString;
     final int start;
     if (range == null || (rangeString = String.valueOf(range).trim()).length() == 0 || (start = rangeString.indexOf("bytes=")) == -1) {
       Files.copy(file.toPath(), out);
-      return;
+      return file.length();
     }
 
     try (final RandomAccessFile raf = new RandomAccessFile(file, "r")) {
-      parseRange(rangeString, start + 6, raf, out, consumer);
+      return parseRange(rangeString, start + 6, raf, out, consumer);
     }
   }
 
-  private static void parseRange(final String range, int i, final RandomAccessFile raf, final OutputStream out, final BiObjBiLongConsumer<RandomAccessFile,OutputStream> consumer) {
+  private static long parseRange(final String range, int i, final RandomAccessFile raf, final OutputStream out, final BiObjBiLongConsumer<RandomAccessFile,OutputStream> consumer) {
     final StringBuilder builder = new StringBuilder();
     long from = Long.MIN_VALUE;
     long to = Long.MAX_VALUE;
     final int len = range.length();
+    long total = 0;
     for (char ch; i <= len; ++i) {
       if (i == len || (ch = range.charAt(i)) == ',') {
         if (builder.length() > 0) {
@@ -67,8 +70,10 @@ public class FileProvider implements MessageBodyReader<File>, MessageBodyWriter<
             from = -Long.valueOf(builder.toString());
         }
 
-        if (from <= to && (from != Long.MIN_VALUE || to != Long.MAX_VALUE))
+        if (from <= to && (from != Long.MIN_VALUE || to != Long.MAX_VALUE)) {
           consumer.accept(raf, out, from, to);
+          total += to - from;
+        }
 
         from = Long.MIN_VALUE;
         to = Long.MAX_VALUE;
@@ -88,9 +93,11 @@ public class FileProvider implements MessageBodyReader<File>, MessageBodyWriter<
         builder.append(ch);
       }
       else if (ch != ' ') {
-        return;
+        break;
       }
     }
+
+    return total;
   }
 
   private static final BiObjBiLongConsumer<RandomAccessFile,OutputStream> consumer = new BiObjBiLongConsumer<RandomAccessFile,OutputStream>() {
@@ -116,6 +123,9 @@ public class FileProvider implements MessageBodyReader<File>, MessageBodyWriter<
     }
   };
 
+  @Context
+  private HttpHeaders requestHeaders;
+
   @Override
   public boolean isReadable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
     return File.class.isAssignableFrom(type);
@@ -140,6 +150,8 @@ public class FileProvider implements MessageBodyReader<File>, MessageBodyWriter<
 
   @Override
   public void writeTo(final File t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,Object> httpHeaders, final OutputStream entityStream) throws IOException {
-    writeTo(httpHeaders.getFirst("Range"), t, entityStream, consumer);
+    final String range = requestHeaders.getRequestHeaders().getFirst("Range");
+    final long contentLength = writeTo(range, t, entityStream, consumer);
+    httpHeaders.addFirst(HttpHeaders.CONTENT_LENGTH, String.valueOf(contentLength));
   }
 }
