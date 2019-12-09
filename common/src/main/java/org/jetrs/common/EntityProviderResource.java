@@ -19,7 +19,6 @@ package org.jetrs.common;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
-import java.text.ParseException;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.core.MediaType;
@@ -32,12 +31,7 @@ public abstract class EntityProviderResource<T> extends TypeProviderResource<T> 
   public EntityProviderResource(final Class<T> clazz, final T singleton, final Class<?> interfaceType) throws IllegalAccessException, InstantiationException, InvocationTargetException {
     super(clazz, singleton, getGenericInterfaceType(interfaceType, clazz));
     final Consumes consumes = clazz.getAnnotation(Consumes.class);
-    try {
-      this.allowedTypes = consumes == null ? null : MediaTypes.parse(consumes.value());
-    }
-    catch (final ParseException e) {
-      throw new IllegalArgumentException(e);
-    }
+    this.allowedTypes = consumes == null ? null : MediaTypes.parse(consumes.value());
   }
 
   /**

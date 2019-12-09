@@ -19,7 +19,6 @@ package org.jetrs.common.ext;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
-import java.text.ParseException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -104,12 +103,7 @@ public abstract class ReaderInterceptorContextImpl implements ReaderInterceptorC
 
   @Override
   public MediaType getMediaType() {
-    try {
-      return MediaTypes.parse(headers.getFirst(HttpHeaders.CONTENT_TYPE));
-    }
-    catch (final ParseException e) {
-      throw new IllegalStateException(e);
-    }
+    return MediaTypes.parse(headers.getFirst(HttpHeaders.CONTENT_TYPE));
   }
 
   @Override

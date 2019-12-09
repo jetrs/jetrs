@@ -19,7 +19,6 @@ package org.jetrs.server.container;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -28,7 +27,6 @@ import java.util.Locale;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.BadRequestException;
 import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -69,16 +67,11 @@ public class ContainerRequestContextImpl extends InterceptorContextImpl implemen
     for (String attribute; attributes.hasMoreElements();)
       properties.put(attribute = attributes.nextElement(), httpServletRequest.getAttribute(attribute));
 
-    try {
-      this.httpServletRequest = httpServletRequest;
-      this.accept = Collections.unmodifiableList(Arrays.asList(MediaTypes.parse(httpServletRequest.getHeaders(HttpHeaders.ACCEPT))));
-      this.acceptLanguages = Collections.unmodifiableList(Arrays.asList(Locales.parse(httpServletRequest.getHeaders(HttpHeaders.ACCEPT_LANGUAGE))));
-      this.headers = executionContext.getRequestHeaders();
-      this.uriInfo = new UriInfoImpl(this, httpServletRequest, executionContext);
-    }
-    catch (final ParseException e) {
-      throw new BadRequestException(e);
-    }
+    this.httpServletRequest = httpServletRequest;
+    this.accept = Collections.unmodifiableList(Arrays.asList(MediaTypes.parse(httpServletRequest.getHeaders(HttpHeaders.ACCEPT))));
+    this.acceptLanguages = Collections.unmodifiableList(Arrays.asList(Locales.parse(httpServletRequest.getHeaders(HttpHeaders.ACCEPT_LANGUAGE))));
+    this.headers = executionContext.getRequestHeaders();
+    this.uriInfo = new UriInfoImpl(this, httpServletRequest, executionContext);
   }
 
   @Override

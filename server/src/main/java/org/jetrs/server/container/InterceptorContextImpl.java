@@ -18,7 +18,6 @@ package org.jetrs.server.container;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
-import java.text.ParseException;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Locale;
@@ -111,13 +110,8 @@ abstract class InterceptorContextImpl implements InterceptorContext {
 
   @Override
   public final MediaType getMediaType() {
-    try {
-      final String mediaType = getStringHeaders().getFirst(HttpHeaders.CONTENT_TYPE);
-      return mediaType == null ? MediaType.WILDCARD_TYPE : MediaTypes.parse(mediaType);
-    }
-    catch (final ParseException e) {
-      throw new IllegalStateException(e);
-    }
+    final String mediaType = getStringHeaders().getFirst(HttpHeaders.CONTENT_TYPE);
+    return mediaType == null ? MediaType.WILDCARD_TYPE : MediaTypes.parse(mediaType);
   }
 
   @Override

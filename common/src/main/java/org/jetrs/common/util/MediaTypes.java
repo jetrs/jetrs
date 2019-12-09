@@ -16,7 +16,6 @@
 
 package org.jetrs.common.util;
 
-import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
@@ -269,24 +268,113 @@ public final class MediaTypes {
     return new MediaType(type, subType, parameters);
   }
 
-  public static MediaType[] parse(final Collection<String> strings) throws ParseException {
-    if (strings == null)
-      return null;
+  private interface Adapter<T> {
+    boolean hasNext(T obj, int index);
+    String next(T obj, int index);
+  }
 
-    final MediaType[] mediaTypes = parse(strings.iterator(), 0);
-    Arrays.sort(mediaTypes, qComparator);
+  private static final Adapter<Iterator<String>> iteratorAdapter = new Adapter<Iterator<String>>() {
+    @Override
+    public boolean hasNext(final Iterator<String> obj, final int index) {
+      return obj.hasNext();
+    }
+
+    @Override
+    public String next(final Iterator<String> obj, final int index) {
+      return obj.next();
+    }
+  };
+
+  private static final Adapter<Enumeration<String>> enumerationAdapter = new Adapter<Enumeration<String>>() {
+    @Override
+    public boolean hasNext(final Enumeration<String> obj, final int index) {
+      return obj.hasMoreElements();
+    }
+
+    @Override
+    public String next(final Enumeration<String> obj, final int index) {
+      return obj.nextElement();
+    }
+  };
+
+  private static final Adapter<String[]> arrayAdapter = new Adapter<String[]>() {
+    @Override
+    public boolean hasNext(final String[] obj, final int index) {
+      return index < obj.length;
+    }
+
+    @Override
+    public String next(final String[] obj, final int index) {
+      return obj[index];
+    }
+  };
+
+  private static <T>MediaType[] parse(final Adapter<T> adapter, final T source, int index, final int depth, StringBuilder builder, String header, int start) {
+    MediaType mediaType = null;
+    do {
+      if (header == null) {
+        if (adapter.hasNext(source, index)) {
+          header = adapter.next(source, index++);
+          start = 0;
+          if (header == null || header.length() == 0)
+            return parse(adapter, source, index, depth, builder, null, 0);
+        }
+        else {
+          return depth == 0 ? null : new MediaType[depth];
+        }
+      }
+
+      final int len = header.length();
+      for (int i = start; i <= len; ++i) {
+        final char ch;
+        if (i == len || (ch = header.charAt(i)) == ',') {
+          if ((start = i + 1) >= len)
+            header = null;
+
+          if (builder == null || builder.length() == 0)
+            continue;
+
+          mediaType = parse(builder.toString());
+          break;
+        }
+
+        if (ch != ' ') {
+          if (!isValidChar(ch)) {
+            i = header.indexOf(',', i + 2) - 1;
+            if (i < 0) {
+              if (builder != null)
+                builder.setLength(0);
+
+              header = null;
+              break;
+            }
+          }
+
+          if (builder == null)
+            builder = new StringBuilder();
+
+          builder.append(ch);
+        }
+      }
+    }
+    while (mediaType == null);
+
+    builder.setLength(0);
+    final MediaType[] mediaTypes = parse(adapter, source, index, depth + 1, builder, header, start);
+    mediaTypes[depth] = mediaType;
+
     return mediaTypes;
   }
 
-  private static MediaType[] parse(final Iterator<String> iterator, final int depth) throws ParseException {
-    if (!iterator.hasNext())
-      return new MediaType[depth];
+  public static MediaType[] parse(final Collection<String> strings) {
+    if (strings == null || strings.size() == 0)
+      return null;
 
-    final String[] parts = iterator.next().split(",");
-    final MediaType[] mediaTypes = parse(iterator, depth + parts.length);
-    for (int i = 0; i < parts.length; ++i)
-      mediaTypes[depth + i] = parse(parts[i]);
+    final MediaType[] mediaTypes = parse(iteratorAdapter, strings.iterator(), -1, 0, null, null, 0);
+    if (mediaTypes == null)
+      return null;
 
+    Arrays.sort(mediaTypes, qComparator);
     return mediaTypes;
   }
 
@@ -296,24 +384,17 @@ public final class MediaTypes {
    *
    * @param enumeration The enumeration of strings.
    * @return An array of {@link MediaType} objects.
-   * @throws ParseException If a parse error has occurred.
    * @throws NullPointerException If {@code enumeration} is null.
    */
-  public static MediaType[] parse(final Enumeration<String> enumeration) throws ParseException {
-    final MediaType[] mediaTypes = parse(enumeration, 0);
+  public static MediaType[] parse(final Enumeration<String> enumeration) {
+    if (enumeration == null || !enumeration.hasMoreElements())
+      return null;
+
+    final MediaType[] mediaTypes = parse(enumerationAdapter, enumeration, -1, 0, null, null, 0);
+    if (mediaTypes == null)
+      return null;
+
     Arrays.sort(mediaTypes, qComparator);
-    return mediaTypes;
-  }
-
-  private static MediaType[] parse(final Enumeration<String> enumeration, final int depth) throws ParseException {
-    if (!enumeration.hasMoreElements())
-      return new MediaType[depth];
-
-    final String[] parts = enumeration.nextElement().split(",");
-    final MediaType[] mediaTypes = parse(enumeration, depth + parts.length);
-    for (int i = 0; i < parts.length; ++i)
-      mediaTypes[depth + i] = parse(parts[i]);
-
     return mediaTypes;
   }
 
@@ -323,67 +404,101 @@ public final class MediaTypes {
    *
    * @param strings The the strings array.
    * @return An array of {@link MediaType} objects.
-   * @throws ParseException If a parse error has occurred.
    * @throws NullPointerException If {@code strings} is null.
    */
-  public static MediaType[] parse(final String ... strings) throws ParseException {
-    final MediaType[] mediaTypes = parse(strings, 0, 0);
+  public static MediaType[] parse(final String ... strings) {
+    if (strings == null || strings.length == 0)
+      return null;
+
+    final MediaType[] mediaTypes = parse(arrayAdapter, strings, 0, 0, null, null, 0);
+    if (mediaTypes == null)
+      return null;
+
     Arrays.sort(mediaTypes, qComparator);
     return mediaTypes;
   }
 
-  private static MediaType[] parse(final String[] strings, int index, final int depth) throws ParseException {
-    if (index == strings.length)
-      return new MediaType[depth];
+  private static boolean isValidChar(final char ch) {
+    if ('0' <= ch && ch <= '9')
+      return true;
 
-    final String[] parts = strings[index].split(",");
-    final MediaType[] mediaTypes = parse(strings, index + 1, depth + parts.length);
-    for (int i = 0; i < parts.length; ++i)
-      mediaTypes[depth + i] = parse(parts[i]);
+    if ('a' <= ch && ch <= 'z')
+      return true;
 
-    return mediaTypes;
+    if ('A' <= ch && ch <= 'Z')
+      return true;
+
+    if (ch == '*' || ch == '/' || ch == '_' || ch == '+' || ch == '-' || ch == '.' || ch == ' ' || ch == ';' || ch == '=' || ch == '"')
+      return true;
+
+    return false;
   }
 
   /**
    * Parses the specified string and returns an the corresponding
-   * {@link MediaType} objects, or {@code null} if the specified string is null.
+   * {@link MediaType} objects, or {@code null} if the specified string is null
+   * or is empty.
    *
    * @param string The the string.
    * @return The corresponding {@link MediaType} object, or {@code null} if the
    *         specified string is null.
-   * @throws ParseException If a parse error has occurred.
    */
-  public static MediaType parse(String string) throws ParseException {
+  // FIXME: Reimplement with char-by-char algorithm
+  // FIXME: What are the legal name and subname spec? Need to properly throw IllegalArgumentException!
+  public static MediaType parse(String string) {
     if (string == null)
-      return null;
+      throw new IllegalArgumentException(string);
 
     string = string.trim();
-    int start = string.indexOf('/');
-    if (start == -1)
-      return new MediaType(string.trim(), null);
+    if (string.length() == 0)
+      throw new IllegalArgumentException(string);
 
-    int end = string.indexOf(';', start + 2);
-    final String type = string.substring(0, start).trim();
-    final String subtype = string.substring(start + 1, end > -1 ? end : string.length()).trim();
-    if (end < 0)
-      return new MediaType(type, subtype);
+    for (int i = 0; i < string.length(); ++i) {
+      final char ch = string.charAt(i);
+      if (!isValidChar(ch))
+        throw new IllegalArgumentException("Illegal character '" + ch + "' at pos=" + i + " in: " + string);
+    }
+
+    int start = string.indexOf('/');
+    int end = string.indexOf(';', start + 1);
+    final String type;
+    final String subtype;
+    if (start > -1) {
+      type = string.substring(0, start).trim();
+      subtype = string.substring(start + 1, end > -1 ? end : string.length()).trim();
+      if (subtype.chars().anyMatch(c -> c == '/'))
+        throw new IllegalArgumentException(string);
+
+      if (end == -1)
+        return new MediaType(type, subtype);
+    }
+    else if (end == -1) {
+      return new MediaType(string, null);
+    }
+    else {
+      type = string.substring(0, end).trim();
+      subtype = null;
+    }
 
     final int len = string.length();
     start = end;
     final Map<String,String> parameters = new HashMap<>();
     do {
-      final int eq = string.indexOf('=', start + 2);
-      if (eq == -1)
-        throw new ParseException("Unable to parse parameter: " + string, start);
+      int eq = string.indexOf('=', start + 1);
+      boolean hasEq = eq != -1;
+      if (!hasEq)
+        eq = start;
 
-      final String key = string.substring(start + 1, eq).trim();
       end = Strings.indexOfUnQuoted(string, ';', eq + 1);
       if (end == -1)
         end = len;
 
-      final String value = string.substring(eq + 1, end).trim();
-      parameters.put(key, value.charAt(0) == '"' && value.charAt(value.length() - 1) == '"' ? value.substring(1, value.length() - 1) : value);
-      start = end;
+      if (hasEq) {
+        final String key = string.substring(start + 1, eq).trim();
+        final String value = string.substring(eq + 1, end).trim();
+        if (value.length() > 0)
+          parameters.put(key, value.charAt(0) == '"' && value.charAt(value.length() - 1) == '"' ? value.substring(1, value.length() - 1) : value);
+      }
     }
     while ((start = end) < len - 1);
     return new MediaType(type, subtype, parameters);

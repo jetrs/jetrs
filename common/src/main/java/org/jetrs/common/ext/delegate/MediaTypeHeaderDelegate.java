@@ -16,8 +16,6 @@
 
 package org.jetrs.common.ext.delegate;
 
-import java.text.ParseException;
-
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.RuntimeDelegate;
 
@@ -26,12 +24,7 @@ import org.jetrs.common.util.MediaTypes;
 public class MediaTypeHeaderDelegate implements RuntimeDelegate.HeaderDelegate<MediaType> {
   @Override
   public MediaType fromString(final String value) {
-    try {
-      return MediaTypes.parse(value);
-    }
-    catch (final ParseException e) {
-      throw new IllegalArgumentException(e);
-    }
+    return MediaTypes.parse(value);
   }
 
   @Override

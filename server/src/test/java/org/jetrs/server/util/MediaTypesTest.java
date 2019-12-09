@@ -18,30 +18,19 @@ package org.jetrs.server.util;
 
 import static org.junit.Assert.*;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import javax.ws.rs.core.MediaType;
 
 import org.jetrs.common.util.MediaTypes;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class MediaTypesTest {
-  @Test
-  public void testParse() {
-    assertEquals(new MediaType("application", "json"), MediaType.valueOf("application/json"));
-    assertEquals(new MediaType("application", "json", "utf8"), MediaType.valueOf("application/json; charset=utf8"));
-    assertEquals(new MediaType("application", "json", Collections.singletonMap("charset", "utf8")), MediaType.valueOf("application/json;charset=utf8 "));
-    final Map<String,String> parameters = new HashMap<>();
-    parameters.put("charset", "utf8");
-    parameters.put("q", ".5");
-    assertEquals(new MediaType("application", "json", parameters), MediaType.valueOf("application/json;charset=utf8; q=.5"));
-    assertEquals(new MediaType("application", "json", parameters), MediaType.valueOf("application/json;charset=\"utf8\"; q=.5"));
-    parameters.put("q", "oops;hello=.5;yes!");
-    assertEquals(new MediaType("application", "json", parameters), MediaType.valueOf("application/json; q=\"oops;hello=.5;yes!\" ; charset=\"utf8\";  "));
-  }
-
   private static void same(final MediaType specific, final MediaType general) {
     assertSame(specific, MediaTypes.getCompatible(specific, general));
     assertSame(specific, MediaTypes.getCompatible(general, specific));
@@ -52,6 +41,37 @@ public class MediaTypesTest {
     assertEquals(specific, MediaTypes.getCompatible(specific, general));
     assertEquals(specific, MediaTypes.getCompatible(general, specific));
     assertEquals(specific, MediaTypes.getCompatible(specific, specific));
+  }
+
+  private static void testParse(final Consumer<MediaType[]> c, final String ... headers) {
+    c.accept(MediaTypes.parse(headers));
+    c.accept(MediaTypes.parse(Arrays.asList(headers)));
+    c.accept(MediaTypes.parse(Collections.enumeration(Arrays.asList(headers))));
+  }
+
+  @Test
+  public void testError() {
+    testParse(Assert::assertNull, (String)null);
+    testParse(Assert::assertNull, "");
+    testParse((m) -> assertEquals(3, m.length), "application/json; q=\"oops\" ; charset=\"utf8\";  ", "application/xml; q= ; charset=\"utf8\";  ", "application/json; q=\"oops\" ; charset=\"utf8\";  ");
+    testParse((m) -> assertEquals(3, m.length), "application/json; q=\"oops\" ; charset;  ", "application/xml; q= ; charset=\"utf8\";  ", "application/json; q=\"oops\" ; charset=\"utf8\";  ");
+    testParse((m) -> assertEquals(3, m.length), "application/json; q=\"oops\" ; charset;  ", "application/xml; q= ; charset=\"utf8\";  ", "application/json; ;;;");
+    testParse((m) -> assertEquals(3, m.length), "application/json; q=\"oops\" ; charset;  , application/xml; q= ; charset=\"utf8\";  ", "application/json; ;;;");
+    testParse((m) -> assertEquals(3, m.length), "application/json; q=\"oops\" ; charset;  , application/xml; q= ; charset=\"utf8\";  ,application/json; ;;;");
+  }
+
+  @Test
+  public void testParse() {
+    assertEquals(new MediaType("application", "json"), MediaType.valueOf("application/json"));
+    assertEquals(new MediaType("application", "json", "utf8"), MediaType.valueOf("application/json; charset=utf8"));
+    assertEquals(new MediaType("application", "json", Collections.singletonMap("charset", "utf8")), MediaType.valueOf("application/json;charset=utf8 "));
+    final Map<String,String> parameters = new HashMap<>();
+    parameters.put("charset", "utf8");
+    parameters.put("q", ".5");
+    assertEquals(new MediaType("application", "json", parameters), MediaType.valueOf("application/json;charset=utf8; q=.5"));
+    assertEquals(new MediaType("application", "json", parameters), MediaType.valueOf("application/json;charset=\"utf8\"; q=.5"));
+    parameters.put("q", "oops");
+    assertEquals(new MediaType("application", "json", parameters), MediaType.valueOf("application/json; q=\"oops\" ; charset=\"utf8\";  "));
   }
 
   @Test

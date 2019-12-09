@@ -18,7 +18,6 @@ package org.jetrs.server;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.text.ParseException;
 import java.util.Arrays;
 
 import javax.ws.rs.Consumes;
@@ -69,35 +68,30 @@ class ResourceAnnotationProcessor<T extends Annotation> {
 
   @SuppressWarnings("unchecked")
   ResourceAnnotationProcessor(final Method method, final Class<T> annotationClass) {
-    try {
-      if (annotationClass == Consumes.class) {
-        annotation = (T)getMethodClassAnnotation((Class<Consumes>)annotationClass, method);
-        if (!hasEntityParameter(method)) {
-          this.mediaTypes = null;
-          if (annotation != null)
-            throw new IllegalAnnotationException(annotation, method.getDeclaringClass().getName() + "#" + method.getName() + " does not specify entity parameters, and thus cannot declare @Consumes annotation");
-        }
-        else {
-          this.mediaTypes = annotation != null ? MediaTypes.parse(((Consumes)annotation).value()) : wildcard;
-        }
-      }
-      else if (annotationClass == Produces.class) {
-        annotation = (T)getMethodClassAnnotation((Class<Produces>)annotationClass, method);
-        if (Void.TYPE.equals(method.getReturnType())) {
-          this.mediaTypes = null;
-          if (annotation != null)
-            throw new IllegalAnnotationException(annotation, method.getDeclaringClass().getName() + "#" + method.getName() + " is void return type, and thus cannot declare @Produces annotation");
-        }
-        else {
-          this.mediaTypes = annotation != null ? MediaTypes.parse(((Produces)annotation).value()) : wildcard;
-        }
+    if (annotationClass == Consumes.class) {
+      annotation = (T)getMethodClassAnnotation((Class<Consumes>)annotationClass, method);
+      if (!hasEntityParameter(method)) {
+        this.mediaTypes = null;
+        if (annotation != null)
+          throw new IllegalAnnotationException(annotation, method.getDeclaringClass().getName() + "#" + method.getName() + " does not specify entity parameters, and thus cannot declare @Consumes annotation");
       }
       else {
-        throw new UnsupportedOperationException("Expected @Consumes or @Produces, but got: " + annotationClass.getName());
+        this.mediaTypes = annotation != null ? MediaTypes.parse(((Consumes)annotation).value()) : wildcard;
       }
     }
-    catch (final ParseException e) {
-      throw new IllegalArgumentException(e);
+    else if (annotationClass == Produces.class) {
+      annotation = (T)getMethodClassAnnotation((Class<Produces>)annotationClass, method);
+      if (Void.TYPE.equals(method.getReturnType())) {
+        this.mediaTypes = null;
+        if (annotation != null)
+          throw new IllegalAnnotationException(annotation, method.getDeclaringClass().getName() + "#" + method.getName() + " is void return type, and thus cannot declare @Produces annotation");
+      }
+      else {
+        this.mediaTypes = annotation != null ? MediaTypes.parse(((Produces)annotation).value()) : wildcard;
+      }
+    }
+    else {
+      throw new UnsupportedOperationException("Expected @Consumes or @Produces, but got: " + annotationClass.getName());
     }
   }
 
