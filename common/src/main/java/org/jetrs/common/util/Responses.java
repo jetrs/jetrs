@@ -27,7 +27,7 @@ import javax.ws.rs.core.Response.StatusType;
  * Utility functions for operations pertaining to {@link Response}.
  */
 public final class Responses {
-  private static final Response.Status[] statuses = Response.Status.values();
+  private static final Status[] statuses = Status.values();
   private static final int[] statusCodes = new int[statuses.length];
 
   static {
@@ -43,7 +43,7 @@ public final class Responses {
    * @return The matching {@link Status} or {@code null} if the specified string
    *         is null.
    */
-  public static Response.StatusType from(final String status) {
+  public static StatusType from(final String status) {
     if (status == null)
       return null;
 
@@ -55,9 +55,9 @@ public final class Responses {
    * Convert a numerical status code into the corresponding {@link StatusType}.
    *
    * @param statusCode The numerical status code.
-   * @return The matching {@link Status} or null if there is no match.
+   * @return The matching {@link Status} or {@code null} if there is no match.
    */
-  public static Response.StatusType from(final int statusCode) {
+  public static StatusType from(final int statusCode) {
     final int index = Arrays.binarySearch(statusCodes, statusCode);
     return index < 0 ? null : statuses[index];
   }
@@ -67,14 +67,15 @@ public final class Responses {
    *
    * @param statusCode The numerical status code.
    * @param reasonPhrase The reason phrase.
-   * @return The matching {@link StatusType} or null if there is no match.
+   * @return The matching {@link StatusType} or {@code null} if there is no
+   *         match.
    */
-  public static Response.StatusType from(final int statusCode, final String reasonPhrase) {
-    final Response.StatusType statusType = from(statusCode);
+  public static StatusType from(final int statusCode, final String reasonPhrase) {
+    final StatusType statusType = from(statusCode);
     if (statusType != null && statusType.getReasonPhrase().equals(reasonPhrase))
       return statusType;
 
-    return new Response.StatusType() {
+    return new StatusType() {
       @Override
       public int getStatusCode() {
         return statusCode;
