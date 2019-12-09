@@ -29,16 +29,12 @@ import java.util.regex.Matcher;
 
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriBuilderException;
-import javax.ws.rs.ext.RuntimeDelegate;
 
+import org.jetrs.common.ext.RuntimeDelegateTest;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class UriBuilderTest {
-  static {
-    System.setProperty(RuntimeDelegate.JAXRS_RUNTIME_DELEGATE_PROPERTY, TestRuntimeDelegate.class.getName());
-  }
-
+public class UriBuilderTest extends RuntimeDelegateTest {
   @Test
   public void testExceptions() {
     try {
