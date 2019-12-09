@@ -14,9 +14,15 @@
  * program. If not, see <http://opensource.org/licenses/MIT/>.
  */
 
-package org.jetrs.common.core;
+package org.jetrs.common.ext;
 
-import org.jetrs.common.ext.RuntimeDelegateImpl;
+import javax.ws.rs.ext.RuntimeDelegate;
 
-public class TestRuntimeDelegate extends RuntimeDelegateImpl {
+public abstract class RuntimeDelegateTest {
+  static {
+    System.setProperty(RuntimeDelegate.JAXRS_RUNTIME_DELEGATE_PROPERTY, TestRuntimeDelegate.class.getName());
+  }
+
+  public static class TestRuntimeDelegate extends RuntimeDelegateImpl {
+  }
 }
