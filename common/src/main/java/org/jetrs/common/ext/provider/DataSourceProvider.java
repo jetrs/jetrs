@@ -38,7 +38,7 @@ import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
 import org.libj.io.Streams;
-import org.libj.util.Objects;
+import org.libj.util.ObjectUtil;
 
 /**
  * JAX-RS 2.1 Section 4.2.4
@@ -111,7 +111,7 @@ public class DataSourceProvider implements MessageBodyReader<DataSource>, Messag
       snk.transferFrom(src, 0, Long.MAX_VALUE);
     }
 
-    return new ProviderDataSource(mediaType.toString(), Objects.identity(entityStream)) {
+    return new ProviderDataSource(mediaType.toString(), ObjectUtil.identity(entityStream)) {
       @Override
       public InputStream getInputStream() throws IOException {
         return new FileInputStream(file);
