@@ -21,6 +21,8 @@ import java.util.Map;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.ext.RuntimeDelegate;
 
+import org.libj.util.Strings;
+
 public class CacheControlHeaderDelegate implements RuntimeDelegate.HeaderDelegate<CacheControl> {
   private static String parseField(final String value) {
     final int index = value.indexOf('=');
@@ -39,16 +41,20 @@ public class CacheControlHeaderDelegate implements RuntimeDelegate.HeaderDelegat
     return field.length() == 0 ? null : "\"" + field + "\"";
   }
 
-  private static void parseValue(final CacheControl cacheControl, final String value) {
+  private static boolean parseValue(final CacheControl cacheControl, final String value) {
     if (value.startsWith("max-age")) {
       final int index = value.indexOf('=');
-      if (index != -1)
-        cacheControl.setMaxAge(Integer.parseInt(value.substring(index + 1).trim()));
+      if (index == -1)
+        throw new IllegalArgumentException(value);
+
+      cacheControl.setMaxAge(Integer.parseInt(value.substring(index + 1).trim()));
     }
-    if (value.startsWith("s-maxage")) {
+    else if (value.startsWith("s-maxage")) {
       final int index = value.indexOf('=');
-      if (index != -1)
-        cacheControl.setSMaxAge(Integer.parseInt(value.substring(index + 1).trim()));
+      if (index == -1)
+        throw new IllegalArgumentException(value);
+
+      cacheControl.setSMaxAge(Integer.parseInt(value.substring(index + 1).trim()));
     }
     else if (value.startsWith("no-cache")) {
       final String field = parseField(value);
@@ -81,8 +87,12 @@ public class CacheControlHeaderDelegate implements RuntimeDelegate.HeaderDelegat
       if (index == -1)
         cacheControl.getCacheExtension().put(value, null);
       else
-        cacheControl.getCacheExtension().put(value.substring(0, index).trim(), value.substring(index + 1).trim());
+        cacheControl.getCacheExtension().put(Strings.requireLettersOrDigits(value.substring(0, index).trim()), value.substring(index + 1).trim());
+
+      return false;
     }
+
+    return true;
   }
 
   @Override
@@ -91,9 +101,13 @@ public class CacheControlHeaderDelegate implements RuntimeDelegate.HeaderDelegat
     for (int i = 0; i < values.length; ++i)
       values[i] = values[i].trim();
 
+    boolean valid = false;
     final CacheControl cacheControl = new CacheControl();
     for (int i = 0; i < values.length; ++i)
-      parseValue(cacheControl, values[i]);
+      valid |= parseValue(cacheControl, values[i]);
+
+    if (!valid)
+      throw new IllegalArgumentException(value);
 
     return cacheControl;
   }
