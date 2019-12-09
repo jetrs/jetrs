@@ -23,9 +23,11 @@ import java.util.Date;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.ext.RuntimeDelegate;
 
+import org.libj.util.Strings;
 import org.libj.util.Temporals;
 
 public class NewCookieHeaderDelegate implements RuntimeDelegate.HeaderDelegate<NewCookie> {
+  // FIXME: This should be re-implemented with a char-by-char algorithm
   @Override
   public NewCookie fromString(final String string) {
     final String[] parts = string.split(";");
@@ -34,8 +36,8 @@ public class NewCookieHeaderDelegate implements RuntimeDelegate.HeaderDelegate<N
     if (index == -1)
       return null;
 
-    final String name = part0.substring(0, index).trim();
-    final String value = part0.substring(index + 1).trim();
+    final String name = Strings.trim(part0.substring(0, index).trim(), '"');
+    final String value = Strings.trim(part0.substring(index + 1).trim(), '"');
 
     String path = null;
     String domain = null;
@@ -46,35 +48,35 @@ public class NewCookieHeaderDelegate implements RuntimeDelegate.HeaderDelegate<N
     boolean secure = false;
     boolean httpOnly = false;
     for (int i = 1; i < parts.length; ++i) {
-      final String part = parts[i];
-      if ("Path".equalsIgnoreCase(part)) {
+      final String part = parts[i].trim();
+      if (part.startsWith("Path")) {
         if ((index = part.indexOf('=')) != -1)
-          path = part.substring(index + 1).trim();
+          path = Strings.trim(part.substring(index + 1).trim(), '"');
       }
-      else if ("Domain".equalsIgnoreCase(part)) {
+      else if (part.startsWith("Domain")) {
         if ((index = part.indexOf('=')) != -1)
           domain = part.substring(index + 1).trim();
       }
-      else if ("Version".equalsIgnoreCase(part)) {
+      else if (part.startsWith("Version")) {
         if ((index = part.indexOf('=')) != -1)
-          version = Integer.valueOf(part.substring(index + 1).trim());
+          version = Integer.valueOf(Strings.trim(part.substring(index + 1).trim(), '"'));
       }
-      else if ("Comment".equalsIgnoreCase(part)) {
+      else if (part.startsWith("Comment")) {
         if ((index = part.indexOf('=')) != -1)
           comment = part.substring(index + 1).trim();
       }
-      else if ("Max-Age".equalsIgnoreCase(part)) {
+      else if (part.startsWith("Max-Age")) {
         if ((index = part.indexOf('=')) != -1)
           maxAge = Integer.valueOf(part.substring(index + 1).trim());
       }
-      else if ("Expires".equalsIgnoreCase(part)) {
+      else if (part.startsWith("Expires")) {
         if ((index = part.indexOf('=')) != -1)
           expires = Temporals.toDate(LocalDateTime.parse(part.substring(index + 1).trim(), DateTimeFormatter.RFC_1123_DATE_TIME));
       }
-      else if ("Secure".equalsIgnoreCase(part)) {
+      else if (part.startsWith("Secure")) {
         secure = true;
       }
-      else if ("HttpOnly".equalsIgnoreCase(part)) {
+      else if (part.startsWith("HttpOnly")) {
         httpOnly = true;
       }
     }
