@@ -367,16 +367,21 @@ public final class MediaTypes {
   }
 
   public static MediaType[] parse(final Collection<String> strings) {
-    if (strings == null || strings.size() == 0)
+    if (strings == null)
       return null;
+
+    if (strings.size() == 0)
+      return EMPTY_ARRAY;
 
     final MediaType[] mediaTypes = parse(iteratorAdapter, strings.iterator(), -1, 0, null, null, 0);
     if (mediaTypes == null)
-      return null;
+      return EMPTY_ARRAY;
 
     Arrays.sort(mediaTypes, qComparator);
     return mediaTypes;
   }
+
+  private static final MediaType[] EMPTY_ARRAY = new MediaType[0];
 
   /**
    * Parses the specified enumeration of strings and returns an array of
@@ -387,12 +392,15 @@ public final class MediaTypes {
    * @throws NullPointerException If {@code enumeration} is null.
    */
   public static MediaType[] parse(final Enumeration<String> enumeration) {
-    if (enumeration == null || !enumeration.hasMoreElements())
+    if (enumeration == null)
       return null;
+
+    if (!enumeration.hasMoreElements())
+      return EMPTY_ARRAY;
 
     final MediaType[] mediaTypes = parse(enumerationAdapter, enumeration, -1, 0, null, null, 0);
     if (mediaTypes == null)
-      return null;
+      return EMPTY_ARRAY;
 
     Arrays.sort(mediaTypes, qComparator);
     return mediaTypes;
@@ -407,12 +415,15 @@ public final class MediaTypes {
    * @throws NullPointerException If {@code strings} is null.
    */
   public static MediaType[] parse(final String ... strings) {
-    if (strings == null || strings.length == 0)
+    if (strings == null)
       return null;
+
+    if (strings.length == 0)
+      return EMPTY_ARRAY;
 
     final MediaType[] mediaTypes = parse(arrayAdapter, strings, 0, 0, null, null, 0);
     if (mediaTypes == null)
-      return null;
+      return EMPTY_ARRAY;
 
     Arrays.sort(mediaTypes, qComparator);
     return mediaTypes;

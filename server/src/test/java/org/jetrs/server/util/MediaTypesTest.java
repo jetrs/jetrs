@@ -45,19 +45,20 @@ public class MediaTypesTest {
 
   private static void testParse(final Consumer<MediaType[]> c, final String ... headers) {
     c.accept(MediaTypes.parse(headers));
-    c.accept(MediaTypes.parse(Arrays.asList(headers)));
-    c.accept(MediaTypes.parse(Collections.enumeration(Arrays.asList(headers))));
+    c.accept(MediaTypes.parse(headers == null ? null : Arrays.asList(headers)));
+    c.accept(MediaTypes.parse(headers == null ? null : Collections.enumeration(Arrays.asList(headers))));
   }
 
   @Test
   public void testError() {
-    testParse(Assert::assertNull, (String)null);
-    testParse(Assert::assertNull, "");
-    testParse((m) -> assertEquals(3, m.length), "application/json; q=\"oops\" ; charset=\"utf8\";  ", "application/xml; q= ; charset=\"utf8\";  ", "application/json; q=\"oops\" ; charset=\"utf8\";  ");
-    testParse((m) -> assertEquals(3, m.length), "application/json; q=\"oops\" ; charset;  ", "application/xml; q= ; charset=\"utf8\";  ", "application/json; q=\"oops\" ; charset=\"utf8\";  ");
-    testParse((m) -> assertEquals(3, m.length), "application/json; q=\"oops\" ; charset;  ", "application/xml; q= ; charset=\"utf8\";  ", "application/json; ;;;");
-    testParse((m) -> assertEquals(3, m.length), "application/json; q=\"oops\" ; charset;  , application/xml; q= ; charset=\"utf8\";  ", "application/json; ;;;");
-    testParse((m) -> assertEquals(3, m.length), "application/json; q=\"oops\" ; charset;  , application/xml; q= ; charset=\"utf8\";  ,application/json; ;;;");
+    testParse(Assert::assertNull, (String[])null);
+    testParse(m -> assertArrayEquals(new MediaType[0], m), (String)null);
+    testParse(m -> assertArrayEquals(new MediaType[0], m), "");
+    testParse(m -> assertEquals(3, m.length), "application/json; q=\"oops\" ; charset=\"utf8\";  ", "application/xml; q= ; charset=\"utf8\";  ", "application/json; q=\"oops\" ; charset=\"utf8\";  ");
+    testParse(m -> assertEquals(3, m.length), "application/json; q=\"oops\" ; charset;  ", "application/xml; q= ; charset=\"utf8\";  ", "application/json; q=\"oops\" ; charset=\"utf8\";  ");
+    testParse(m -> assertEquals(3, m.length), "application/json; q=\"oops\" ; charset;  ", "application/xml; q= ; charset=\"utf8\";  ", "application/json; ;;;");
+    testParse(m -> assertEquals(3, m.length), "application/json; q=\"oops\" ; charset;  , application/xml; q= ; charset=\"utf8\";  ", "application/json; ;;;");
+    testParse(m -> assertEquals(3, m.length), "application/json; q=\"oops\" ; charset;  , application/xml; q= ; charset=\"utf8\";  ,application/json; ;;;");
   }
 
   @Test

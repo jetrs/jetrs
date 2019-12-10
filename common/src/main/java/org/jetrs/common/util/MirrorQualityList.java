@@ -178,8 +178,10 @@ public class MirrorQualityList<V,R> extends MirrorList<V,R> implements Cloneable
    * @param values The underlying list of type {@code <V>}, which is implicitly
    *          assumed to also be {@link Cloneable}.
    * @param mirror The {@link org.libj.util.MirrorList.Mirror} specifying the
-   *          {@link org.libj.util.MirrorList.Mirror#valueToReflection(Object) V -> R} and
-   *          {@link org.libj.util.MirrorList.Mirror#reflectionToValue(Object) R -> V} methods.
+   *          {@link org.libj.util.MirrorList.Mirror#valueToReflection(Object) V
+   *          -> R} and
+   *          {@link org.libj.util.MirrorList.Mirror#reflectionToValue(Object) R
+   *          -> V} methods.
    */
   protected MirrorQualityList(final MirrorQualityList<R,V> mirrorList, final List<V> values, final Mirror<V,R> mirror) {
     super(mirrorList, values, mirror);
