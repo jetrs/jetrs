@@ -52,11 +52,11 @@ public final class MediaTypes {
    * evaluating the two specified arrays of {@link MediaType}s, or {@code null}
    * if there not compatible {@link MediaType} is found.
    * <p>
-   * <i><b>Note:</b> The {@link MediaType} arrays must be sorted on the "q"
-   * parameter in descending order.</i>
+   * <b>Note:</b> The {@link MediaType} arrays must be sorted on the "q"
+   * parameter in descending order.
    * <p>
-   * <i><b>Note:</b> A null {@link MediaType} is considered to be equivalent to
-   * {@link MediaType#WILDCARD}.</i>
+   * <b>Note:</b> A null {@link MediaType} is considered to be equivalent to
+   * {@link MediaType#WILDCARD}.
    *
    * @param mediaTypes1 The first {@link MediaType} array sorted on the "q"
    *          parameter in descending order.
@@ -82,11 +82,11 @@ public final class MediaTypes {
    * {@link MediaType}s, or {@code null} if there not compatible
    * {@link MediaType} is found.
    * <p>
-   * <i><b>Note:</b> The provided {@link MediaType} array must be sorted on the
-   * "q" parameter in descending order.</i>
+   * <b>Note:</b> The provided {@link MediaType} array must be sorted on the "q"
+   * parameter in descending order.
    * <p>
-   * <i><b>Note:</b> A null {@link MediaType} is considered to be equivalent to
-   * {@link MediaType#WILDCARD}.</i>
+   * <b>Note:</b> A null {@link MediaType} is considered to be equivalent to
+   * {@link MediaType#WILDCARD}.
    *
    * @param mediaType1 The first {@link MediaType}.
    * @param mediaTypes2 The second {@link MediaType} array sorted on the "q"
@@ -170,8 +170,8 @@ public final class MediaTypes {
    * {@link MediaType}s, or {@code null} if the {@link MediaType}s are not
    * compatible.
    * <p>
-   * <i><b>Note:</b> A null {@link MediaType} is considered to be equivalent to
-   * {@link MediaType#WILDCARD}.</i>
+   * <b>Note:</b> A null {@link MediaType} is considered to be equivalent to
+   * {@link MediaType#WILDCARD}.
    *
    * @param mediaType1 The first {@link MediaType}.
    * @param mediaType2 The second {@link MediaType}.
