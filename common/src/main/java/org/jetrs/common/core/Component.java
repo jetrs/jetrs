@@ -70,7 +70,7 @@ class Component {
 
   @Override
   public int hashCode() {
-    return cls.hashCode();
+    return 31 + cls.hashCode();
   }
 
   @Override

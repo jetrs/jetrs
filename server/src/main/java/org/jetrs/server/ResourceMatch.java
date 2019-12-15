@@ -55,8 +55,8 @@ public class ResourceMatch {
   @Override
   public int hashCode() {
     int hashCode = 1;
-    hashCode *= 31 ^ hashCode + manifest.hashCode();
-    hashCode *= 31 ^ hashCode + accept.hashCode();
+    hashCode = 31 * hashCode + manifest.hashCode();
+    hashCode = 31 * hashCode + accept.hashCode();
     return hashCode;
   }
 }

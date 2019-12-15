@@ -125,6 +125,6 @@ public class PathPattern {
 
   @Override
   public int hashCode() {
-    return 31 + 7 * pattern.hashCode();
+    return 31 + pattern.hashCode();
   }
 }

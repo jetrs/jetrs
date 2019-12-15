@@ -304,13 +304,13 @@ public class ResourceManifest {
   @Override
   public int hashCode() {
     int hashCode = 1;
-    hashCode *= 31 ^ hashCode + httpMethod.hashCode();
-    hashCode *= 31 ^ hashCode + securityAnnotation.hashCode();
-    hashCode *= 31 ^ hashCode + method.hashCode();
-    hashCode *= 31 ^ hashCode + serviceClass.hashCode();
-    hashCode *= 31 ^ hashCode + pathPattern.hashCode();
-    hashCode *= 31 ^ hashCode + consumesMatcher.hashCode();
-    hashCode *= 31 ^ hashCode + producesMatcher.hashCode();
+    hashCode = 31 * hashCode + httpMethod.hashCode();
+    hashCode = 31 * hashCode + securityAnnotation.hashCode();
+    hashCode = 31 * hashCode + method.hashCode();
+    hashCode = 31 * hashCode + serviceClass.hashCode();
+    hashCode = 31 * hashCode + pathPattern.hashCode();
+    hashCode = 31 * hashCode + consumesMatcher.hashCode();
+    hashCode = 31 * hashCode + producesMatcher.hashCode();
     return hashCode;
   }
 

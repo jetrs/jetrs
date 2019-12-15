@@ -125,12 +125,8 @@ class ResourceAnnotationProcessor<T extends Annotation> {
   @Override
   public int hashCode() {
     int hashCode = 1;
-    if (annotation != null)
-      hashCode *= 31 ^ hashCode + annotation.hashCode();
-
-    if (mediaTypes != null)
-      hashCode *= 31 ^ hashCode + mediaTypes.hashCode();
-
+    hashCode = 31 * hashCode + (annotation == null ? 0 : annotation.hashCode());
+    hashCode = 31 * hashCode + (mediaTypes == null ? 0 : mediaTypes.hashCode());
     return hashCode;
   }
 }
