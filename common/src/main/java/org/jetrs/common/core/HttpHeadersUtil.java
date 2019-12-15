@@ -39,12 +39,12 @@ import org.jetrs.common.util.MediaTypes;
 import org.jetrs.common.util.MirrorQualityList;
 import org.jetrs.common.util.Responses;
 import org.libj.io.Charsets;
-import org.libj.util.ArrayFloatList;
 import org.libj.util.CollectionUtil;
-import org.libj.util.FloatComparator;
 import org.libj.util.Locales;
 import org.libj.util.MirrorList;
 import org.libj.util.Numbers;
+import org.libj.util.primitive.ArrayFloatList;
+import org.libj.util.primitive.FloatComparator;
 
 class HttpHeadersUtil {
   static Object valueToReflection(final String key, final String value, final boolean single) {

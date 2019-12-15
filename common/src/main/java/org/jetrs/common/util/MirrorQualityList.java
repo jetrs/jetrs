@@ -20,12 +20,12 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Objects;
 
-import org.libj.util.ArrayFloatList;
 import org.libj.util.CollectionUtil;
-import org.libj.util.FloatComparator;
 import org.libj.util.MirrorList;
 import org.libj.util.Numbers;
 import org.libj.util.ObjectUtil;
+import org.libj.util.primitive.ArrayFloatList;
+import org.libj.util.primitive.FloatComparator;
 
 /**
  * A {@link MirrorList} that performs live sorting of values based on a quality
