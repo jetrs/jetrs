@@ -21,7 +21,7 @@ import java.util.Map;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.ext.RuntimeDelegate;
 
-import org.libj.util.Strings;
+import org.libj.lang.Strings;
 
 public class CacheControlHeaderDelegate implements RuntimeDelegate.HeaderDelegate<CacheControl> {
   private static String parseField(final String value) {

@@ -26,8 +26,8 @@ import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
 
+import org.libj.lang.Strings;
 import org.libj.util.Numbers;
-import org.libj.util.Strings;
 
 /**
  * Utility class with convenience functions for the {@link MediaType} class.

@@ -23,7 +23,7 @@ import java.util.Date;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.ext.RuntimeDelegate;
 
-import org.libj.util.Strings;
+import org.libj.lang.Strings;
 import org.libj.util.Temporals;
 
 public class NewCookieHeaderDelegate implements RuntimeDelegate.HeaderDelegate<NewCookie> {
