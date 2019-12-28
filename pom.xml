@@ -33,7 +33,7 @@
   <description>
     JetRS is a fast and lightweight implementation of the JAX-RS v2.0 Specification that runs in a
     Servlet Container. This project was inspired with the goal to create a better, simpler, easier
-    to use, reliable, and debugable JAX-RS implementation using the CohesionFirst approach.
+    to use, reliable, and debuggable JAX-RS implementation using the CohesionFirst approach.
   </description>
   <organization>
     <name>JetRS</name>

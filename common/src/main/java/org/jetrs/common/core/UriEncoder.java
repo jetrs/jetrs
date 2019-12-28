@@ -43,7 +43,7 @@ final class UriEncoder {
 
     /*
      * Encode via <a href="http://ietf.org/rfc/rfc3986.txt">RFC 3986</a>. PCHAR
-     * is allowed allong with '/' unreserved = ALPHA / DIGIT / "-" / "." / "_" /
+     * is allowed along with '/' unreserved = ALPHA / DIGIT / "-" / "." / "_" /
      * "~" sub-delims = "!" / "$" / "&" / "'" / "(" / ")" / "*" / "+" / "," /
      * ";" / "=" pchar = unreserved / pct-encoded / sub-delims / ":" / "@"
      */

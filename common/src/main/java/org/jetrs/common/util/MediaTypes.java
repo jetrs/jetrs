@@ -456,7 +456,7 @@ public final class MediaTypes {
    *         specified string is null.
    */
   // FIXME: Reimplement with char-by-char algorithm
-  // FIXME: What are the legal name and subname spec? Need to properly throw IllegalArgumentException!
+  // FIXME: What are the legal name and sub-name spec? Need to properly throw IllegalArgumentException!
   public static MediaType parse(String string) {
     if (string == null)
       throw new IllegalArgumentException(string);
