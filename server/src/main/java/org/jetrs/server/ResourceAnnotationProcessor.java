@@ -19,6 +19,7 @@ package org.jetrs.server;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.Objects;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.CookieParam;
@@ -38,7 +39,7 @@ class ResourceAnnotationProcessor<T extends Annotation> {
   private static final MediaType[] wildcard = {MediaType.WILDCARD_TYPE};
 
   static <T extends Annotation>T getMethodClassAnnotation(final Class<T> annotationClass, final Method method) {
-    T annotation = method.getAnnotation(annotationClass);
+    final T annotation = method.getAnnotation(annotationClass);
     return annotation != null ? annotation : method.getDeclaringClass().getAnnotation(annotationClass);
   }
 
@@ -119,14 +120,14 @@ class ResourceAnnotationProcessor<T extends Annotation> {
       return false;
 
     final ResourceAnnotationProcessor<?> that = (ResourceAnnotationProcessor<?>)obj;
-    return (annotation != null ? annotation.equals(that.annotation) : that.annotation == null) && mediaTypes != null ? Arrays.equals(mediaTypes, that.mediaTypes) : that.mediaTypes == null;
+    return Objects.equals(annotation, that.annotation) && mediaTypes != null ? Arrays.equals(mediaTypes, that.mediaTypes) : that.mediaTypes == null;
   }
 
   @Override
   public int hashCode() {
     int hashCode = 1;
     hashCode = 31 * hashCode + (annotation == null ? 0 : annotation.hashCode());
-    hashCode = 31 * hashCode + (mediaTypes == null ? 0 : mediaTypes.hashCode());
+    hashCode = 31 * hashCode + (mediaTypes == null ? 0 : Arrays.hashCode(mediaTypes));
     return hashCode;
   }
 }

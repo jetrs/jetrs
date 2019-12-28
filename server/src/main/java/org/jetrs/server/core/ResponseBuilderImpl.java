@@ -63,11 +63,13 @@ public class ResponseBuilderImpl extends Response.ResponseBuilder implements Clo
     this.reasonPhrase = copy.reasonPhrase;
     this.entity = copy.entity;
     this.annotations = copy.annotations;
+    this.cookies = copy.cookies;
   }
 
   @Override
   public Response build() {
-    // FIXME: Need to reset the builder to a "blank state", as is documented in the javadocs of this method
+    // FIXME: Need to reset the builder to a "blank state", as is documented in
+    // the javadocs of this method
     final Response.StatusType statusType = reasonPhrase != null ? Responses.from(status, reasonPhrase) : Responses.from(status);
     return new ResponseImpl(resourceContext.getProviders(null), resourceContext.getReaderInterceptors(), statusType, headers, cookies, entity, annotations);
   }
@@ -186,7 +188,7 @@ public class ResponseBuilderImpl extends Response.ResponseBuilder implements Clo
     return this;
   }
 
-  private Map<String,NewCookie> cookies;
+  private volatile Map<String,NewCookie> cookies;
 
   @Override
   public Response.ResponseBuilder cookie(final NewCookie ... cookies) {

@@ -49,9 +49,9 @@ public class UriBuilderImpl extends UriBuilder implements Cloneable {
     if (authority != null) {
       this.authority = null;
       String host = match.group(4);
-      int at = host.indexOf('@');
+      final int at = host.indexOf('@');
       if (at > -1) {
-        String user = host.substring(0, at);
+        final String user = host.substring(0, at);
         host = host.substring(at + 1);
         this.userInfo = user;
       }
@@ -85,10 +85,10 @@ public class UriBuilderImpl extends UriBuilder implements Cloneable {
 
     if (match.group(5) != null) {
       final String group = match.group(5);
-      if (!hasScheme && !"".equals(group) && !group.startsWith("/") && group.indexOf(':') > -1 && group.indexOf('/') > -1 && group.indexOf(':') < group.indexOf('/'))
+      if (!hasScheme && !group.isEmpty() && !group.startsWith("/") && group.indexOf(':') > -1 && group.indexOf('/') > -1 && group.indexOf(':') < group.indexOf('/'))
         throw new IllegalArgumentException(invalid("uri template", uriTemplate));
 
-      if (!"".equals(group))
+      if (!group.isEmpty())
         replacePath(group);
     }
 
@@ -144,14 +144,14 @@ public class UriBuilderImpl extends UriBuilder implements Cloneable {
       }
 
       if (host != null) {
-        if ("".equals(host))
+        if (host.isEmpty())
           throw new UriBuilderException(invalid("host", "\"\""));
 
         replaceParameter(parameters, fromEncodedMap, isTemplate, host, builder, uriEncoder);
       }
 
       if (port != -1)
-        builder.append(':').append(Integer.toString(port));
+        builder.append(':').append(port);
     }
     else if (authority != null) {
       builder.append("//");
@@ -291,7 +291,7 @@ public class UriBuilderImpl extends UriBuilder implements Cloneable {
 
   @Override
   public UriBuilder host(final String host) throws IllegalArgumentException {
-    if (host != null && "".equals(host))
+    if (host != null && host.isEmpty())
       throw new IllegalArgumentException(invalidParam("host", "\"" + host + "\""));
 
     this.host = host;
@@ -449,11 +449,16 @@ public class UriBuilderImpl extends UriBuilder implements Cloneable {
     if (path == null)
       path = "";
 
-    for (final Object value : values) {
-      if (value == null)
-        throw new IllegalArgumentException(invalid("value", null));
+    if (values.length != 0) {
+      final StringBuilder builder = new StringBuilder();
+      for (final Object value : values) {
+        if (value == null)
+          throw new IllegalArgumentException(invalid("value", null));
 
-      path += ";" + UriEncoder.MATRIX.encode(name) + "=" + UriEncoder.MATRIX.encode(value.toString());
+        builder.append(';').append(UriEncoder.MATRIX.encode(name)).append("=").append(UriEncoder.MATRIX.encode(value.toString()));
+      }
+
+      path += builder;
     }
 
     return this;
@@ -505,7 +510,7 @@ public class UriBuilderImpl extends UriBuilder implements Cloneable {
         for (final Object val : vals) {
           path += ";" + theName;
           if (val != null)
-            path += "=" + val.toString();
+            path += "=" + val;
         }
       }
     }
@@ -561,7 +566,7 @@ public class UriBuilderImpl extends UriBuilder implements Cloneable {
     if (name == null)
       throw new IllegalArgumentException(invalidParam("name", null));
 
-    if (query == null || "".equals(query))
+    if (query == null || query.isEmpty())
       return values == null || values.length == 0 ? this : queryParam(name, values);
 
     final String[] params = query.split("&");

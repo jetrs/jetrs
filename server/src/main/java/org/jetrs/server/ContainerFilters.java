@@ -42,11 +42,11 @@ final class ContainerFilters {
 
   private static final Comparator<Object> priorityComparator = Comparator.nullsFirst((o1, o2) -> {
     final Priority p1 = o1.getClass().getAnnotation(Priority.class);
-    final Priority p2 = o1.getClass().getAnnotation(Priority.class);
+    final Priority p2 = o2.getClass().getAnnotation(Priority.class);
     return p1 == null ? p2 == null ? 0 : 1 : p2 == null ? -1 : Integer.compare(p1.value(), p2.value());
   });
 
-  ContainerFilters(final List<ProviderResource<ContainerRequestFilter>> requestFilters, final List<ProviderResource<ContainerResponseFilter>> responseFilters) {
+  ContainerFilters(final List<? extends ProviderResource<ContainerRequestFilter>> requestFilters, final List<? extends ProviderResource<ContainerResponseFilter>> responseFilters) {
     for (final ProviderResource<ContainerRequestFilter> requestFilter : requestFilters)
       (requestFilter.getProviderClass().isAnnotationPresent(PreMatching.class) ? preMatchContainerRequestFilters : containerRequestFilters).add(requestFilter);
 

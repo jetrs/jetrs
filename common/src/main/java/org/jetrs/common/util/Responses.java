@@ -17,6 +17,7 @@
 package org.jetrs.common.util;
 
 import java.util.Arrays;
+import java.util.Comparator;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -31,7 +32,7 @@ public final class Responses {
   private static final int[] statusCodes = new int[statuses.length];
 
   static {
-    Arrays.sort(statuses, (o1, o2) -> Integer.compare(o1.getStatusCode(), o2.getStatusCode()));
+    Arrays.sort(statuses, Comparator.comparingInt(Status::getStatusCode));
     for (int i = 0; i < statuses.length; ++i)
       statusCodes[i] = statuses[i].getStatusCode();
   }
@@ -82,8 +83,10 @@ public final class Responses {
       }
 
       @Override
+      // FIXME: This returns a null family for unknown status codes
       public Family getFamily() {
-        return from(statusCode).getFamily();
+        final StatusType statusType = from(statusCode);
+        return statusType == null ? null : statusType.getFamily();
       }
 
       @Override

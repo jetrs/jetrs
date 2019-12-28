@@ -167,13 +167,13 @@ final class UriEncoder {
     // encode it (if necessary).
     int index = 0;
     for (int start; matcher.find(index); index = start + 1)
-      builder.append(string.substring(index, start = matcher.start())).append("%25");
+      builder.append(string, index, start = matcher.start()).append("%25");
 
     builder.append(string.substring(index));
     return builder.toString();
   }
 
-  static boolean savePathParams(final String segmentString, final StringBuilder newSegment, final List<String> params) {
+  static boolean savePathParams(final String segmentString, final StringBuilder newSegment, final List<? super String> params) {
     boolean foundParam = false;
     // Regular expressions can have '{' and '}' characters. Replace them to do
     // match

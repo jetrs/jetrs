@@ -49,10 +49,9 @@ abstract class RestApplicationServlet extends RestHttpServlet {
 
   private static String getApplicationClassName(final WebServlet webServlet) {
     final WebInitParam[] webInitParams = webServlet.initParams();
-    if (webInitParams != null)
-      for (final WebInitParam webInitParam : webInitParams)
-        if ("javax.ws.rs.Application".equals(webInitParam.name()))
-          return webInitParam.value();
+    for (final WebInitParam webInitParam : webInitParams)
+      if ("javax.ws.rs.Application".equals(webInitParam.name()))
+        return webInitParam.value();
 
     return null;
   }
@@ -128,7 +127,7 @@ abstract class RestApplicationServlet extends RestHttpServlet {
     }
   }
 
-  public RestApplicationServlet(final Application application) {
+  RestApplicationServlet(final Application application) {
     super(application);
     final Class<?> applicationClass;
     final ApplicationPath applicationPath;

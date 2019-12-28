@@ -40,7 +40,7 @@ public class InputStreamProvider implements MessageBodyReader<InputStream>, Mess
   }
 
   @Override
-  public InputStream readFrom(final Class<InputStream> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,String> httpHeaders, final InputStream entityStream) throws IOException, WebApplicationException {
+  public InputStream readFrom(final Class<InputStream> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,String> httpHeaders, final InputStream entityStream) throws WebApplicationException {
     return entityStream;
   }
 

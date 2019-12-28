@@ -385,7 +385,7 @@ public class MirrorQualityList<V,R> extends MirrorList<V,R> implements Cloneable
   }
 
   @Override
-  protected boolean beforeAdd(int index, final V element) {
+  protected boolean beforeAdd(final int index, final V element) {
     final boolean unlocked = unlock();
     final long qualityAndIndex = qualifier.valueToQuality(element, 0);
     final float quality = Numbers.Compound.decodeFloat(qualityAndIndex, 0);

@@ -42,7 +42,7 @@ import org.libj.util.function.Throwing;
  */
 @Provider
 public class FileProvider implements MessageBodyReader<File>, MessageBodyWriter<File> {
-  static long writeTo(final Object range, final File file, final OutputStream out, final BiObjBiLongConsumer<RandomAccessFile,OutputStream> consumer) throws IOException {
+  static long writeTo(final Object range, final File file, final OutputStream out, final BiObjBiLongConsumer<? super RandomAccessFile,? super OutputStream> consumer) throws IOException {
     final String rangeString;
     final int start;
     if (range == null || (rangeString = String.valueOf(range).trim()).length() == 0 || (start = rangeString.indexOf("bytes=")) == -1) {
@@ -55,7 +55,7 @@ public class FileProvider implements MessageBodyReader<File>, MessageBodyWriter<
     }
   }
 
-  private static long parseRange(final String range, int i, final RandomAccessFile raf, final OutputStream out, final BiObjBiLongConsumer<RandomAccessFile,OutputStream> consumer) {
+  private static long parseRange(final String range, int i, final RandomAccessFile raf, final OutputStream out, final BiObjBiLongConsumer<? super RandomAccessFile,? super OutputStream> consumer) {
     final StringBuilder builder = new StringBuilder();
     long from = Long.MIN_VALUE;
     long to = Long.MAX_VALUE;
@@ -65,9 +65,9 @@ public class FileProvider implements MessageBodyReader<File>, MessageBodyWriter<
       if (i == len || (ch = range.charAt(i)) == ',') {
         if (builder.length() > 0) {
           if (from != Long.MIN_VALUE)
-            to = Long.valueOf(builder.toString());
+            to = Long.parseLong(builder.toString());
           else
-            from = -Long.valueOf(builder.toString());
+            from = -Long.parseLong(builder.toString());
         }
 
         if (from <= to && (from != Long.MIN_VALUE || to != Long.MAX_VALUE)) {
@@ -81,11 +81,11 @@ public class FileProvider implements MessageBodyReader<File>, MessageBodyWriter<
       }
       else if (ch == '-') {
         if (from != Long.MIN_VALUE) {
-          to = Long.valueOf(builder.toString());
+          to = Long.parseLong(builder.toString());
           builder.setLength(0);
         }
         else if (builder.length() > 0) {
-          from = Long.valueOf(builder.toString());
+          from = Long.parseLong(builder.toString());
           builder.setLength(0);
         }
       }

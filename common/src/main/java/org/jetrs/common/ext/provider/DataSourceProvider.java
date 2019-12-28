@@ -19,6 +19,7 @@ package org.jetrs.common.ext.provider;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -57,7 +58,7 @@ public class DataSourceProvider implements MessageBodyReader<DataSource>, Messag
     this(DEFAULT_BUFFER_SIZE);
   }
 
-  private abstract class ProviderDataSource implements DataSource {
+  private abstract static class ProviderDataSource implements DataSource {
     private final String contentType;
     private final String name;
 
@@ -67,7 +68,7 @@ public class DataSourceProvider implements MessageBodyReader<DataSource>, Messag
     }
 
     @Override
-    public OutputStream getOutputStream() throws IOException {
+    public OutputStream getOutputStream() {
       throw new UnsupportedOperationException();
     }
 
@@ -94,7 +95,7 @@ public class DataSourceProvider implements MessageBodyReader<DataSource>, Messag
     if (readCount < bytes.length) {
       return new ProviderDataSource(mediaType.toString(), "") {
         @Override
-        public InputStream getInputStream() throws IOException {
+        public InputStream getInputStream() {
           return new ByteArrayInputStream(bytes, 0, readCount);
         }
       };
@@ -113,14 +114,14 @@ public class DataSourceProvider implements MessageBodyReader<DataSource>, Messag
 
     return new ProviderDataSource(mediaType.toString(), ObjectUtil.identity(entityStream)) {
       @Override
-      public InputStream getInputStream() throws IOException {
+      public InputStream getInputStream() throws FileNotFoundException {
         return new FileInputStream(file);
       }
     };
   }
 
   @Override
-  public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+  public boolean isWriteable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
     return DataSource.class.isAssignableFrom(type);
   }
 

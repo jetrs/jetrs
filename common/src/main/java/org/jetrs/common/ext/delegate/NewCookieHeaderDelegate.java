@@ -59,7 +59,7 @@ public class NewCookieHeaderDelegate implements RuntimeDelegate.HeaderDelegate<N
       }
       else if (part.startsWith("Version")) {
         if ((index = part.indexOf('=')) != -1)
-          version = Integer.valueOf(Strings.trim(part.substring(index + 1).trim(), '"'));
+          version = Integer.parseInt(Strings.trim(part.substring(index + 1).trim(), '"'));
       }
       else if (part.startsWith("Comment")) {
         if ((index = part.indexOf('=')) != -1)
@@ -67,7 +67,7 @@ public class NewCookieHeaderDelegate implements RuntimeDelegate.HeaderDelegate<N
       }
       else if (part.startsWith("Max-Age")) {
         if ((index = part.indexOf('=')) != -1)
-          maxAge = Integer.valueOf(part.substring(index + 1).trim());
+          maxAge = Integer.parseInt(part.substring(index + 1).trim());
       }
       else if (part.startsWith("Expires")) {
         if ((index = part.indexOf('=')) != -1)

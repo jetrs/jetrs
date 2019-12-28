@@ -29,7 +29,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
@@ -118,7 +117,7 @@ public class InvocationImpl implements Invocation {
       if (entity != null) {
         connection.setDoOutput(true);
         final MessageBodyWriter messageBodyWriter = providers.getMessageBodyWriter(entity.getEntity().getClass(), null, entity.getAnnotations(), entity.getMediaType());
-        ProviderUtil.writeTo(messageBodyWriter, entity.getEntity(), entity.getEntity().getClass(), null, entity.getAnnotations(), entity.getMediaType(), headers.getMirrorMap(), connection.getOutputStream());
+        ProviderUtil.writeTo(messageBodyWriter, entity.getEntity(), entity.getEntity().getClass(), null, entity.getAnnotations(), entity.getMediaType(), headers == null ? null : headers.getMirrorMap(), connection.getOutputStream());
       }
 
       final int responseCode = connection.getResponseCode();
@@ -173,50 +172,32 @@ public class InvocationImpl implements Invocation {
 
   @Override
   public Future<Response> submit() {
-    return getExecutorService().submit(new Callable<Response>() {
-      @Override
-      public Response call() {
-        return invoke();
-      }
-    });
+    return getExecutorService().submit(() -> invoke());
   }
 
   @Override
   public <T>Future<T> submit(final Class<T> responseType) {
-    return getExecutorService().submit(new Callable<T>() {
-      @Override
-      public T call() {
-        return invoke().readEntity(responseType);
-      }
-    });
+    return getExecutorService().submit(() -> invoke().readEntity(responseType));
   }
 
   @Override
   public <T>Future<T> submit(final GenericType<T> responseType) {
-    return getExecutorService().submit(new Callable<T>() {
-      @Override
-      public T call() {
-        return invoke().readEntity(responseType);
-      }
-    });
+    return getExecutorService().submit(() -> invoke().readEntity(responseType));
   }
 
   @Override
   @SuppressWarnings("unchecked")
   public <T>Future<T> submit(final InvocationCallback<T> callback) {
     client.assertNotClosed();
-    return getExecutorService().submit(new Callable<T>() {
-      @Override
-      public T call() {
-        try {
-          final T entity = (T)invoke().getEntity();
-          callback.completed(entity);
-          return entity;
-        }
-        catch (final Throwable t) {
-          callback.failed(t);
-          throw t;
-        }
+    return getExecutorService().submit(() -> {
+      try {
+        final T entity = (T)invoke().getEntity();
+        callback.completed(entity);
+        return entity;
+      }
+      catch (final Throwable t) {
+        callback.failed(t);
+        throw t;
       }
     });
   }
@@ -242,31 +223,31 @@ public class InvocationImpl implements Invocation {
 
     @Override
     public Invocation.Builder accept(final String ... mediaTypes) {
-      getHeaders().put(HttpHeaders.ACCEPT, Arrays.asList((Object[])mediaTypes));
+      getHeaders().put(HttpHeaders.ACCEPT, Arrays.asList(mediaTypes));
       return this;
     }
 
     @Override
     public Invocation.Builder accept(final MediaType ... mediaTypes) {
-      getHeaders().put(HttpHeaders.ACCEPT, Arrays.asList((Object[])mediaTypes));
+      getHeaders().put(HttpHeaders.ACCEPT, Arrays.asList(mediaTypes));
       return this;
     }
 
     @Override
     public Invocation.Builder acceptLanguage(final Locale ... locales) {
-      getHeaders().put(HttpHeaders.ACCEPT_LANGUAGE, Arrays.asList((Object[])locales));
+      getHeaders().put(HttpHeaders.ACCEPT_LANGUAGE, Arrays.asList(locales));
       return this;
     }
 
     @Override
     public Invocation.Builder acceptLanguage(final String ... locales) {
-      getHeaders().put(HttpHeaders.ACCEPT_LANGUAGE, Arrays.asList((Object[])locales));
+      getHeaders().put(HttpHeaders.ACCEPT_LANGUAGE, Arrays.asList(locales));
       return this;
     }
 
     @Override
     public Invocation.Builder acceptEncoding(final String ... encodings) {
-      getHeaders().put(HttpHeaders.ACCEPT_LANGUAGE, Arrays.asList((Object[])encodings));
+      getHeaders().put(HttpHeaders.ACCEPT_LANGUAGE, Arrays.asList(encodings));
       return this;
     }
 
@@ -420,7 +401,7 @@ public class InvocationImpl implements Invocation {
 
     @Override
     public Invocation build(final String method, final Entity<?> entity) {
-      return super.build(method, entity, requestHeaders, cookies, cacheControl);
+      return build(method, entity, requestHeaders, cookies, cacheControl);
     }
 
     @Override

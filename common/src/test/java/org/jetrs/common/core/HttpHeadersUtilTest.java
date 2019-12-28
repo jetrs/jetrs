@@ -19,6 +19,7 @@ package org.jetrs.common.core;
 import static org.junit.Assert.*;
 
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -113,11 +114,11 @@ public class HttpHeadersUtilTest extends RuntimeDelegateTest {
   @Test
   public void testParseRequestHeader() {
     assertParseRequestHeader(MediaType.valueOf("application/json;q=.5"), HttpHeaders.ACCEPT, "application/json;q=.5");
-    assertParseRequestHeader(Arrays.asList(Charset.forName("iso-8859-5"), Charset.forName("utf-8"), null),  HttpHeaders.ACCEPT_CHARSET, "*;q=0.1, iso-8859-5, utf-8;q=0.8");
+    assertParseRequestHeader(Arrays.asList(Charset.forName("iso-8859-5"), StandardCharsets.UTF_8, null),  HttpHeaders.ACCEPT_CHARSET, "*;q=0.1, iso-8859-5, utf-8;q=0.8");
     assertParseRequestHeader(Arrays.asList(Locales.fromRFC1766("fr-CH"), Locales.fromRFC1766("fr"), Locales.fromRFC1766("en"), Locales.fromRFC1766("de"), Locales.fromRFC1766("*")), HttpHeaders.ACCEPT_LANGUAGE, "fr-CH , fr ;q=0.9, en; q=0.8, de;q= 0.7, * ; q = 0.5");
     assertParseRequestHeader(DateHeaderDelegate.parse("Thu, 31 May 2007 20:35:00 GMT"), "Accept-Datetime", "Thu, 31 May 2007 20:35:00 GMT");
     assertParseRequestHeader(CacheControl.valueOf("no-cache, must-revalidate"), HttpHeaders.CACHE_CONTROL, "no-cache, must-revalidate");
-    assertParseRequestHeader(4372943279l, HttpHeaders.CONTENT_LENGTH, "4372943279");
+    assertParseRequestHeader(4372943279L, HttpHeaders.CONTENT_LENGTH, "4372943279");
     assertParseRequestHeader(MediaType.valueOf("application/json;q=.5"), HttpHeaders.CONTENT_TYPE, "application/json;q=.5");
     final Map<String,Cookie> cookies = new HashMap<>();
     cookies.put("yummy_cookie", new Cookie("yummy_cookie", "choco"));
@@ -126,17 +127,17 @@ public class HttpHeadersUtilTest extends RuntimeDelegateTest {
     assertParseRequestHeader(DateHeaderDelegate.parse("Wed, 21 Oct 2015 07:28:00 GMT"), HttpHeaders.DATE, "Wed, 21 Oct 2015 07:28:00 GMT");
     assertParseRequestHeader(DateHeaderDelegate.parse("Tue, 20 Oct 2015 07:28:20 GMT"), HttpHeaders.IF_MODIFIED_SINCE, "Tue, 20 Oct 2015 07:28:20 GMT");
     assertParseRequestHeader(DateHeaderDelegate.parse("Sat, 29 Oct 1994 19:43:31 GMT"), HttpHeaders.IF_UNMODIFIED_SINCE, "Sat, 29 Oct 1994 19:43:31 GMT");
-    assertParseRequestHeader(3l, "Max-Forwards", "3");
+    assertParseRequestHeader(3L, "Max-Forwards", "3");
     assertParseRequestHeader(Arrays.asList("1.0 fred", "1.1 p.example.net"), "Via", "1.0 fred, 1.1 p.example.net");
-    assertParseRequestHeader(112l, "Upgrade-Insecure-Requests", "112");
+    assertParseRequestHeader(112L, "Upgrade-Insecure-Requests", "112");
   }
 
   @Test
   public void testParseResponseHeader() {
     assertParseResponseHeader(MediaType.valueOf("application/json;q=.5"), "Accept-Patch", "application/json;q=.5");
-    assertParseResponseHeader(3l, "Age", "3");
+    assertParseResponseHeader(3L, "Age", "3");
     assertParseResponseHeader(Locale.forLanguageTag("en"), HttpHeaders.CONTENT_LANGUAGE, "en");
-    assertParseResponseHeader(8432957497543l, HttpHeaders.CONTENT_LENGTH, "8432957497543");
+    assertParseResponseHeader(8432957497543L, HttpHeaders.CONTENT_LENGTH, "8432957497543");
     assertParseResponseHeader(new Date((3432 + System.currentTimeMillis() / 1000) * 1000), HttpHeaders.EXPIRES, "3432");
     assertParseResponseHeader(DateHeaderDelegate.parse("Thu, 01 Dec 1994 16:00:00 GMT"), HttpHeaders.EXPIRES, "Thu, 01 Dec 1994 16:00:00 GMT");
     assertParseResponseHeader(new NewCookie("Part_Number", "Rocket_Launcher_0001", "/acme", null, 1, null, -1, false), HttpHeaders.SET_COOKIE, "Part_Number=\"Rocket_Launcher_0001\"; Version=\"1\"; Path=\"/acme\"");

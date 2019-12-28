@@ -133,7 +133,7 @@ public class ResponseImpl extends Response {
 
         @Override
         public Object proceed() throws IOException {
-          if (readerInterceptors == null || ++interceptorIndex == readerInterceptors.length)
+          if (++interceptorIndex == readerInterceptors.length)
             return lastProceeded = ((MessageBodyReader)messageBodyReader).readFrom(getType(), getGenericType(), getAnnotations(), getMediaType(), getHeaders(), getInputStream());
 
           if (interceptorIndex < readerInterceptors.length)
@@ -158,7 +158,7 @@ public class ResponseImpl extends Response {
     return entity != null;
   }
 
-  private boolean buffered = false;
+  private boolean buffered;
   private byte[] entityBuffer;
 
   @Override

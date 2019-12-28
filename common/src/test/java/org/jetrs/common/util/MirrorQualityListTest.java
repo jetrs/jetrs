@@ -28,7 +28,7 @@ import org.libj.util.Numbers;
 public class MirrorQualityListTest {
   @Test
   public void test() {
-    final MirrorQualityList<String,Float> list = new MirrorQualityList<>(new ArrayList<String>(), new ArrayList<Float>(), new MirrorList.Mirror<String,Float>() {
+    final MirrorQualityList<String,Float> list = new MirrorQualityList<>(new ArrayList<>(), new ArrayList<>(), new MirrorList.Mirror<String,Float>() {
       @Override
       public Float valueToReflection(final String value) {
         return Float.valueOf(value);

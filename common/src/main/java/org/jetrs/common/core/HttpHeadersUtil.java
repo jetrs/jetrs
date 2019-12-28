@@ -46,7 +46,7 @@ import org.libj.util.Numbers;
 import org.libj.util.primitive.ArrayFloatList;
 import org.libj.util.primitive.FloatComparator;
 
-class HttpHeadersUtil {
+final class HttpHeadersUtil {
   static Object valueToReflection(final String key, final String value, final boolean single) {
     Objects.requireNonNull(key);
     if (value == null)
@@ -119,10 +119,10 @@ class HttpHeadersUtil {
    *         containing the {@code float} quality value and {@code int} ending
    *         index of the attribute in the string.
    */
-  static long getQualityFromObject(final Object obj, int i) {
+  static long getQualityFromObject(final Object obj, final int i) {
     final float quality = obj instanceof MediaType ? Numbers.parseFloat(((MediaType)obj).getParameters().get("q"), 1f) : 1f;
     return Numbers.Compound.encode(quality, i);
-  };
+  }
 
   /**
    * Parses the quality attribute from a raw header string (i.e.
@@ -142,7 +142,7 @@ class HttpHeadersUtil {
     StringBuilder builder = null;
     final int len = str.length();
     for (int stage = 1; i <= len; ++i) {
-      char ch;
+      final char ch;
       if (i == len || (ch = str.charAt(i)) == ',' || qFinished && ch == ';')
         break;
 
@@ -187,9 +187,9 @@ class HttpHeadersUtil {
     // FIXME: Can we avoid Float.parseFloat?
     final float quality = builder == null || builder.length() == 0 ? Float.NaN : Float.parseFloat(builder.toString());
     return Numbers.Compound.encode(quality, i);
-  };
+  }
 
-  static <T>ArrayFloatList parseMultiHeaderNoSort(final List<String> values, ArrayFloatList qualities, final String header, final Function<String,T> stringToObjectFunction, final boolean hasQuality) {
+  static <T>ArrayFloatList parseMultiHeaderNoSort(final List<? super String> values, final ArrayFloatList qualities, final String header, final Function<String,T> stringToObjectFunction, final boolean hasQuality) {
     final int len = header.length();
     String value = null;
     char ch;
@@ -212,9 +212,9 @@ class HttpHeadersUtil {
     }
 
     return qualities;
-  };
+  }
 
-  static <T>ArrayFloatList parseMultiHeader(final List<T> values, ArrayFloatList qualities, final String header, final Function<String,T> stringToObjectFunction, final boolean hasQuality) {
+  static <T>ArrayFloatList parseMultiHeader(final List<? super T> values, ArrayFloatList qualities, final String header, final Function<? super String,? extends T> stringToObjectFunction, final boolean hasQuality) {
     final int len = header.length();
     String value = null;
     float quality = 1f;
@@ -267,7 +267,7 @@ class HttpHeadersUtil {
     return qualities;
   }
 
-  static <T>List<T> parseMultiHeaders(final List<String> headers, final Function<String,T> stringToObjectFunction, final boolean hasQuality, final List<T> dflt) {
+  static <T>List<T> parseMultiHeaders(final List<String> headers, final Function<? super String,? extends T> stringToObjectFunction, final boolean hasQuality, final List<T> dflt) {
     if (headers == null)
       return dflt;
 
@@ -313,7 +313,7 @@ class HttpHeadersUtil {
     final long qualityAndIndex = getQualityFromString(value, colon);
     final int index = Numbers.Compound.decodeInt(qualityAndIndex, 1);
     final String trimmed = value.substring(0, colon);
-    return index <= value.length() ? trimmed + value.substring(index, value.length()) : trimmed;
+    return index <= value.length() ? trimmed + value.substring(index) : trimmed;
   }
 
   private static final Object NOT_FOUND = new Object();
@@ -328,7 +328,7 @@ class HttpHeadersUtil {
    *         {@code key} and {@code value}.
    */
   // https://en.wikipedia.org/wiki/List_of_HTTP_header_fields
-  static Object parseRequestHeader(final String key, String value, final boolean single) {
+  static Object parseRequestHeader(final String key, final String value, final boolean single) {
     // Standard headers...
 
     if (HttpHeaders.ACCEPT.equalsIgnoreCase(key)) {

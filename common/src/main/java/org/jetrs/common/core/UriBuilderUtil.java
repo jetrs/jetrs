@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
 import javax.ws.rs.core.UriBuilderException;
 
 final class UriBuilderUtil {
-  private static final String URI_PARAM_NAME_REGEX = "\\w[\\w\\.-]*";
+  private static final String URI_PARAM_NAME_REGEX = "\\w[\\w.-]*";
   private static final String URI_PARAM_REGEX_REGEX = "[^{}][^{}]*";
   private static final String URI_PARAM_REGEX = "\\{\\s*(" + URI_PARAM_NAME_REGEX + ")\\s*(:\\s*(" + URI_PARAM_REGEX_REGEX + "))?\\}";
   private static final Pattern URI_PARAM_PATTERN = Pattern.compile(URI_PARAM_REGEX);
@@ -37,7 +37,7 @@ final class UriBuilderUtil {
     private final Object[] parameterValues;
     private int index;
 
-    TemplateParametersMap(final Object ... parameterValues) {
+    TemplateParametersMap(final Object[] parameterValues) {
       super(parameterValues.length);
       this.parameterValues = parameterValues;
     }
@@ -47,8 +47,11 @@ final class UriBuilderUtil {
       if (super.containsKey(key))
         return super.get(key);
 
+      if (index == parameterValues.length)
+        return null;
+
       final Object value = parameterValues[index++];
-      super.put((String)key, value);
+      put((String)key, value);
       return value;
     }
 
@@ -56,6 +59,11 @@ final class UriBuilderUtil {
     public boolean containsKey(final Object key) {
       get(key);
       return super.containsKey(key);
+    }
+
+    @Override
+    public TemplateParametersMap clone() {
+      return (TemplateParametersMap)super.clone();
     }
   }
 

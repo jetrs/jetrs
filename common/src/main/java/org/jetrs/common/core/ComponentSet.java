@@ -16,6 +16,7 @@
 
 package org.jetrs.common.core;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Map;
@@ -24,13 +25,9 @@ import java.util.TreeSet;
 
 import org.libj.util.TransSet;
 
-class ComponentSet implements Cloneable {
-  private static final Comparator<Component> comparator = new Comparator<Component>() {
-    @Override
-    public int compare(final Component o1, final Component o2) {
-      return Integer.compare(o1.priority, o2.priority);
-    }
-  };
+class ComponentSet implements Cloneable, Serializable {
+  private static final long serialVersionUID = 20638934997557381L;
+  private static final Comparator<Component> comparator = Comparator.comparingInt(o -> o.priority);
   private TreeSet<Component> components = new TreeSet<>(comparator);
 
   void add(final Component component) {

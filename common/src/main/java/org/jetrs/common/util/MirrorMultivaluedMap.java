@@ -94,8 +94,8 @@ public class MirrorMultivaluedMap<K,V,R> extends MirrorMap<K,List<V>,List<R>> im
    * and {@link Mirror}. The specified target maps are meant to be empty, as
    * they become the underlying maps of the new {@link MirrorMultivaluedMap}
    * instance. The specified {@link Mirror} provides the
-   * {@link Mirror#valueToReflection(Object,Object) V -> R} and
-   * {@link Mirror#reflectionToValue(Object,Object) R -> V} methods, which are
+   * {@link Mirror#valueToReflection(Object,List) V -&gt; R} and
+   * {@link Mirror#reflectionToValue(Object,List) R -&gt; V} methods, which are
    * used to reflect object values from one {@link MirrorMultivaluedMap} to the
    * other.
    *
@@ -108,8 +108,8 @@ public class MirrorMultivaluedMap<K,V,R> extends MirrorMap<K,List<V>,List<R>> im
    * @param reflections The underlying map of type
    *          {@code <K,List<R>> & Cloneable}.
    * @param mirror The {@link Mirror} specifying the
-   *          {@link Mirror#valueToReflection(Object,Object) V -> R} and
-   *          {@link Mirror#reflectionToValue(Object,Object) R -> V} methods.
+   *          {@link Mirror#valueToReflection(Object,List) V -&gt; R} and
+   *          {@link Mirror#reflectionToValue(Object,List) R -&gt; V} methods.
    * @throws NullPointerException If any of the specified parameters is null.
    */
   public <CloneableValues extends Map<K,List<V>> & Cloneable,CloneableReflections extends Map<K,List<R>> & Cloneable>MirrorMultivaluedMap(final CloneableValues values, final CloneableReflections reflections, final Mirror<K,V,R> mirror) {
@@ -127,8 +127,8 @@ public class MirrorMultivaluedMap<K,V,R> extends MirrorMap<K,List<V>,List<R>> im
    * @param values The underlying map of type {@code <K,List<V>>}, which is
    *          implicitly assumed to also be {@link Cloneable}.
    * @param mirror The {@link Mirror} specifying the
-   *          {@link Mirror#valueToReflection(Object,Object) V -> R} and
-   *          {@link Mirror#reflectionToValue(Object,Object) R -> V} methods.
+   *          {@link Mirror#valueToReflection(Object,List) V -&gt; R} and
+   *          {@link Mirror#reflectionToValue(Object,List) R -&gt; V} methods.
    */
   protected MirrorMultivaluedMap(final MirrorMultivaluedMap<K,R,V> mirrorMap, final Map<K,List<V>> values, final Mirror<K,V,R> mirror) {
     super(mirrorMap, values, mirror);
@@ -266,20 +266,12 @@ public class MirrorMultivaluedMap<K,V,R> extends MirrorMap<K,List<V>,List<R>> im
 
   @SuppressWarnings("unchecked")
   private MirrorList<V,R> ensureMirrorList(final K key, final List<V> value) {
-    final MirrorList<V,R> mirrorList;
-    if (value instanceof MirrorList) {
-      mirrorList = (MirrorList<V,R>)value;
-    }
-    else {
-      mirrorList = getMirror().valueToReflection(key, value).reverse();
-    }
-
-    return mirrorList;
+    return value instanceof MirrorList ? (MirrorList<V,R>)value : getMirror().valueToReflection(key, value).reverse();
   }
 
   @Override
   @SuppressWarnings("unchecked")
-  protected MirrorList<V,R> put(final K key, List<V> oldValue, final List<V> newValue) {
+  protected MirrorList<V,R> put(final K key, final List<V> oldValue, final List<V> newValue) {
     return (MirrorList<V,R>)super.put(key, oldValue, ensureMirrorList(key, newValue));
   }
 

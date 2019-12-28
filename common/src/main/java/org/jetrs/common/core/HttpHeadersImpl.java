@@ -159,8 +159,7 @@ public class HttpHeadersImpl extends HttpHeadersMap<String,String,Object> implem
   public List<Locale> getAcceptableLanguages() {
     // FIXME: This is a lot of processing to collate all "Accept-Language" headers.
     // FIXME: Need to add a `isDirty` flag to see if this work needs to be redone.
-    final String key = HttpHeaders.ACCEPT_LANGUAGE;
-    final MirrorQualityList<?,String> headers = getMirrorMap().get(key);
+    final MirrorQualityList<?,String> headers = getMirrorMap().get(HttpHeaders.ACCEPT_LANGUAGE);
     if (headers == null || headers.size() == 0)
       return WILDCARD_LOCALE;
 

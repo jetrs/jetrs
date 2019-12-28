@@ -16,7 +16,6 @@
 
 package org.jetrs.common.ext.provider;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
@@ -48,11 +47,11 @@ public class SourceProvider implements MessageBodyReader<Source>, MessageBodyWri
 
   @Override
   public boolean isReadable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
-    return Source.class.isAssignableFrom(type) && (MediaTypes.TEXT_XML.isCompatible(mediaType) || MediaTypes.APPLICATION_XML.isCompatible(mediaType) || mediaType.getType().equals("application") && mediaType.getSubtype().endsWith("+xml"));
+    return Source.class.isAssignableFrom(type) && (MediaTypes.TEXT_XML.isCompatible(mediaType) || MediaTypes.APPLICATION_XML.isCompatible(mediaType) || "application".equals(mediaType.getType()) && mediaType.getSubtype().endsWith("+xml"));
   }
 
   @Override
-  public Source readFrom(final Class<Source> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,String> httpHeaders, final InputStream entityStream) throws IOException {
+  public Source readFrom(final Class<Source> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,String> httpHeaders, final InputStream entityStream) {
     return new StreamSource(entityStream);
   }
 
@@ -67,7 +66,7 @@ public class SourceProvider implements MessageBodyReader<Source>, MessageBodyWri
   }
 
   @Override
-  public void writeTo(final Source source, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,Object> httpHeaders, final OutputStream entityStream) throws IOException {
+  public void writeTo(final Source source, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,Object> httpHeaders, final OutputStream entityStream) {
     try {
       transformerFactory.newTransformer().transform(source, new StreamResult(entityStream));
     }

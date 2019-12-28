@@ -17,6 +17,7 @@
 package org.jetrs.common.util;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -33,8 +34,8 @@ import org.jetrs.common.ProviderResource;
 import org.libj.util.CollectionUtil;
 
 public final class ParameterUtil {
-  private static final String[] forEnums = new String[] {"fromString", "valueOf"};
-  private static final String[] forOther = new String[] {"valueOf", "fromString"};
+  private static final String[] forEnums = {"fromString", "valueOf"};
+  private static final String[] forOther = {"valueOf", "fromString"};
 
   private static Method findToString(final Class<?> type) throws NoSuchMethodException {
     final String[] methodNames = type.isEnum() ? forEnums : forOther;
@@ -47,7 +48,7 @@ public final class ParameterUtil {
     return null;
   }
 
-  private static <T>ParamConverter<T> lookupParamConverter(final List<ProviderResource<ParamConverterProvider>> paramConverterProviders, final Class<T> rawType, final Type genericType, final Annotation[] annotations) {
+  private static <T>ParamConverter<T> lookupParamConverter(final List<? extends ProviderResource<ParamConverterProvider>> paramConverterProviders, final Class<T> rawType, final Type genericType, final Annotation[] annotations) {
     for (final ProviderResource<ParamConverterProvider> paramConverterProvider : paramConverterProviders) {
       final ParamConverter<T> paramConverter = paramConverterProvider.getMatchInstance().getConverter(rawType, genericType, annotations);
       if (paramConverter != null)
@@ -59,7 +60,7 @@ public final class ParameterUtil {
 
   // http://download.oracle.com/otn-pub/jcp/jaxrs-2_0_rev_A-mrel-eval-spec/jsr339-jaxrs-2.0-final-spec.pdf Section 3.2
   @SuppressWarnings({"rawtypes", "unchecked"})
-  public static Object convertParameter(final Class<?> parameterType, final Type genericType, final Annotation[] annotations, final List<String> values, final List<ProviderResource<ParamConverterProvider>> paramConverterProviders) throws ReflectiveOperationException {
+  public static Object convertParameter(final Class<?> parameterType, final Type genericType, final Annotation[] annotations, final List<String> values, final List<? extends ProviderResource<ParamConverterProvider>> paramConverterProviders) throws IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException {
     if (values == null || values.size() == 0)
       return null;
 
@@ -71,19 +72,19 @@ public final class ParameterUtil {
       return values.get(0);
 
     if (parameterType == Long.class || parameterType == long.class)
-      return Long.parseLong(values.get(0));
+      return Long.valueOf(values.get(0));
 
     if (parameterType == Double.class || parameterType == double.class)
-      return Double.parseDouble(values.get(0));
+      return Double.valueOf(values.get(0));
 
     if (parameterType == Float.class || parameterType == float.class)
-      return Float.parseFloat(values.get(0));
+      return Float.valueOf(values.get(0));
 
     if (parameterType == Integer.class || parameterType == int.class)
-      return Integer.parseInt(values.get(0));
+      return Integer.valueOf(values.get(0));
 
     if (parameterType == Short.class || parameterType == short.class)
-      return Short.parseShort(values.get(0));
+      return Short.valueOf(values.get(0));
 
     // FIXME: What if it's out of range of char?
     if (parameterType == Character.class || parameterType == char.class)

@@ -56,7 +56,7 @@ public class ContainerResponseContextImpl extends InterceptorContextImpl impleme
   private Type genericType;
 
   public ContainerResponseContextImpl(final HttpServletResponse response, final WriterInterceptor[] writerInterceptors) {
-    super(response.getLocale(), new HashMap<String,Object>());
+    super(response.getLocale(), new HashMap<>());
     this.headers = new HttpHeadersImpl(response);
     this.writerInterceptors = writerInterceptors;
     this.status = Response.Status.fromStatusCode(response.getStatus());

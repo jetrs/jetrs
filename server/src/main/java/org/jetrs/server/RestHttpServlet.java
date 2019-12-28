@@ -51,7 +51,7 @@ abstract class RestHttpServlet extends HttpServlet {
 
   private final Application application;
 
-  public RestHttpServlet(final Application application) {
+  RestHttpServlet(final Application application) {
     this.application = application;
   }
 

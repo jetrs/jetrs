@@ -36,11 +36,14 @@ import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 
-public class EndpointFactory {
+public final class EndpointFactory {
   private static final String packageName = RestApplicationServlet.class.getPackage().getName().replace('.', '/');
   private static final String superClassName = RestApplicationServlet.class.getName().replace('.', '/');
   private static final boolean isJdk178 = System.getProperty("java.version").startsWith("1.");
   private static final AtomicInteger serial = new AtomicInteger(1);
+
+  private EndpointFactory() {
+  }
 
   private static Class<?> defineClass(final byte[] bytes, final String className) {
     try {

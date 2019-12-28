@@ -29,8 +29,8 @@ public class CacheControlHeaderDelegate implements RuntimeDelegate.HeaderDelegat
     if (index == -1)
       return null;
 
-      final String field = value.substring(index + 1).trim();
-      return field.startsWith("\"") && field.endsWith("\"") ? field.substring(1, field.length() - 1).trim() : field;
+    final String field = value.substring(index + 1).trim();
+    return field.startsWith("\"") && field.endsWith("\"") ? field.substring(1, field.length() - 1).trim() : field;
   }
 
   private static String fieldToString(String field) {

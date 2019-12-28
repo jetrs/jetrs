@@ -45,7 +45,7 @@ public class PathPattern {
     int end = -1;
     final StringBuilder builder = new StringBuilder();
     while ((start = path.indexOf('{', end + 1)) > -1) {
-      builder.append(path.substring(end + 1, start++));
+      builder.append(path, end + 1, start++);
       end = path.indexOf('}', start);
       builder.append(pathExpressionToRegex(path.substring(start, end)));
     }

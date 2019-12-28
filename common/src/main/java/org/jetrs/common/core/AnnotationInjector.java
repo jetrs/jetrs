@@ -84,7 +84,7 @@ public class AnnotationInjector {
     return null;
   }
 
-  private static final Comparator<Constructor<?>> parameterCountComparator = (o1, o2) -> o1.getParameterCount() < o2.getParameterCount() ? -1 : 1;
+  private static final Comparator<Constructor<?>> parameterCountComparator = Comparator.comparingInt(Constructor::getParameterCount);
 
   public static final AnnotationInjector CONTEXT_ONLY = new AnnotationInjector(null, null, null, null, null, null, null);
 

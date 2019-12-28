@@ -18,7 +18,7 @@ package org.jetrs.common;
 
 import java.lang.reflect.InvocationTargetException;
 
-public class TypeProviderResource<T> extends ProviderResource<T> {
+public abstract class TypeProviderResource<T> extends ProviderResource<T> {
   private final Class<?> type;
 
   public TypeProviderResource(final Class<T> clazz, final T singleton, final Class<?> type) throws IllegalAccessException, InstantiationException, InvocationTargetException {

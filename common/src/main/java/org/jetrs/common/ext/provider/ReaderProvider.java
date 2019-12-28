@@ -46,7 +46,7 @@ public class ReaderProvider implements MessageBodyReader<Reader>, MessageBodyWri
   }
 
   @Override
-  public Reader readFrom(final Class<Reader> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,String> httpHeaders, final InputStream entityStream) throws IOException, WebApplicationException {
+  public Reader readFrom(final Class<Reader> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,String> httpHeaders, final InputStream entityStream) throws WebApplicationException {
     return new InputStreamReader(entityStream);
   }
 

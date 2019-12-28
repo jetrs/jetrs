@@ -50,7 +50,7 @@ public class CharacterProvider implements MessageBodyReader<Character>, MessageB
   }
 
   @Override
-  public Character readFrom(final Class<Character> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,String> httpHeaders, final InputStream entityStream) throws IOException, WebApplicationException {
+  public Character readFrom(final Class<Character> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,String> httpHeaders, final InputStream entityStream) throws IOException, BadRequestException {
     if (MultivaluedMaps.getFirstOrDefault(httpHeaders, HttpHeaders.CONTENT_LENGTH, Long.MAX_VALUE, Long::parseLong) == 0)
       return null;
 

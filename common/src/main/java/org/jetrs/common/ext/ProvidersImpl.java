@@ -38,9 +38,9 @@ import org.jetrs.common.core.AnnotationInjector;
 public class ProvidersImpl implements Providers {
   public static final Comparator<TypeProviderResource<?>> providerResourceComparator = Comparator.nullsFirst((o1, o2) -> o1.getType() == o2.getType() ? Integer.compare(o1.getPriority(), o2.getPriority()) : o1.getType().isAssignableFrom(o2.getType()) ? 1 : -1);
 
-  private final List<ExceptionMappingProviderResource> exceptionMappers;
-  private final List<EntityReaderProviderResource> entityReaders;
-  private final List<EntityWriterProviderResource> entityWriters;
+  private final List<? extends ExceptionMappingProviderResource> exceptionMappers;
+  private final List<? extends EntityReaderProviderResource> entityReaders;
+  private final List<? extends EntityWriterProviderResource> entityWriters;
   private final AnnotationInjector annotationInjector;
 
   public ProvidersImpl(final ProvidersImpl copy, final AnnotationInjector annotationInjector) {
@@ -50,7 +50,7 @@ public class ProvidersImpl implements Providers {
     this.annotationInjector = annotationInjector;
   }
 
-  public ProvidersImpl(final List<ExceptionMappingProviderResource> exceptionMappers, final List<EntityReaderProviderResource> entityReaders, final List<EntityWriterProviderResource> entityWriters) {
+  public ProvidersImpl(final List<? extends ExceptionMappingProviderResource> exceptionMappers, final List<? extends EntityReaderProviderResource> entityReaders, final List<? extends EntityWriterProviderResource> entityWriters) {
     this.exceptionMappers = exceptionMappers;
     this.entityReaders = entityReaders;
     this.entityWriters = entityWriters;

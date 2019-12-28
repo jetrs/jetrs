@@ -18,7 +18,6 @@ package org.jetrs.client;
 
 import java.net.URL;
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
@@ -176,10 +175,9 @@ public class AsyncInvokerImpl extends Invoker<Future<Response>> implements Async
   @Override
   public <T>Future<T> method(final String name, final Entity<?> entity, final Class<T> responseType) {
     client.assertNotClosed();
-    return getExecutorService().submit(new Callable<T>() {
-      @Override
-      public T call() throws Exception {
-        return build(name, entity, requestHeaders, cookies, cacheControl).invoke().readEntity(responseType);
+    return getExecutorService().submit(() -> {
+      try (final Response response = build(name, entity, requestHeaders, cookies, cacheControl).invoke()) {
+        return response.readEntity(responseType);
       }
     });
   }
@@ -187,10 +185,9 @@ public class AsyncInvokerImpl extends Invoker<Future<Response>> implements Async
   @Override
   public <T>Future<T> method(final String name, final Entity<?> entity, final GenericType<T> responseType) {
     client.assertNotClosed();
-    return getExecutorService().submit(new Callable<T>() {
-      @Override
-      public T call() throws Exception {
-        return build(name, entity, requestHeaders, cookies, cacheControl).invoke().readEntity(responseType);
+    return getExecutorService().submit(() -> {
+      try (final Response response = build(name, entity, requestHeaders, cookies, cacheControl).invoke()) {
+        return response.readEntity(responseType);
       }
     });
   }
@@ -199,18 +196,15 @@ public class AsyncInvokerImpl extends Invoker<Future<Response>> implements Async
   @SuppressWarnings("unchecked")
   public <T>Future<T> method(final String name, final Entity<?> entity, final InvocationCallback<T> callback) {
     client.assertNotClosed();
-    return getExecutorService().submit(new Callable<T>() {
-      @Override
-      public T call() throws Exception {
-        try {
-          final T response = (T)build(name, entity, requestHeaders, cookies, cacheControl).invoke().getEntity();
-          callback.completed(response);
-          return response;
-        }
-        catch (final Throwable t) {
-          callback.failed(t);
-          throw t;
-        }
+    return getExecutorService().submit(() -> {
+      try (final Response response = build(name, entity, requestHeaders, cookies, cacheControl).invoke()) {
+        final T message = (T)response.getEntity();
+        callback.completed(message);
+        return message;
+      }
+      catch (final Throwable t) {
+        callback.failed(t);
+        throw t;
       }
     });
   }

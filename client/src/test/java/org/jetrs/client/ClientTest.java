@@ -28,7 +28,8 @@ public class ClientTest {
   @Test
   public void test() {
     final Client client = ClientBuilder.newClient();
-    final Response response = client.target("https://www.google.com/").request().buildGet().invoke();
-    assertEquals(Response.Status.OK, response.getStatusInfo());
+    try (final Response response = client.target("https://www.google.com/").request().buildGet().invoke()) {
+      assertEquals(Response.Status.OK, response.getStatusInfo());
+    }
   }
 }

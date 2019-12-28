@@ -316,6 +316,6 @@ public class ResourceManifest {
 
   @Override
   public String toString() {
-    return httpMethod.value() + " " + String.valueOf(pathPattern.getPattern());
+    return httpMethod.value() + " " + pathPattern.getPattern();
   }
 }

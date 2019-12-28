@@ -47,11 +47,11 @@ import org.jetrs.common.WriterInterceptorEntityProviderResource;
 class ServerBootstrap extends Bootstrap<ResourceManifest> {
   /**
    * http://docs.oracle.com/javaee/6/tutorial/doc/gilik.html
-   * Root resource classes are POJOs that are either annotated with @Path or have at least one
-   * method annotated with @Path or a request method designator, such as @GET, @PUT, @POST, or
-   * @DELETE. Resource methods are methods of a resource class annotated with a request method
-   * designator. This section explains how to use JAX-RS to annotate Java classes to create
-   * RESTful web services.
+   * Root resource classes are POJOs that are either annotated with {@code @Path} or have
+   * at least one method annotated with @Path or a request method designator, such as
+   * {@code @GET}, {@code @PUT}, {@code @POST}, or {@code @DELETE}. Resource methods are
+   * methods of a resource class annotated with a request method designator. This section
+   * explains how to use JAX-RS to annotate Java classes to create RESTful web services.
    */
   private static boolean isRootResource(final Class<?> cls) {
     if (Modifier.isAbstract(cls.getModifiers()) || Modifier.isInterface(cls.getModifiers()))
@@ -74,21 +74,26 @@ class ServerBootstrap extends Bootstrap<ResourceManifest> {
   }
 
   @Override
-  protected <T>void addResourceOrProvider(final MultivaluedMap<String,ResourceManifest> resources, final List<ExceptionMappingProviderResource> exceptionMappers, final List<EntityReaderProviderResource> entityReaders, final List<EntityWriterProviderResource> entityWriters, final List<ProviderResource<ContainerRequestFilter>> requestFilters, final List<ProviderResource<ContainerResponseFilter>> responseFilters, final List<ReaderInterceptorEntityProviderResource> readerInterceptors, final List<WriterInterceptorEntityProviderResource> writerInterceptors, final List<ProviderResource<ParamConverterProvider>> paramConverterProviders, final Class<? extends T> clazz, T singleton) throws IllegalAccessException, InstantiationException, InvocationTargetException {
+  protected <T>void addResourceOrProvider(final MultivaluedMap<? super String,? super ResourceManifest> resources, final List<? super ExceptionMappingProviderResource> exceptionMappers, final List<? super EntityReaderProviderResource> entityReaders, final List<? super EntityWriterProviderResource> entityWriters, final List<? super ProviderResource<ContainerRequestFilter>> requestFilters, final List<? super ProviderResource<ContainerResponseFilter>> responseFilters, final List<? super ReaderInterceptorEntityProviderResource> readerInterceptors, final List<? super WriterInterceptorEntityProviderResource> writerInterceptors, final List<? super ProviderResource<ParamConverterProvider>> paramConverterProviders, final Class<? extends T> clazz, final T singleton) throws IllegalAccessException, InstantiationException, InvocationTargetException {
     if (isRootResource(clazz)) {
-      for (final Method method : clazz.getMethods()) {
+      final Method[] methods = clazz.getMethods();
+      if (methods.length > 0) {
         final Set<HttpMethod> httpMethodAnnotations = new HashSet<>(); // FIXME: Can this be done without a Collection?
-        final Annotation[] annotations = method.getAnnotations();
-        for (final Annotation annotation : annotations) {
-          final HttpMethod httpMethodAnnotation = annotation.annotationType().getAnnotation(HttpMethod.class);
-          if (httpMethodAnnotation != null)
-            httpMethodAnnotations.add(httpMethodAnnotation);
-        }
+        for (final Method method : clazz.getMethods()) {
+          final Annotation[] annotations = method.getAnnotations();
+          for (final Annotation annotation : annotations) {
+            final HttpMethod httpMethodAnnotation = annotation.annotationType().getAnnotation(HttpMethod.class);
+            if (httpMethodAnnotation != null)
+              httpMethodAnnotations.add(httpMethodAnnotation);
+          }
 
-        for (final HttpMethod httpMethodAnnotation : httpMethodAnnotations) {
-          final ResourceManifest manifest = new ResourceManifest(httpMethodAnnotation, method, singleton);
-          logger.info(httpMethodAnnotation.value() + " " + manifest.getPathPattern().getPattern().toString() + " -> " + clazz.getSimpleName() + "." + method.getName() + "()");
-          resources.add(manifest.getHttpMethod().value().toUpperCase(), manifest);
+          for (final HttpMethod httpMethodAnnotation : httpMethodAnnotations) {
+            final ResourceManifest manifest = new ResourceManifest(httpMethodAnnotation, method, singleton);
+            logger.info(httpMethodAnnotation.value() + " " + manifest.getPathPattern().getPattern().toString() + " -> " + clazz.getSimpleName() + "." + method.getName() + "()");
+            resources.add(manifest.getHttpMethod().value().toUpperCase(), manifest);
+          }
+
+          httpMethodAnnotations.clear();
         }
       }
     }

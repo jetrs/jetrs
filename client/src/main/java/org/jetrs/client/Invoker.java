@@ -51,7 +51,7 @@ abstract class Invoker<R> {
   }
 
   public final R get() {
-    return method(HttpMethod.GET, (Entity<?>)null);
+    return method(HttpMethod.GET, null);
   }
 
   public final R put(final Entity<?> entity) {
@@ -63,19 +63,19 @@ abstract class Invoker<R> {
   }
 
   public final R delete() {
-    return method(HttpMethod.DELETE, (Entity<?>)null);
+    return method(HttpMethod.DELETE, null);
   }
 
   public final R head() {
-    return method(HttpMethod.HEAD, (Entity<?>)null);
+    return method(HttpMethod.HEAD, null);
   }
 
   public final R options() {
-    return method(HttpMethod.OPTIONS, (Entity<?>)null);
+    return method(HttpMethod.OPTIONS, null);
   }
 
   public final R trace() {
-    return method("TRACE", (Entity<?>)null);
+    return method("TRACE", null);
   }
 
   public abstract R method(final String name, final Entity<?> entity);

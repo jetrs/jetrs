@@ -136,6 +136,6 @@ public class ClientBuilderImpl extends ClientBuilder implements ConfigurableImpl
 
   @Override
   public Client build() {
-    return new ClientImpl(config == null ? new ClientConfiguration() : ((ClientConfiguration)getConfiguration()).clone(), sslContext == null ? sslContext = newSSLContext() : sslContext, verifier, executorService, connectTimeout, readTimeout);
+    return new ClientImpl(config == null ? new ClientConfiguration() : config.clone(), sslContext == null ? sslContext = newSSLContext() : sslContext, verifier, executorService, connectTimeout, readTimeout);
   }
 }

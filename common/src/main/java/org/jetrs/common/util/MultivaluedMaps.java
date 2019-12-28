@@ -21,12 +21,12 @@ import java.util.function.Function;
 import javax.ws.rs.core.MultivaluedMap;
 
 public final class MultivaluedMaps {
-  public static <K,V>V getFirstOrDefault(final MultivaluedMap<K,V> headers, final K key, final V defaultValue) {
+  public static <K,V>V getFirstOrDefault(final MultivaluedMap<K,? extends V> headers, final K key, final V defaultValue) {
     final V value = headers.getFirst(key);
     return value != null ? value : defaultValue;
   }
 
-  public static <K,V,W>W getFirstOrDefault(final MultivaluedMap<K,V> headers, final K key, final W defaultValue, final Function<V,W> function) {
+  public static <K,V,W>W getFirstOrDefault(final MultivaluedMap<K,? extends V> headers, final K key, final W defaultValue, final Function<? super V,? extends W> function) {
     final V value = headers.getFirst(key);
     return value != null ? function.apply(value) : defaultValue;
   }

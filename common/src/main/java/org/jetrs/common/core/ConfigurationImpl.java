@@ -119,7 +119,7 @@ public abstract class ConfigurationImpl implements Cloneable, Configuration, Ser
   }
 
   @Override
-  public ConfigurationImpl clone() {
+  public Configuration clone() {
     try {
       final ConfigurationImpl clone = (ConfigurationImpl)super.clone();
       clone.components = components.clone();

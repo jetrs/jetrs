@@ -331,14 +331,15 @@ public final class MediaTypes {
           if ((start = i + 1) >= len)
             header = null;
 
-          if (builder == null || builder.length() == 0)
-            continue;
+          if (builder != null && builder.length() != 0) {
+            mediaType = parse(builder.toString());
+            break;
+          }
 
-          mediaType = parse(builder.toString());
-          break;
+          if (header == null)
+            break;
         }
-
-        if (ch != ' ') {
+        else if (ch != ' ') {
           if (!isValidChar(ch)) {
             i = header.indexOf(',', i + 2) - 1;
             if (i < 0) {
@@ -496,7 +497,7 @@ public final class MediaTypes {
     final Map<String,String> parameters = new HashMap<>();
     do {
       int eq = string.indexOf('=', start + 1);
-      boolean hasEq = eq != -1;
+      final boolean hasEq = eq != -1;
       if (!hasEq)
         eq = start;
 
