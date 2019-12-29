@@ -41,10 +41,8 @@ public class PathPattern {
   }
 
   private static Pattern createPattern(final String path) {
-    int start = -1;
-    int end = -1;
     final StringBuilder builder = new StringBuilder();
-    while ((start = path.indexOf('{', end + 1)) > -1) {
+    for (int start, end = -1; (start = path.indexOf('{', end + 1)) > -1;) {
       builder.append(path, end + 1, start++);
       end = path.indexOf('}', start);
       builder.append(pathExpressionToRegex(path.substring(start, end)));

@@ -208,63 +208,8 @@ public final class MediaTypes {
       return new MediaType(type, subType, mergeParameters(mediaType1, mediaType2));
     }
 
-    final Map<String,String> parameters = new HashMap<>();
-    final Iterator<Map.Entry<String,String>> iterator1 = mediaType1.getParameters().entrySet().iterator();
-    final Iterator<Map.Entry<String,String>> iterator2 = mediaType2.getParameters().entrySet().iterator();
-
-    boolean next1 = true;
-    boolean next2 = true;
-    Map.Entry<String,String> entry1 = null;
-    Map.Entry<String,String> entry2 = null;
-    while (iterator1.hasNext() || iterator2.hasNext()) {
-      if (next1)
-        entry1 = iterator1.hasNext() ? iterator1.next() : null;
-
-      if (entry1 != null && "q".equalsIgnoreCase(entry1.getKey())) {
-        entry1 = null;
-        continue;
-      }
-
-      next1 = false;
-      if (next2)
-        entry2 = iterator2.hasNext() ? iterator2.next() : null;
-
-      if (entry2 != null && "q".equalsIgnoreCase(entry2.getKey())) {
-        entry2 = null;
-        continue;
-      }
-
-      next2 = false;
-      final int comparison = entry1 == null ? 1 : entry2 == null ? -1 : entry1.getKey().toLowerCase().compareTo(entry2.getKey().toLowerCase());
-      if (comparison < 0) {
-        if (entry1 != null)
-          parameters.put(entry1.getKey(), entry1.getValue());
-
-        next1 = true;
-        continue;
-      }
-
-      if (entry2 != null)
-        parameters.put(entry2.getKey(), entry2.getValue());
-
-      if (comparison > 0) {
-        next2 = true;
-        continue;
-      }
-
-      if (!entry1.getValue().equalsIgnoreCase(entry2.getValue()))
-        return null;
-
-      next1 = true;
-      next2 = true;
-    }
-
-    if (entry1 != null)
-      parameters.put(entry1.getKey(), entry1.getValue());
-
-    if (entry2 != null)
-      parameters.put(entry2.getKey(), entry2.getValue());
-
+    // FIXME: Need to compare parameters for compatibility.
+    final Map<String,String> parameters = mergeParameters(mediaType1, mediaType2);
     return new MediaType(type, subType, parameters);
   }
 
@@ -359,8 +304,9 @@ public final class MediaTypes {
       }
     }
     while (mediaType == null);
+    if (builder != null)
+      builder.setLength(0);
 
-    builder.setLength(0);
     final MediaType[] mediaTypes = parse(adapter, source, index, depth + 1, builder, header, start);
     mediaTypes[depth] = mediaType;
 

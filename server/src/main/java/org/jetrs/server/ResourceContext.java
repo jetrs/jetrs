@@ -164,7 +164,7 @@ public class ResourceContext {
     return manifests == null ? null : filterAndMatch(containerRequestContext, manifests.iterator(), 0);
   }
 
-  private ResourceMatch[] filterAndMatch(final ContainerRequestContext containerRequestContext, final Iterator<? extends ResourceManifest> manifests, final int depth) {
+  private static ResourceMatch[] filterAndMatch(final ContainerRequestContext containerRequestContext, final Iterator<? extends ResourceManifest> manifests, final int depth) {
     if (!manifests.hasNext())
       return depth == 0 ? null : new ResourceMatch[depth];
 

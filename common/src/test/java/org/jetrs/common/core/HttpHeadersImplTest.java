@@ -36,6 +36,7 @@ import org.libj.util.MirrorList;
 import org.libj.util.function.TriConsumer;
 
 public class HttpHeadersImplTest extends RuntimeDelegateTest {
+  @SuppressWarnings({"rawtypes", "unchecked"})
   private static void testAddFirst(final HttpHeadersMap<? super String,?,?> headers, final String name, final Object value) {
     if (value instanceof String)
       throw new IllegalArgumentException();
@@ -57,6 +58,7 @@ public class HttpHeadersImplTest extends RuntimeDelegateTest {
     }
   }
 
+  @SuppressWarnings({"rawtypes", "unchecked"})
   private static void testGetAdd(final HttpHeadersMap<? super String,?,?> headers, final String name, final Object value) {
     if (value instanceof String)
       throw new IllegalArgumentException();
@@ -79,6 +81,7 @@ public class HttpHeadersImplTest extends RuntimeDelegateTest {
     }
   }
 
+  @SuppressWarnings("rawtypes")
   private static void testAddFirstRemove(final HttpHeadersMap<String,?,?> headers, final String name, final Object value, final TriConsumer<? super HttpHeadersMap,? super String,Object> consumer) {
     assertSize(0, headers);
     consumer.accept(headers, name, value);
@@ -148,6 +151,7 @@ public class HttpHeadersImplTest extends RuntimeDelegateTest {
   }
 
   @Test
+  @SuppressWarnings("unchecked")
   public void testStory() {
     final HttpHeadersImpl headers = new HttpHeadersImpl();
 

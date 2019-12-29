@@ -195,12 +195,9 @@ final class HttpHeadersUtil {
     char ch;
     for (int i = 0, start = -1, end = -1; i <= len; ++i) {
       if (i == len || (ch = header.charAt(i)) == ',') {
-        if (value == null)
-          value = header.substring(start + 1, end + 1);
-
+        value = header.substring(start + 1, end + 1);
         values.add(value);
         start = end = -1;
-        value = null;
       }
       else if (ch == ' ') {
         if (end == -1)
