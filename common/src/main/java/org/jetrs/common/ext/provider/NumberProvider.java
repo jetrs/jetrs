@@ -48,7 +48,8 @@ public class NumberProvider implements MessageBodyReader<Number>, MessageBodyWri
 
   @Override
   public Number readFrom(final Class<Number> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,String> httpHeaders, final InputStream entityStream) throws IOException, WebApplicationException {
-    return Numbers.parseNumber(ProviderUtil.toString(entityStream, mediaType.getParameters().get(MediaType.CHARSET_PARAMETER)));
+    final String str = ProviderUtil.toString(entityStream, mediaType.getParameters().get(MediaType.CHARSET_PARAMETER));
+    return Numbers.parseNumber(str, type);
   }
 
   @Override
