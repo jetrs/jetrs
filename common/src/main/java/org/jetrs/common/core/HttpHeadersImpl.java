@@ -252,10 +252,14 @@ public class HttpHeadersImpl extends HttpHeadersMap<String,String,Object> implem
       return "";
 
     final StringBuilder builder = new StringBuilder();
-    for (final String value : values)
-      builder.append(',').append(value);
+    for (int i = 0; i < values.size(); ++i) {
+      if (i > 0)
+        builder.append(',');
 
-    return builder.substring(1);
+      builder.append(values.get(i));
+    }
+
+    return builder.toString();
   }
 
   @Override
