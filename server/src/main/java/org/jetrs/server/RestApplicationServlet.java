@@ -42,7 +42,7 @@ import org.jetrs.common.core.HttpHeadersImpl;
 import org.jetrs.server.container.ContainerRequestContextImpl;
 import org.jetrs.server.container.ContainerResponseContextImpl;
 import org.jetrs.server.core.RequestImpl;
-import org.libj.util.Classes;
+import org.libj.lang.Classes;
 
 abstract class RestApplicationServlet extends RestHttpServlet {
   private static final long serialVersionUID = 3700080355780006441L;

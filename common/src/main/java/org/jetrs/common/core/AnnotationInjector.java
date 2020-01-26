@@ -52,8 +52,8 @@ import javax.ws.rs.ext.Providers;
 
 import org.jetrs.common.ProviderResource;
 import org.jetrs.common.util.ParameterUtil;
+import org.libj.lang.Classes;
 import org.libj.lang.IllegalAnnotationException;
-import org.libj.util.Classes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
