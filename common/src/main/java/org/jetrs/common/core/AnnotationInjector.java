@@ -184,7 +184,7 @@ public class AnnotationInjector {
     throw new IllegalStateException("Should have returned a @Context object");
   }
 
-  public Object getParamObject(final Annotation annotation, final Class<?> parameterType, final Annotation[] annotations, final Type genericParameterType, final List<ProviderResource<ParamConverterProvider>> paramConverterProviders) throws ReflectiveOperationException {
+  public Object getParamObject(final Annotation annotation, final Class<?> parameterType, final Annotation[] annotations, final Type genericParameterType, final List<ProviderResource<ParamConverterProvider>> paramConverterProviders) {
     if (annotation.annotationType() == QueryParam.class) {
       final boolean decode = ParameterUtil.decode(annotations);
       return ParameterUtil.convertParameter(parameterType, genericParameterType, annotations, containerRequestContext.getUriInfo().getQueryParameters(decode).get(((QueryParam)annotation).value()), paramConverterProviders);

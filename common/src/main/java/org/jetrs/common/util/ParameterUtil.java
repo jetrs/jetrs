@@ -21,6 +21,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -31,16 +33,20 @@ import javax.ws.rs.ext.ParamConverter;
 import javax.ws.rs.ext.ParamConverterProvider;
 
 import org.jetrs.common.ProviderResource;
+import org.libj.lang.Classes;
 import org.libj.util.CollectionUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class ParameterUtil {
+  private static final Logger logger = LoggerFactory.getLogger(ParameterUtil.class);
   private static final String[] forEnums = {"fromString", "valueOf"};
   private static final String[] forOther = {"valueOf", "fromString"};
 
-  private static Method findToString(final Class<?> type) throws NoSuchMethodException {
+  private static Method findToString(final Class<?> type) {
     final String[] methodNames = type.isEnum() ? forEnums : forOther;
     for (final String methodName : methodNames) {
-      final Method method = type.getMethod(methodName, String.class);
+      final Method method = Classes.getMethod(type, methodName, String.class);
       if (method != null)
         return method;
     }
@@ -60,7 +66,7 @@ public final class ParameterUtil {
 
   // http://download.oracle.com/otn-pub/jcp/jaxrs-2_0_rev_A-mrel-eval-spec/jsr339-jaxrs-2.0-final-spec.pdf Section 3.2
   @SuppressWarnings({"rawtypes", "unchecked"})
-  public static Object convertParameter(final Class<?> parameterType, final Type genericType, final Annotation[] annotations, final List<String> values, final List<? extends ProviderResource<ParamConverterProvider>> paramConverterProviders) throws IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException {
+  public static Object convertParameter(final Class<?> parameterType, final Type genericType, final Annotation[] annotations, final List<String> values, final List<? extends ProviderResource<ParamConverterProvider>> paramConverterProviders) {
     if (values == null || values.size() == 0)
       return null;
 
@@ -70,6 +76,12 @@ public final class ParameterUtil {
 
     if (parameterType == String.class)
       return values.get(0);
+
+    if (parameterType == BigInteger.class)
+      return new BigInteger(values.get(0));
+
+    if (parameterType == BigDecimal.class)
+      return new BigDecimal(values.get(0));
 
     if (parameterType == Long.class || parameterType == long.class)
       return Long.valueOf(values.get(0));
@@ -93,24 +105,31 @@ public final class ParameterUtil {
     if (parameterType == Byte.class || parameterType == byte.class)
       return Byte.valueOf(values.get(0));
 
-    if (parameterType == Set.class || parameterType == List.class || parameterType == SortedSet.class) {
-      final Collection collection = CollectionUtil.concat(((Class<? extends Collection>)parameterType).getDeclaredConstructor().newInstance(), values);
-      final Class<?> type = (Class<?>)((ParameterizedType)parameterType.getGenericInterfaces()[0]).getActualTypeArguments()[0];
-      if (type == String.class) {
-        collection.addAll(values);
-      }
-      else {
-        final Method method = findToString(type);
-        for (final String value : values) {
-          collection.add(method.invoke(null, value));
+    try {
+      if (parameterType == Set.class || parameterType == List.class || parameterType == SortedSet.class) {
+        final Collection collection = CollectionUtil.concat(((Class<? extends Collection>)parameterType).getDeclaredConstructor().newInstance(), values);
+        final Class<?> type = (Class<?>)((ParameterizedType)parameterType.getGenericInterfaces()[0]).getActualTypeArguments()[0];
+        if (type == String.class) {
+          collection.addAll(values);
         }
+        else {
+          final Method method = findToString(type);
+          for (final String value : values) {
+            collection.add(method.invoke(null, value));
+          }
+        }
+
+        return collection;
       }
 
-      return collection;
+      final Method method = findToString(parameterType);
+      return method.invoke(null, CollectionUtil.toString(values, ';'));
     }
-
-    final Method method = findToString(parameterType);
-    return method.invoke(null, CollectionUtil.toString(values, ';'));
+    catch (final IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException e) {
+      // FIXME: This error is kinda hidden in the logs, but it should somehow be highlighted to be fixed?!
+      logger.error(e.getMessage(), e);
+      return e;
+    }
   }
 
   public static boolean decode(final Annotation[] annotations) {

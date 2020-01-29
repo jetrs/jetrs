@@ -32,12 +32,8 @@ import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.ForbiddenException;
 import javax.ws.rs.HttpMethod;
-import javax.ws.rs.MatrixParam;
 import javax.ws.rs.NotAuthorizedException;
-import javax.ws.rs.NotFoundException;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.HttpHeaders;
@@ -161,15 +157,9 @@ public class ResourceManifest {
         parameterInstances[i] = containerRequestContext.readBody(messageBodyReader);
       }
       else {
-        try {
-          parameterInstances[i] = annotationInjector.getParamObject(paramAnnotation, parameter.getType(), annotations, genericParameterType, paramConverterProviders);
-        }
-        catch (final ReflectiveOperationException e) {
-          if (paramAnnotation.annotationType() == MatrixParam.class || paramAnnotation.annotationType() == QueryParam.class || paramAnnotation.annotationType() == PathParam.class)
-            throw new NotFoundException(e);
-
-          throw new BadRequestException(e);
-        }
+        parameterInstances[i] = annotationInjector.getParamObject(paramAnnotation, parameter.getType(), annotations, genericParameterType, paramConverterProviders);
+        if (parameterInstances[i] instanceof Exception)
+          throw new BadRequestException((Exception)parameterInstances[i]);
       }
     }
 
