@@ -60,8 +60,8 @@ public class ContainerRequestContextImpl extends InterceptorContextImpl implemen
   private final List<Locale> acceptLanguages;
   private InputStream entityStream;
 
-  public ContainerRequestContextImpl(final HttpServletRequest httpServletRequest, final HttpHeaders requestHeaders, final ContainerResponseContextImpl containerResponseContext, final ExecutionContext executionContext, final ReaderInterceptor[] readerInterceptors) {
-    super(getAcceptableLanguage(requestHeaders), containerResponseContext.properties);
+  public ContainerRequestContextImpl(final HttpServletRequest httpServletRequest, final ContainerResponseContextImpl containerResponseContext, final ExecutionContext executionContext, final ReaderInterceptor[] readerInterceptors) {
+    super(getAcceptableLanguage(executionContext.getRequestHeaders()), containerResponseContext.properties);
     this.readerInterceptors = readerInterceptors;
     this.method = httpServletRequest.getMethod();
     final Enumeration<String> attributes = httpServletRequest.getAttributeNames();
@@ -69,9 +69,9 @@ public class ContainerRequestContextImpl extends InterceptorContextImpl implemen
       properties.put(attribute = attributes.nextElement(), httpServletRequest.getAttribute(attribute));
 
     this.httpServletRequest = httpServletRequest;
-    this.accept = requestHeaders.getAcceptableMediaTypes();
-    this.acceptLanguages = requestHeaders.getAcceptableLanguages();
     this.headers = executionContext.getRequestHeaders();
+    this.accept = this.headers.getAcceptableMediaTypes();
+    this.acceptLanguages = this.headers.getAcceptableLanguages();
     this.uriInfo = new UriInfoImpl(this, httpServletRequest, executionContext);
   }
 

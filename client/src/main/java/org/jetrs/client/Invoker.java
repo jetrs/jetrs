@@ -85,7 +85,7 @@ abstract class Invoker<R> {
     client.assertNotClosed();
     final MirrorMultivaluedMap<String,Object,String> headers = requestHeaders == null ? new HttpHeadersImpl().getMirrorMap() : requestHeaders instanceof HttpHeadersMap ? ((HttpHeadersMap<String,Object,String>)requestHeaders).clone() : new HttpHeadersImpl(requestHeaders).getMirrorMap();
     if (entity != null && entity.getMediaType() != null)
-      headers.add(HttpHeaders.CONTENT_TYPE, entity.getMediaType());
+      headers.putSingle(HttpHeaders.CONTENT_TYPE, entity.getMediaType());
 
     return new InvocationImpl(client, providers, url, method, entity, headers.getMirrorMap(), cookies, cacheControl, executorService, connectTimeout, readTimeout);
   }

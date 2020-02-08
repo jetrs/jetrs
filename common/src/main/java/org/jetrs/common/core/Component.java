@@ -70,7 +70,7 @@ class Component {
 
   @Override
   public int hashCode() {
-    return 31 + cls.hashCode();
+    return 31 + (instance != null ? instance.hashCode() : cls.hashCode());
   }
 
   @Override
@@ -81,6 +81,7 @@ class Component {
     if (!(obj instanceof Component))
       return false;
 
-    return cls.equals(((Component)obj).cls);
+    final Component that = (Component)obj;
+    return instance != null ? instance.equals(that.instance) : cls.equals(that.cls);
   }
 }

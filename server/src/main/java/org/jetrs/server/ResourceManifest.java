@@ -258,6 +258,7 @@ public class ResourceManifest {
       throw new ServletException(e.getCause());
     }
     catch (final IllegalArgumentException e) {
+      e.printStackTrace();
       throw new BadRequestException(e);
     }
   }

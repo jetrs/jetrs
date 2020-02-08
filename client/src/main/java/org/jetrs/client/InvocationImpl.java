@@ -22,8 +22,8 @@ import java.net.CookieManager;
 import java.net.HttpCookie;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -275,7 +275,17 @@ public class InvocationImpl implements Invocation {
 
     @Override
     public Invocation.Builder header(final String name, final Object value) {
-      getHeaders().put(name, Collections.singletonList(value));
+      if (value == null) {
+        getHeaders().remove(name);
+      }
+      else {
+        final List<Object> header = getHeaders().get(name);
+        if (header != null)
+          header.add(value);
+        else
+          getHeaders().put(name, CollectionUtil.asCollection(new ArrayList<>(), value));
+      }
+
       return this;
     }
 

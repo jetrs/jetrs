@@ -26,9 +26,8 @@ import org.libj.util.MirrorList;
 import org.libj.util.Numbers;
 
 public class MirrorQualityListTest {
-  @Test
-  public void test() {
-    final MirrorQualityList<String,Float> list = new MirrorQualityList<>(new ArrayList<>(), new ArrayList<>(), new MirrorList.Mirror<String,Float>() {
+  private static MirrorQualityList<String,Float> newList() {
+    return new MirrorQualityList<>(new ArrayList<>(), new ArrayList<>(), new MirrorList.Mirror<String,Float>() {
       @Override
       public Float valueToReflection(final String value) {
         return Float.valueOf(value);
@@ -49,7 +48,11 @@ public class MirrorQualityListTest {
         return Numbers.Compound.encode(reflection, index);
       }
     });
+  }
 
+  @Test
+  public void test() {
+    final MirrorQualityList<String,Float> list = newList();
     list.add("0.1");
     assertTrue(list.getMirrorList().contains(0.1f));
 

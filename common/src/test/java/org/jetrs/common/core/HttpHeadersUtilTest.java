@@ -63,8 +63,8 @@ public class HttpHeadersUtilTest extends RuntimeDelegateTest {
     assertCompound(1f, 11, HttpHeadersUtil.getQualityFromString("en-GB; q=1 ; q=0  ;;, fr;q=0.4", 1));
     assertCompound(0f, 15, HttpHeadersUtil.getQualityFromString("en-GB; q =0    ; foo=bar,,,", 7));
     assertCompound(0.4f, 25, HttpHeadersUtil.getQualityFromString("en-GB;q= 0.8 0 ; fr;q=0.4,", 6));
-    assertCompound(Float.NaN, 15, HttpHeadersUtil.getQualityFromString("en-GB;q= 0.8 0 , fr;q=0.4,", 6));
-    assertCompound(Float.NaN, 17, HttpHeadersUtil.getQualityFromString("en-GB;rq=0.8;;;;;", 5));
+    assertCompound(1f, 15, HttpHeadersUtil.getQualityFromString("en-GB;q= 0.8 0 , fr;q=0.4,", 6));
+    assertCompound(1f, 17, HttpHeadersUtil.getQualityFromString("en-GB;rq=0.8;;;;;", 5));
   }
 
   private static void assertHeaderWithQ(final String[] headers, final String ... expecteds) {

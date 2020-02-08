@@ -185,7 +185,7 @@ final class HttpHeadersUtil {
     }
 
     // FIXME: Can we avoid Float.parseFloat?
-    final float quality = builder == null || builder.length() == 0 ? Float.NaN : Float.parseFloat(builder.toString());
+    final float quality = builder == null || builder.length() == 0 ? 1f : Float.parseFloat(builder.toString());
     return Numbers.Compound.encode(quality, i);
   }
 
@@ -244,9 +244,6 @@ final class HttpHeadersUtil {
         if (hasQuality) {
           final long qualityAndIndex = getQualityFromString(header, end + 1);
           quality = Numbers.Compound.decodeFloat(qualityAndIndex, 0);
-          if (Float.isNaN(quality))
-            quality = 1f;
-
           i = Numbers.Compound.decodeInt(qualityAndIndex, 1) - 1;
         }
 
