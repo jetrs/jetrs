@@ -117,6 +117,9 @@ public class InvocationImpl implements Invocation {
       if (entity != null) {
         connection.setDoOutput(true);
         final MessageBodyWriter messageBodyWriter = providers.getMessageBodyWriter(entity.getEntity().getClass(), null, entity.getAnnotations(), entity.getMediaType());
+        if (messageBodyWriter == null)
+          throw new ProcessingException("Provider not found for " + entity.getEntity().getClass().getName());
+
         ProviderUtil.writeTo(messageBodyWriter, entity.getEntity(), entity.getEntity().getClass(), null, entity.getAnnotations(), entity.getMediaType(), headers == null ? null : headers.getMirrorMap(), connection.getOutputStream());
       }
 
