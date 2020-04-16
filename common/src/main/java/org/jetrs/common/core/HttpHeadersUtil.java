@@ -21,6 +21,7 @@ import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -94,11 +95,13 @@ final class HttpHeadersUtil {
     // NOTE: It is assumed that the only Map in here is a Map of cookies
     if (value instanceof Map) {
       final StringBuilder builder = new StringBuilder();
-      for (final Object cookie : ((Map<?,?>)value).values())
-        builder.append(cookie).append(';');
+      final Iterator<?> iterator = ((Map<?,?>)value).values().iterator();
+      for (int i = 0; iterator.hasNext(); ++i) {
+        if (i > 0)
+          builder.append(';');
 
-      if (builder.length() > 0)
-        builder.setLength(builder.length() - 1);
+        builder.append(iterator.next());
+      }
 
       return builder.toString();
     }
