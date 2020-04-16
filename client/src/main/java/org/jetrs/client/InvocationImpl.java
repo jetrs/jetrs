@@ -137,7 +137,13 @@ public class InvocationImpl implements Invocation {
         cookies = new HashMap<>();
         final List<HttpCookie> httpCookies = cookieManager.getCookieStore().getCookies();
         for (final String setCookie : setCookies) {
-          cookieManager.getCookieStore().add(null, HttpCookie.parse(setCookie).get(0));
+          try {
+            cookieManager.getCookieStore().add(null, HttpCookie.parse(setCookie).get(0));
+          }
+          catch (final IllegalArgumentException e) {
+            continue;
+          }
+
           for (final HttpCookie httpCookie : httpCookies) {
             final Date expiry = Dates.addTime(headers.getDate(), 0, 0, (int)httpCookie.getMaxAge());
             final NewCookie cookie = new NewCookie(httpCookie.getName(), httpCookie.getValue(), httpCookie.getPath(), httpCookie.getDomain(), httpCookie.getVersion(), httpCookie.getComment(), (int)httpCookie.getMaxAge(), expiry, httpCookie.getSecure(), httpCookie.isHttpOnly());
@@ -149,7 +155,7 @@ public class InvocationImpl implements Invocation {
         cookies = null;
       }
 
-      return new ResponseImpl(null, null, status, headers, cookies, connection.getInputStream(), null);
+      return new ResponseImpl(providers, null, status, headers, cookies, connection.getInputStream(), null);
     }
     catch (final IOException e) {
       throw new ProcessingException(e);
