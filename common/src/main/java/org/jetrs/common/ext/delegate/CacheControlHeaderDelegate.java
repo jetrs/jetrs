@@ -16,6 +16,7 @@
 
 package org.jetrs.common.ext.delegate;
 
+import java.util.Iterator;
 import java.util.Map;
 
 import javax.ws.rs.core.CacheControl;
@@ -160,16 +161,16 @@ public class CacheControlHeaderDelegate implements RuntimeDelegate.HeaderDelegat
     else if (value.getMaxAge() != -1)
       builder.append("s-maxage=").append(value.getMaxAge());
 
-    for (final Map.Entry<String,String> entry : value.getCacheExtension().entrySet()) {
+    final Iterator<Map.Entry<String,String>> iterator = value.getCacheExtension().entrySet().iterator();
+    for (int i = 0; iterator.hasNext(); ++i) {
+      if (i > 0)
+        builder.append(',');
+
+      final Map.Entry<String,String> entry = iterator.next();
       builder.append(entry.getKey());
       if (entry.getValue() != null)
         builder.append('=').append(entry.getValue());
-
-      builder.append(',');
     }
-
-    if (builder.length() > 0)
-      builder.setLength(builder.length() - 1);
 
     return builder.toString();
   }
