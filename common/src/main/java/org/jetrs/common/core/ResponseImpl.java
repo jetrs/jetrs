@@ -114,6 +114,9 @@ public class ResponseImpl extends Response {
     if (!(entity instanceof InputStream))
       throw new IllegalStateException("Entity is not an instance of InputStream");
 
+    if (providers == null)
+      throw new ProcessingException("No providers were registered for required MessageBodyReader for type: " + rawType.getName());
+
     final MediaType mediaType = headers.getMediaType();
     final MessageBodyReader<T> messageBodyReader = providers.getMessageBodyReader(rawType, genericType, annotations, mediaType);
     if (messageBodyReader == null)
@@ -149,7 +152,8 @@ public class ResponseImpl extends Response {
       throw new ResponseProcessingException(this, e);
     }
     finally {
-      close();
+      if (!InputStream.class.isAssignableFrom(rawType))
+        close();
     }
   }
 
