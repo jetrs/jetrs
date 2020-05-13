@@ -56,8 +56,14 @@ public final class EndpointFactory {
       final Method method = Lookup.class.getMethod("defineClass", byte[].class);
       return (Class<?>)method.invoke(MethodHandles.lookup(), bytes);
     }
-    catch (final IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+    catch (final IllegalAccessException | NoSuchMethodException e) {
       throw new RuntimeException(e);
+    }
+    catch (final InvocationTargetException e) {
+      if (e.getCause() instanceof RuntimeException)
+        throw (RuntimeException)e.getCause();
+
+      throw new RuntimeException(e.getCause());
     }
   }
 
@@ -215,8 +221,14 @@ public final class EndpointFactory {
       final Constructor<?> constructor = cls.getDeclaredConstructor(Application.class);
       return (RestApplicationServlet)constructor.newInstance(application);
     }
-    catch (final IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException e) {
+    catch (final IllegalAccessException | InstantiationException | NoSuchMethodException e) {
       throw new RuntimeException(e);
+    }
+    catch (final InvocationTargetException e) {
+      if (e.getCause() instanceof RuntimeException)
+        throw (RuntimeException)e.getCause();
+
+      throw new RuntimeException(e.getCause());
     }
   }
 }

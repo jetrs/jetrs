@@ -245,19 +245,19 @@ public class ResourceManifest {
       throw new ServletException(e);
     }
     catch (final InvocationTargetException e) {
-      // FIXME: Hmm, this is an interesting idea to help reduce the noise in Exceptions from dynamically invoked methods
       if (e.getCause() instanceof RuntimeException)
         throw (RuntimeException)e.getCause();
-
-      if (e.getCause() instanceof ServletException)
-        throw (ServletException)e.getCause();
 
       if (e.getCause() instanceof IOException)
         throw (IOException)e.getCause();
 
+      if (e.getCause() instanceof ServletException)
+        throw (ServletException)e.getCause();
+
       throw new ServletException(e.getCause());
     }
     catch (final IllegalArgumentException e) {
+      // FIXME: Is this really neede here?...
       e.printStackTrace();
       throw new BadRequestException(e);
     }

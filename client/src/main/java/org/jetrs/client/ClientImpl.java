@@ -21,7 +21,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
@@ -76,14 +75,14 @@ public class ClientImpl implements Client, ConfigurableImpl<Client> {
       return providers;
 
     try {
-      final List<ExceptionMappingProviderResource> exceptionMappers = new ArrayList<>();
-      final List<EntityReaderProviderResource> entityReaders = new ArrayList<>();
-      final List<EntityWriterProviderResource> entityWriters = new ArrayList<>();
-      final List<ProviderResource<ContainerRequestFilter>> requestFilters = new ArrayList<>();
-      final List<ProviderResource<ContainerResponseFilter>> responseFilters = new ArrayList<>();
-      final List<ReaderInterceptorEntityProviderResource> readerInterceptors = new ArrayList<>();
-      final List<WriterInterceptorEntityProviderResource> writerInterceptors = new ArrayList<>();
-      final List<ProviderResource<ParamConverterProvider>> paramConverterProviders = new ArrayList<>();
+      final ArrayList<ExceptionMappingProviderResource> exceptionMappers = new ArrayList<>();
+      final ArrayList<EntityReaderProviderResource> entityReaders = new ArrayList<>();
+      final ArrayList<EntityWriterProviderResource> entityWriters = new ArrayList<>();
+      final ArrayList<ProviderResource<ContainerRequestFilter>> requestFilters = new ArrayList<>();
+      final ArrayList<ProviderResource<ContainerResponseFilter>> responseFilters = new ArrayList<>();
+      final ArrayList<ReaderInterceptorEntityProviderResource> readerInterceptors = new ArrayList<>();
+      final ArrayList<WriterInterceptorEntityProviderResource> writerInterceptors = new ArrayList<>();
+      final ArrayList<ProviderResource<ParamConverterProvider>> paramConverterProviders = new ArrayList<>();
 
       final Bootstrap<Void> bootstrap = new Bootstrap<>();
       bootstrap.init(config.getInstances(), config.getClasses(), null, exceptionMappers, entityReaders, entityWriters, requestFilters, responseFilters, readerInterceptors, writerInterceptors, paramConverterProviders);
@@ -92,10 +91,16 @@ public class ClientImpl implements Client, ConfigurableImpl<Client> {
       return providers = new ProvidersImpl(exceptionMappers, entityReaders, entityWriters);
     }
     catch (final IllegalAccessException | PackageNotFoundException e) {
-      throw new IllegalStateException(e);
+      throw new RuntimeException(e);
     }
-    catch (final InstantiationException | InvocationTargetException | IOException e) {
+    catch (final InstantiationException | IOException e) {
       throw new ProcessingException(e);
+    }
+    catch (final InvocationTargetException e) {
+      if (e.getCause() instanceof RuntimeException)
+        throw (RuntimeException)e.getCause();
+
+      throw new ProcessingException(e.getCause());
     }
   }
 

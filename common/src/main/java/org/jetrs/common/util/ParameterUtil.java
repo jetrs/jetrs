@@ -128,7 +128,7 @@ public final class ParameterUtil {
     catch (final IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException e) {
       // FIXME: This error is kinda hidden in the logs, but it should somehow be highlighted to be fixed?!
       logger.error(e.getMessage(), e);
-      return e;
+      return e instanceof InvocationTargetException ? e.getCause() : e;
     }
   }
 

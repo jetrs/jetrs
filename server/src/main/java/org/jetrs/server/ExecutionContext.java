@@ -89,8 +89,14 @@ public class ExecutionContext {
             else
               this.target.set(index, instance);
           }
-          catch (final IllegalAccessException | InstantiationException | InvocationTargetException e) {
+          catch (final IllegalAccessException | InstantiationException e) {
             throw new InternalServerErrorException(e);
+          }
+          catch (final InvocationTargetException e) {
+            if (e.getCause() instanceof RuntimeException)
+              throw (RuntimeException)e.getCause();
+
+            throw new InternalServerErrorException(e.getCause());
           }
         }
       }
