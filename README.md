@@ -27,7 +27,7 @@
    <dependency>
      <groupId>org.jetrs</groupId>
      <artifactId>server</artifactId>
-     <version>2.1.0</version>
+     <version>2.1.0-alpha-3</version>
    </dependency>
    ```
 
@@ -36,8 +36,8 @@
    ```xml
    <dependency>
      <groupId>org.jsonx</groupId>
-     <artifactId>jsonx-rs</artifactId>
-     <version>0.3.1</version>
+     <artifactId>jaxrs</artifactId>
+     <version>0.3.2</version>
    </dependency>
    ```
 
