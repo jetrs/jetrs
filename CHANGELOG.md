@@ -1,6 +1,8 @@
 # Changes by Version
 
-## [v2.1.0-alpha-3](https://github.com/jetrs/jetrs/compare/81057d19ba20886fece1f820c1d6b72dfe7ec623..HEAD) (2020-05-23)
+## [v2.1.0-alpha-4-SNAPSHOT](https://github.com/jetrs/jetrs/compare/3412e736ddd8975fbb582c486a9fcf2652bfdcb1..HEAD)
+
+## [v2.1.0-alpha-3](https://github.com/jetrs/jetrs/compare/81057d19ba20886fece1f820c1d6b72dfe7ec623..3412e736ddd8975fbb582c486a9fcf2652bfdcb1) (2020-05-23)
 * Separate `server` module to `common` and `client` modules.
 * Implement `JAX-RS Client` APIs.
 * Introduce common `Bootstrap` for `server` and `client`.
