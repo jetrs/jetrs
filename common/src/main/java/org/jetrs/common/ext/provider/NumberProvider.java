@@ -32,7 +32,7 @@ import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
 import org.jetrs.common.util.ProviderUtil;
-import org.libj.util.Numbers;
+import org.libj.lang.Numbers;
 
 /**
  * JAX-RS 2.1 Section 4.2.4

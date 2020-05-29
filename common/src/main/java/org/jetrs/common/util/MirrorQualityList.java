@@ -20,10 +20,10 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Objects;
 
+import org.libj.lang.Numbers;
+import org.libj.lang.ObjectUtil;
 import org.libj.util.CollectionUtil;
 import org.libj.util.MirrorList;
-import org.libj.util.Numbers;
-import org.libj.util.ObjectUtil;
 import org.libj.util.primitive.ArrayFloatList;
 import org.libj.util.primitive.FloatComparator;
 
@@ -45,7 +45,7 @@ public class MirrorQualityList<V,R> extends MirrorList<V,R> implements Cloneable
    */
   public interface Qualifier<V,R> {
     /**
-     * Returns a {@link org.libj.util.Numbers.Compound#encode(float,int)
+     * Returns a {@link org.libj.lang.Numbers.Compound#encode(float,int)
      * compound} quality-and-index {@code long} comprised of the quality
      * dereferenced from the value object of type {@code <V>}, and some index of
      * type {@code int} that could be used to further direct downstream parsing.
@@ -53,7 +53,7 @@ public class MirrorQualityList<V,R> extends MirrorList<V,R> implements Cloneable
      * @param value The value of type {@code <V>} from which to dereference the
      *          quality.
      * @param index An index of type {@code int}.
-     * @return A {@link org.libj.util.Numbers.Compound#encode(float,int)
+     * @return A {@link org.libj.lang.Numbers.Compound#encode(float,int)
      *         compound} quality-and-index {@code long} comprised of the quality
      *         dereferenced from the value object of type {@code <V>}, and some
      *         index of type {@code int} that could be used to further direct
@@ -62,7 +62,7 @@ public class MirrorQualityList<V,R> extends MirrorList<V,R> implements Cloneable
     long valueToQuality(V value, int index);
 
     /**
-     * Returns a {@link org.libj.util.Numbers.Compound#encode(float,int)
+     * Returns a {@link org.libj.lang.Numbers.Compound#encode(float,int)
      * compound} quality-and-index {@code long} comprised of the quality
      * dereferenced from the reflection value object of type {@code <R>}, and
      * some index of type {@code int} that could be used to further direct
@@ -71,7 +71,7 @@ public class MirrorQualityList<V,R> extends MirrorList<V,R> implements Cloneable
      * @param reflection The reflection value of type {@code <R>} from which to
      *          dereference the quality.
      * @param index An index of type {@code int}.
-     * @return A {@link org.libj.util.Numbers.Compound#encode(float,int)
+     * @return A {@link org.libj.lang.Numbers.Compound#encode(float,int)
      *         compound} quality-and-index {@code long} comprised of the quality
      *         dereferenced from the value object of type {@code <R>}, and some
      *         index of type {@code int} that could be used to further direct

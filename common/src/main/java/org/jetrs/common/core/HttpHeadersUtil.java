@@ -40,10 +40,10 @@ import org.jetrs.common.util.MediaTypes;
 import org.jetrs.common.util.MirrorQualityList;
 import org.jetrs.common.util.Responses;
 import org.libj.io.Charsets;
+import org.libj.lang.Numbers;
 import org.libj.util.CollectionUtil;
 import org.libj.util.Locales;
 import org.libj.util.MirrorList;
-import org.libj.util.Numbers;
 import org.libj.util.primitive.ArrayFloatList;
 import org.libj.util.primitive.FloatComparator;
 
@@ -112,13 +112,13 @@ final class HttpHeadersUtil {
   /**
    * Gets the quality attribute from a strongly typed header object (i.e.
    * {@link MediaType#getParameters() mediaType.getParameters().get("q")}), and
-   * returns a {@link org.libj.util.Numbers.Compound compound} {@code long}
+   * returns a {@link org.libj.lang.Numbers.Compound compound} {@code long}
    * containing the {@code float} quality value and {@code int} ending index of
    * the attribute in the string.
    *
    * @param obj The object to parse.
    * @param i The index from which to start parsing (ignored).
-   * @return A {@link org.libj.util.Numbers.Compound compound} {@code long}
+   * @return A {@link org.libj.lang.Numbers.Compound compound} {@code long}
    *         containing the {@code float} quality value and {@code int} ending
    *         index of the attribute in the string.
    */
@@ -129,13 +129,13 @@ final class HttpHeadersUtil {
 
   /**
    * Parses the quality attribute from a raw header string (i.e.
-   * {@code "fr-CH;q=0.8"}), and returns a {@link org.libj.util.Numbers.Compound
+   * {@code "fr-CH;q=0.8"}), and returns a {@link org.libj.lang.Numbers.Compound
    * compound} {@code long} containing the {@code float} quality value and
    * {@code int} ending index of the attribute in the string.
    *
    * @param str The string to parse.
    * @param i The index from which to start parsing.
-   * @return A {@link org.libj.util.Numbers.Compound compound} {@code long}
+   * @return A {@link org.libj.lang.Numbers.Compound compound} {@code long}
    *         containing the {@code float} quality value and {@code int} ending
    *         index of the attribute in the string.
    */

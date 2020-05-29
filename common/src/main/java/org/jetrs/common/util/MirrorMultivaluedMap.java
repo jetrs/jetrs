@@ -22,9 +22,9 @@ import java.util.Map;
 
 import javax.ws.rs.core.MultivaluedMap;
 
+import org.libj.lang.ObjectUtil;
 import org.libj.util.MirrorList;
 import org.libj.util.MirrorMap;
-import org.libj.util.ObjectUtil;
 
 /**
  * A {@link MirrorMap} that implements the {@link MultivaluedMap} interface.

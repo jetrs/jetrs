@@ -37,8 +37,8 @@ import javax.ws.rs.core.NewCookie;
 import org.jetrs.common.ext.RuntimeDelegateTest;
 import org.jetrs.common.ext.delegate.DateHeaderDelegate;
 import org.junit.Test;
+import org.libj.lang.Numbers;
 import org.libj.util.Locales;
-import org.libj.util.Numbers;
 import org.libj.util.primitive.ArrayFloatList;
 
 public class HttpHeadersUtilTest extends RuntimeDelegateTest {

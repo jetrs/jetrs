@@ -21,8 +21,8 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.libj.lang.ArrayCharSequence;
 import org.libj.net.URLs;
-import org.libj.util.ArrayCharSequence;
 
 final class UriEncoder {
   static final UriEncoder QUERY;

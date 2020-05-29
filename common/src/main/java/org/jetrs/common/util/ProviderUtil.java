@@ -31,7 +31,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyWriter;
 
 import org.libj.io.Readers;
-import org.libj.util.Numbers;
+import org.libj.lang.Numbers;
 
 public final class ProviderUtil {
   private static final int AUTO_CONTENT_LENGTH_THRESHOLD;

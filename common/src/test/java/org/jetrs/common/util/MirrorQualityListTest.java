@@ -22,8 +22,8 @@ import java.util.ArrayList;
 import java.util.ListIterator;
 
 import org.junit.Test;
+import org.libj.lang.Numbers;
 import org.libj.util.MirrorList;
-import org.libj.util.Numbers;
 
 public class MirrorQualityListTest {
   private static MirrorQualityList<String,Float> newList() {

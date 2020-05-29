@@ -38,10 +38,10 @@ import org.jetrs.common.ext.delegate.DateHeaderDelegate;
 import org.jetrs.common.util.HttpHeadersMap;
 import org.jetrs.common.util.MirrorMultivaluedMap;
 import org.jetrs.common.util.MirrorQualityList;
+import org.libj.lang.Numbers;
 import org.libj.util.CollectionUtil;
 import org.libj.util.Locales;
 import org.libj.util.MirrorMap;
-import org.libj.util.Numbers;
 
 /**
  * A {@link HttpHeadersMap} that implements the {@link HttpHeaders} interface,
