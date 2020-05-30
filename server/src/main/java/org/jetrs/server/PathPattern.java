@@ -48,7 +48,7 @@ public class PathPattern {
       builder.append(pathExpressionToRegex(path.substring(start, end)));
     }
 
-    return Pattern.compile(builder.length() != 0 ? builder.toString() : path);
+    return Patterns.compile(builder.length() != 0 ? builder.toString() : path);
   }
 
   private static String prependSlash(final Path path) {
