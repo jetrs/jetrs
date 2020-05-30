@@ -6,6 +6,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/jetrs/jetrs/badge.svg?1)](https://coveralls.io/github/jetrs/jetrs)
 [![Javadocs](https://www.javadoc.io/badge/org.jetrs/jetrs.svg?1)](https://www.javadoc.io/doc/org.jetrs/jetrs)
 [![Released Version](https://img.shields.io/maven-central/v/org.jetrs/jetrs.svg?1)](https://mvnrepository.com/artifact/org.jetrs/jetrs)
+![Snapshot Version](https://img.shields.io/nexus/s/org.jetrs/jetrs?label=maven-snapshot&server=https%3A%2F%2Foss.sonatype.org)
 
 ## Introduction
 
