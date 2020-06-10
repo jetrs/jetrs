@@ -328,7 +328,7 @@ public final class MediaTypes {
     return mediaTypes;
   }
 
-  private static final MediaType[] EMPTY_ARRAY = new MediaType[0];
+  private static final MediaType[] EMPTY_ARRAY = {};
 
   /**
    * Parses the specified enumeration of strings and returns an array of
