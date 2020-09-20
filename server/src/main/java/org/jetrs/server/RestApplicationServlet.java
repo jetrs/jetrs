@@ -96,7 +96,7 @@ abstract class RestApplicationServlet extends RestHttpServlet {
       executionContext.writeResponse(containerRequestContext, providers);
     }
     catch (final IOException | RuntimeException | ServletException e) {
-      final WebApplicationException e1 = e instanceof WebApplicationException ? (WebApplicationException)e : new InternalServerErrorException(e);
+      final WebApplicationException e1 = e instanceof WebApplicationException ? (WebApplicationException)e : new InternalServerErrorException(e instanceof ServletException && e.getCause() != null ? e.getCause() : e);
       final Response response;
       try {
         // (4b) Error

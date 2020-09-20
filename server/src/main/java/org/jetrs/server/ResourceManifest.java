@@ -257,7 +257,7 @@ public class ResourceManifest {
       throw new ServletException(e.getCause());
     }
     catch (final IllegalArgumentException e) {
-      // FIXME: Is this really neede here?...
+      // FIXME: Is this really needed here?...
       e.printStackTrace();
       throw new BadRequestException(e);
     }
