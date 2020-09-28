@@ -155,7 +155,7 @@ public class InvocationImpl implements Invocation {
         cookies = null;
       }
 
-      return new ResponseImpl(providers, null, status, headers, cookies, connection.getInputStream(), null);
+      return new ResponseImpl(providers, null, status, headers, cookies, 200 <= responseCode && responseCode < 400 ? connection.getInputStream() : connection.getErrorStream(), null);
     }
     catch (final IOException e) {
       throw new ProcessingException(e);
