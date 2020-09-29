@@ -20,6 +20,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -209,12 +210,24 @@ public class ExecutionContext {
   }
 
   @SuppressWarnings("rawtypes")
-  private void writeBody(final Providers providers) throws IOException {
+  private void writeBody(final ResourceMatch resource, final Providers providers) throws IOException {
     final Object entity = containerResponseContext.getEntity();
     if (entity == null)
       return;
 
-    final MessageBodyWriter messageBodyWriter = providers.getMessageBodyWriter(containerResponseContext.getEntityClass(), containerResponseContext.getEntityType(), containerResponseContext.getEntityAnnotations(), containerResponseContext.getMediaType());
+    final Type methodReturnType;
+    final Annotation[] methodAnnotations;
+    if (resource != null) {
+      final ResourceManifest manifest = resource.getManifest();
+      methodReturnType = manifest.getMethodReturnType();
+      methodAnnotations = manifest.getMethodAnnotations();
+    }
+    else {
+      methodReturnType = null;
+      methodAnnotations = null;
+    }
+
+    final MessageBodyWriter messageBodyWriter = providers.getMessageBodyWriter(containerResponseContext.getEntityClass(), methodReturnType, methodAnnotations, containerResponseContext.getMediaType());
     if (messageBodyWriter == null)
       throw new WebApplicationException("Could not find MessageBodyWriter for type: " + entity.getClass().getName());
 
@@ -225,10 +238,10 @@ public class ExecutionContext {
     containerResponseContext.writeBody(messageBodyWriter);
   }
 
-  void writeResponse(final ContainerRequestContext requestContext, final Providers providers) throws IOException {
+  void writeResponse(final ResourceMatch resource, final ContainerRequestContext requestContext, final Providers providers) throws IOException {
     writeHeader();
     if (!HttpMethod.HEAD.equals(requestContext.getMethod()))
-      writeBody(providers);
+      writeBody(resource, providers);
   }
 
   void commitResponse() throws IOException {

@@ -110,6 +110,14 @@ public class ResourceManifest {
     return method.getAnnotations();
   }
 
+  Class<?> getMethodReturnClass() {
+    return method.getReturnType();
+  }
+
+  Type getMethodReturnType() {
+    return method.getGenericReturnType();
+  }
+
   MediaType getCompatibleAccept(final ContainerRequestContext containerRequestContext) {
     if (!httpMethod.value().toUpperCase().equals(containerRequestContext.getMethod()))
       return null;

@@ -72,12 +72,13 @@ abstract class RestApplicationServlet extends RestHttpServlet {
 
     final AnnotationInjector annotationInjector = createAnnotationInjector(containerRequestContext, httpServletRequestContext, httpServletResponse, requestHeaders, resourceContext);
     final Providers providers = resourceContext.getProviders(annotationInjector);
+    ResourceMatch resource = null;
     try {
       // (1) Filter Request (Pre-Match)
       executionContext.filterPreMatchContainerRequest(containerRequestContext, annotationInjector);
 
       // (2) Match
-      final ResourceMatch resource = executionContext.filterAndMatch(containerRequestContext, annotationInjector);
+      resource = executionContext.filterAndMatch(containerRequestContext, annotationInjector);
       if (resource == null)
         throw new NotFoundException();
 
@@ -93,7 +94,7 @@ abstract class RestApplicationServlet extends RestHttpServlet {
       executionContext.filterContainerResponse(containerRequestContext, annotationInjector);
 
       // (6a) Write Response
-      executionContext.writeResponse(containerRequestContext, providers);
+      executionContext.writeResponse(resource, containerRequestContext, providers);
     }
     catch (final IOException | RuntimeException | ServletException e) {
       final WebApplicationException e1 = e instanceof WebApplicationException ? (WebApplicationException)e : new InternalServerErrorException(e instanceof ServletException && e.getCause() != null ? e.getCause() : e);
@@ -106,7 +107,7 @@ abstract class RestApplicationServlet extends RestHttpServlet {
         executionContext.filterContainerResponse(containerRequestContext, annotationInjector);
 
         // (6b) Write Response
-        executionContext.writeResponse(containerRequestContext, providers);
+        executionContext.writeResponse(resource, containerRequestContext, providers);
       }
       catch (final WebApplicationException e2) {
         e2.addSuppressed(e1);
