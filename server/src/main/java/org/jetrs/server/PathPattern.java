@@ -42,12 +42,14 @@ public class PathPattern {
 
   private static Pattern createPattern(final String path) {
     final StringBuilder builder = new StringBuilder();
-    for (int start, end = -1; (start = path.indexOf('{', end + 1)) > -1;) {
+    int end = -1;
+    for (int start; (start = path.indexOf('{', end + 1)) > -1;) {
       builder.append(path, end + 1, start++);
       end = path.indexOf('}', start);
       builder.append(pathExpressionToRegex(path.substring(start, end)));
     }
 
+    builder.append(path.substring(end + 1));
     return Patterns.compile(builder.length() != 0 ? builder.toString() : path);
   }
 

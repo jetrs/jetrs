@@ -58,9 +58,11 @@ public class PathPatternTest {
     assertEquals("/bar", pathToPattern(null, "/bar"));
     assertEquals("/foo/(?<id>[^\\/]+)", pathToPattern("/foo", "{id}"));
     assertEquals("/foo/bar/(?<id>[^\\/]+)", pathToPattern("/foo", "bar/{id}"));
+    assertEquals("/foo/(?<id>[^\\/]+)/bar", pathToPattern("/foo", "{id}/bar"));
 
     assertEquals("/foo/bar/(?<id>[^\\/]+)", pathToPattern("/foo", "bar/{id:([^\\/]+)}"));
     assertEquals("/foo/bar/(?<id>[^\\/]+)/(?<name>[^\\/]+)", pathToPattern("/foo", "bar/{id:([^\\/]+)}/{name}"));
+    assertEquals("/foo/(?<id>[^\\/]+)/bar/(?<name>[^\\/]+)/hi", pathToPattern("/foo", "{id:([^\\/]+)}/bar/{name}/hi"));
     assertEquals("/foo/bar/(?<id>[^\\/]+)/blank/(?<name>[^\\/]+)", pathToPattern("/foo", "bar/{id:([^\\/]+)}/blank/{name}"));
   }
 }
