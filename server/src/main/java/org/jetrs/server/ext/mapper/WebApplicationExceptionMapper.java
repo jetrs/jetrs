@@ -23,14 +23,27 @@ import javax.ws.rs.ext.Provider;
 
 @Provider
 public class WebApplicationExceptionMapper implements ExceptionMapper<WebApplicationException> {
+  private final boolean verbose;
+
+  public WebApplicationExceptionMapper(final boolean verbose) {
+    this.verbose = verbose;
+  }
+
+  public WebApplicationExceptionMapper() {
+    this(true);
+  }
+
   @Override
   public Response toResponse(final WebApplicationException exception) {
     try (final Response response = exception.getResponse()) {
-      final StringBuilder builder = new StringBuilder("{\"status\":").append(response.getStatus());
-      final String message = exception.getMessage();
-      if (message != null) {
-        final String prefix = "HTTP " + response.getStatus() + " ";
-        builder.append(",\"message\":\"").append(message.startsWith(prefix) ? message.substring(prefix.length()) : message).append('"');
+      final int status = response.getStatus();
+      final StringBuilder builder = new StringBuilder("{\"status\":").append(status);
+      if (verbose) {
+        final String message = exception.getMessage();
+        if (message != null) {
+          final String prefix = "HTTP " + status + " ";
+          builder.append(",\"message\":\"").append(message.startsWith(prefix) ? message.substring(prefix.length()) : message).append('"');
+        }
       }
 
       return Response.fromResponse(response).entity(builder.append('}').toString()).build();
