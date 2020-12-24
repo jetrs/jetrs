@@ -355,7 +355,7 @@ public class MirrorQualityList<V,R> extends MirrorList<V,R> implements Cloneable
   private void add(int index, final V value, final float quality) {
     index = addQuality(index, quality);
     super.target.add(index, value);
-    super.beforeAdd(index, value);
+    super.beforeAdd(index, value, preventDefault);
   }
 
   /**
@@ -385,20 +385,20 @@ public class MirrorQualityList<V,R> extends MirrorList<V,R> implements Cloneable
   }
 
   @Override
-  protected boolean beforeAdd(final int index, final V element) {
+  protected Object beforeAdd(final int index, final V element, final Object preventDefault) {
     final boolean unlocked = unlock();
     final long qualityAndIndex = qualifier.valueToQuality(element, 0);
     final float quality = Numbers.Compound.decodeFloat(qualityAndIndex, 0);
     add(index, element, quality);
     lock(unlocked);
-    return false;
+    return preventDefault;
   }
 
   @Override
   protected boolean beforeSet(final int index, final V newElement) {
     final boolean unlocked = unlock();
     beforeRemove(index);
-    beforeAdd(index, newElement);
+    beforeAdd(index, newElement, preventDefault);
     lock(unlocked);
     return false;
   }
