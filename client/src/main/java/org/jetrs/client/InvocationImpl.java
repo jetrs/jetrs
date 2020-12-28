@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -448,5 +449,25 @@ public class InvocationImpl implements Invocation {
       client.assertNotClosed();
       return new AsyncInvokerImpl(client, providers, url, requestHeaders, cookies, cacheControl, executorService, connectTimeout, readTimeout);
     }
+  }
+
+  @Override
+  public String toString() {
+    final StringBuilder builder = new StringBuilder();
+    builder.append("{\n  \"url\": \"" + url + "\",");
+    builder.append("\n  \"method\": \"").append(method).append("\",");
+    builder.append("\n  \"headers\": {");
+
+    final Iterator<Map.Entry<String,List<String>>> iterator = headers.entrySet().iterator();
+    for (int i = 0; iterator.hasNext(); ++i) {
+      final Map.Entry<String,List<String>> entry = iterator.next();
+      if (i > 0)
+        builder.append(',');
+
+      builder.append("\n    \"").append(entry.getKey()).append("\": [").append(CollectionUtil.toString(entry.getValue(), "\", \"")).append(']');
+    }
+
+    builder.append("\n  }\n}");
+    return builder.toString();
   }
 }
