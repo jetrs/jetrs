@@ -51,10 +51,12 @@ import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.StatusType;
 import javax.ws.rs.ext.MessageBodyWriter;
-import javax.ws.rs.ext.Providers;
 
+import org.jetrs.common.core.AnnotationInjector;
 import org.jetrs.common.core.HttpHeadersImpl;
+import org.jetrs.common.core.RequestImpl;
 import org.jetrs.common.core.ResponseImpl;
+import org.jetrs.common.ext.ProvidersImpl;
 import org.jetrs.common.util.MirrorMultivaluedMap;
 import org.jetrs.common.util.ProviderUtil;
 import org.jetrs.common.util.Responses;
@@ -63,7 +65,7 @@ import org.libj.util.Dates;
 
 public class InvocationImpl implements Invocation {
   private final ClientImpl client;
-  private final Providers providers;
+  private final ProvidersImpl providers;
   private final URL url;
   private final String method;
   private final Entity<?> entity;
@@ -74,7 +76,7 @@ public class InvocationImpl implements Invocation {
   private final long connectTimeout;
   private final long readTimeout;
 
-  InvocationImpl(final ClientImpl client, final Providers providers, final URL url, final String method, final Entity<?> entity, final MirrorMultivaluedMap<String,String,Object> headers, final List<Cookie> cookies, final CacheControl cacheControl, final ExecutorService executorService, final long connectTimeout, final long readTimeout) {
+  InvocationImpl(final ClientImpl client, final ProvidersImpl providers, final URL url, final String method, final Entity<?> entity, final MirrorMultivaluedMap<String,String,Object> headers, final List<Cookie> cookies, final CacheControl cacheControl, final ExecutorService executorService, final long connectTimeout, final long readTimeout) {
     this.client = client;
     this.providers = providers;
     this.url = url;
@@ -115,13 +117,18 @@ public class InvocationImpl implements Invocation {
       else
         connection.setUseCaches(false);
 
+      final ProvidersImpl providers;
       if (entity != null) {
+        providers = new ProvidersImpl(this.providers, new AnnotationInjector(null, new RequestImpl(method), null, null, new HttpHeadersImpl(connection.getRequestProperties()), null, null));
         connection.setDoOutput(true);
         final MessageBodyWriter messageBodyWriter = providers.getMessageBodyWriter(entity.getEntity().getClass(), null, entity.getAnnotations(), entity.getMediaType());
         if (messageBodyWriter == null)
           throw new ProcessingException("Provider not found for " + entity.getEntity().getClass().getName());
 
         ProviderUtil.writeTo(messageBodyWriter, entity.getEntity(), entity.getEntity().getClass(), null, entity.getAnnotations(), entity.getMediaType(), headers == null ? null : headers.getMirrorMap(), connection.getOutputStream());
+      }
+      else {
+        providers = this.providers;
       }
 
       final int responseCode = connection.getResponseCode();
@@ -217,16 +224,16 @@ public class InvocationImpl implements Invocation {
     private List<Cookie> cookies;
     private CacheControl cacheControl;
 
-    BuilderImpl(final ClientImpl client, final Providers providers, final URL url, final ExecutorService executorService, final long connectTimeout, final long readTimeout) {
+    BuilderImpl(final ClientImpl client, final ProvidersImpl providers, final URL url, final ExecutorService executorService, final long connectTimeout, final long readTimeout) {
       super(client, providers, url, executorService, connectTimeout, readTimeout);
     }
 
-    BuilderImpl(final ClientImpl client, final Providers providers, final URL url, final ExecutorService executorService, final long connectTimeout, final long readTimeout, final String ... acceptedResponseTypes) {
+    BuilderImpl(final ClientImpl client, final ProvidersImpl providers, final URL url, final ExecutorService executorService, final long connectTimeout, final long readTimeout, final String ... acceptedResponseTypes) {
       this(client, providers, url, executorService, connectTimeout, readTimeout);
       accept(acceptedResponseTypes);
     }
 
-    BuilderImpl(final ClientImpl client, final Providers providers, final URL url, final ExecutorService executorService, final long connectTimeout, final long readTimeout, final MediaType ... acceptedResponseTypes) {
+    BuilderImpl(final ClientImpl client, final ProvidersImpl providers, final URL url, final ExecutorService executorService, final long connectTimeout, final long readTimeout, final MediaType ... acceptedResponseTypes) {
       this(client, providers, url, executorService, connectTimeout, readTimeout);
       accept(acceptedResponseTypes);
     }

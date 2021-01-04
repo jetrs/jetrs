@@ -36,7 +36,6 @@ import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.ext.ParamConverterProvider;
-import javax.ws.rs.ext.Providers;
 
 import org.jetrs.Bootstrap;
 import org.jetrs.common.EntityReaderProviderResource;
@@ -66,11 +65,11 @@ public class ClientImpl implements Client, ConfigurableImpl<Client> {
     this.readTimeout = readTimeout;
   }
 
-  private Providers providers;
+  private ProvidersImpl providers;
   private Set<?> singletons;
   private Set<Class<?>> classes;
 
-  private Providers buildProviders() {
+  private ProvidersImpl buildProviders() {
     if (providers != null && (singletons != null ? singletons.equals(config.getInstances()) : config.getInstances() == null) && (classes != null ? classes.equals(config.getClasses()) : config.getClasses() == null))
       return providers;
 

@@ -14,7 +14,7 @@
  * program. If not, see <http://opensource.org/licenses/MIT/>.
  */
 
-package org.jetrs.server.core;
+package org.jetrs.common.core;
 
 import java.util.Date;
 import java.util.List;

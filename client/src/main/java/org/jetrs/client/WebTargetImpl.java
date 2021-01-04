@@ -28,20 +28,20 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.ext.Providers;
 
 import org.jetrs.common.core.ConfigurableImpl;
+import org.jetrs.common.ext.ProvidersImpl;
 
 public class WebTargetImpl implements ConfigurableImpl<WebTarget>, WebTarget {
   private final ClientImpl client;
-  private final Providers providers;
+  private final ProvidersImpl providers;
   private final Configuration config;
   private final UriBuilder uriBuilder;
   private final ExecutorService executorService;
   private final long connectTimeout;
   private final long readTimeout;
 
-  WebTargetImpl(final ClientImpl client, final Providers providers, final Configuration config, final UriBuilder uriBuilder, final ExecutorService executorService, final long connectTimeout, final long readTimeout) {
+  WebTargetImpl(final ClientImpl client, final ProvidersImpl providers, final Configuration config, final UriBuilder uriBuilder, final ExecutorService executorService, final long connectTimeout, final long readTimeout) {
     this.client = client;
     this.providers = providers;
     this.config = config;

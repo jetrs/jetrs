@@ -39,9 +39,9 @@ import javax.ws.rs.ext.Providers;
 
 import org.jetrs.common.core.AnnotationInjector;
 import org.jetrs.common.core.HttpHeadersImpl;
+import org.jetrs.common.core.RequestImpl;
 import org.jetrs.server.container.ContainerRequestContextImpl;
 import org.jetrs.server.container.ContainerResponseContextImpl;
-import org.jetrs.server.core.RequestImpl;
 import org.libj.lang.Classes;
 
 abstract class RestApplicationServlet extends RestHttpServlet {

@@ -27,21 +27,21 @@ import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.ext.Providers;
 
 import org.jetrs.common.core.HttpHeadersImpl;
+import org.jetrs.common.ext.ProvidersImpl;
 import org.jetrs.common.util.HttpHeadersMap;
 import org.jetrs.common.util.MirrorMultivaluedMap;
 
 abstract class Invoker<R> {
   final ClientImpl client;
-  final Providers providers;
+  final ProvidersImpl providers;
   final URL url;
   final ExecutorService executorService;
   final long connectTimeout;
   final long readTimeout;
 
-  Invoker(final ClientImpl client, final Providers providers, final URL url, final ExecutorService executorService, final long connectTimeout, final long readTimeout) {
+  Invoker(final ClientImpl client, final ProvidersImpl providers, final URL url, final ExecutorService executorService, final long connectTimeout, final long readTimeout) {
     this.client = client;
     this.providers = providers;
     this.url = url;
