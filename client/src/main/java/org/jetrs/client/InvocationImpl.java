@@ -17,6 +17,7 @@
 package org.jetrs.client;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.CookieHandler;
 import java.net.CookieManager;
 import java.net.HttpCookie;
@@ -125,7 +126,9 @@ public class InvocationImpl implements Invocation {
         if (messageBodyWriter == null)
           throw new ProcessingException("Provider not found for " + entity.getEntity().getClass().getName());
 
-        ProviderUtil.writeTo(messageBodyWriter, entity.getEntity(), entity.getEntity().getClass(), null, entity.getAnnotations(), entity.getMediaType(), headers == null ? null : headers.getMirrorMap(), connection.getOutputStream());
+        final OutputStream entityStream = connection.getOutputStream();
+        ProviderUtil.writeTo(messageBodyWriter, entity.getEntity(), entity.getEntity().getClass(), null, entity.getAnnotations(), entity.getMediaType(), headers == null ? null : headers.getMirrorMap(), entityStream);
+        entityStream.flush();
       }
       else {
         providers = this.providers;

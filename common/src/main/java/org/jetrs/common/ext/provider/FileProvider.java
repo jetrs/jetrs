@@ -46,8 +46,12 @@ public class FileProvider implements MessageBodyReader<File>, MessageBodyWriter<
     final String rangeString;
     final int start;
     if (range == null || (rangeString = String.valueOf(range).trim()).length() == 0 || (start = rangeString.indexOf("bytes=")) == -1) {
-      Files.copy(file.toPath(), out);
-      return file.length();
+      final long len = file.length();
+      final long copied = Files.copy(file.toPath(), out);
+      if (len != copied)
+        throw new IOException("Only " + copied + " of " + len + " bytes were written for: " + file.getName());
+
+      return len;
     }
 
     try (final RandomAccessFile raf = new RandomAccessFile(file, "r")) {

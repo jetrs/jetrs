@@ -46,9 +46,11 @@ public final class ProviderUtil {
     final OutputStream out = hasContentLength ? entityStream : new CountingBufferedOutputStream(entityStream, AUTO_CONTENT_LENGTH_THRESHOLD);
     provider.writeTo(t, type, genericType, annotations, mediaType, httpHeaders, out);
     // FIXME: This sets the CONTENT_LENGTH only if the written size is less than DEFAULT_BUFFER_SIZE. Is this correct?!?!
-    final int length;
-    if (!hasContentLength && !httpHeaders.containsKey(HttpHeaders.CONTENT_LENGTH) && (length = ((CountingBufferedOutputStream)out).getCount()) < AUTO_CONTENT_LENGTH_THRESHOLD) {
-      httpHeaders.add(HttpHeaders.CONTENT_LENGTH, String.valueOf(length));
+    if (!hasContentLength) {
+      final int length;
+      if (!httpHeaders.containsKey(HttpHeaders.CONTENT_LENGTH) && (length = ((CountingBufferedOutputStream)out).getCount()) < AUTO_CONTENT_LENGTH_THRESHOLD)
+        httpHeaders.add(HttpHeaders.CONTENT_LENGTH, String.valueOf(length));
+
       out.flush();
     }
   }
