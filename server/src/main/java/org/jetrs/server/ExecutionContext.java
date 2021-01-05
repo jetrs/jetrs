@@ -232,7 +232,7 @@ public class ExecutionContext {
       throw new WebApplicationException("Could not find MessageBodyWriter for type: " + entity.getClass().getName());
 
     if (containerResponseContext.getOutputStream() == null)
-      containerResponseContext.setEntityStream(entityStream = new ByteArrayOutputStream());
+      containerResponseContext.setEntityStream(entityStream = new ByteArrayOutputStream(1024));
 
     // Start WriterInterceptor process chain
     containerResponseContext.writeBody(messageBodyWriter);

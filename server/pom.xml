@@ -35,5 +35,11 @@
       <artifactId>common</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.openjax</groupId>
+      <artifactId>jetty</artifactId>
+      <version>9.4.28-SNAPSHOT</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 </project>

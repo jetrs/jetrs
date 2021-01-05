@@ -39,8 +39,8 @@ public class EndpointFactoryTest {
     final WebServlet webServlet = cls.getAnnotation(WebServlet.class);
     assertEquals(1, webServlet.urlPatterns().length);
     assertEquals("/*", webServlet.urlPatterns()[0]);
-    assertEquals("org/jetrs/server/Endpoint1Servlet", webServlet.name());
-    assertEquals("JetRS Endpoint 1: " + App.class.getName(), webServlet.displayName());
+    assertTrue(webServlet.name(), webServlet.name().matches("org/jetrs/server/Endpoint\\dServlet"));
+    assertTrue(webServlet.displayName(), webServlet.displayName().matches("JetRS Endpoint \\d: " + App.class.getName().replace("$", "\\$")));
   }
 
   @Test
