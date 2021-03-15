@@ -24,11 +24,12 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 
+import org.libj.lang.Strings;
 import org.libj.net.URLs;
 import org.libj.util.Patterns;
 
 public class PathPattern {
-  private static final Pattern pathExpressionPattern = Pattern.compile("(\\w+)\\s*(:\\s*\\(([^)]+)\\))?");
+  private static final Pattern pathExpressionPattern = Pattern.compile("(\\w+)\\s*(:\\s*(.+))?");
 
   private static String pathExpressionToRegex(final String pathExpression) {
     final Matcher matcher = pathExpressionPattern.matcher(pathExpression);
@@ -37,7 +38,7 @@ public class PathPattern {
 
     final String name = matcher.group(1);
     final String regex = matcher.group(3);
-    return regex != null ? "(?<" + name + ">" + regex + ")" : "(?<" + name + ">[^\\/]+)";
+    return regex != null ? "(?<" + name + ">" + regex + ")" : "(?<" + name + ">[^/]+)";
   }
 
   private static Pattern createPattern(final String path) {
@@ -45,7 +46,7 @@ public class PathPattern {
     int end = -1;
     for (int start; (start = path.indexOf('{', end + 1)) > -1;) {
       builder.append(path, end + 1, start++);
-      end = path.indexOf('}', start);
+      end = Strings.indexOfScopeClose(path, '{', '}', start);
       builder.append(pathExpressionToRegex(path.substring(start, end)));
     }
 
