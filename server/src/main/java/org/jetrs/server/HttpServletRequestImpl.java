@@ -20,10 +20,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import javax.ws.rs.container.ContainerRequestContext;
 
-public class HttpServletRequestContext extends HttpServletRequestWrapper {
-  public HttpServletRequestContext(final HttpServletRequest request) {
+public class HttpServletRequestImpl extends HttpServletRequestWrapper {
+  public HttpServletRequestImpl(final HttpServletRequest request) {
     super(request);
   }
+
+  // FIXME: Try to remove these...
 
   private ContainerRequestContext requestContext;
 

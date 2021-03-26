@@ -62,15 +62,15 @@ abstract class RestApplicationServlet extends RestHttpServlet {
     return annotationInjector;
   }
 
-  private static void service(final ResourceContext resourceContext, final HttpServletRequestContext httpServletRequestContext, final HttpServletResponse httpServletResponse) throws IOException {
+  private static void service(final ResourceContext resourceContext, final HttpServletRequestImpl httpServletRequest, final HttpServletResponse httpServletResponse) throws IOException {
     final ContainerResponseContextImpl containerResponseContext = new ContainerResponseContextImpl(httpServletResponse, resourceContext.getWriterInterceptors());
-    final HttpHeaders requestHeaders = new HttpHeadersImpl(httpServletRequestContext);
+    final HttpHeaders requestHeaders = new HttpHeadersImpl(httpServletRequest);
     final ExecutionContext executionContext = new ExecutionContext(requestHeaders, httpServletResponse, containerResponseContext, resourceContext);
 
     final ContainerRequestContextImpl containerRequestContext; // NOTE: This weird construct is done this way to at least somehow make the two objects cohesive
-    httpServletRequestContext.setRequestContext(containerRequestContext = new ContainerRequestContextImpl(httpServletRequestContext, containerResponseContext, executionContext, resourceContext.getReaderInterceptors()));
+    httpServletRequest.setRequestContext(containerRequestContext = new ContainerRequestContextImpl(httpServletRequest, containerResponseContext, executionContext, resourceContext.getReaderInterceptors()));
 
-    final AnnotationInjector annotationInjector = createAnnotationInjector(containerRequestContext, httpServletRequestContext, httpServletResponse, requestHeaders, resourceContext);
+    final AnnotationInjector annotationInjector = createAnnotationInjector(containerRequestContext, httpServletRequest, httpServletResponse, requestHeaders, resourceContext);
     final Providers providers = resourceContext.getProviders(annotationInjector);
     ResourceMatch resource = null;
     try {
@@ -82,7 +82,7 @@ abstract class RestApplicationServlet extends RestHttpServlet {
       if (resource == null)
         throw new NotFoundException();
 
-      httpServletRequestContext.setResourceManifest(resource.getManifest());
+      httpServletRequest.setResourceManifest(resource.getManifest());
 
       // (3) Filter Request
       executionContext.filterContainerRequest(containerRequestContext, annotationInjector);
@@ -162,7 +162,7 @@ abstract class RestApplicationServlet extends RestHttpServlet {
   @Override
   protected final void service(final HttpServletRequest request, final HttpServletResponse response) throws IOException, ServletException {
     try {
-      service(getResourceContext(), new HttpServletRequestContext(request) {
+      service(getResourceContext(), new HttpServletRequestImpl(request) {
         // NOTE: Check for the existence of the @Consumes header, and subsequently the Content-Type header in the request,
         // NOTE: only if data is expected (i.e. GET, HEAD, DELETE, OPTIONS methods will not have a body and should thus not
         // NOTE: expect a Content-Type header from the request)

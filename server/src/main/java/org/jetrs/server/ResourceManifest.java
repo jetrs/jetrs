@@ -210,27 +210,32 @@ public class ResourceManifest {
     if (!(securityAnnotation instanceof RolesAllowed))
       throw new UnsupportedOperationException("Unsupported security annotation: " + securityAnnotation.getClass().getName());
 
+    final RolesAllowed rolesAllowed = (RolesAllowed)securityAnnotation;
     if (containerRequestContext.getSecurityContext().getUserPrincipal() != null)
-      for (final String role : ((RolesAllowed)securityAnnotation).value())
+      for (final String role : rolesAllowed.value())
         if (containerRequestContext.getSecurityContext().isUserInRole(role))
           return;
 
-    final RolesAllowed rolesAllowed = (RolesAllowed)securityAnnotation;
-    if (rolesAllowed.value().length == 1)
-      throw new NotAuthorizedException(containerRequestContext.getSecurityContext().getAuthenticationScheme() != null ? containerRequestContext.getSecurityContext().getAuthenticationScheme() + " realm=\"" + rolesAllowed.value()[0] + "\"" : "realm=\"" + rolesAllowed.value()[0] + "\"");
+    final String authenticationScheme = containerRequestContext.getSecurityContext().getAuthenticationScheme();
+    final StringBuilder builder = new StringBuilder();
+    if (authenticationScheme != null)
+      builder.append(authenticationScheme).append(' ');
 
-    final String[] challenges = new String[rolesAllowed.value().length];
-    if (containerRequestContext.getSecurityContext().getAuthenticationScheme() != null) {
-      final String scheme = containerRequestContext.getSecurityContext().getAuthenticationScheme();
-      for (int i = 0; i < challenges.length; ++i)
-        challenges[i] = scheme + " realm=\"" + rolesAllowed.value()[i] + "\"";
-    }
-    else {
-      for (int i = 0; i < challenges.length; ++i)
-        challenges[i] = "realm=\"" + rolesAllowed.value()[i] + "\"";
+    final String[] roles = rolesAllowed.value();
+    builder.append("realm=\"").append(roles[0]).append('"');
+    final String challenge = builder.toString();
+    if (roles.length == 1)
+      throw new NotAuthorizedException(challenge);
+
+    final Object[] challenges = new Object[roles.length - 1];
+    final int resetLen = authenticationScheme != null ? authenticationScheme.length() + 1 : 0;
+    for (int i = 1; i < roles.length; ++i) {
+      builder.setLength(resetLen);
+      builder.append("realm=\"").append(roles[i]).append('"');
+      challenges[i - 1] = builder.toString();
     }
 
-    throw new NotAuthorizedException(challenges);
+    throw new NotAuthorizedException(challenge, challenges);
   }
 
   Object service(final ExecutionContext executionContext, final ContainerRequestContextImpl containerRequestContext, final AnnotationInjector annotationInjector, final List<ProviderResource<ParamConverterProvider>> paramConverterProviders) throws IOException, ServletException {

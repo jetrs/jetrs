@@ -192,6 +192,7 @@ public class UriInfoImpl implements UriInfo {
         parameters.addAll(entry.getKey(), entry.getValue());
     }
 
+    // FIXME: Make `parameters` unmodifiable, as per the spec.
     return decode ? queryParametersDecoded = parameters : (queryParametersEncoded = parameters);
   }
 
