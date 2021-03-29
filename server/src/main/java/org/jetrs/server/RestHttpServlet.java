@@ -17,7 +17,6 @@
 package org.jetrs.server;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 
 import javax.servlet.ServletConfig;
@@ -59,14 +58,14 @@ abstract class RestHttpServlet extends HttpServlet {
   public void init(final ServletConfig config) throws ServletException {
     super.init(config);
     final MultivaluedMap<String,ResourceManifest> resources = new MultivaluedHashMap<>();
-    final List<ExceptionMappingProviderResource> exceptionMappers = new ArrayList<>();
-    final List<EntityReaderProviderResource> entityReaders = new ArrayList<>();
-    final List<EntityWriterProviderResource> entityWriters = new ArrayList<>();
-    final List<ProviderResource<ContainerRequestFilter>> requestFilters = new ArrayList<>();
-    final List<ProviderResource<ContainerResponseFilter>> responseFilters = new ArrayList<>();
-    final List<ReaderInterceptorEntityProviderResource> readerInterceptors = new ArrayList<>();
-    final List<WriterInterceptorEntityProviderResource> writerInterceptors = new ArrayList<>();
-    final List<ProviderResource<ParamConverterProvider>> paramConverterProviders = new ArrayList<>();
+    final ArrayList<ExceptionMappingProviderResource> exceptionMappers = new ArrayList<>();
+    final ArrayList<EntityReaderProviderResource> entityReaders = new ArrayList<>();
+    final ArrayList<EntityWriterProviderResource> entityWriters = new ArrayList<>();
+    final ArrayList<ProviderResource<ContainerRequestFilter>> requestFilters = new ArrayList<>();
+    final ArrayList<ProviderResource<ContainerResponseFilter>> responseFilters = new ArrayList<>();
+    final ArrayList<ReaderInterceptorEntityProviderResource> readerInterceptors = new ArrayList<>();
+    final ArrayList<WriterInterceptorEntityProviderResource> writerInterceptors = new ArrayList<>();
+    final ArrayList<ProviderResource<ParamConverterProvider>> paramConverterProviders = new ArrayList<>();
 
     final ServerBootstrap bootstrap = new ServerBootstrap();
     try {

@@ -29,7 +29,7 @@ public abstract class EntityProviderResource<T> extends TypeProviderResource<T> 
   private final MediaType[] allowedTypes;
 
   public EntityProviderResource(final Class<T> clazz, final T singleton, final Class<?> interfaceType) throws IllegalAccessException, InstantiationException, InvocationTargetException {
-    super(clazz, singleton, getGenericInterfaceType(interfaceType, clazz));
+    super(clazz, singleton, getGenericInterfaceType(interfaceType, clazz, Object.class));
     final Consumes consumes = clazz.getAnnotation(Consumes.class);
     this.allowedTypes = consumes == null ? null : MediaTypes.parse(consumes.value());
   }

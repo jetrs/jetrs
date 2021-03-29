@@ -36,7 +36,7 @@ import org.jetrs.common.TypeProviderResource;
 import org.jetrs.common.core.AnnotationInjector;
 
 public class ProvidersImpl implements Providers {
-  public static final Comparator<TypeProviderResource<?>> providerResourceComparator = Comparator.nullsFirst((o1, o2) -> o1.getType() == o2.getType() ? Integer.compare(o1.getPriority(), o2.getPriority()) : o1.getType().isAssignableFrom(o2.getType()) ? 1 : -1);
+  public static final Comparator<TypeProviderResource<?>> providerResourceComparator = Comparator.nullsFirst((o1, o2) -> o1.getType() == o2.getType() ? Integer.compare(o1.getPriority(), o2.getPriority()) : o1.getType().isAssignableFrom(o2.getType()) ? -1 : 1);
 
   private final List<? extends ExceptionMappingProviderResource> exceptionMappers;
   private final List<? extends EntityReaderProviderResource> entityReaders;

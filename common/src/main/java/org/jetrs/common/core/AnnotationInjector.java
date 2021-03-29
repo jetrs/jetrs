@@ -29,6 +29,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.CookieParam;
@@ -73,7 +75,9 @@ public class AnnotationInjector {
     Request.class,
     HttpHeaders.class,
     HttpServletRequest.class,
-    HttpServletResponse.class
+    HttpServletResponse.class,
+    ServletConfig.class,
+    ServletContext.class
   };
 
   private static Class<?> getAssignableContextClass(final Class<?> clazz) {
@@ -86,7 +90,7 @@ public class AnnotationInjector {
 
   private static final Comparator<Constructor<?>> parameterCountComparator = Comparator.comparingInt(Constructor::getParameterCount);
 
-  public static final AnnotationInjector CONTEXT_ONLY = new AnnotationInjector(null, null, null, null, null, null, null);
+  public static final AnnotationInjector CONTEXT_ONLY = new AnnotationInjector(null, null, null, null, null, null, null, null, null);
 
   @SuppressWarnings("unchecked")
   private static final Class<Annotation>[] paramAnnotationTypes = new Class[] {QueryParam.class, PathParam.class, MatrixParam.class, CookieParam.class, HeaderParam.class};
@@ -127,6 +131,8 @@ public class AnnotationInjector {
   private final ContainerRequestContext containerRequestContext;
   private final Request request;
   private final HttpHeaders httpHeaders;
+  private final ServletConfig servletConfig;
+  private final ServletContext servletContext;
   private final HttpServletRequest httpServletRequest;
   private final HttpServletResponse httpServletResponse;
   private final Configuration configuration;
@@ -134,10 +140,12 @@ public class AnnotationInjector {
   // NOTE: Have to leave this non-final because there is a circular reference in the createAnnotationInjector() factory method
   private Providers providers;
 
-  public AnnotationInjector(final ContainerRequestContext containerRequestContext, final Request request, final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse, final HttpHeaders httpHeaders, final Configuration configuration, final Application application) {
+  public AnnotationInjector(final ContainerRequestContext containerRequestContext, final Request request, final ServletConfig servletConfig, final ServletContext servletContext, final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse, final HttpHeaders httpHeaders, final Configuration configuration, final Application application) {
     this.containerRequestContext = containerRequestContext;
     this.request = request;
     this.httpHeaders = httpHeaders;
+    this.servletConfig = servletConfig;
+    this.servletContext = servletContext;
     this.httpServletRequest = httpServletRequest;
     this.httpServletResponse = httpServletResponse;
     this.configuration = configuration;
@@ -159,6 +167,12 @@ public class AnnotationInjector {
 
     if (HttpHeaders.class.isAssignableFrom(contextClass))
       return (T)httpHeaders;
+
+    if (ServletConfig.class.isAssignableFrom(contextClass))
+      return (T)servletConfig;
+
+    if (ServletContext.class.isAssignableFrom(contextClass))
+      return (T)servletContext;
 
     if (HttpServletRequest.class.isAssignableFrom(contextClass))
       return (T)httpServletRequest;

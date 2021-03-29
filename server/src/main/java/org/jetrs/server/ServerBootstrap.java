@@ -98,7 +98,7 @@ class ServerBootstrap extends Bootstrap<ResourceManifest> {
       }
     }
     else {
-      super.addResourceOrProvider(resources, exceptionMappers, entityReaders, entityWriters, requestFilters, responseFilters, readerInterceptors, writerInterceptors, paramConverterProviders, singleton.getClass(), singleton);
+      super.addResourceOrProvider(resources, exceptionMappers, entityReaders, entityWriters, requestFilters, responseFilters, readerInterceptors, writerInterceptors, paramConverterProviders, singleton == null ? clazz : singleton.getClass(), singleton);
     }
   }
 }

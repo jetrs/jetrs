@@ -19,6 +19,8 @@ package org.jetrs.server;
 import java.io.BufferedReader;
 import java.io.IOException;
 
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletInputStream;
 import javax.servlet.annotation.WebInitParam;
@@ -28,7 +30,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -56,13 +57,13 @@ abstract class RestApplicationServlet extends RestHttpServlet {
     return null;
   }
 
-  private static AnnotationInjector createAnnotationInjector(final ContainerRequestContext containerRequestContext, final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse, final HttpHeaders headers, final ResourceContext resourceContext) {
-    final AnnotationInjector annotationInjector = new AnnotationInjector(containerRequestContext, new RequestImpl(httpServletRequest.getMethod()), httpServletRequest, httpServletResponse, headers, resourceContext.getConfiguration(), resourceContext.getApplication());
+  private static AnnotationInjector createAnnotationInjector(final ContainerRequestContext containerRequestContext, final ServletConfig servletConfig, final ServletContext servletContext, final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse, final HttpHeaders headers, final ResourceContext resourceContext) {
+    final AnnotationInjector annotationInjector = new AnnotationInjector(containerRequestContext, new RequestImpl(httpServletRequest.getMethod()), servletConfig, servletContext, httpServletRequest, httpServletResponse, headers, resourceContext.getConfiguration(), resourceContext.getApplication());
     annotationInjector.setProviders(resourceContext.getProviders(annotationInjector));
     return annotationInjector;
   }
 
-  private static void service(final ResourceContext resourceContext, final HttpServletRequestImpl httpServletRequest, final HttpServletResponse httpServletResponse) throws IOException {
+  private static void service(final ResourceContext resourceContext, final ServletConfig servletConfig, final ServletContext servletContext, final HttpServletRequestImpl httpServletRequest, final HttpServletResponse httpServletResponse) throws IOException, ServletException {
     final ContainerResponseContextImpl containerResponseContext = new ContainerResponseContextImpl(httpServletResponse, resourceContext.getWriterInterceptors());
     final HttpHeaders requestHeaders = new HttpHeadersImpl(httpServletRequest);
     final ExecutionContext executionContext = new ExecutionContext(requestHeaders, httpServletResponse, containerResponseContext, resourceContext);
@@ -70,7 +71,7 @@ abstract class RestApplicationServlet extends RestHttpServlet {
     final ContainerRequestContextImpl containerRequestContext; // NOTE: This weird construct is done this way to at least somehow make the two objects cohesive
     httpServletRequest.setRequestContext(containerRequestContext = new ContainerRequestContextImpl(httpServletRequest, containerResponseContext, executionContext, resourceContext.getReaderInterceptors()));
 
-    final AnnotationInjector annotationInjector = createAnnotationInjector(containerRequestContext, httpServletRequest, httpServletResponse, requestHeaders, resourceContext);
+    final AnnotationInjector annotationInjector = createAnnotationInjector(containerRequestContext, servletConfig, servletContext, httpServletRequest, httpServletResponse, requestHeaders, resourceContext);
     final Providers providers = resourceContext.getProviders(annotationInjector);
     ResourceMatch resource = null;
     try {
@@ -97,30 +98,42 @@ abstract class RestApplicationServlet extends RestHttpServlet {
       executionContext.writeResponse(resource, containerRequestContext, providers);
     }
     catch (final IOException | RuntimeException | ServletException e) {
-      final WebApplicationException e1 = e instanceof WebApplicationException ? (WebApplicationException)e : new InternalServerErrorException(e instanceof ServletException && e.getCause() != null ? e.getCause() : e);
+      // (4b) Error
       final Response response;
       try {
-        // (4b) Error
-        response = executionContext.error(providers, e1);
+        response = executionContext.error(providers, e);
+      }
+      catch (final WebApplicationException e1) {
+        e1.addSuppressed(e);
+        throw e1;
+      }
+      catch (final RuntimeException e1) {
+        httpServletResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        e1.addSuppressed(e);
+        throw e1;
+      }
 
+      if (response == null) {
+        httpServletResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        throw e;
+      }
+
+      try {
         // (5b) Filter Response
         executionContext.filterContainerResponse(containerRequestContext, annotationInjector);
 
         // (6b) Write Response
         executionContext.writeResponse(resource, containerRequestContext, providers);
       }
-      catch (final WebApplicationException e2) {
-        e2.addSuppressed(e1);
-        throw e2;
-      }
-      catch (final IOException | RuntimeException e2) {
-        httpServletResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-        e2.addSuppressed(e1);
-        throw e2;
-      }
-
-      if (response.getStatusInfo().getFamily() == Response.Status.Family.SERVER_ERROR)
+      catch (final WebApplicationException e1) {
+        e1.addSuppressed(e);
         throw e1;
+      }
+      catch (final IOException | RuntimeException e1) {
+        httpServletResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        e1.addSuppressed(e);
+        throw e1;
+      }
     }
     finally {
       // (7) Commit Response
@@ -162,7 +175,7 @@ abstract class RestApplicationServlet extends RestHttpServlet {
   @Override
   protected final void service(final HttpServletRequest request, final HttpServletResponse response) throws IOException, ServletException {
     try {
-      service(getResourceContext(), new HttpServletRequestImpl(request) {
+      service(getResourceContext(), getServletConfig(), getServletContext(), new HttpServletRequestImpl(request) {
         // NOTE: Check for the existence of the @Consumes header, and subsequently the Content-Type header in the request,
         // NOTE: only if data is expected (i.e. GET, HEAD, DELETE, OPTIONS methods will not have a body and should thus not
         // NOTE: expect a Content-Type header from the request)

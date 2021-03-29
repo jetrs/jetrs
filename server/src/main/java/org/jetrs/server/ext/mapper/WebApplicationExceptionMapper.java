@@ -18,35 +18,20 @@ package org.jetrs.server.ext.mapper;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
 @Provider
-public class WebApplicationExceptionMapper implements ExceptionMapper<WebApplicationException> {
-  private final boolean verbose;
-
+public class WebApplicationExceptionMapper extends ThrowableMapper<WebApplicationException> {
   public WebApplicationExceptionMapper(final boolean verbose) {
-    this.verbose = verbose;
+    super(verbose);
   }
 
   public WebApplicationExceptionMapper() {
-    this(true);
+    super();
   }
 
   @Override
   public Response toResponse(final WebApplicationException exception) {
-    try (final Response response = exception.getResponse()) {
-      final int status = response.getStatus();
-      final StringBuilder builder = new StringBuilder("{\"status\":").append(status);
-      if (verbose) {
-        final String message = exception.getMessage();
-        if (message != null) {
-          final String prefix = "HTTP " + status + " ";
-          builder.append(",\"message\":\"").append(message.startsWith(prefix) ? message.substring(prefix.length()) : message).append('"');
-        }
-      }
-
-      return Response.fromResponse(response).entity(builder.append('}').toString()).build();
-    }
+    return toResponse(exception, exception.getResponse());
   }
 }

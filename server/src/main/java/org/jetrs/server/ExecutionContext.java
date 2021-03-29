@@ -161,15 +161,26 @@ public class ExecutionContext {
     }
   }
 
-  @SuppressWarnings("unchecked")
-  Response error(final Providers providers, final WebApplicationException e1) throws WebApplicationException {
-    final ExceptionMapper<WebApplicationException> exceptionMapper = providers.getExceptionMapper((Class<WebApplicationException>)e1.getClass());
-    final Response response = exceptionMapper != null ? exceptionMapper.toResponse(e1) : e1.getResponse();
-    setResponse(response, null, null);
-    return response;
+  @SuppressWarnings({"rawtypes", "unchecked"})
+  Response error(final Providers providers, final Throwable t) throws WebApplicationException {
+    Class cls = t.getClass();
+    do {
+      final ExceptionMapper exceptionMapper = providers.getExceptionMapper(cls);
+      if (exceptionMapper != null) {
+        final Response response = exceptionMapper.toResponse(t);
+        if (response != null)
+          return setResponse(response, null, null);
+      }
+    }
+    while ((cls = cls.getSuperclass()) != null);
+
+    if (t instanceof WebApplicationException)
+      return setResponse(((WebApplicationException)t).getResponse(), null, null);
+
+    return null;
   }
 
-  private void setResponse(final Response response, final Annotation[] annotations, final MediaType mediaType) {
+  private Response setResponse(final Response response, final Annotation[] annotations, final MediaType mediaType) {
     containerResponseContext.setEntityStream(null);
 
     // FIXME: Have to hack getting the annotations out of the Response
@@ -194,6 +205,8 @@ public class ExecutionContext {
     for (final Map.Entry<String,List<String>> entry : responseHeaders.entrySet())
       for (final String header : entry.getValue())
         containerResponseHeaders.add(entry.getKey(), header);
+
+    return response;
   }
 
   private void setEntity(final Object entity, final Annotation[] annotations, final MediaType mediaType) {

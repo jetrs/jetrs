@@ -120,7 +120,7 @@ public class InvocationImpl implements Invocation {
 
       final ProvidersImpl providers;
       if (entity != null) {
-        providers = new ProvidersImpl(this.providers, new AnnotationInjector(null, new RequestImpl(method), null, null, new HttpHeadersImpl(connection.getRequestProperties()), null, null));
+        providers = new ProvidersImpl(this.providers, new AnnotationInjector(null, new RequestImpl(method), null, null, null, null, new HttpHeadersImpl(connection.getRequestProperties()), null, null));
         connection.setDoOutput(true);
         final MessageBodyWriter messageBodyWriter = providers.getMessageBodyWriter(entity.getEntity().getClass(), null, entity.getAnnotations(), entity.getMediaType());
         if (messageBodyWriter == null)
