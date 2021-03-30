@@ -32,6 +32,7 @@ import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.ext.RuntimeDelegate;
 
 import org.jetrs.common.ext.delegate.CookieHeaderDelegate;
 import org.jetrs.common.ext.delegate.DateHeaderDelegate;
@@ -122,12 +123,12 @@ public class HttpHeadersImpl extends HttpHeadersMap<String,String,Object> implem
     super(new MirrorMap.Mirror<String,String,Object>() {
       @Override
       public Object valueToReflection(final String key, final String value) {
-        return HttpHeadersUtil.valueToReflection(key, value, false);
+        return HttpHeadersUtil.fromString(key, value, false);
       }
 
       @Override
-      public String reflectionToValue(final String key, final Object reflection) {
-        return HttpHeadersUtil.reflectionToValue(reflection);
+      public String reflectionToValue(final String key, final Object value) {
+        return HttpHeadersUtil.toString(value);
       }
     }, HttpHeadersUtil.qualifier);
   }

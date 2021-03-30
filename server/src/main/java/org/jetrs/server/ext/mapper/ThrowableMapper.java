@@ -16,6 +16,8 @@
 
 package org.jetrs.server.ext.mapper;
 
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
@@ -48,6 +50,7 @@ public class ThrowableMapper<T extends Throwable> implements ExceptionMapper<T> 
       }
     }
 
+    response.getStringHeaders().putSingle(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON);
     return Response.fromResponse(response).entity(builder.append('}').toString()).build();
   }
 }

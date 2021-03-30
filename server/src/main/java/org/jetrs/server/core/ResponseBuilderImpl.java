@@ -35,7 +35,6 @@ import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Variant;
-import javax.ws.rs.ext.RuntimeDelegate;
 
 import org.jetrs.common.core.HttpHeadersImpl;
 import org.jetrs.common.core.ResponseImpl;
@@ -129,15 +128,12 @@ public class ResponseBuilderImpl extends Response.ResponseBuilder implements Clo
   }
 
   @Override
-  @SuppressWarnings("unchecked")
   public Response.ResponseBuilder header(final String name, final Object value) {
-    if (value == null) {
-      headers.getMirrorMap().add(name, null);
-      return this;
-    }
+    if (value != null)
+      headers.getMirrorMap().add(name, value);
+    else
+      headers.getMirrorMap().remove(name);
 
-    final RuntimeDelegate.HeaderDelegate<Object> headerDelegate = (RuntimeDelegate.HeaderDelegate<Object>)RuntimeDelegate.getInstance().createHeaderDelegate(value.getClass());
-    headers.getMirrorMap().add(name, headerDelegate != null ? headerDelegate.toString(value) : value.toString());
     return this;
   }
 

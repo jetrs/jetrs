@@ -31,13 +31,13 @@ final class HttpHeaderMirrors {
     if (mirror == null) {
       forward.put(key, mirror = new MirrorList.Mirror<String,Object>() {
         @Override
-        public Object valueToReflection(final String reflection) {
-          return HttpHeadersUtil.valueToReflection(key, reflection, true);
+        public Object valueToReflection(final String value) {
+          return HttpHeadersUtil.fromString(key, value, true);
         }
 
         @Override
         public String reflectionToValue(final Object value) {
-          return HttpHeadersUtil.reflectionToValue(value);
+          return HttpHeadersUtil.toString(value);
         }
       });
 
@@ -53,12 +53,12 @@ final class HttpHeaderMirrors {
       reverse.put(key, mirror = new MirrorList.Mirror<Object,String>() {
         @Override
         public String valueToReflection(final Object value) {
-          return HttpHeadersUtil.reflectionToValue(value);
+          return HttpHeadersUtil.toString(value);
         }
 
         @Override
-        public Object reflectionToValue(final String reflection) {
-          return HttpHeadersUtil.valueToReflection(key, reflection, true);
+        public Object reflectionToValue(final String value) {
+          return HttpHeadersUtil.fromString(key, value, true);
         }
       });
 

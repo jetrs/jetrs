@@ -35,6 +35,7 @@ import org.jetrs.common.core.UriBuilderImpl;
 import org.jetrs.common.ext.delegate.CacheControlHeaderDelegate;
 import org.jetrs.common.ext.delegate.CookieHeaderDelegate;
 import org.jetrs.common.ext.delegate.DateHeaderDelegate;
+import org.jetrs.common.ext.delegate.DefaultHeaderDelegate;
 import org.jetrs.common.ext.delegate.MediaTypeHeaderDelegate;
 import org.jetrs.common.ext.delegate.NewCookieHeaderDelegate;
 import org.jetrs.common.ext.delegate.StringArrayHeaderDelegate;
@@ -60,29 +61,41 @@ public abstract class RuntimeDelegateImpl extends RuntimeDelegate {
     throw new UnsupportedOperationException();
   }
 
+  private static final MediaTypeHeaderDelegate mediaTypeHeaderDelegate = new MediaTypeHeaderDelegate();
+  private static final DateHeaderDelegate dateHeaderDelegate = new DateHeaderDelegate();
+  private static final StringArrayHeaderDelegate stringArrayHeaderDelegate = new StringArrayHeaderDelegate();
+  private static final StringHeaderDelegate stringHeaderDelegate = new StringHeaderDelegate();
+  private static final CacheControlHeaderDelegate cacheControlHeaderDelegate = new CacheControlHeaderDelegate();
+  private static final NewCookieHeaderDelegate newCookieHeaderDelegate = new NewCookieHeaderDelegate();
+  private static final CookieHeaderDelegate cookieHeaderDelegate = new CookieHeaderDelegate();
+  private static final DefaultHeaderDelegate defaultHeaderDelegate = new DefaultHeaderDelegate();
+
   @Override
   @SuppressWarnings("unchecked")
   public <T>HeaderDelegate<T> createHeaderDelegate(final Class<T> type) {
+    if (type == null)
+      throw new IllegalArgumentException("type is null");
+
     if (MediaType.class.isAssignableFrom(type))
-      return (HeaderDelegate<T>)new MediaTypeHeaderDelegate();
+      return (HeaderDelegate<T>)mediaTypeHeaderDelegate;
 
     if (Date.class.isAssignableFrom(type))
-      return (HeaderDelegate<T>)new DateHeaderDelegate();
+      return (HeaderDelegate<T>)dateHeaderDelegate;
 
     if (String[].class.isAssignableFrom(type))
-      return (HeaderDelegate<T>)new StringArrayHeaderDelegate();
+      return (HeaderDelegate<T>)stringArrayHeaderDelegate;
 
     if (String.class.isAssignableFrom(type))
-      return (HeaderDelegate<T>)new StringHeaderDelegate();
+      return (HeaderDelegate<T>)stringHeaderDelegate;
 
     if (CacheControl.class.isAssignableFrom(type))
-      return (HeaderDelegate<T>)new CacheControlHeaderDelegate();
+      return (HeaderDelegate<T>)cacheControlHeaderDelegate;
 
     if (NewCookie.class.isAssignableFrom(type))
-      return (HeaderDelegate<T>)new NewCookieHeaderDelegate();
+      return (HeaderDelegate<T>)newCookieHeaderDelegate;
 
     if (Cookie.class.isAssignableFrom(type))
-      return (HeaderDelegate<T>)new CookieHeaderDelegate();
+      return (HeaderDelegate<T>)cookieHeaderDelegate;
 
     if (EntityTag.class.isAssignableFrom(type))
       throw new UnsupportedOperationException();
@@ -90,7 +103,7 @@ public abstract class RuntimeDelegateImpl extends RuntimeDelegate {
     if (Link.class.isAssignableFrom(type))
       throw new UnsupportedOperationException();
 
-    return null;
+    return (HeaderDelegate<T>)defaultHeaderDelegate;
   }
 
   @Override

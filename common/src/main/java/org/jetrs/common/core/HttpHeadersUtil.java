@@ -33,6 +33,7 @@ import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.NewCookie;
+import javax.ws.rs.ext.RuntimeDelegate;
 
 import org.jetrs.common.ext.delegate.CookieHeaderDelegate;
 import org.jetrs.common.ext.delegate.DateHeaderDelegate;
@@ -48,7 +49,7 @@ import org.libj.util.primitive.ArrayFloatList;
 import org.libj.util.primitive.FloatComparator;
 
 final class HttpHeadersUtil {
-  static Object valueToReflection(final String key, final String value, final boolean single) {
+  static Object fromString(final String key, final String value, final boolean single) {
     Objects.requireNonNull(key);
     if (value == null)
       return null;
@@ -64,49 +65,13 @@ final class HttpHeadersUtil {
     return value;
   }
 
-  static String reflectionToValue(final Object value) {
+  @SuppressWarnings("unchecked")
+  static String toString(final Object value) {
     if (value == null)
       return null;
 
-    if (value instanceof String)
-      return (String)value;
-
-    if (value instanceof MediaType)
-      return value.toString();
-
-    if (value instanceof Locale)
-      return value.toString();
-
-    if (value instanceof Charset)
-      return value.toString();
-
-    if (value instanceof Date)
-      return DateHeaderDelegate.format((Date)value);
-
-    if (value instanceof URI)
-      return value.toString();
-
-    if (value instanceof CacheControl)
-      return value.toString();
-
-    if (value instanceof NewCookie)
-      return value.toString();
-
-    // NOTE: It is assumed that the only Map in here is a Map of cookies
-    if (value instanceof Map) {
-      final StringBuilder builder = new StringBuilder();
-      final Iterator<?> iterator = ((Map<?,?>)value).values().iterator();
-      for (int i = 0; iterator.hasNext(); ++i) {
-        if (i > 0)
-          builder.append(';');
-
-        builder.append(iterator.next());
-      }
-
-      return builder.toString();
-    }
-
-    throw new UnsupportedOperationException("Unsupported type: " + value.getClass());
+    final RuntimeDelegate.HeaderDelegate<Object> headerDelegate = (RuntimeDelegate.HeaderDelegate<Object>)RuntimeDelegate.getInstance().createHeaderDelegate(value.getClass());
+    return headerDelegate != null ? headerDelegate.toString(value) : value.toString();
   }
 
   /**
