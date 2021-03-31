@@ -1,4 +1,4 @@
-/* Copyright (c) 2016 OpenJAX
+/* Copyright (c) 2016 JetRS
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -40,6 +40,7 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.ReaderInterceptorContext;
 
+import org.jetrs.server.AbortFilterChainException;
 import org.jetrs.server.ExecutionContext;
 import org.jetrs.server.core.DefaultSecurityContext;
 import org.jetrs.server.core.UriInfoImpl;
@@ -176,8 +177,7 @@ public class ContainerRequestContextImpl extends InterceptorContextImpl implemen
 
   @Override
   public void abortWith(final Response response) {
-    // FIXME: throw new IllegalStateException if invoked from response filter
-    throw new WebApplicationException(response);
+    throw new AbortFilterChainException(response);
   }
 
   @Override

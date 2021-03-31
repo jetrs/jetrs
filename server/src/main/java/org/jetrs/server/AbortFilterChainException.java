@@ -1,4 +1,4 @@
-/* Copyright (c) 2018 JetRS
+/* Copyright (c) 2021 JetRS
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -14,14 +14,19 @@
  * program. If not, see <http://opensource.org/licenses/MIT/>.
  */
 
-package org.jetrs.common;
+package org.jetrs.server;
 
-import java.lang.reflect.InvocationTargetException;
+import javax.ws.rs.core.Response;
 
-import javax.ws.rs.ext.ExceptionMapper;
+public class AbortFilterChainException extends RuntimeException {
+  private static final long serialVersionUID = -5400569556631732839L;
+  private final Response response;
 
-public class ExceptionMappingProviderResource extends TypeProviderResource<ExceptionMapper<?>> {
-  public ExceptionMappingProviderResource(final Class<ExceptionMapper<?>> clazz, final ExceptionMapper<?> singleton) throws IllegalAccessException, InstantiationException, InvocationTargetException {
-    super(clazz, singleton, getGenericInterfaceFirstTypeArgument(clazz, ExceptionMapper.class, Throwable.class));
+  public AbortFilterChainException(final Response response) {
+    this.response = response;
+  }
+
+  public Response getResponse() {
+    return this.response;
   }
 }

@@ -1,4 +1,4 @@
-/* Copyright (c) 2016 OpenJAX
+/* Copyright (c) 2016 JetRS
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -161,8 +161,12 @@ public class ExecutionContext {
     }
   }
 
+  void setAbortResponse(final AbortFilterChainException e) throws WebApplicationException {
+    setResponse(e.getResponse(), null, null);
+  }
+
   @SuppressWarnings({"rawtypes", "unchecked"})
-  Response error(final Providers providers, final Throwable t) throws WebApplicationException {
+  Response setErrorResponse(final Providers providers, final Throwable t) throws WebApplicationException {
     Class cls = t.getClass();
     do {
       final ExceptionMapper exceptionMapper = providers.getExceptionMapper(cls);

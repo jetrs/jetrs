@@ -17,7 +17,6 @@
 package org.jetrs.common;
 
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 import javax.annotation.Priority;
@@ -27,26 +26,9 @@ import org.jetrs.common.core.AnnotationInjector;
 import org.libj.lang.Classes;
 
 public class ProviderResource<T> {
-  protected static Class<?> getGenericInterfaceType(final Class<?> interfaceType, final Class<?> cls, final Class<?> defaultValue) {
-    final Class<?>[] type = new Class[1];
-    Classes.getClassHierarchy(cls, c -> {
-      final Type[] genericInterfaces = c.getGenericInterfaces();
-      if (genericInterfaces != null && genericInterfaces.length > 0) {
-        for (int i = 0; i < genericInterfaces.length; ++i) {
-          if (genericInterfaces[i].getTypeName().startsWith(interfaceType.getTypeName() + "<")) {
-            final Type typeArgument = ((ParameterizedType)genericInterfaces[i]).getActualTypeArguments()[0];
-            if (typeArgument instanceof Class) {
-              type[0] = (Class<?>)typeArgument;
-              return false;
-            }
-          }
-        }
-      }
-
-      return true;
-    });
-
-    return type[0] != null ? type[0] : defaultValue;
+  protected static Class<?> getGenericInterfaceFirstTypeArgument(final Class<?> cls, final Class<?> interfaceType, final Class<?> defaultValue) {
+    final Type[] typeArguments = Classes.getGenericInterfaceTypeArguments(cls, interfaceType);
+    return typeArguments.length > 0 && typeArguments[0] instanceof Class ? (Class<?>)typeArguments[0] : defaultValue;
   }
 
   private final Class<T> clazz;
