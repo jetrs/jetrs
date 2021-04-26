@@ -114,8 +114,7 @@ abstract class RestApplicationServlet extends RestHttpServlet {
       executionContext.writeResponse(resource, containerRequestContext, providers);
     }
     catch (final IOException | RuntimeException | ServletException e) {
-      final boolean isAbort = e instanceof AbortFilterChainException;
-      if (!isAbort) {
+      if (!(e instanceof AbortFilterChainException)) {
         // (4b) Error
         final Response response;
         try {

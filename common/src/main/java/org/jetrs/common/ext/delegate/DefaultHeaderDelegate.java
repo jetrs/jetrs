@@ -77,6 +77,6 @@ public class DefaultHeaderDelegate implements RuntimeDelegate.HeaderDelegate<Obj
       return builder.toString();
     }
 
-    throw new UnsupportedOperationException("Unsupported type: " + value.getClass());
+    throw new UnsupportedOperationException("Unsupported type: " + value.getClass().getName());
   }
 }
