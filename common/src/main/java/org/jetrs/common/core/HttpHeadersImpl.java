@@ -32,7 +32,6 @@ import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.ext.RuntimeDelegate;
 
 import org.jetrs.common.ext.delegate.CookieHeaderDelegate;
 import org.jetrs.common.ext.delegate.DateHeaderDelegate;
@@ -90,14 +89,18 @@ public class HttpHeadersImpl extends HttpHeadersMap<String,String,Object> implem
    */
   public HttpHeadersImpl(final HttpServletRequest request) {
     this();
-    if (request != null) {
-      final Enumeration<String> headerNames = request.getHeaderNames();
-      while (headerNames.hasMoreElements()) {
-        final String headerName = headerNames.nextElement();
-        final Enumeration<String> enumeration = request.getHeaders(headerName);
-        while (enumeration.hasMoreElements())
-          add(headerName, enumeration.nextElement());
-      }
+    if (request == null)
+      return;
+
+    final Enumeration<String> headerNames = request.getHeaderNames();
+    if (headerNames == null)
+      return;
+
+    while (headerNames.hasMoreElements()) {
+      final String headerName = headerNames.nextElement();
+      final Enumeration<String> enumeration = request.getHeaders(headerName);
+      while (enumeration.hasMoreElements())
+        add(headerName, enumeration.nextElement());
     }
   }
 

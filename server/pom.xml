@@ -36,6 +36,11 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
+      <groupId>org.openjax.security</groupId>
+      <artifactId>cert</artifactId>
+      <version>0.3.4-SNAPSHOT</version>
+    </dependency>
+    <dependency>
       <groupId>org.openjax</groupId>
       <artifactId>jetty</artifactId>
       <version>9.4.28-SNAPSHOT</version>

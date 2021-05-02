@@ -19,7 +19,6 @@ package org.jetrs.server.container;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -62,13 +61,9 @@ public class ContainerRequestContextImpl extends InterceptorContextImpl implemen
   private InputStream entityStream;
 
   public ContainerRequestContextImpl(final HttpServletRequest httpServletRequest, final ContainerResponseContextImpl containerResponseContext, final ExecutionContext executionContext, final ReaderInterceptor[] readerInterceptors) {
-    super(getAcceptableLanguage(executionContext.getRequestHeaders()), containerResponseContext.properties);
+    super(getAcceptableLanguage(executionContext.getRequestHeaders()), containerResponseContext.request);
     this.readerInterceptors = readerInterceptors;
     this.method = httpServletRequest.getMethod();
-    final Enumeration<String> attributes = httpServletRequest.getAttributeNames();
-    for (String attribute; attributes.hasMoreElements();)
-      properties.put(attribute = attributes.nextElement(), httpServletRequest.getAttribute(attribute));
-
     this.httpServletRequest = httpServletRequest;
     this.headers = executionContext.getRequestHeaders();
     this.accept = this.headers.getAcceptableMediaTypes();

@@ -73,7 +73,7 @@ abstract class RestApplicationServlet extends RestHttpServlet {
   }
 
   private static void service(final ResourceContext resourceContext, final ServletConfig servletConfig, final ServletContext servletContext, final HttpServletRequestImpl httpServletRequest, final HttpServletResponse httpServletResponse) throws IOException, ServletException {
-    final ContainerResponseContextImpl containerResponseContext = new ContainerResponseContextImpl(httpServletResponse, resourceContext.getWriterInterceptors());
+    final ContainerResponseContextImpl containerResponseContext = new ContainerResponseContextImpl(httpServletRequest, httpServletResponse, resourceContext.getWriterInterceptors());
     final HttpHeaders requestHeaders = new HttpHeadersImpl(httpServletRequest);
     final ExecutionContext executionContext = new ExecutionContext(requestHeaders, httpServletResponse, containerResponseContext, resourceContext);
 

@@ -22,10 +22,10 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.core.EntityTag;
@@ -55,8 +55,8 @@ public class ContainerResponseContextImpl extends InterceptorContextImpl impleme
   private Class<?> type;
   private Type genericType;
 
-  public ContainerResponseContextImpl(final HttpServletResponse response, final WriterInterceptor[] writerInterceptors) {
-    super(response.getLocale(), new HashMap<>());
+  public ContainerResponseContextImpl(final HttpServletRequest request, final HttpServletResponse response, final WriterInterceptor[] writerInterceptors) {
+    super(response.getLocale(), request);
     this.headers = new HttpHeadersImpl(response);
     this.writerInterceptors = writerInterceptors;
     this.status = Response.Status.fromStatusCode(response.getStatus());
