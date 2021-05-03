@@ -140,7 +140,7 @@ public abstract class ClientCertificateFilter implements ContainerRequestFilter 
     final CertPathBuilder certPathBuilder = CertPathBuilder.getInstance("PKIX");
     final CertPath certPath = certPathBuilder.build(pkixBuilderParameters).getCertPath();
     if (logger.isDebugEnabled())
-      logger.debug("Certification path built with " + certPath.getCertificates().size() + " X509 Certificates");
+      logger.debug("Certification path built with " + certPath.getCertificates().size() + " X.509 Certificates");
 
     final X509Certificate[] clientCertChain = convertCertPathtoX509CertArray(certPath.getCertificates(), 0, 0);
     if (clientCertChain != null && logger.isDebugEnabled())
@@ -150,19 +150,19 @@ public abstract class ClientCertificateFilter implements ContainerRequestFilter 
   }
 
   private X509Certificate getCertificateFromHeader(final ContainerRequestContext requestContext, final String headerName) {
-    String cert = requestContext.getHeaders().getFirst(Objects.requireNonNull(headerName));
-    if (cert == null || (cert = cert.trim()).length() == 0)
+    String value = requestContext.getHeaders().getFirst(Objects.requireNonNull(headerName));
+    if (value == null || (value = value.trim()).length() == 0)
       return null;
 
-    cert = Strings.trimStartEnd(cert, '"', '"').trim();
+    value = Strings.trimStartEnd(value, '"', '"').trim();
     try {
-      final X509Certificate x509Cert = decodePem(cert);
-      if (x509Cert == null)
-        logger.warn("HTTP header \"" + headerName + "\" does not contain a valid x.509 certificate\n" + cert);
+      final X509Certificate cert = decodePem(value);
+      if (cert == null)
+        logger.warn("Invalid X.509 certificate in header \"" + headerName + "\": " + value);
       else if (logger.isDebugEnabled())
-        logger.debug("Found a valid x.509 certificate in \"" + headerName + "\" HTTP header");
+        logger.debug("Valid X.509 certificate in header \"" + headerName + "\"");
 
-      return x509Cert;
+      return cert;
     }
     catch (final CertificateException e) {
       logger.error(e.getMessage(), e);
@@ -267,7 +267,7 @@ public abstract class ClientCertificateFilter implements ContainerRequestFilter 
       logger.debug("Client certificate: SubjectDN=[" + clientCert.getSubjectDN() + "] SerialNumber=[" + clientCert.getSerialNumber() + "]");
 
     try {
-      return buildCertificateChain(clientCert, trustedRootCerts, intermediateCerts);
+      return buildCertificateChain(clientCert, trustedRootCerts, new HashSet<>(intermediateCerts));
     }
     catch (final CertPathBuilderException e) {
       if ("unable to find valid certification path to requested target".equals(e.getMessage())) {
