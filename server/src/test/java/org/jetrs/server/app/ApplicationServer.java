@@ -27,11 +27,11 @@ import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.ext.RuntimeDelegate;
 
-import org.jetrs.common.ext.provider.BytesProvider;
-import org.jetrs.common.ext.provider.InputStreamProvider;
-import org.jetrs.common.ext.provider.StringProvider;
+import org.jetrs.provider.ext.BytesProvider;
+import org.jetrs.provider.ext.InputStreamProvider;
+import org.jetrs.provider.ext.StringProvider;
+import org.jetrs.provider.ext.mapper.WebApplicationExceptionMapper;
 import org.jetrs.server.app.service.FileUploadService;
-import org.jetrs.server.ext.mapper.WebApplicationExceptionMapper;
 import org.libj.util.function.Throwing;
 import org.openjax.jetty.EmbeddedServletContainer;
 import org.openjax.jetty.UncaughtServletExceptionHandler;

@@ -44,7 +44,7 @@ import javax.ws.rs.ext.Providers;
 
 import org.jetrs.common.ProviderResource;
 import org.jetrs.common.core.AnnotationInjector;
-import org.jetrs.common.util.MediaTypes;
+import org.jetrs.provider.util.MediaTypes;
 import org.jetrs.server.container.ContainerRequestContextImpl;
 import org.libj.lang.Identifiers;
 import org.slf4j.Logger;

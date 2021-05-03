@@ -35,7 +35,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.NewCookie;
 
 import org.jetrs.common.ext.RuntimeDelegateTest;
-import org.jetrs.common.ext.delegate.DateHeaderDelegate;
+import org.jetrs.provider.ext.delegate.DateHeaderDelegate;
 import org.junit.Test;
 import org.libj.lang.Numbers;
 import org.libj.util.Locales;

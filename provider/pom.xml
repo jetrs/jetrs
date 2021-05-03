@@ -1,5 +1,5 @@
 <!--
-  Copyright (c) 2016 JetRS
+  Copyright (c) 2021 JetRS
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -24,22 +24,18 @@
     <artifactId>jetrs</artifactId>
     <version>2.1.0-alpha-4-SNAPSHOT</version>
   </parent>
-  <artifactId>server</artifactId>
-  <name>JetRS Server</name>
-  <description>
-    A fast and lightweight implementation of Java's JAX-RS 2.1 server specification built to run in a servlet container.
-  </description>
+  <artifactId>provider</artifactId>
+  <name>JetRS Provider</name>
   <dependencies>
     <dependency>
-      <groupId>org.jetrs</groupId>
-      <artifactId>common</artifactId>
-      <version>${project.version}</version>
+      <groupId>org.libj</groupId>
+      <artifactId>io</artifactId>
+      <version>0.7.8-SNAPSHOT</version>
     </dependency>
     <dependency>
-      <groupId>org.openjax</groupId>
-      <artifactId>jetty</artifactId>
-      <version>9.4.28-SNAPSHOT</version>
-      <scope>test</scope>
+      <groupId>org.openjax.security</groupId>
+      <artifactId>cert</artifactId>
+      <version>0.3.4-SNAPSHOT</version>
     </dependency>
   </dependencies>
 </project>

@@ -35,11 +35,11 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.ext.RuntimeDelegate;
 
-import org.jetrs.common.ext.delegate.CookieHeaderDelegate;
-import org.jetrs.common.ext.delegate.DateHeaderDelegate;
-import org.jetrs.common.util.MediaTypes;
 import org.jetrs.common.util.MirrorQualityList;
 import org.jetrs.common.util.Responses;
+import org.jetrs.provider.ext.delegate.CookieHeaderDelegate;
+import org.jetrs.provider.ext.delegate.DateHeaderDelegate;
+import org.jetrs.provider.util.MediaTypes;
 import org.libj.io.Charsets;
 import org.libj.lang.Numbers;
 import org.libj.util.CollectionUtil;

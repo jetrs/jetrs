@@ -29,7 +29,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.ReaderInterceptorContext;
 
 import org.jetrs.common.core.HttpHeadersImpl;
-import org.jetrs.common.util.MediaTypes;
+import org.jetrs.provider.util.MediaTypes;
 
 public abstract class ReaderInterceptorContextImpl implements ReaderInterceptorContext {
   private final HttpHeadersImpl headers;

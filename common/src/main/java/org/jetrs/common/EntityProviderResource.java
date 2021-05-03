@@ -23,7 +23,7 @@ import java.lang.reflect.Type;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.core.MediaType;
 
-import org.jetrs.common.util.MediaTypes;
+import org.jetrs.provider.util.MediaTypes;
 
 public abstract class EntityProviderResource<T> extends TypeProviderResource<T> {
   private final MediaType[] allowedTypes;

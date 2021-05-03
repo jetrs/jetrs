@@ -33,11 +33,11 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
-import org.jetrs.common.ext.delegate.CookieHeaderDelegate;
-import org.jetrs.common.ext.delegate.DateHeaderDelegate;
 import org.jetrs.common.util.HttpHeadersMap;
 import org.jetrs.common.util.MirrorMultivaluedMap;
 import org.jetrs.common.util.MirrorQualityList;
+import org.jetrs.provider.ext.delegate.CookieHeaderDelegate;
+import org.jetrs.provider.ext.delegate.DateHeaderDelegate;
 import org.libj.lang.Numbers;
 import org.libj.util.CollectionUtil;
 import org.libj.util.Locales;

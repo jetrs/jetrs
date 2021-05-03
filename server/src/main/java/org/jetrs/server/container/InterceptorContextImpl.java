@@ -30,8 +30,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.InterceptorContext;
 
-import org.jetrs.common.ext.delegate.DateHeaderDelegate;
-import org.jetrs.common.util.MediaTypes;
+import org.jetrs.provider.ext.delegate.DateHeaderDelegate;
+import org.jetrs.provider.util.MediaTypes;
 import org.libj.lang.EnumerationIterator;
 import org.libj.lang.Enumerations;
 

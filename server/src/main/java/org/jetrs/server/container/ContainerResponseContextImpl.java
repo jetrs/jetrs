@@ -42,7 +42,7 @@ import javax.ws.rs.ext.WriterInterceptor;
 import javax.ws.rs.ext.WriterInterceptorContext;
 
 import org.jetrs.common.core.HttpHeadersImpl;
-import org.jetrs.common.util.ProviderUtil;
+import org.jetrs.provider.util.ProviderUtil;
 
 public class ContainerResponseContextImpl extends InterceptorContextImpl implements ContainerResponseContext, WriterInterceptorContext {
   private final WriterInterceptor[] writerInterceptors;

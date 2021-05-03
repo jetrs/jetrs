@@ -59,8 +59,8 @@ import org.jetrs.common.core.RequestImpl;
 import org.jetrs.common.core.ResponseImpl;
 import org.jetrs.common.ext.ProvidersImpl;
 import org.jetrs.common.util.MirrorMultivaluedMap;
-import org.jetrs.common.util.ProviderUtil;
 import org.jetrs.common.util.Responses;
+import org.jetrs.provider.util.ProviderUtil;
 import org.libj.util.CollectionUtil;
 import org.libj.util.Dates;
 

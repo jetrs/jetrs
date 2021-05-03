@@ -31,7 +31,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
-import org.jetrs.common.util.MediaTypes;
+import org.jetrs.provider.util.MediaTypes;
 import org.libj.lang.IllegalAnnotationException;
 
 class ResourceAnnotationProcessor<T extends Annotation> {

@@ -32,14 +32,14 @@ import javax.ws.rs.core.Variant.VariantListBuilder;
 import javax.ws.rs.ext.RuntimeDelegate;
 
 import org.jetrs.common.core.UriBuilderImpl;
-import org.jetrs.common.ext.delegate.CacheControlHeaderDelegate;
-import org.jetrs.common.ext.delegate.CookieHeaderDelegate;
-import org.jetrs.common.ext.delegate.DateHeaderDelegate;
-import org.jetrs.common.ext.delegate.DefaultHeaderDelegate;
-import org.jetrs.common.ext.delegate.MediaTypeHeaderDelegate;
-import org.jetrs.common.ext.delegate.NewCookieHeaderDelegate;
-import org.jetrs.common.ext.delegate.StringArrayHeaderDelegate;
-import org.jetrs.common.ext.delegate.StringHeaderDelegate;
+import org.jetrs.provider.ext.delegate.CacheControlHeaderDelegate;
+import org.jetrs.provider.ext.delegate.CookieHeaderDelegate;
+import org.jetrs.provider.ext.delegate.DateHeaderDelegate;
+import org.jetrs.provider.ext.delegate.DefaultHeaderDelegate;
+import org.jetrs.provider.ext.delegate.MediaTypeHeaderDelegate;
+import org.jetrs.provider.ext.delegate.NewCookieHeaderDelegate;
+import org.jetrs.provider.ext.delegate.StringArrayHeaderDelegate;
+import org.jetrs.provider.ext.delegate.StringHeaderDelegate;
 
 public abstract class RuntimeDelegateImpl extends RuntimeDelegate {
   private static final String serverRuntimeDelegateClassName = "org.jetrs.server.ext.ServerRuntimeDelegate";

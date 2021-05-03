@@ -60,6 +60,7 @@
     </developer>
   </developers>
   <modules>
+    <module>provider</module>
     <module>common</module>
     <module>client</module>
     <module>server</module>
