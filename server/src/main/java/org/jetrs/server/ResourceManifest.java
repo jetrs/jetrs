@@ -221,6 +221,7 @@ public class ResourceManifest {
     if (authenticationScheme != null)
       builder.append(authenticationScheme).append(' ');
 
+    // FIXME: What about "Proxy-Authenticate"?
     final String[] roles = rolesAllowed.value();
     builder.append("realm=\"").append(roles[0]).append('"');
     final String challenge = builder.toString();
