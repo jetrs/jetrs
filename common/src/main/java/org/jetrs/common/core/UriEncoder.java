@@ -278,7 +278,7 @@ final class UriEncoder {
   static CharSequence replaceBraces(final String string) {
     CharSequence sequence = string;
     char[] chars = null;
-    for (int i = 0, open = 0; i < string.length(); ++i) {
+    for (int i = 0, open = 0, len = string.length(); i < len; ++i) {
       if (sequence.charAt(i) == '{') {
         if (open++ != 0) {
           if (sequence == string) {

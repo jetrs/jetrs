@@ -62,7 +62,7 @@ public class ResourceContext {
     if (readerInterceptors.size() > 0) {
       readerInterceptors.sort(ProvidersImpl.providerResourceComparator);
       this.readerInterceptors = new ReaderInterceptor[readerInterceptors.size()];
-      for (int i = 0; i < readerInterceptors.size(); ++i)
+      for (int i = 0, len = readerInterceptors.size(); i < len; ++i)
         this.readerInterceptors[i] = readerInterceptors.get(i).getMatchInstance();
     }
     else {
@@ -72,7 +72,7 @@ public class ResourceContext {
     if (writerInterceptors.size() > 0) {
       writerInterceptors.sort(ProvidersImpl.providerResourceComparator);
       this.writerInterceptors = new WriterInterceptor[writerInterceptors.size()];
-      for (int i = 0; i < readerInterceptors.size(); ++i)
+      for (int i = 0, len = readerInterceptors.size(); i < len; ++i)
         this.writerInterceptors[i] = writerInterceptors.get(i).getMatchInstance();
     }
     else {

@@ -256,7 +256,7 @@ public class HttpHeadersImpl extends HttpHeadersMap<String,String,Object> implem
       return "";
 
     final StringBuilder builder = new StringBuilder();
-    for (int i = 0; i < values.size(); ++i) {
+    for (int i = 0, len = values.size(); i < len; ++i) {
       if (i > 0)
         builder.append(',');
 
