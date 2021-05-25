@@ -16,13 +16,24 @@
 
 package org.jetrs.server;
 
+import java.io.IOException;
+import java.util.List;
+
+import javax.servlet.ServletException;
+import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.ext.ParamConverterProvider;
+
+import org.jetrs.common.ProviderResource;
+import org.jetrs.common.core.AnnotationInjector;
+import org.jetrs.server.container.ContainerRequestContextImpl;
 
 public class ResourceMatch {
   private final ResourceManifest manifest;
   private final MediaType accept;
+  private final ClientErrorException securityException;
 
-  public ResourceMatch(final ResourceManifest manifest, final MediaType accept) {
+  public ResourceMatch(final ResourceManifest manifest, final MediaType accept, final ClientErrorException securityException) {
     this.manifest = manifest;
     if (manifest == null)
       throw new IllegalArgumentException("manifest == null");
@@ -30,6 +41,8 @@ public class ResourceMatch {
     this.accept = accept;
     if (accept == null)
       throw new IllegalArgumentException("accept == null");
+
+    this.securityException = securityException;
   }
 
   public ResourceManifest getManifest() {
@@ -38,6 +51,17 @@ public class ResourceMatch {
 
   public MediaType getAccept() {
     return this.accept;
+  }
+
+  public ClientErrorException getSecurityException() {
+    return this.securityException;
+  }
+
+  public Object service(final ContainerRequestContextImpl containerRequestContext, final AnnotationInjector annotationInjector, final List<ProviderResource<ParamConverterProvider>> paramConverterProviders) throws IOException, ServletException {
+    if (securityException != null)
+      throw securityException;
+
+    return manifest.service(containerRequestContext, annotationInjector, paramConverterProviders);
   }
 
   @Override

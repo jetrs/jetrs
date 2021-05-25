@@ -19,6 +19,7 @@ package org.jetrs.server;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Produces;
@@ -173,8 +174,9 @@ public class ResourceContext {
     if (accept == null)
       return filterAndMatch(containerRequestContext, manifests, depth);
 
+    final ClientErrorException securityException = manifest.checkAllowed(containerRequestContext);
     final ResourceMatch[] matches = filterAndMatch(containerRequestContext, manifests, depth + 1);
-    matches[depth] = new ResourceMatch(manifest, accept);
+    matches[depth] = new ResourceMatch(manifest, accept, securityException);
     return matches;
   }
 }

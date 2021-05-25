@@ -24,7 +24,6 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.InternalServerErrorException;
-import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.PathSegment;
@@ -37,12 +36,10 @@ import org.libj.net.URIComponent;
 import org.libj.net.URLs;
 
 public class UriInfoImpl implements UriInfo {
-  private final ContainerRequestContext containerRequestContext;
   private final HttpServletRequest httpServletRequest;
   private final ExecutionContext executionContext;
 
-  public UriInfoImpl(final ContainerRequestContext containerRequestContext, final HttpServletRequest httpServletRequest, final ExecutionContext executionContext) {
-    this.containerRequestContext = containerRequestContext;
+  public UriInfoImpl(final HttpServletRequest httpServletRequest, final ExecutionContext executionContext) {
     this.httpServletRequest = httpServletRequest;
     this.executionContext = executionContext;
   }
@@ -150,17 +147,21 @@ public class UriInfoImpl implements UriInfo {
     return getPathParameters(true);
   }
 
+  private ResourceMatch[] resourceMatches;
+
   private MultivaluedMap<String,String> filterPathParameters(final boolean decode) {
-    final ResourceMatch[] resourceMatches = executionContext.filterAndMatch(containerRequestContext);
-    return resourceMatches == null ? null : resourceMatches[0].getManifest().getPathPattern().getParameters(getPath(decode));
+    if (resourceMatches == null)
+      resourceMatches = executionContext.getResourceMatches();
+
+    return resourceMatches[0].getManifest().getPathPattern().getParameters(getPath(decode));
   }
 
-  private MultivaluedMap<String,String> parametersDecoded;
-  private MultivaluedMap<String,String> parametersEncoded;
+  private MultivaluedMap<String,String> pathParametersDecoded;
+  private MultivaluedMap<String,String> pathParametersEncoded;
 
   @Override
   public MultivaluedMap<String,String> getPathParameters(final boolean decode) {
-    return decode ? (parametersDecoded == null ? parametersDecoded = filterPathParameters(decode) : parametersDecoded) : parametersEncoded == null ? parametersEncoded = filterPathParameters(decode) : parametersEncoded;
+    return decode ? (pathParametersDecoded == null ? pathParametersDecoded = filterPathParameters(decode) : pathParametersDecoded) : pathParametersEncoded == null ? pathParametersEncoded = filterPathParameters(decode) : pathParametersEncoded;
   }
 
   @Override

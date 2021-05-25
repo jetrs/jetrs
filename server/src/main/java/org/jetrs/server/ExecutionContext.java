@@ -22,7 +22,9 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -50,6 +52,13 @@ import org.libj.util.ArrayUtil;
 import org.libj.util.ObservableList;
 
 public class ExecutionContext {
+  private static final Comparator<ResourceMatch> comparator = new Comparator<ResourceMatch>() {
+    @Override
+    public int compare(final ResourceMatch o1, final ResourceMatch o2) {
+      return o1.getSecurityException() == null ? -1 : o2.getSecurityException() != null ? 0 : 1;
+    }
+  };
+
   private final HttpHeaders requestHeaders;
   private final HttpServletResponse httpServletResponse;
   private final ContainerResponseContextImpl containerResponseContext;
@@ -62,23 +71,24 @@ public class ExecutionContext {
     this.resourceContext = resourceContext;
   }
 
+  private ResourceMatch[] resourceMatches;
   private List<String> matchedURIs;
   private List<String> decodedMatchedURIs;
   private List<Object> matchedResources;
   private ByteArrayOutputStream entityStream;
 
-  public ResourceMatch[] filterAndMatch(final ContainerRequestContext containerRequestContext) {
-    return resourceContext.filterAndMatch(containerRequestContext);
-  }
-
   ResourceMatch filterAndMatch(final ContainerRequestContext containerRequestContext, final AnnotationInjector annotationInjector) {
-    final ResourceMatch[] resources = filterAndMatch(containerRequestContext);
-    if (resources == null)
+    final ResourceMatch[] resourceMatches = resourceContext.filterAndMatch(containerRequestContext);
+    if (resourceMatches == null)
       return null;
 
-    final List<String> matchedURIs = new ArrayList<>(resources.length);
-    final List<String> decodedMatchedURIs = new ArrayList<>(resources.length);
-    final List<Object> matchedResources = new ObservableList<Object>(new ArrayList<>(resources.length)) {
+    if (this.resourceMatches != null)
+      throw new IllegalStateException(getClass().getSimpleName() + ".filterAndMatch(" + ResourceMatch.class.getSimpleName() + "," + AnnotationInjector.class.getSimpleName() + ") has already been called");
+
+    this.resourceMatches = resourceMatches;
+    final List<String> matchedURIs = new ArrayList<>(resourceMatches.length);
+    final List<String> decodedMatchedURIs = new ArrayList<>(resourceMatches.length);
+    final List<Object> matchedResources = new ObservableList<Object>(new ArrayList<>(resourceMatches.length)) {
       @Override
       protected void beforeGet(final int index, final ListIterator<Object> iterator) {
         final Object object = this.target.get(index);
@@ -103,17 +113,25 @@ public class ExecutionContext {
       }
     };
 
-    for (final ResourceMatch resource : resources) {
-      matchedURIs.add(resource.getManifest().getPathPattern().getURI(false));
-      decodedMatchedURIs.add(resource.getManifest().getPathPattern().getURI(true));
-      matchedResources.add(resource.getManifest().getSingleton() != null ? resource.getManifest().getSingleton() : resource.getManifest().getServiceClass());
+    // FIXME: What is the spec here? How do all the resource matches get handled/processed/priority?
+    // FIXME: For now, just find the first resource that doesn't have a security exception.
+    Arrays.sort(resourceMatches, comparator);
+    for (final ResourceMatch resource : resourceMatches) {
+      final ResourceManifest manifest = resource.getManifest();
+      matchedURIs.add(manifest.getPathPattern().getURI(false));
+      decodedMatchedURIs.add(manifest.getPathPattern().getURI(true));
+      matchedResources.add(manifest.getResource());
     }
 
     this.matchedURIs = Collections.unmodifiableList(matchedURIs);
     this.decodedMatchedURIs = Collections.unmodifiableList(decodedMatchedURIs);
     this.matchedResources = Collections.unmodifiableList(matchedResources);
 
-    return resources[0];
+    return resourceMatches[0];
+  }
+
+  public ResourceMatch[] getResourceMatches() {
+    return resourceMatches;
   }
 
   public List<String> getMatchedURIs(final boolean decode) {
@@ -151,14 +169,11 @@ public class ExecutionContext {
   void service(final ResourceMatch resource, final ContainerRequestContextImpl containerRequestContext, final AnnotationInjector annotationInjector) throws IOException, ServletException {
     setContentType(resource);
 
-    final ResourceManifest manifest = resource.getManifest();
-    final Object content = manifest.service(this, containerRequestContext, annotationInjector, resourceContext.getParamConverterProviders());
-    if (content instanceof Response) {
-      setResponse((Response)content, manifest.getMethodAnnotations(), resource.getAccept());
-    }
-    else if (content != null) {
-      setEntity(content, manifest.getMethodAnnotations(), resource.getAccept());
-    }
+    final Object content = resource.service(containerRequestContext, annotationInjector, resourceContext.getParamConverterProviders());
+    if (content instanceof Response)
+      setResponse((Response)content, resource.getManifest().getMethodAnnotations(), resource.getAccept());
+    else if (content != null)
+      setEntity(content, resource.getManifest().getMethodAnnotations(), resource.getAccept());
   }
 
   void setAbortResponse(final AbortFilterChainException e) throws WebApplicationException {

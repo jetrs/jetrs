@@ -43,7 +43,7 @@ import org.libj.lang.Numbers;
 public class NumberProvider implements MessageBodyReader<Number>, MessageBodyWriter<Number> {
   @Override
   public boolean isReadable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
-    return Number.class.isAssignableFrom(type);
+    return type.isPrimitive() && type != boolean.class && type != char.class || Number.class.isAssignableFrom(type);
   }
 
   @Override
@@ -54,7 +54,7 @@ public class NumberProvider implements MessageBodyReader<Number>, MessageBodyWri
 
   @Override
   public boolean isWriteable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
-    return Number.class.isAssignableFrom(type);
+    return type.isPrimitive() && type != boolean.class && type != char.class || Number.class.isAssignableFrom(type);
   }
 
   @Override

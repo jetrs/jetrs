@@ -55,9 +55,9 @@ public class ContainerRequestContextImpl extends InterceptorContextImpl implemen
 
   private String method;
   private final HttpHeaders headers;
-  private final UriInfo uriInfo;
   private final List<MediaType> accept;
   private final List<Locale> acceptLanguages;
+  private final UriInfo uriInfo;
   private InputStream entityStream;
 
   public ContainerRequestContextImpl(final HttpServletRequest httpServletRequest, final ContainerResponseContextImpl containerResponseContext, final ExecutionContext executionContext, final ReaderInterceptor[] readerInterceptors) {
@@ -68,7 +68,7 @@ public class ContainerRequestContextImpl extends InterceptorContextImpl implemen
     this.headers = executionContext.getRequestHeaders();
     this.accept = this.headers.getAcceptableMediaTypes();
     this.acceptLanguages = this.headers.getAcceptableLanguages();
-    this.uriInfo = new UriInfoImpl(this, httpServletRequest, executionContext);
+    this.uriInfo = new UriInfoImpl(httpServletRequest, executionContext);
   }
 
   @Override

@@ -29,6 +29,7 @@ import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.ServletException;
 import javax.ws.rs.BadRequestException;
+import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.ForbiddenException;
 import javax.ws.rs.HttpMethod;
@@ -47,6 +48,7 @@ import org.jetrs.common.core.AnnotationInjector;
 import org.jetrs.provider.util.MediaTypes;
 import org.jetrs.server.container.ContainerRequestContextImpl;
 import org.libj.lang.Identifiers;
+import org.libj.util.ArrayUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,12 +100,8 @@ public class ResourceManifest {
     this.producesMatcher = new ResourceAnnotationProcessor<>(method, Produces.class);
   }
 
-  Object getSingleton() {
-    return this.singleton;
-  }
-
-  Class<?> getServiceClass() {
-    return this.serviceClass;
+  Object getResource() {
+    return singleton != null ? singleton : serviceClass;
   }
 
   Annotation[] getMethodAnnotations() {
@@ -144,7 +142,7 @@ public class ResourceManifest {
     final Type[] genericParameterTypes = method.getGenericParameterTypes();
     final Annotation[][] parameterAnnotations = method.getParameterAnnotations();
     if (parameters.length == 0)
-      return null;
+      return ArrayUtil.EMPTY_ARRAY;
 
     final Object[] parameterInstances = new Object[parameters.length];
     for (int i = 0; i < parameters.length; ++i) {
@@ -200,12 +198,12 @@ public class ResourceManifest {
     return logMissingHeaderWarning(headerName, annotationClass);
   }
 
-  private static void allow(final Annotation securityAnnotation, final ContainerRequestContext containerRequestContext) {
+  ClientErrorException checkAllowed(final ContainerRequestContext containerRequestContext) {
     if (securityAnnotation instanceof PermitAll)
-      return;
+      return null;
 
     if (securityAnnotation instanceof DenyAll)
-      throw new ForbiddenException("@DenyAll");
+      return new ForbiddenException("@DenyAll");
 
     if (!(securityAnnotation instanceof RolesAllowed))
       throw new UnsupportedOperationException("Unsupported security annotation: " + securityAnnotation.getClass().getName());
@@ -214,7 +212,7 @@ public class ResourceManifest {
     if (containerRequestContext.getSecurityContext().getUserPrincipal() != null)
       for (final String role : rolesAllowed.value())
         if (containerRequestContext.getSecurityContext().isUserInRole(role))
-          return;
+          return null;
 
     final String authenticationScheme = containerRequestContext.getSecurityContext().getAuthenticationScheme();
     final StringBuilder builder = new StringBuilder();
@@ -226,7 +224,7 @@ public class ResourceManifest {
     builder.append("realm=\"").append(roles[0]).append('"');
     final String challenge = builder.toString();
     if (roles.length == 1)
-      throw new NotAuthorizedException(challenge);
+      return new NotAuthorizedException(challenge);
 
     final Object[] challenges = new Object[roles.length - 1];
     final int resetLen = authenticationScheme != null ? authenticationScheme.length() + 1 : 0;
@@ -236,24 +234,12 @@ public class ResourceManifest {
       challenges[i - 1] = builder.toString();
     }
 
-    throw new NotAuthorizedException(challenge, challenges);
+    return new NotAuthorizedException(challenge, challenges);
   }
 
-  Object service(final ExecutionContext executionContext, final ContainerRequestContextImpl containerRequestContext, final AnnotationInjector annotationInjector, final List<ProviderResource<ParamConverterProvider>> paramConverterProviders) throws IOException, ServletException {
-    if (executionContext.getMatchedResources() == null)
-      throw new IllegalStateException("service() called before filterAndMatch()");
-
-    if (executionContext.getMatchedResources().size() == 0)
-      throw new IllegalStateException("should have already issued 404");
-
-    // FIXME: The ExecutionContext instance contains the resource object already instantiated for
-    // FIXME: the serviceClass in this ResourceManifest. The cohesion needs to be made tighter!
-    final Object serviceResource = executionContext.getMatchedResources().get(0);
-    allow(securityAnnotation, containerRequestContext);
-
+  Object service(final ContainerRequestContextImpl containerRequestContext, final AnnotationInjector annotationInjector, final List<ProviderResource<ParamConverterProvider>> paramConverterProviders) throws IOException, ServletException {
     try {
-      final Object[] parameters = getParameters(method, containerRequestContext, annotationInjector, paramConverterProviders);
-      return parameters != null ? method.invoke(serviceResource, parameters) : method.invoke(serviceResource);
+      return method.invoke(getResource(), getParameters(method, containerRequestContext, annotationInjector, paramConverterProviders));
     }
     catch (final IllegalAccessException e) {
       throw new ServletException(e);
