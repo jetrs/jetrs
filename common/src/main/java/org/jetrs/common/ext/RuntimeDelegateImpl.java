@@ -43,14 +43,26 @@ import org.jetrs.provider.ext.delegate.StringHeaderDelegate;
 
 public abstract class RuntimeDelegateImpl extends RuntimeDelegate {
   private static final String serverRuntimeDelegateClassName = "org.jetrs.server.ext.ServerRuntimeDelegate";
+  private static final String serverRuntimeDelegateResource = "org/jetrs/server/ext/ServerRuntimeDelegate.class";
 
   private static boolean isServerPresent(final ClassLoader classLoader) {
-    return classLoader.getResource(serverRuntimeDelegateClassName.replace('.', '/').concat(".class")) != null;
+    return classLoader.getResource(serverRuntimeDelegateResource) != null;
+  }
+
+  private boolean isServerRuntimeDelegate() {
+    Class<?> cls = getClass();
+    do {
+      if (serverRuntimeDelegateClassName.equals(cls.getName()))
+        return true;
+    }
+    while ((cls = cls.getSuperclass()) != RuntimeDelegateImpl.class);
+
+    return false;
   }
 
   public RuntimeDelegateImpl() {
-    if (!serverRuntimeDelegateClassName.equals(getClass().getName()) && (isServerPresent(Thread.currentThread().getContextClassLoader()) || isServerPresent(getClass().getClassLoader()))) {
-      System.setProperty(RuntimeDelegate.JAXRS_RUNTIME_DELEGATE_PROPERTY, serverRuntimeDelegateClassName);
+    if (!isServerRuntimeDelegate() && (isServerPresent(Thread.currentThread().getContextClassLoader()) || isServerPresent(getClass().getClassLoader()))) {
+      System.setProperty(RuntimeDelegate.JAXRS_RUNTIME_DELEGATE_PROPERTY, getClass().getName());
       throw new ServiceConfigurationError("Server is present and should be loaded instead");
     }
   }
