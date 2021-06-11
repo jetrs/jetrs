@@ -77,7 +77,7 @@ public class ExecutionContext {
   private List<Object> matchedResources;
   private ByteArrayOutputStream entityStream;
 
-  ResourceMatch filterAndMatch(final ContainerRequestContext containerRequestContext, final AnnotationInjector annotationInjector) {
+  ResourceMatch[] filterAndMatch(final ContainerRequestContext containerRequestContext, final AnnotationInjector annotationInjector) {
     final ResourceMatch[] resourceMatches = resourceContext.filterAndMatch(containerRequestContext);
     if (resourceMatches == null)
       return null;
@@ -127,7 +127,7 @@ public class ExecutionContext {
     this.decodedMatchedURIs = Collections.unmodifiableList(decodedMatchedURIs);
     this.matchedResources = Collections.unmodifiableList(matchedResources);
 
-    return resourceMatches[0];
+    return resourceMatches;
   }
 
   public ResourceMatch[] getResourceMatches() {

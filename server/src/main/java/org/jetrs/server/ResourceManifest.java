@@ -137,7 +137,7 @@ public class ResourceManifest {
   }
 
   @SuppressWarnings("rawtypes")
-  private static Object[] getParameters(final Method method, final ContainerRequestContextImpl containerRequestContext, final AnnotationInjector annotationInjector, final List<ProviderResource<ParamConverterProvider>> paramConverterProviders) throws IOException {
+  private Object[] getParameters(final ContainerRequestContextImpl containerRequestContext, final AnnotationInjector annotationInjector, final List<ProviderResource<ParamConverterProvider>> paramConverterProviders) throws IOException {
     final Parameter[] parameters = method.getParameters();
     final Type[] genericParameterTypes = method.getGenericParameterTypes();
     final Annotation[][] parameterAnnotations = method.getParameterAnnotations();
@@ -239,7 +239,7 @@ public class ResourceManifest {
 
   Object service(final ContainerRequestContextImpl containerRequestContext, final AnnotationInjector annotationInjector, final List<ProviderResource<ParamConverterProvider>> paramConverterProviders) throws IOException, ServletException {
     try {
-      return method.invoke(getResource(), getParameters(method, containerRequestContext, annotationInjector, paramConverterProviders));
+      return method.invoke(getResource(), getParameters(containerRequestContext, annotationInjector, paramConverterProviders));
     }
     catch (final IllegalAccessException e) {
       throw new ServletException(e);
