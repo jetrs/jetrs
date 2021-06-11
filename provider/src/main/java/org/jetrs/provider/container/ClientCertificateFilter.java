@@ -248,8 +248,11 @@ public abstract class ClientCertificateFilter implements ContainerRequestFilter 
    *          header values of the request.
    * @param clientCertHeader The header name containing a base64-encoded
    *          (Section 4 of [RFC4648]) DER [ITU.X690] PKIX certificate.
-   * @param trustedRootCerts
-   * @param intermediateCerts
+   * @param trustedRootCerts The root certificates of the {@linkplain KeyStore
+   *          Trust Store} specifying the certificate chain.
+   * @param intermediateCerts The intermediate certificates of the
+   *          {@linkplain KeyStore Trust Store} specifying the certificate
+   *          chain.
    * @return A <b>valid</b> certificate chain from the {@code clientCertHeader}
    *         header specifying the client certificate in the provided
    *         {@link ContainerRequestContext} and the {@code trustedRootCerts}
