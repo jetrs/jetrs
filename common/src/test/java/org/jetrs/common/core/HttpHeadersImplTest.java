@@ -37,7 +37,6 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.RuntimeDelegate;
 import javax.ws.rs.ext.RuntimeDelegate.HeaderDelegate;
 
 import org.jetrs.common.ext.RuntimeDelegateTest;
@@ -246,11 +245,7 @@ public class HttpHeadersImplTest extends RuntimeDelegateTest {
   }
 
   private static void test(final String headerName, final Class<?> type, final String ... args) {
-    final HeaderDelegate<?> headerDelegate;
-    if (type != null)
-      headerDelegate = RuntimeDelegate.getInstance().createHeaderDelegate(type);
-    else
-      headerDelegate = Delegate.fromHeaderName(headerName);
+    final HeaderDelegate<?> headerDelegate = Delegate.lookup(headerName, type);
 
     final HttpHeadersImpl strings = new HttpHeadersImpl();
     final List<String> expectedStrings = new ArrayList<>();

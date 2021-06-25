@@ -42,23 +42,6 @@ public abstract class Delegate<T> implements RuntimeDelegate.HeaderDelegate<T> {
   private static final HashMap<String,Delegate<?>> headerNameToDelegate = new HashMap<>();
   private static final ArrayList<Delegate<?>> delegates = new ArrayList<>();
 
-  static final Delegate<Object> DEFAULT = new Delegate<Object>(false) {
-    @Override
-    Class<Object> getType() {
-      return null;
-    }
-
-    @Override
-    public Object fromString(final String value) {
-      return value;
-    }
-
-    @Override
-    public String toString(final Object value) {
-      return value == null ? null : value instanceof String ? (String)value : value.toString();
-    }
-  };
-
   static final Delegate<Object> RETRY_AFTER = new Delegate<Object>(false, "Retry-After") {
     @Override
     Class<Object> getType() {
@@ -384,7 +367,24 @@ public abstract class Delegate<T> implements RuntimeDelegate.HeaderDelegate<T> {
     }
   };
 
-  public static final Delegate<String[]> STRING_ARRAY = new Delegate<String[]>(true) {
+  static final Delegate<Tk> TK = new Delegate<Tk>(true, "Tk") {
+    @Override
+    Class<Tk> getType() {
+      return Tk.class;
+    }
+
+    @Override
+    public Tk fromString(final String value) {
+      return Tk.fromString(value);
+    }
+
+    @Override
+    public String toString(final Tk value) {
+      return value.toString();
+    }
+  };
+
+  static final Delegate<String[]> STRING_ARRAY = new Delegate<String[]>(true) {
     @Override
     Class<String[]> getType() {
       return String[].class;
@@ -432,23 +432,6 @@ public abstract class Delegate<T> implements RuntimeDelegate.HeaderDelegate<T> {
     }
   };
 
-  static final Delegate<Tk> TK = new Delegate<Tk>(true, "Tk") {
-    @Override
-    Class<Tk> getType() {
-      return Tk.class;
-    }
-
-    @Override
-    public Tk fromString(final String value) {
-      return Tk.fromString(value);
-    }
-
-    @Override
-    public String toString(final Tk value) {
-      return value.toString();
-    }
-  };
-
   static final Delegate<java.net.URI> URI = new Delegate<java.net.URI>(true, HttpHeaders.LOCATION) {
     @Override
     Class<java.net.URI> getType() {
@@ -466,8 +449,34 @@ public abstract class Delegate<T> implements RuntimeDelegate.HeaderDelegate<T> {
     }
   };
 
+  public static final Delegate<Object> DEFAULT = new Delegate<Object>(false) {
+    @Override
+    Class<Object> getType() {
+      return null;
+    }
+
+    @Override
+    public Object fromString(final String value) {
+      return value;
+    }
+
+    @Override
+    public String toString(final Object value) {
+      return value == null ? null : value instanceof String ? (String)value : value.toString();
+    }
+  };
+
+  @SuppressWarnings("rawtypes")
+  public static <T>Delegate lookup(final String headerName) {
+    final Delegate delegate = headerNameToDelegate.get(headerName.toLowerCase());
+    return delegate != null ? delegate : DEFAULT;
+  }
+
   @SuppressWarnings("unchecked")
-  public static <T>Delegate<T> fromClass(final Class<T> type) {
+  public static <T>Delegate<T> lookup(final Class<T> type) {
+    if (type == null)
+      return (Delegate<T>)DEFAULT;
+
     for (final Delegate<?> delegate : delegates)
       if (delegate.getType().isAssignableFrom(type))
         return (Delegate<T>)delegate;
@@ -476,9 +485,9 @@ public abstract class Delegate<T> implements RuntimeDelegate.HeaderDelegate<T> {
   }
 
   @SuppressWarnings("rawtypes")
-  public static Delegate fromHeaderName(final String headerName) {
-    final Delegate<?> headerDelegate = headerNameToDelegate.get(headerName.toLowerCase());
-    return headerDelegate != null ? headerDelegate : DEFAULT;
+  public static <T>Delegate lookup(final String headerName, final Class<T> type) {
+    final Delegate delegate = headerNameToDelegate.get(headerName.toLowerCase());
+    return delegate != null && delegate.getClass().isAssignableFrom(type) ? delegate : lookup(type);
   }
 
   abstract Class<T> getType();

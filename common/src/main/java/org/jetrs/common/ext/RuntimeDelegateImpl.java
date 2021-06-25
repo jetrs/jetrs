@@ -65,7 +65,7 @@ public abstract class RuntimeDelegateImpl extends RuntimeDelegate {
     if (type == null)
       throw new IllegalArgumentException("type is null");
 
-    return Delegate.fromClass(type);
+    return Delegate.lookup(type);
   }
 
   @Override

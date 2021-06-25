@@ -201,14 +201,12 @@ public class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements Ht
     super(new MirrorMap.Mirror<String,String,Object>() {
       @Override
       public Object valueToReflection(final String key, final String value) {
-        // FIXME: Move this out of RuntimeDelegateImpl
-        return Delegate.fromHeaderName(key).fromString(value);
+        return value == null ? null : Delegate.lookup(key).fromString(value);
       }
 
       @Override
       public String reflectionToValue(final String key, final Object value) {
-        // FIXME: Move this out of RuntimeDelegateImpl
-        return Delegate.fromHeaderName(key).toString(value);
+        return value == null ? null : Delegate.lookup(key, value.getClass()).toString(value);
       }
     }, new MirrorQualityList.Qualifier<String,Object>() {
       @Override
