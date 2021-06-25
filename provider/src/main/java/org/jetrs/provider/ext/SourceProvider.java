@@ -34,7 +34,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
-import org.jetrs.provider.util.MediaTypes;
+import org.jetrs.provider.ext.header.MediaTypes;
 
 /**
  * JAX-RS 2.1 Section 4.2.4

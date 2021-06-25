@@ -17,6 +17,7 @@
 package org.jetrs.server;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import javax.servlet.ServletConfig;
@@ -25,8 +26,6 @@ import javax.servlet.http.HttpServlet;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.Application;
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.ParamConverterProvider;
 import javax.ws.rs.ext.RuntimeDelegate;
 
@@ -42,10 +41,10 @@ import org.jetrs.server.ext.ServerRuntimeDelegate;
 abstract class RestHttpServlet extends HttpServlet {
   private static final long serialVersionUID = 6825431027711735886L;
 
-  private ResourceContext resourceContext;
+  private ServerContext serverContext;
 
-  protected ResourceContext getResourceContext() {
-    return resourceContext;
+  protected ServerContext getServerContext() {
+    return serverContext;
   }
 
   private final Application application;
@@ -57,7 +56,7 @@ abstract class RestHttpServlet extends HttpServlet {
   @Override
   public void init(final ServletConfig config) throws ServletException {
     super.init(config);
-    final MultivaluedMap<String,ResourceManifest> resources = new MultivaluedHashMap<>();
+    final List<ResourceManifest> resources = new ArrayList<>();
     final ArrayList<ExceptionMappingProviderResource> exceptionMappers = new ArrayList<>();
     final ArrayList<EntityReaderProviderResource> entityReaders = new ArrayList<>();
     final ArrayList<EntityWriterProviderResource> entityWriters = new ArrayList<>();
@@ -90,8 +89,8 @@ abstract class RestHttpServlet extends HttpServlet {
       }
 
       bootstrap.init(singletons, classes, resources, exceptionMappers, entityReaders, entityWriters, requestFilters, responseFilters, readerInterceptors, writerInterceptors, paramConverterProviders);
-      this.resourceContext = new ResourceContext(application, resources, new ContainerFilters(requestFilters, responseFilters), new ProvidersImpl(exceptionMappers, entityReaders, entityWriters), readerInterceptors, writerInterceptors, paramConverterProviders);
-      RuntimeDelegate.setInstance(new ServerRuntimeDelegate(this.resourceContext));
+      this.serverContext = new ServerContext(application, resources, new ContainerFilters(requestFilters, responseFilters), new ProvidersImpl(exceptionMappers, entityReaders, entityWriters), readerInterceptors, writerInterceptors, paramConverterProviders);
+      RuntimeDelegate.setInstance(new ServerRuntimeDelegate(this.serverContext));
     }
     catch (final RuntimeException e) {
       throw e;

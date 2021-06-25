@@ -32,6 +32,7 @@ import org.jetrs.provider.ext.InputStreamProvider;
 import org.jetrs.provider.ext.StringProvider;
 import org.jetrs.provider.ext.mapper.WebApplicationExceptionMapper;
 import org.jetrs.server.app.service.FileUploadService;
+import org.jetrs.server.app.service.RootService1;
 import org.libj.util.function.Throwing;
 import org.openjax.jetty.EmbeddedServletContainer;
 import org.openjax.jetty.UncaughtServletExceptionHandler;
@@ -106,6 +107,7 @@ public class ApplicationServer extends Application implements AutoCloseable {
     singletons.add(new WebApplicationExceptionMapper(true));
 
     // Specific
+    singletons.add(new RootService1());
     singletons.add(new FileUploadService());
     return singletons;
   }

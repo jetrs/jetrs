@@ -1,4 +1,4 @@
-/* Copyright (c) 2016 JetRS
+/* Copyright (c) 2021 JetRS
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -14,21 +14,16 @@
  * program. If not, see <http://opensource.org/licenses/MIT/>.
  */
 
-package org.jetrs.provider.ext.delegate;
+package org.jetrs.provider.ext.header;
 
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.ext.RuntimeDelegate;
+import java.util.LinkedList;
 
-import org.jetrs.provider.util.MediaTypes;
-
-public class MediaTypeHeaderDelegate implements RuntimeDelegate.HeaderDelegate<MediaType> {
-  @Override
-  public MediaType fromString(final String value) {
-    return MediaTypes.parse(value);
-  }
+class DirectiveList<D extends Enum<D>> extends LinkedList<D> {
+  private static final long serialVersionUID = 1724872570085550861L;
 
   @Override
-  public String toString(final MediaType value) {
-    return MediaTypes.toString(value);
+  public boolean add(final D e) {
+    remove(e);
+    return super.add(e);
   }
 }

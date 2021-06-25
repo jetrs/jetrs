@@ -38,25 +38,25 @@ import javax.ws.rs.core.Variant;
 
 import org.jetrs.common.core.HttpHeadersImpl;
 import org.jetrs.common.core.ResponseImpl;
-import org.jetrs.common.util.Responses;
-import org.jetrs.server.ResourceContext;
+import org.jetrs.provider.util.Responses;
+import org.jetrs.server.ServerContext;
 import org.libj.util.Locales;
 
 public class ResponseBuilderImpl extends Response.ResponseBuilder implements Cloneable {
-  private final ResourceContext resourceContext;
+  private final ServerContext serverContext;
   private final HttpHeadersImpl headers;
   private int status;
   private String reasonPhrase;
   private Object entity;
   private Annotation[] annotations;
 
-  public ResponseBuilderImpl(final ResourceContext resourceContext) {
-    this.resourceContext = resourceContext;
+  public ResponseBuilderImpl(final ServerContext serverContext) {
+    this.serverContext = serverContext;
     this.headers = new HttpHeadersImpl();
   }
 
   private ResponseBuilderImpl(final ResponseBuilderImpl copy) {
-    this.resourceContext = copy.resourceContext;
+    this.serverContext = copy.serverContext;
     this.headers = copy.headers.clone();
     this.status = copy.status;
     this.reasonPhrase = copy.reasonPhrase;
@@ -69,10 +69,10 @@ public class ResponseBuilderImpl extends Response.ResponseBuilder implements Clo
   public Response build() {
     // FIXME: Need to reset the builder to a "blank state", as is documented in the javadocs of this method
     final Response.StatusType statusType = reasonPhrase != null ? Responses.from(status, reasonPhrase) : Responses.from(status);
-    if (resourceContext == null)
+    if (serverContext == null)
       return null;
 
-    return new ResponseImpl(resourceContext.getProviders(null), resourceContext.getReaderInterceptors(), statusType, headers, cookies, entity, annotations);
+    return new ResponseImpl(serverContext.getProviders(null), serverContext.getReaderInterceptors(), statusType, headers, cookies, entity, annotations);
   }
 
   @Override

@@ -29,7 +29,6 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.ReaderInterceptorContext;
 
 import org.jetrs.common.core.HttpHeadersImpl;
-import org.jetrs.provider.util.MediaTypes;
 
 public abstract class ReaderInterceptorContextImpl implements ReaderInterceptorContext {
   private final HttpHeadersImpl headers;
@@ -103,12 +102,12 @@ public abstract class ReaderInterceptorContextImpl implements ReaderInterceptorC
 
   @Override
   public MediaType getMediaType() {
-    return MediaTypes.parse(headers.getFirst(HttpHeaders.CONTENT_TYPE));
+    return headers.getMediaType();
   }
 
   @Override
   public void setMediaType(final MediaType mediaType) {
-    headers.putSingle(HttpHeaders.CONTENT_TYPE, mediaType.toString());
+    headers.getMirrorMap().putSingle(HttpHeaders.CONTENT_TYPE, mediaType);
   }
 
   private InputStream is;

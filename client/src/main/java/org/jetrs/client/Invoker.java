@@ -26,12 +26,9 @@ import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MultivaluedMap;
 
 import org.jetrs.common.core.HttpHeadersImpl;
 import org.jetrs.common.ext.ProvidersImpl;
-import org.jetrs.common.util.HttpHeadersMap;
-import org.jetrs.common.util.MirrorMultivaluedMap;
 
 abstract class Invoker<R> {
   final ClientImpl client;
@@ -80,13 +77,12 @@ abstract class Invoker<R> {
 
   public abstract R method(final String name, final Entity<?> entity);
 
-  @SuppressWarnings("unchecked")
-  Invocation build(final String method, final Entity<?> entity, final MultivaluedMap<String,Object> requestHeaders, final List<Cookie> cookies, final CacheControl cacheControl) {
+  Invocation build(final String method, final Entity<?> entity, final HttpHeadersImpl requestHeaders, final List<Cookie> cookies, final CacheControl cacheControl) {
     client.assertNotClosed();
-    final MirrorMultivaluedMap<String,Object,String> headers = requestHeaders == null ? new HttpHeadersImpl().getMirrorMap() : requestHeaders instanceof HttpHeadersMap ? ((HttpHeadersMap<String,Object,String>)requestHeaders).clone() : new HttpHeadersImpl(requestHeaders).getMirrorMap();
-    if (entity != null && entity.getMediaType() != null)
-      headers.putSingle(HttpHeaders.CONTENT_TYPE, entity.getMediaType());
+    final HttpHeadersImpl headers = requestHeaders != null ? requestHeaders.clone() : new HttpHeadersImpl();
+    if (entity != null && entity.getMediaType() != null && headers.getMediaType() == null)
+      headers.getMirrorMap().putSingle(HttpHeaders.CONTENT_TYPE, entity.getMediaType());
 
-    return new InvocationImpl(client, providers, url, method, entity, headers.getMirrorMap(), cookies, cacheControl, executorService, connectTimeout, readTimeout);
+    return new InvocationImpl(client, providers, url, method, entity, headers, cookies, cacheControl, executorService, connectTimeout, readTimeout);
   }
 }

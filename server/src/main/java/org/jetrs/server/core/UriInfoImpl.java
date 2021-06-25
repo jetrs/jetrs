@@ -147,13 +147,13 @@ public class UriInfoImpl implements UriInfo {
     return getPathParameters(true);
   }
 
-  private ResourceMatch[] resourceMatches;
+  private ResourceMatch resourceMatch;
 
   private MultivaluedMap<String,String> filterPathParameters(final boolean decode) {
-    if (resourceMatches == null)
-      resourceMatches = executionContext.getResourceMatches();
+    if (resourceMatch == null)
+      resourceMatch = executionContext.getResourceMatch();
 
-    return resourceMatches[0].getManifest().getPathPattern().getParameters(getPath(decode));
+    return resourceMatch.getManifest().getPathPattern().getParameters(getPath(decode));
   }
 
   private MultivaluedMap<String,String> pathParametersDecoded;
@@ -220,5 +220,10 @@ public class UriInfoImpl implements UriInfo {
   @Override
   public URI relativize(final URI uri) {
     return uri.isAbsolute() ? getRequestUri().relativize(uri) : getRequestUri().relativize(resolve(uri));
+  }
+
+  @Override
+  public String toString() {
+    return getPath(false);
   }
 }

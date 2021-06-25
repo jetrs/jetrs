@@ -23,7 +23,6 @@ import java.net.CookieManager;
 import java.net.HttpCookie;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -58,9 +57,9 @@ import org.jetrs.common.core.HttpHeadersImpl;
 import org.jetrs.common.core.RequestImpl;
 import org.jetrs.common.core.ResponseImpl;
 import org.jetrs.common.ext.ProvidersImpl;
-import org.jetrs.common.util.MirrorMultivaluedMap;
-import org.jetrs.common.util.Responses;
+import org.jetrs.common.util.HttpHeadersMap;
 import org.jetrs.provider.util.ProviderUtil;
+import org.jetrs.provider.util.Responses;
 import org.libj.util.CollectionUtil;
 import org.libj.util.Dates;
 
@@ -70,14 +69,14 @@ public class InvocationImpl implements Invocation {
   private final URL url;
   private final String method;
   private final Entity<?> entity;
-  private final MirrorMultivaluedMap<String,String,Object> headers;
+  private final HttpHeadersMap<String,Object> headers;
   private final List<Cookie> cookies;
   private final CacheControl cacheControl;
   private final ExecutorService executorService;
   private final long connectTimeout;
   private final long readTimeout;
 
-  InvocationImpl(final ClientImpl client, final ProvidersImpl providers, final URL url, final String method, final Entity<?> entity, final MirrorMultivaluedMap<String,String,Object> headers, final List<Cookie> cookies, final CacheControl cacheControl, final ExecutorService executorService, final long connectTimeout, final long readTimeout) {
+  InvocationImpl(final ClientImpl client, final ProvidersImpl providers, final URL url, final String method, final Entity<?> entity, final HttpHeadersMap<String,Object> headers, final List<Cookie> cookies, final CacheControl cacheControl, final ExecutorService executorService, final long connectTimeout, final long readTimeout) {
     this.client = client;
     this.providers = providers;
     this.url = url;
@@ -103,12 +102,14 @@ public class InvocationImpl implements Invocation {
     try {
       final HttpURLConnection connection = (HttpURLConnection)url.openConnection();
       connection.setRequestMethod(method);
-      // FIXME: Casting long to int here
       connection.setConnectTimeout((int)connectTimeout);
       connection.setReadTimeout((int)readTimeout);
-      if (headers != null)
-        for (final Map.Entry<String,List<String>> entry : headers.entrySet())
-          connection.setRequestProperty(entry.getKey(), CollectionUtil.toString(entry.getValue(), ','));
+      if (headers != null) {
+        for (final Map.Entry<String,List<String>> entry : headers.entrySet()) {
+          final String headerName = entry.getKey();
+          connection.setRequestProperty(headerName, CollectionUtil.toString(entry.getValue(), HttpHeadersImpl.getHeaderValueDelimiters(headerName)[0]));
+        }
+      }
 
       if (cookies != null)
         connection.setRequestProperty(HttpHeaders.COOKIE, CollectionUtil.toString(cookies, ';'));
@@ -223,7 +224,7 @@ public class InvocationImpl implements Invocation {
   }
 
   public static class BuilderImpl extends Invoker<Response> implements Invocation.Builder {
-    private MultivaluedMap<String,Object> requestHeaders;
+    private HttpHeadersImpl requestHeaders;
     private List<Cookie> cookies;
     private CacheControl cacheControl;
 
@@ -249,13 +250,13 @@ public class InvocationImpl implements Invocation {
 
     @Override
     public Invocation.Builder accept(final MediaType ... mediaTypes) {
-      getHeaders().put(HttpHeaders.ACCEPT, Arrays.asList(mediaTypes));
+      getHeaders().getMirrorMap().put(HttpHeaders.ACCEPT, Arrays.asList(mediaTypes));
       return this;
     }
 
     @Override
     public Invocation.Builder acceptLanguage(final Locale ... locales) {
-      getHeaders().put(HttpHeaders.ACCEPT_LANGUAGE, Arrays.asList(locales));
+      getHeaders().getMirrorMap().put(HttpHeaders.ACCEPT_LANGUAGE, Arrays.asList(locales));
       return this;
     }
 
@@ -289,29 +290,29 @@ public class InvocationImpl implements Invocation {
       return this;
     }
 
-    private MultivaluedMap<String,Object> getHeaders() {
-      return requestHeaders == null ? requestHeaders = new HttpHeadersImpl().getMirrorMap() : requestHeaders;
+    private HttpHeadersImpl getHeaders() {
+      return requestHeaders == null ? requestHeaders = new HttpHeadersImpl() : requestHeaders;
     }
 
     @Override
     public Invocation.Builder header(final String name, final Object value) {
-      if (value == null) {
+      if (value == null)
         getHeaders().remove(name);
-      }
-      else {
-        final List<Object> header = getHeaders().get(name);
-        if (header != null)
-          header.add(value);
-        else
-          getHeaders().put(name, CollectionUtil.asCollection(new ArrayList<>(), value));
-      }
+      else if (value instanceof String)
+        getHeaders().add(name, (String)value);
+      else
+        getHeaders().getMirrorMap().add(name, value);
 
       return this;
     }
 
     @Override
     public Invocation.Builder headers(final MultivaluedMap<String,Object> headers) {
-      requestHeaders = headers;
+      getHeaders().clear();
+      for (final Map.Entry<String,List<Object>> entry : headers.entrySet())
+        for (final Object value : entry.getValue())
+          header(entry.getKey(), value);
+
       return this;
     }
 

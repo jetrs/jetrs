@@ -83,7 +83,7 @@ public class ClientImpl implements Client, ConfigurableImpl<Client> {
       final ArrayList<WriterInterceptorEntityProviderResource> writerInterceptors = new ArrayList<>();
       final ArrayList<ProviderResource<ParamConverterProvider>> paramConverterProviders = new ArrayList<>();
 
-      final Bootstrap<Void> bootstrap = new Bootstrap<>();
+      final Bootstrap<?> bootstrap = new Bootstrap<>();
       bootstrap.init(config.getInstances(), config.getClasses(), null, exceptionMappers, entityReaders, entityWriters, requestFilters, responseFilters, readerInterceptors, writerInterceptors, paramConverterProviders);
       this.singletons = config.getInstances();
       this.classes = config.getClasses();

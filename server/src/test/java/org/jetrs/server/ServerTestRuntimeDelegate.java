@@ -24,6 +24,6 @@ import org.jetrs.server.ext.ServerRuntimeDelegate;
 
 public class ServerTestRuntimeDelegate extends ServerRuntimeDelegate {
   public ServerTestRuntimeDelegate() {
-    super(new ResourceContext(new Application(), null, null, null, Collections.emptyList(), Collections.emptyList(), null));
+    super(new ServerContext(new Application(), null, null, null, Collections.emptyList(), Collections.emptyList(), null));
   }
 }

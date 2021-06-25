@@ -1,4 +1,4 @@
-/* Copyright (c) 2018 JetRS
+/* Copyright (c) 2021 JetRS
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -14,26 +14,8 @@
  * program. If not, see <http://opensource.org/licenses/MIT/>.
  */
 
-package org.jetrs.provider.ext.delegate;
+package org.jetrs.provider.ext.header;
 
-import javax.ws.rs.ext.RuntimeDelegate;
-
-public class StringHeaderDelegate implements RuntimeDelegate.HeaderDelegate<String> {
-  public static String parse(final String value) {
-    return value;
-  }
-
-  public static String format(final String value) {
-    return value;
-  }
-
-  @Override
-  public String fromString(final String value) {
-    return value;
-  }
-
-  @Override
-  public String toString(final String value) {
-    return value;
-  }
+public interface Qualified {
+  Float getQuality();
 }

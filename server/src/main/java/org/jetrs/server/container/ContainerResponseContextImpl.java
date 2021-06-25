@@ -49,12 +49,6 @@ public class ContainerResponseContextImpl extends InterceptorContextImpl impleme
   private final HttpHeadersImpl headers;
   private Response.StatusType status;
 
-  private OutputStream outputStream;
-  private Object entity;
-
-  private Class<?> type;
-  private Type genericType;
-
   public ContainerResponseContextImpl(final HttpServletRequest request, final HttpServletResponse response, final WriterInterceptor[] writerInterceptors) {
     super(response.getLocale(), request);
     this.headers = new HttpHeadersImpl(response);
@@ -88,7 +82,7 @@ public class ContainerResponseContextImpl extends InterceptorContextImpl impleme
   }
 
   @Override
-  public MultivaluedMap<String,String> getStringHeaders() {
+  public HttpHeadersImpl getStringHeaders() {
     return headers;
   }
 
@@ -137,6 +131,8 @@ public class ContainerResponseContextImpl extends InterceptorContextImpl impleme
     throw new UnsupportedOperationException();
   }
 
+  private Object entity;
+
   @Override
   public boolean hasEntity() {
     return entity != null;
@@ -147,10 +143,14 @@ public class ContainerResponseContextImpl extends InterceptorContextImpl impleme
     return entity;
   }
 
+  private Class<?> type;
+
   @Override
   public Class<?> getEntityClass() {
     return type;
   }
+
+  private Type genericType;
 
   @Override
   public Type getEntityType() {
@@ -185,6 +185,8 @@ public class ContainerResponseContextImpl extends InterceptorContextImpl impleme
   public Annotation[] getEntityAnnotations() {
     return getAnnotations();
   }
+
+  private OutputStream outputStream;
 
   @Override
   public OutputStream getEntityStream() {

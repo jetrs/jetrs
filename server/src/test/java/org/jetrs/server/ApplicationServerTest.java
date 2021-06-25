@@ -16,14 +16,25 @@
 
 package org.jetrs.server;
 
+import static org.junit.Assert.*;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Random;
 
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
+import org.jetrs.provider.ext.BytesProvider;
+import org.jetrs.provider.ext.NumberProvider;
+import org.jetrs.provider.ext.StringProvider;
 import org.jetrs.server.app.ApplicationServer;
 import org.junit.AfterClass;
 import org.junit.Test;
@@ -31,6 +42,15 @@ import org.junit.Test;
 public class ApplicationServerTest {
   private static final Random random = new Random();
   private static final ApplicationServer server = new ApplicationServer();
+  private static final String serviceUrl = "http://localhost:" + server.getContainerPort();
+  private static final Client client;
+
+  static {
+    client = ClientBuilder.newClient();
+    client.register(new NumberProvider());
+    client.register(new BytesProvider());
+    client.register(new StringProvider());
+  }
 
   @Test
   public void testUpload() throws IOException {
@@ -47,6 +67,67 @@ public class ApplicationServerTest {
       out.close();
       connection.getInputStream();
     }
+  }
+
+  @Test
+  public void testMatchGet1() {
+    final Response response = client.target(serviceUrl + "/root1/1")
+      .request()
+      .get();
+
+    assertEquals(200, response.getStatus());
+    // FIXME: Is the client supposed to automatically return a String due to "text/plain" MediaType?!
+    assertEquals("GET", response.readEntity(String.class));
+  }
+
+  @Test
+  public void testMatchOptions1() {
+    final Response response = client.target(serviceUrl + "/root1/1")
+      .request()
+      .options();
+
+    assertEquals(200, response.getStatus());
+    assertEquals("GET,POST", response.getHeaderString("Access-Control-Allow-Methods"));
+  }
+
+  @Test
+  public void testMatchOptions2() {
+    final Response response = client.target(serviceUrl + "/root1/2")
+      .request()
+      .options();
+
+    assertEquals(200, response.getStatus());
+    assertEquals(new HashSet<>(Arrays.asList("HEAD", "GET")), new HashSet<>(Arrays.asList(response.getHeaderString("Access-Control-Allow-Methods").split(","))));
+  }
+
+  @Test
+  public void testMatchPost1String() {
+    Response response = client.target(serviceUrl + "/root1/1")
+      .request()
+      .post(Entity.text("data"));
+
+    assertEquals(405, response.getStatus());
+    response = client.target(serviceUrl + "/root1/1/eyj1ijoicgfub2fpiiwiysi6imnrzmu5")
+      .request()
+      .post(Entity.text("data"));
+
+    assertEquals(200, response.getStatus());
+    assertEquals("POST", response.readEntity(String.class));
+  }
+
+  @Test
+  public void testMatchPost1Int() {
+    Response response = client.target(serviceUrl + "/root1/1")
+      .request()
+      .post(Entity.text("data"));
+
+    assertEquals(405, response.getStatus());
+    response = client.target(serviceUrl + "/root1/1/1")
+      .request()
+      .post(Entity.text("data"));
+
+    assertEquals(200, response.getStatus());
+    assertEquals("POST", response.readEntity(String.class));
   }
 
   @AfterClass

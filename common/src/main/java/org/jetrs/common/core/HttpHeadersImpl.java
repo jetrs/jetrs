@@ -17,10 +17,13 @@
 package org.jetrs.common.core;
 
 import java.net.URI;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -36,11 +39,11 @@ import javax.ws.rs.core.MultivaluedMap;
 import org.jetrs.common.util.HttpHeadersMap;
 import org.jetrs.common.util.MirrorMultivaluedMap;
 import org.jetrs.common.util.MirrorQualityList;
-import org.jetrs.provider.ext.delegate.CookieHeaderDelegate;
-import org.jetrs.provider.ext.delegate.DateHeaderDelegate;
+import org.jetrs.provider.ext.header.Delegate;
+import org.jetrs.provider.ext.header.HeaderUtil;
+import org.jetrs.provider.ext.header.Qualified;
 import org.libj.lang.Numbers;
 import org.libj.util.CollectionUtil;
-import org.libj.util.Locales;
 import org.libj.util.MirrorMap;
 
 /**
@@ -48,9 +51,74 @@ import org.libj.util.MirrorMap;
  * providing a mirrored multi-valued map of headers in {@link String} and
  * {@link Object} representations.
  */
-public class HttpHeadersImpl extends HttpHeadersMap<String,String,Object> implements HttpHeaders {
-  private static final List<Locale> WILDCARD_LOCALE = Collections.unmodifiableList(Collections.singletonList(new Locale("*")));
-  private static final List<MediaType> WILDCARD_ACCEPT = Collections.unmodifiableList(Collections.singletonList(MediaType.WILDCARD_TYPE));
+// FIXME: Multiple message-header fields with the same field-name MAY be
+// FIXME: present in a message if and only if the entire field-value for
+// FIXME: that header field is defined as a comma-separated list [i.e.,
+// FIXME: #(values)]. It MUST be possible to combine the multiple header
+// FIXME: fields into one "field-name: field-value" pair, without changing
+// FIXME: the semantics of the message, by appending each subsequent
+// FIXME: field-value to the first, each separated by a comma. The order
+// FIXME: in which header fields with the same field-name are received is
+// FIXME: therefore significant to the interpretation of the combined field
+// FIXME: value, and thus a proxy MUST NOT change the order of these field
+// FIXME: values when a message is forwarded.
+// FIXME: http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
+// FIXME: Except for COOKIE: https://datatracker.ietf.org/doc/html/rfc6265#section-4.2.1
+public class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeaders {
+  private static final List<Locale> WILDCARD_LOCALE = Arrays.asList(new Locale("*"));
+  private static final List<MediaType> WILDCARD_ACCEPT = Arrays.asList(MediaType.WILDCARD_TYPE);
+  private static final HashMap<String,char[]> headerWithNonCommaDelimiters = new HashMap<>();
+  private static final char[] comma = new char[] {','};
+  private static final char[] semiComma = new char[] {';', ','};
+
+  static {
+    headerWithNonCommaDelimiters.put(HttpHeaders.COOKIE, semiComma);
+  }
+
+  public static char[] getHeaderValueDelimiters(final String headerName) {
+    final char[] delimiters = headerWithNonCommaDelimiters.get(headerName);
+    return delimiters != null ? delimiters : comma;
+  }
+
+  private static void parseHeaderValuesFromString(final List<String> values, final String headerValue, final char[] delimiters) {
+    if (delimiters != null)
+      parseMultiHeaderNoSort(values, headerValue, delimiters);
+    else
+      values.add(headerValue);
+  }
+
+  private static char checkDel(final char ch, final char[] delimiters, final char found) {
+    if (found != '\0')
+      return ch == found ? ch : '\0';
+
+    for (int i = 0; i < delimiters.length; ++i)
+      if (ch == delimiters[i])
+        return ch;
+
+    return '\0';
+  }
+
+  private static void parseMultiHeaderNoSort(final List<String> values, final String header, final char ... delimiters) {
+    String value = null;
+    char ch;
+    char checkDel = '\0', foundDel = '\0';
+    for (int i = 0, start = -1, end = -1, len = header.length(); i <= len; ++i) {
+      if (i == len || (checkDel = checkDel(ch = header.charAt(i), delimiters, foundDel)) != '\0') {
+        if (foundDel == '\0')
+          foundDel = checkDel;
+
+        value = header.substring(start + 1, end + 1);
+        values.add(value);
+        start = end = -1;
+      }
+      else if (ch != ' ') {
+        end = i;
+      }
+      else if (end == -1) {
+        start = i;
+      }
+    }
+  }
 
   /**
    * Creates a new {@link HttpHeadersImpl} with the specified map of headers as
@@ -99,8 +167,15 @@ public class HttpHeadersImpl extends HttpHeadersMap<String,String,Object> implem
     while (headerNames.hasMoreElements()) {
       final String headerName = headerNames.nextElement();
       final Enumeration<String> enumeration = request.getHeaders(headerName);
-      while (enumeration.hasMoreElements())
-        add(headerName, enumeration.nextElement());
+      if (!enumeration.hasMoreElements())
+        continue;
+
+      final List<String> values = getValues(headerName);
+      final char[] delimiters = getHeaderValueDelimiters(headerName);
+      do {
+        parseHeaderValuesFromString(values, enumeration.nextElement(), delimiters);
+      }
+      while (enumeration.hasMoreElements());
     }
   }
 
@@ -126,14 +201,46 @@ public class HttpHeadersImpl extends HttpHeadersMap<String,String,Object> implem
     super(new MirrorMap.Mirror<String,String,Object>() {
       @Override
       public Object valueToReflection(final String key, final String value) {
-        return HttpHeadersUtil.fromString(key, value, false);
+        // FIXME: Move this out of RuntimeDelegateImpl
+        return Delegate.fromHeaderName(key).fromString(value);
       }
 
       @Override
       public String reflectionToValue(final String key, final Object value) {
-        return HttpHeadersUtil.toString(value);
+        // FIXME: Move this out of RuntimeDelegateImpl
+        return Delegate.fromHeaderName(key).toString(value);
       }
-    }, HttpHeadersUtil.qualifier);
+    }, new MirrorQualityList.Qualifier<String,Object>() {
+      @Override
+      public long valueToQuality(final String reflection, final int index) {
+        return HeaderUtil.getQualityFromString(reflection, index);
+      }
+
+      /**
+       * Gets the quality attribute from a strongly typed header object (i.e.
+       * {@link MediaType#getParameters() mediaType.getParameters().get("q")}),
+       * and returns a {@link org.libj.lang.Numbers.Compound compound}
+       * {@code long} containing the {@code float} quality value and {@code int}
+       * ending index of the attribute in the string.
+       *
+       * @param value The object to parse.
+       * @param index The index from which to start parsing (ignored).
+       * @return A {@link org.libj.lang.Numbers.Compound compound} {@code long}
+       *         containing the {@code float} quality value and {@code int}
+       *         ending index of the attribute in the string.
+       */
+      @Override
+      public long reflectionToQuality(final Object value, final int index) {
+        if (value == null)
+          return Numbers.Compound.encode(1f, index);
+
+        if (value instanceof String || !(value instanceof Qualified))
+          return HeaderUtil.getQualityFromString(value.toString(), index);
+
+        final Float quality = ((Qualified)value).getQuality();
+        return Numbers.Compound.encode(quality != null ? quality : 1f, index);
+      }
+    });
   }
 
   @Override
@@ -143,36 +250,26 @@ public class HttpHeadersImpl extends HttpHeadersMap<String,String,Object> implem
 
   @Override
   public String getHeaderString(final String name) {
-    return CollectionUtil.toString(getRequestHeader(name), ",");
+    return CollectionUtil.toString(getRequestHeader(name), getHeaderValueDelimiters(name)[0]);
   }
 
   @Override
-  public MultivaluedMap<String,String> getRequestHeaders() {
+  public HttpHeadersImpl getRequestHeaders() {
     return this;
   }
 
   @Override
-  @SuppressWarnings({"rawtypes", "unchecked"})
+  @SuppressWarnings({"unchecked"})
   public List<MediaType> getAcceptableMediaTypes() {
-    final List header = getMirrorMap().get(HttpHeaders.ACCEPT);
-    return header == null || header.size() == 0 ? WILDCARD_ACCEPT : Collections.unmodifiableList(header);
+    final MirrorQualityList<?,String> headers = getMirrorMap().get(HttpHeaders.ACCEPT);
+    return headers == null || headers.size() == 0 ? WILDCARD_ACCEPT : (List<MediaType>)headers;
   }
 
   @Override
-  @SuppressWarnings({"rawtypes", "unchecked"})
+  @SuppressWarnings({"unchecked"})
   public List<Locale> getAcceptableLanguages() {
-    // FIXME: This is a lot of processing to collate all "Accept-Language" headers.
-    // FIXME: Need to add a `isDirty` flag to see if this work needs to be redone.
     final MirrorQualityList<?,String> headers = getMirrorMap().get(HttpHeaders.ACCEPT_LANGUAGE);
-    if (headers == null || headers.size() == 0)
-      return WILDCARD_LOCALE;
-
-    final MirrorQualityList<?,String> all = ((MirrorQualityList<?,String>)headers.get(0)).clone();
-    for (int i = 1; i < headers.size(); ++i) {
-      all.addAll((MirrorQualityList)headers.get(i));
-    }
-
-    return (List<Locale>)all;
+    return headers == null || headers.size() == 0 ? WILDCARD_LOCALE : (List<Locale>)headers;
   }
 
   @Override
@@ -182,20 +279,27 @@ public class HttpHeadersImpl extends HttpHeadersMap<String,String,Object> implem
 
   @Override
   public Locale getLanguage() {
-    final String language = getFirst(HttpHeaders.CONTENT_LANGUAGE);
-    return language == null ? null : Locales.parse(language);
+    return (Locale)getMirrorMap().getFirst(HttpHeaders.CONTENT_LANGUAGE);
   }
 
   @Override
   public Map<String,Cookie> getCookies() {
-    final List<String> cookies = getRequestHeader(HttpHeaders.COOKIE);
-    return cookies == null || cookies.size() == 0 ? null : CookieHeaderDelegate.parse(cookies.toArray(new String[cookies.size()]));
+    final MirrorQualityList<?,String> headers = getMirrorMap().get(HttpHeaders.COOKIE);
+    if (headers == null || headers.size() == 0)
+      return Collections.emptyMap();
+
+    final Map<String,Cookie> cookies = new LinkedHashMap<>();
+    for (final Object header : headers) {
+      final Cookie cookie = (Cookie)header;
+      cookies.put(cookie.getName(), cookie);
+    }
+
+    return cookies;
   }
 
   @Override
   public Date getDate() {
-    final String date = getFirst(HttpHeaders.DATE);
-    return date == null ? null : DateHeaderDelegate.parse(date);
+    return (Date)getMirrorMap().getFirst(HttpHeaders.DATE);
   }
 
   @Override
@@ -222,8 +326,7 @@ public class HttpHeadersImpl extends HttpHeadersMap<String,String,Object> implem
    *         otherwise {@code null} if not present.
    */
   public Date getLastModified() {
-    final String lastModified = getFirst(HttpHeaders.LAST_MODIFIED);
-    return lastModified == null ? null : DateHeaderDelegate.parse(lastModified);
+    return (Date)getMirrorMap().getFirst(HttpHeaders.LAST_MODIFIED);
   }
 
   /**
@@ -240,25 +343,26 @@ public class HttpHeadersImpl extends HttpHeadersMap<String,String,Object> implem
 
   /**
    * Returns a string representation of the list of header strings associated
-   * with the specified {@code header} name, or {@code null} if no value exists.
+   * with the specified {@code headerName}, or {@code null} if no value exists.
    *
-   * @param header The name of the header.
+   * @param headerName The name of the header.
    * @return A string representation of the list of header strings associated
    *         with the specified {@code header} name, or {@code null} if no value
    *         exists
    */
-  String getString(final String header) {
-    final List<String> values = get(header);
+  String getString(final String headerName) {
+    final List<String> values = get(headerName);
     if (values == null)
       return null;
 
     if (values.size() == 0)
       return "";
 
+    final char delimiter = getHeaderValueDelimiters(headerName)[0];
     final StringBuilder builder = new StringBuilder();
     for (int i = 0, len = values.size(); i < len; ++i) {
       if (i > 0)
-        builder.append(',');
+        builder.append(delimiter);
 
       builder.append(values.get(i));
     }

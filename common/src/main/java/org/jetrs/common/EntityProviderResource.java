@@ -23,15 +23,17 @@ import java.lang.reflect.Type;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.core.MediaType;
 
-import org.jetrs.provider.util.MediaTypes;
+import org.jetrs.provider.ext.header.CompatibleMediaType;
+import org.jetrs.provider.ext.header.MediaTypes;
+import org.jetrs.provider.ext.header.ServerMediaType;
 
 public abstract class EntityProviderResource<T> extends TypeProviderResource<T> {
-  private final MediaType[] allowedTypes;
+  private final ServerMediaType[] allowedTypes;
 
   public EntityProviderResource(final Class<T> clazz, final T singleton, final Class<?> interfaceType) throws IllegalAccessException, InstantiationException, InvocationTargetException {
     super(clazz, singleton, getGenericInterfaceFirstTypeArgument(clazz, interfaceType, Object.class));
     final Consumes consumes = clazz.getAnnotation(Consumes.class);
-    this.allowedTypes = consumes == null ? null : MediaTypes.parse(consumes.value());
+    this.allowedTypes = consumes == null ? null : ServerMediaType.valueOf(consumes.value());
   }
 
   /**
@@ -46,7 +48,7 @@ public abstract class EntityProviderResource<T> extends TypeProviderResource<T> 
    * @return A compatible {@link MediaType} for the specified {@code provider}
    *         and the entity of the given parameters, if one exists.
    */
-  public MediaType getCompatibleMediaType(final T provider, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
-    return allowedTypes == null ? MediaTypes.getCompatible(mediaType, MediaType.WILDCARD_TYPE) : MediaTypes.getCompatible(mediaType, allowedTypes);
+  public CompatibleMediaType[] getCompatibleMediaType(final T provider, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
+    return allowedTypes == null ? MediaTypes.getCompatible(MediaTypes.WILDCARD_SERVER_TYPE, mediaType, null) : MediaTypes.getCompatible(allowedTypes, mediaType, null);
   }
 }

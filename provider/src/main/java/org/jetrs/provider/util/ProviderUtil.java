@@ -56,9 +56,14 @@ public final class ProviderUtil {
     }
   }
 
+  private static final Charset defaultCharset = Charset.forName("UTF-8");
+
   public static Charset getCharset(final MediaType mediaType) {
+    if (mediaType == null)
+      return defaultCharset;
+
     final String charsetParameter = mediaType.getParameters().get(MediaType.CHARSET_PARAMETER);
-    return charsetParameter != null && Charset.isSupported(charsetParameter) ? Charset.forName(charsetParameter) : Charset.defaultCharset();
+    return charsetParameter != null && Charset.isSupported(charsetParameter) ? Charset.forName(charsetParameter) : defaultCharset;
   }
 
   public static byte[] toBytes(final Object value, final MediaType mediaType) {

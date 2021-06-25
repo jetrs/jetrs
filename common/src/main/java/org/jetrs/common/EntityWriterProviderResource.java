@@ -23,14 +23,16 @@ import java.lang.reflect.Type;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.MessageBodyWriter;
 
+import org.jetrs.provider.ext.header.CompatibleMediaType;
+
 public class EntityWriterProviderResource extends EntityProviderResource<MessageBodyWriter<?>> {
   public EntityWriterProviderResource(final Class<MessageBodyWriter<?>> clazz, final MessageBodyWriter<?> singleton) throws IllegalAccessException, InstantiationException, InvocationTargetException {
     super(clazz, singleton, MessageBodyWriter.class);
   }
 
   @Override
-  public MediaType getCompatibleMediaType(final MessageBodyWriter<?> instance, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
-    final MediaType matchedType = super.getCompatibleMediaType(instance, type, genericType, annotations, mediaType);
-    return matchedType != null && instance.isWriteable(type, genericType, annotations, mediaType) ? matchedType : null;
+  public CompatibleMediaType[] getCompatibleMediaType(final MessageBodyWriter<?> instance, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
+    final CompatibleMediaType[] mediaTypes = super.getCompatibleMediaType(instance, type, genericType, annotations, mediaType);
+    return mediaTypes != null && instance.isWriteable(type, genericType, annotations, mediaType) ? mediaTypes : null;
   }
 }

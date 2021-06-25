@@ -29,17 +29,17 @@ import javax.ws.rs.client.InvocationCallback;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
+import org.jetrs.common.core.HttpHeadersImpl;
 import org.jetrs.common.ext.ProvidersImpl;
 
 public class AsyncInvokerImpl extends Invoker<Future<Response>> implements AsyncInvoker {
-  private final MultivaluedMap<String,Object> requestHeaders;
+  private final HttpHeadersImpl requestHeaders;
   private final List<Cookie> cookies;
   private final CacheControl cacheControl;
 
-  AsyncInvokerImpl(final ClientImpl client, final ProvidersImpl providers, final URL url, final MultivaluedMap<String,Object> requestHeaders, final List<Cookie> cookies, final CacheControl cacheControl, final ExecutorService executorService, final long connectTimeout, final long readTimeout) {
+  AsyncInvokerImpl(final ClientImpl client, final ProvidersImpl providers, final URL url, final HttpHeadersImpl requestHeaders, final List<Cookie> cookies, final CacheControl cacheControl, final ExecutorService executorService, final long connectTimeout, final long readTimeout) {
     super(client, providers, url, executorService, connectTimeout, readTimeout);
     this.requestHeaders = requestHeaders;
     this.cookies = cookies;

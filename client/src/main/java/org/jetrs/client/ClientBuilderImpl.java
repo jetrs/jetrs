@@ -70,10 +70,7 @@ public class ClientBuilderImpl extends ClientBuilder implements ConfigurableImpl
 
   @Override
   public Configuration getConfiguration() {
-    if (config == null)
-      config = new ClientConfiguration();
-
-    return config;
+    return config == null ? config = new ClientConfiguration() : config;
   }
 
   @Override
@@ -124,12 +121,18 @@ public class ClientBuilderImpl extends ClientBuilder implements ConfigurableImpl
 
   @Override
   public ClientBuilder connectTimeout(final long timeout, final TimeUnit unit) {
+    if (timeout < 0)
+      throw new IllegalArgumentException("timeout (" + timeout + ") cannot be negative");
+
     this.connectTimeout = TimeUnit.MILLISECONDS.convert(timeout, unit);
     return this;
   }
 
   @Override
   public ClientBuilder readTimeout(final long timeout, final TimeUnit unit) {
+    if (timeout < 0)
+      throw new IllegalArgumentException("timeout (" + timeout + ") cannot be negative");
+
     this.readTimeout = TimeUnit.MILLISECONDS.convert(timeout, unit);
     return this;
   }

@@ -26,23 +26,13 @@ import java.util.function.Consumer;
 
 import javax.ws.rs.core.MediaType;
 
-import org.jetrs.provider.util.MediaTypes;
+import org.jetrs.provider.ext.header.CompatibleMediaType;
+import org.jetrs.provider.ext.header.MediaTypes;
+import org.jetrs.provider.ext.header.ServerMediaType;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class MediaTypesTest {
-  private static void same(final MediaType specific, final MediaType general) {
-    assertSame(specific, MediaTypes.getCompatible(specific, general));
-    assertSame(specific, MediaTypes.getCompatible(general, specific));
-    assertSame(specific, MediaTypes.getCompatible(specific, specific));
-  }
-
-  private static void equals(final MediaType specific, final MediaType general) {
-    assertEquals(specific, MediaTypes.getCompatible(specific, general));
-    assertEquals(specific, MediaTypes.getCompatible(general, specific));
-    assertEquals(specific, MediaTypes.getCompatible(specific, specific));
-  }
-
   private static void testParse(final Consumer<MediaType[]> c, final String ... headers) {
     c.accept(MediaTypes.parse(headers));
     c.accept(MediaTypes.parse(headers == null ? null : Arrays.asList(headers)));
@@ -63,69 +53,79 @@ public class MediaTypesTest {
 
   @Test
   public void testParse() {
-    assertEquals(new MediaType("application", "json"), MediaType.valueOf("application/json"));
-    assertEquals(new MediaType("application", "json", "utf8"), MediaType.valueOf("application/json; charset=utf8"));
-    assertEquals(new MediaType("application", "json", Collections.singletonMap("charset", "utf8")), MediaType.valueOf("application/json;charset=utf8 "));
+    assertEquals(new MediaType("application", "json"), MediaTypes.parse("application/json"));
+    assertEquals(new MediaType("application", "json", "utf8"), MediaTypes.parse("application/json; charset=utf8"));
+    assertEquals(new MediaType("application", "json", Collections.singletonMap("charset", "utf8")), MediaTypes.parse("application/json;charset=utf8 "));
     final Map<String,String> parameters = new HashMap<>();
     parameters.put("charset", "utf8");
     parameters.put("q", ".5");
-    assertEquals(new MediaType("application", "json", parameters), MediaType.valueOf("application/json;charset=utf8; q=.5"));
-    assertEquals(new MediaType("application", "json", parameters), MediaType.valueOf("application/json;charset=\"utf8\"; q=.5"));
+    assertEquals(new MediaType("application", "json", parameters), MediaTypes.parse("application/json;charset=utf8; q=.5"));
+    assertEquals(new MediaType("application", "json", parameters), MediaTypes.parse("application/json;charset=\"utf8\"; q=.5"));
     parameters.put("q", "oops");
-    assertEquals(new MediaType("application", "json", parameters), MediaType.valueOf("application/json; q=\"oops\" ; charset=\"utf8\";  "));
+    assertEquals(new MediaType("application", "json", parameters), MediaTypes.parse("application/json; q=\"oops\" ; charset=\"utf8\";  "));
+  }
+
+  @Test
+  public void testCompatibleCombinations() {
+    final ServerMediaType ww1 = ServerMediaType.WILDCARD_TYPE;
+    final ServerMediaType ws1 = new ServerMediaType("*", "specific");
+    final ServerMediaType sw1 = new ServerMediaType("specific", "*");
+    final MediaType ww2 = MediaType.WILDCARD_TYPE;
+    final MediaType ws2 = new MediaType("*", "specific");
+    final MediaType sw2 = new MediaType("specific", "*");
+
+    assertEquals(new CompatibleMediaType("*", "*", 0), MediaTypes.getCompatible(ww1, ww2, null));
+    assertEquals(new CompatibleMediaType("*", "specific", 1), MediaTypes.getCompatible(ww1, ws2, null));
+    assertEquals(new CompatibleMediaType("specific", "*", 1), MediaTypes.getCompatible(ww1, sw2, null));
+    assertEquals(new CompatibleMediaType("*", "specific", 1), MediaTypes.getCompatible(ws1, ww2, null));
+    assertEquals(new CompatibleMediaType("*", "specific", 0), MediaTypes.getCompatible(ws1, ws2, null));
+    assertEquals(new CompatibleMediaType("specific", "specific", 2), MediaTypes.getCompatible(ws1, sw2, null));
+    assertEquals(new CompatibleMediaType("specific", "specific", 2), MediaTypes.getCompatible(sw1, ws2, null));
+    assertEquals(new CompatibleMediaType("specific", "*", 0), MediaTypes.getCompatible(sw1, sw2, null));
+    assertEquals(new CompatibleMediaType("specific", "*", 1), MediaTypes.getCompatible(sw1, ww2, null));
   }
 
   @Test
   public void testCompatible() {
-    same(null, null);
+    ServerMediaType server = ServerMediaType.valueOf("application/xml");
+    MediaType client = MediaTypes.parse("application/*");
+    assertEquals(server, MediaTypes.getCompatible(server, client, null));
 
-    MediaType mediaType1 = new MediaType();
-    same(mediaType1, null);
+    client = MediaTypes.parse("application/json");
+    assertNull(MediaTypes.getCompatible(server, client, null));
 
-    mediaType1 = MediaType.valueOf("application/json");
-    same(mediaType1, new MediaType());
+    server = ServerMediaType.valueOf("application/json;charset=utf-8");
+    assertEquals(server, MediaTypes.getCompatible(server, client, null));
 
-    mediaType1 = MediaType.valueOf("application/json");
-    MediaType mediaType2 = MediaType.valueOf("application/*");
-    same(mediaType1, mediaType2);
+    server = ServerMediaType.valueOf("application/json;charset=utf-8;qs=.5");
+    assertEquals(MediaTypes.parse("application/json;charset=utf-8;qs=.5"), MediaTypes.getCompatible(server, client, null));
 
-    mediaType2 = MediaType.valueOf("application/xml");
-    assertNull(MediaTypes.getCompatible(mediaType1, mediaType2));
+    client = MediaTypes.parse("application/json;charset=utf-8;q=.9");
+    assertEquals(MediaTypes.parse("application/json;charset=utf-8;q=.9;qs=.5"), MediaTypes.getCompatible(server, client, null));
 
-    mediaType2 = MediaType.valueOf("application/xml+json");
-    same(mediaType1, mediaType2);
+    server = ServerMediaType.valueOf("application/json;charset=utf-8;qs=.3");
+    assertEquals(MediaTypes.parse("application/json;charset=utf-8;q=.9;qs=.3"), MediaTypes.getCompatible(server, client, null));
 
+    client = MediaTypes.parse("application/json;x=3;q=.8");
+    assertEquals(MediaTypes.parse("application/json;charset=utf-8;q=.8;qs=.3;x=3"), MediaTypes.getCompatible(server, client, null));
 
-    // NOTE: It is not clear whether the first match for a subtype with a suffix should be
-    // NOTE: for the prefix+suffix, or the prefix?
-//    mediaType2 = MediaType.valueOf("application/json+xml");
-//    same(mediaType1, mediaType2);
+    server = ServerMediaType.valueOf("application/*;y=foo");
+    assertEquals(MediaTypes.parse("application/json;q=.8;x=3;y=foo"), MediaTypes.getCompatible(server, client, Arrays.asList("us-ascii")));
+    assertEquals(MediaTypes.parse("application/json;q=.8;x=3;y=foo"), MediaTypes.getCompatible(server, client, null));
 
-    mediaType1 = MediaType.valueOf("application/json;charset=utf-8");
-    equals(mediaType1, mediaType2);
-//
-    mediaType1 = MediaType.valueOf("application/json;charset=utf-8;q=.5");
-    assertEquals(MediaType.valueOf("application/json;charset=utf-8"), MediaTypes.getCompatible(mediaType1, mediaType2));
+    client = MediaTypes.parse("application/hal+json;charset=utf-8;x=3;q=.8");
+    assertEquals(MediaTypes.parse("application/hal+json;charset=utf-8;q=.8;x=3;y=foo"), MediaTypes.getCompatible(server, client, null));
 
-    mediaType2 = MediaType.valueOf("application/json;charset=utf-8;q=.8");
-    assertEquals(MediaType.valueOf("application/json;charset=utf-8"), MediaTypes.getCompatible(mediaType1, mediaType2));
+    server = ServerMediaType.valueOf("application/hal+xml;charset=utf-8;y=foo");
+    assertNull(MediaTypes.getCompatible(server, client, null));
 
-    mediaType1 = MediaType.valueOf("application/json;charset=utf-8");
-    assertEquals(MediaType.valueOf("application/json;charset=utf-8"), MediaTypes.getCompatible(mediaType1, mediaType2));
+    client = MediaTypes.parse("application/*+xml;charset=utf-8;x=3;q=.8");
+    assertEquals(MediaTypes.parse("application/hal+xml;charset=utf-8;q=.8;x=3;y=foo"), MediaTypes.getCompatible(server, client, null));
 
-    mediaType2 = MediaType.valueOf("application/json;charset=utf-8;x=3;q=.8");
-    assertEquals(MediaType.valueOf("application/json;charset=utf-8;x=3"), MediaTypes.getCompatible(mediaType1, mediaType2));
+    server = ServerMediaType.valueOf("application/*+xml;charset=utf-8;y=foo");
+    assertEquals(MediaTypes.parse("application/*+xml;charset=utf-8;q=.8;x=3;y=foo"), MediaTypes.getCompatible(server, client, null));
 
-    mediaType1 = MediaType.valueOf("application/json;charset=utf-8;y=foo");
-    assertEquals(MediaType.valueOf("application/json;charset=utf-8;x=3;y=foo"), MediaTypes.getCompatible(mediaType1, mediaType2));
-
-    mediaType2 = MediaType.valueOf("application/foo+json;charset=utf-8;x=3;q=.8");
-    assertEquals(MediaType.valueOf("application/json;charset=utf-8;x=3;y=foo"), MediaTypes.getCompatible(mediaType1, mediaType2));
-
-    mediaType1 = MediaType.valueOf("application/bar+json;charset=utf-8;y=foo");
-    assertNull(MediaTypes.getCompatible(mediaType1, mediaType2));
-
-    mediaType2 = MediaType.valueOf("application/*+json;charset=utf-8;x=3;q=.8");
-    assertEquals(MediaType.valueOf("application/json;charset=utf-8;x=3;y=foo"), MediaTypes.getCompatible(mediaType1, mediaType2));
+    client = MediaTypes.parse("application/hal+xml;charset=utf-8;x=3;q=.8");
+    assertEquals(MediaTypes.parse("application/hal+xml;charset=utf-8;q=.8;x=3;y=foo"), MediaTypes.getCompatible(server, client, null));
   }
 }

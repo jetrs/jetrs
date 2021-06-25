@@ -33,7 +33,7 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
-import org.jetrs.provider.util.MediaTypes;
+import org.jetrs.provider.ext.header.MediaTypes;
 import org.jetrs.provider.util.MultivaluedMaps;
 import org.jetrs.provider.util.ProviderUtil;
 

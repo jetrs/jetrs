@@ -22,14 +22,14 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 
 import org.jetrs.common.ext.RuntimeDelegateImpl;
 import org.jetrs.server.EndpointFactory;
-import org.jetrs.server.ResourceContext;
+import org.jetrs.server.ServerContext;
 import org.jetrs.server.core.ResponseBuilderImpl;
 
 public class ServerRuntimeDelegate extends RuntimeDelegateImpl {
-  private final ResourceContext resourceContext;
+  private final ServerContext serverContext;
 
-  public ServerRuntimeDelegate(final ResourceContext resourceContext) {
-    this.resourceContext = resourceContext;
+  public ServerRuntimeDelegate(final ServerContext serverContext) {
+    this.serverContext = serverContext;
   }
 
   public ServerRuntimeDelegate() {
@@ -47,9 +47,9 @@ public class ServerRuntimeDelegate extends RuntimeDelegateImpl {
 
   @Override
   public ResponseBuilder createResponseBuilder() {
-    if (resourceContext == null)
+    if (serverContext == null)
       throw new IllegalStateException("Server environment has not yet initialized");
 
-    return new ResponseBuilderImpl(resourceContext);
+    return new ResponseBuilderImpl(serverContext);
   }
 }

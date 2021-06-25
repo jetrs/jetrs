@@ -23,6 +23,7 @@ import java.lang.reflect.Modifier;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -33,7 +34,6 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseFilter;
-import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.ParamConverterProvider;
 
 import org.jetrs.Bootstrap;
@@ -73,32 +73,51 @@ class ServerBootstrap extends Bootstrap<ResourceManifest> {
     }
   }
 
-  @Override
-  protected <T>void addResourceOrProvider(final MultivaluedMap<? super String,? super ResourceManifest> resources, final List<? super ExceptionMappingProviderResource> exceptionMappers, final List<? super EntityReaderProviderResource> entityReaders, final List<? super EntityWriterProviderResource> entityWriters, final List<? super ProviderResource<ContainerRequestFilter>> requestFilters, final List<? super ProviderResource<ContainerResponseFilter>> responseFilters, final List<? super ReaderInterceptorEntityProviderResource> readerInterceptors, final List<? super WriterInterceptorEntityProviderResource> writerInterceptors, final List<? super ProviderResource<ParamConverterProvider>> paramConverterProviders, final Class<? extends T> clazz, final T singleton) throws IllegalAccessException, InstantiationException, InvocationTargetException {
-    if (isRootResource(clazz)) {
-      final Method[] methods = clazz.getMethods();
-      if (methods.length > 0) {
-        final Set<HttpMethod> httpMethodAnnotations = new HashSet<>(); // FIXME: Can this be done without a Collection?
-        for (final Method method : clazz.getMethods()) {
-          final Annotation[] annotations = method.getAnnotations();
-          for (final Annotation annotation : annotations) {
-            final HttpMethod httpMethodAnnotation = annotation.annotationType().getAnnotation(HttpMethod.class);
-            if (httpMethodAnnotation != null)
-              httpMethodAnnotations.add(httpMethodAnnotation);
-          }
+  private static <T>void add(final HttpMethod httpMethodAnnotation, final Method method, final Path classPath, final Path methodPath, final List<? super ResourceManifest> resources, final Class<? extends T> clazz, final T singleton) {
+    final ResourceManifest manifest = new ResourceManifest(httpMethodAnnotation, method, classPath, methodPath, singleton);
+    logger.info((httpMethodAnnotation != null ? httpMethodAnnotation.value() : "*") + " " + manifest.getPathPattern().toString() + " -> " + clazz.getSimpleName() + "." + method.getName() + "()");
+    resources.add(manifest);
+  }
 
-          for (final HttpMethod httpMethodAnnotation : httpMethodAnnotations) {
-            final ResourceManifest manifest = new ResourceManifest(httpMethodAnnotation, method, singleton);
-            logger.info(httpMethodAnnotation.value() + " " + manifest.getPathPattern().getPattern().toString() + " -> " + clazz.getSimpleName() + "." + method.getName() + "()");
-            resources.add(manifest.getHttpMethod().value().toUpperCase(), manifest);
-          }
+  @Override
+  protected <T>boolean addResourceOrProvider(final List<Consumer<Set<Class<?>>>> afterAdd, final List<ResourceManifest> resources, final List<? super ExceptionMappingProviderResource> exceptionMappers, final List<? super EntityReaderProviderResource> entityReaders, final List<? super EntityWriterProviderResource> entityWriters, final List<? super ProviderResource<ContainerRequestFilter>> requestFilters, final List<? super ProviderResource<ContainerResponseFilter>> responseFilters, final List<? super ReaderInterceptorEntityProviderResource> readerInterceptors, final List<? super WriterInterceptorEntityProviderResource> writerInterceptors, final List<? super ProviderResource<ParamConverterProvider>> paramConverterProviders, final Class<? extends T> clazz, final T singleton) throws IllegalAccessException, InstantiationException, InvocationTargetException {
+    if (!isRootResource(clazz))
+      return super.addResourceOrProvider(afterAdd, resources, exceptionMappers, entityReaders, entityWriters, requestFilters, responseFilters, readerInterceptors, writerInterceptors, paramConverterProviders, singleton == null ? clazz : singleton.getClass(), singleton);
+
+    boolean added = false;
+    final Method[] methods = clazz.getMethods();
+    if (methods.length > 0) {
+      final HashSet<HttpMethod> httpMethodAnnotations = new HashSet<>();
+      for (final Method method : clazz.getMethods()) {
+        final Annotation[] annotations = method.getAnnotations();
+        for (final Annotation annotation : annotations) {
+          final HttpMethod httpMethodAnnotation = annotation.annotationType().getAnnotation(HttpMethod.class);
+          if (httpMethodAnnotation != null)
+            httpMethodAnnotations.add(httpMethodAnnotation);
+        }
+
+        final Path classPath = clazz.getAnnotation(Path.class);
+        final Path methodPath = method.getAnnotation(Path.class);
+        if (httpMethodAnnotations.size() > 0) {
+          for (final HttpMethod httpMethodAnnotation : httpMethodAnnotations)
+            add(httpMethodAnnotation, method, classPath, methodPath, resources, clazz, singleton);
 
           httpMethodAnnotations.clear();
+          added = true;
+        }
+        else if (classPath != null || methodPath != null) {
+          // This is for the case of "JAX-RS 2.1 3.4.1: Sub-Resource Locator"
+          final Class<?> returnType = method.getReturnType();
+          if (!returnType.isAnnotation() && !returnType.isAnonymousClass() && !returnType.isArray() && !returnType.isEnum() && !returnType.isInterface() && !returnType.isPrimitive() && !returnType.isSynthetic() && returnType != Void.class && acceptPackage(returnType.getPackage())) {
+            afterAdd.add(resourceClasses -> {
+              if (resourceClasses.contains(returnType))
+                add(null, method, classPath, methodPath, resources, clazz, singleton);
+            });
+          }
         }
       }
     }
-    else {
-      super.addResourceOrProvider(resources, exceptionMappers, entityReaders, entityWriters, requestFilters, responseFilters, readerInterceptors, writerInterceptors, paramConverterProviders, singleton == null ? clazz : singleton.getClass(), singleton);
-    }
+
+    return added;
   }
 }

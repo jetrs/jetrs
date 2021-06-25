@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Objects;
 
+import org.jetrs.provider.util.Equatable;
 import org.libj.lang.Numbers;
 import org.libj.lang.ObjectUtil;
 import org.libj.util.CollectionUtil;
@@ -334,10 +335,10 @@ public class MirrorQualityList<V,R> extends MirrorList<V,R> implements Cloneable
    *         {@code this} list.
    */
   private int addQuality(int index, final float quality) {
-    if (quality == 1f)
-      return qualities() == null ? index : Math.min(index, size() - qualities.size());
-
     if (qualities() == null) {
+      if (quality == 1f)
+        return index;
+
       qualities = new ArrayFloatList(quality);
       if (mirrorList != null)
         getMirrorList().qualities = qualities;
@@ -345,9 +346,11 @@ public class MirrorQualityList<V,R> extends MirrorList<V,R> implements Cloneable
       return size();
     }
 
+    if (quality == 1f)
+      return Math.min(index, size() - qualities.size());
+
     final int qIndex = CollectionUtil.binaryClosestSearch(qualities, quality, FloatComparator.REVERSE);
     index = qualitiesIndexToIndex(qIndex);
-
     qualities.add(qIndex, quality);
     return index;
   }
@@ -368,7 +371,7 @@ public class MirrorQualityList<V,R> extends MirrorList<V,R> implements Cloneable
    *         equivalent to the specified index of {@code this} list.
    */
   private int indexToQualitiesIndex(final int index) {
-    return index + size() - qualities.size();
+    return index - size() + qualities.size();
   }
 
   /**
@@ -381,7 +384,7 @@ public class MirrorQualityList<V,R> extends MirrorList<V,R> implements Cloneable
    *         specified index in the {@link #qualities} list.
    */
   private int qualitiesIndexToIndex(final int index) {
-    return size() - qualities.size() + index;
+    return index + size() - qualities.size();
   }
 
   @Override
@@ -406,14 +409,28 @@ public class MirrorQualityList<V,R> extends MirrorList<V,R> implements Cloneable
   @Override
   protected boolean beforeRemove(final int index) {
     final boolean unlocked = unlock();
-    if (qualities() != null)
-      qualities.removeIndex(indexToQualitiesIndex(index));
+    if (qualities() != null) {
+      final int qualitiesIndex = indexToQualitiesIndex(index);
+      if (qualitiesIndex >= 0)
+        qualities.removeIndex(qualitiesIndex);
+    }
 
     super.target.remove(index);
     super.beforeRemove(index);
 
     lock(unlocked);
     return false;
+  }
+
+  @Override
+  protected boolean equals(final Object o1, final Object o2) {
+    return o1 instanceof Equatable ? ((Equatable)o1).equal(o2) : o2 instanceof Equatable ? ((Equatable)o2).equal(o1) : super.equals(o1, o2);
+  }
+
+  @Override
+  @SuppressWarnings("unlikely-arg-type")
+  public int indexOf(final Object o) {
+    return super.indexOf(o);
   }
 
   @Override
@@ -432,7 +449,6 @@ public class MirrorQualityList<V,R> extends MirrorList<V,R> implements Cloneable
         clone.qualities = qualities.clone();
 
       clone.target = (List<?>)ObjectUtil.clone((Cloneable)clone.target);
-      clone.target.addAll(target);
       return clone;
     }
     catch (final CloneNotSupportedException e) {

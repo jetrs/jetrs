@@ -19,6 +19,7 @@ package org.jetrs.server;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 import javax.ws.rs.Consumes;
@@ -31,12 +32,13 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
-import org.jetrs.provider.util.MediaTypes;
+import org.jetrs.provider.ext.header.CompatibleMediaType;
+import org.jetrs.provider.ext.header.MediaTypes;
+import org.jetrs.provider.ext.header.ServerMediaType;
 import org.libj.lang.IllegalAnnotationException;
 
-class ResourceAnnotationProcessor<T extends Annotation> {
+class MediaTypeAnnotationProcessor<T extends Annotation> {
   private static final Class<?>[] paramAnnotations = {Context.class, CookieParam.class, HeaderParam.class, MatrixParam.class, PathParam.class, QueryParam.class};
-  private static final MediaType[] wildcard = {MediaType.WILDCARD_TYPE};
 
   static <T extends Annotation>T getMethodClassAnnotation(final Class<T> annotationClass, final Method method) {
     final T annotation = method.getAnnotation(annotationClass);
@@ -65,10 +67,10 @@ class ResourceAnnotationProcessor<T extends Annotation> {
   }
 
   private final T annotation;
-  private final MediaType[] mediaTypes;
+  private final ServerMediaType[] mediaTypes;
 
   @SuppressWarnings("unchecked")
-  ResourceAnnotationProcessor(final Method method, final Class<T> annotationClass) {
+  MediaTypeAnnotationProcessor(final Method method, final Class<T> annotationClass) {
     if (annotationClass == Consumes.class) {
       annotation = (T)getMethodClassAnnotation((Class<Consumes>)annotationClass, method);
       if (!hasEntityParameter(method)) {
@@ -77,7 +79,7 @@ class ResourceAnnotationProcessor<T extends Annotation> {
           throw new IllegalAnnotationException(annotation, method.getDeclaringClass().getName() + "#" + method.getName() + " does not specify entity parameters, and thus cannot declare @Consumes annotation");
       }
       else {
-        this.mediaTypes = annotation != null ? MediaTypes.parse(((Consumes)annotation).value()) : wildcard;
+        this.mediaTypes = annotation != null ? ServerMediaType.valueOf(((Consumes)annotation).value()) : MediaTypes.WILDCARD_SERVER_TYPE;
       }
     }
     else if (annotationClass == Produces.class) {
@@ -88,7 +90,7 @@ class ResourceAnnotationProcessor<T extends Annotation> {
           throw new IllegalAnnotationException(annotation, method.getDeclaringClass().getName() + "#" + method.getName() + " is void return type, and thus cannot declare @Produces annotation");
       }
       else {
-        this.mediaTypes = annotation != null ? MediaTypes.parse(((Produces)annotation).value()) : wildcard;
+        this.mediaTypes = annotation != null ? ServerMediaType.valueOf(((Produces)annotation).value()) : MediaTypes.WILDCARD_SERVER_TYPE;
       }
     }
     else {
@@ -96,19 +98,26 @@ class ResourceAnnotationProcessor<T extends Annotation> {
     }
   }
 
-  MediaType getCompatibleMediaType(final MediaType[] mediaTypes) {
+  CompatibleMediaType[] getCompatibleMediaType(final List<MediaType> mediaTypes, final List<String> acceptCharsets) {
     if (this.mediaTypes == null)
-      return mediaTypes == null ? MediaType.WILDCARD_TYPE : MediaTypes.getCompatible(MediaType.WILDCARD_TYPE, mediaTypes);
+      return mediaTypes == null || mediaTypes.size() == 0 ? MediaTypes.WILDCARD_COMPATIBLE_TYPE : MediaTypes.getCompatible(MediaTypes.WILDCARD_SERVER_TYPE, mediaTypes, acceptCharsets);
 
-    return mediaTypes == null ? this.mediaTypes[0] : MediaTypes.getCompatible(this.mediaTypes, mediaTypes);
+    return mediaTypes == null || mediaTypes.size() == 0 ? MediaTypes.WILDCARD_COMPATIBLE_TYPE : MediaTypes.getCompatible(this.mediaTypes, mediaTypes, acceptCharsets);
+  }
+
+  CompatibleMediaType[] getCompatibleMediaType(final MediaType mediaType, final List<String> acceptCharsets) {
+    if (this.mediaTypes == null)
+      return mediaType == null ? MediaTypes.WILDCARD_COMPATIBLE_TYPE : MediaTypes.getCompatible(MediaTypes.WILDCARD_SERVER_TYPE, mediaType, acceptCharsets);
+
+    return mediaType == null ? MediaTypes.WILDCARD_COMPATIBLE_TYPE : MediaTypes.getCompatible(this.mediaTypes, mediaType, acceptCharsets);
   }
 
   T getAnnotation() {
     return annotation;
   }
 
-  MediaType[] getMediaTypes() {
-    return this.mediaTypes;
+  ServerMediaType[] getMediaTypes() {
+    return mediaTypes;
   }
 
   @Override
@@ -116,10 +125,10 @@ class ResourceAnnotationProcessor<T extends Annotation> {
     if (obj == this)
       return true;
 
-    if (!(obj instanceof ResourceAnnotationProcessor))
+    if (!(obj instanceof MediaTypeAnnotationProcessor))
       return false;
 
-    final ResourceAnnotationProcessor<?> that = (ResourceAnnotationProcessor<?>)obj;
+    final MediaTypeAnnotationProcessor<?> that = (MediaTypeAnnotationProcessor<?>)obj;
     return Objects.equals(annotation, that.annotation) && mediaTypes != null ? Arrays.equals(mediaTypes, that.mediaTypes) : that.mediaTypes == null;
   }
 

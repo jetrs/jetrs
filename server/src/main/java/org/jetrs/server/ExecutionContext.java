@@ -22,9 +22,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -33,11 +31,11 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.InternalServerErrorException;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
@@ -45,50 +43,59 @@ import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Providers;
 
 import org.jetrs.common.core.AnnotationInjector;
+import org.jetrs.common.core.HttpHeadersImpl;
 import org.jetrs.common.core.ResponseImpl;
+import org.jetrs.provider.ext.header.CompatibleMediaType;
+import org.jetrs.provider.ext.header.ServerMediaType;
 import org.jetrs.server.container.ContainerRequestContextImpl;
 import org.jetrs.server.container.ContainerResponseContextImpl;
 import org.libj.util.ArrayUtil;
 import org.libj.util.ObservableList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ExecutionContext {
-  private static final Comparator<ResourceMatch> comparator = new Comparator<ResourceMatch>() {
-    @Override
-    public int compare(final ResourceMatch o1, final ResourceMatch o2) {
-      return o1.getSecurityException() == null ? -1 : o2.getSecurityException() != null ? 0 : 1;
-    }
-  };
+  private static final Logger logger = LoggerFactory.getLogger(ExecutionContext.class);
 
-  private final HttpHeaders requestHeaders;
+  private final HttpHeadersImpl requestHeaders;
   private final HttpServletResponse httpServletResponse;
   private final ContainerResponseContextImpl containerResponseContext;
-  private final ResourceContext resourceContext;
+  private final ServerContext serverContext;
 
-  public ExecutionContext(final HttpHeaders requestHeaders, final HttpServletResponse httpServletResponse, final ContainerResponseContextImpl containerResponseContext, final ResourceContext resourceContext) {
+  public ExecutionContext(final HttpHeadersImpl requestHeaders, final HttpServletResponse httpServletResponse, final ContainerResponseContextImpl containerResponseContext, final ServerContext serverContext) {
     this.requestHeaders = requestHeaders;
     this.httpServletResponse = httpServletResponse;
     this.containerResponseContext = containerResponseContext;
-    this.resourceContext = resourceContext;
+    this.serverContext = serverContext;
   }
 
-  private ResourceMatch[] resourceMatches;
+  private boolean filterAndMatchWasCalled;
+  private ResourceMatch resourceMatch;
   private List<String> matchedURIs;
   private List<String> decodedMatchedURIs;
   private List<Object> matchedResources;
-  private ByteArrayOutputStream entityStream;
 
-  ResourceMatch[] filterAndMatch(final ContainerRequestContext containerRequestContext, final AnnotationInjector annotationInjector) {
-    final ResourceMatch[] resourceMatches = resourceContext.filterAndMatch(containerRequestContext);
-    if (resourceMatches == null)
-      return null;
-
-    if (this.resourceMatches != null)
+  ResourceMatch filterAndMatch(final ContainerRequestContext containerRequestContext, final AnnotationInjector annotationInjector) {
+    if (filterAndMatchWasCalled)
       throw new IllegalStateException(getClass().getSimpleName() + ".filterAndMatch(" + ResourceMatch.class.getSimpleName() + "," + AnnotationInjector.class.getSimpleName() + ") has already been called");
 
-    this.resourceMatches = resourceMatches;
-    final List<String> matchedURIs = new ArrayList<>(resourceMatches.length);
-    final List<String> decodedMatchedURIs = new ArrayList<>(resourceMatches.length);
-    final List<Object> matchedResources = new ObservableList<Object>(new ArrayList<>(resourceMatches.length)) {
+    filterAndMatchWasCalled = true;
+    final List<ResourceMatch> resourceMatches = serverContext.filterAndMatch(containerRequestContext);
+    if (resourceMatches == null)
+      throw new NotFoundException();
+
+    if (resourceMatches.size() > 1) {
+      final StringBuilder builder = new StringBuilder("Multiple resources match for [\"" + containerRequestContext.getUriInfo() + "\"]: {");
+      for (final ResourceMatch resource : resourceMatches)
+        builder.append('"').append(resource).append("\",");
+
+      builder.setCharAt(builder.length() - 1, '}');
+      logger.warn(builder.toString());
+    }
+
+    final List<String> matchedURIs = new ArrayList<>(resourceMatches.size());
+    final List<String> decodedMatchedURIs = new ArrayList<>(resourceMatches.size());
+    final List<Object> matchedResources = new ObservableList<Object>(new ArrayList<>(resourceMatches.size())) {
       @Override
       protected void beforeGet(final int index, final ListIterator<Object> iterator) {
         final Object object = this.target.get(index);
@@ -113,9 +120,6 @@ public class ExecutionContext {
       }
     };
 
-    // FIXME: What is the spec here? How do all the resource matches get handled/processed/priority?
-    // FIXME: For now, just find the first resource that doesn't have a security exception.
-    Arrays.sort(resourceMatches, comparator);
     for (final ResourceMatch resource : resourceMatches) {
       final ResourceManifest manifest = resource.getManifest();
       matchedURIs.add(manifest.getPathPattern().getURI(false));
@@ -127,11 +131,11 @@ public class ExecutionContext {
     this.decodedMatchedURIs = Collections.unmodifiableList(decodedMatchedURIs);
     this.matchedResources = Collections.unmodifiableList(matchedResources);
 
-    return resourceMatches;
+    return this.resourceMatch = resourceMatches.get(0);
   }
 
-  public ResourceMatch[] getResourceMatches() {
-    return resourceMatches;
+  public ResourceMatch getResourceMatch() {
+    return resourceMatch;
   }
 
   public List<String> getMatchedURIs(final boolean decode) {
@@ -142,24 +146,24 @@ public class ExecutionContext {
     return this.matchedResources;
   }
 
-  public HttpHeaders getRequestHeaders() {
+  public HttpHeadersImpl getRequestHeaders() {
     return requestHeaders;
   }
 
   void filterPreMatchContainerRequest(final ContainerRequestContextImpl containerRequestContext, final AnnotationInjector annotationInjector) throws IOException {
-    resourceContext.getContainerFilters().filterPreMatchContainerRequest(containerRequestContext, annotationInjector);
+    serverContext.getContainerFilters().filterPreMatchContainerRequest(containerRequestContext, annotationInjector);
   }
 
   void filterContainerRequest(final ContainerRequestContextImpl containerRequestContext, final AnnotationInjector annotationInjector) throws IOException {
-    resourceContext.getContainerFilters().filterContainerRequest(containerRequestContext, annotationInjector);
+    serverContext.getContainerFilters().filterContainerRequest(containerRequestContext, annotationInjector);
   }
 
   void filterContainerResponse(final ContainerRequestContextImpl containerRequestContext, final AnnotationInjector annotationInjector) throws IOException {
-    resourceContext.getContainerFilters().filterContainerResponse(containerRequestContext, containerResponseContext, annotationInjector);
+    serverContext.getContainerFilters().filterContainerResponse(containerRequestContext, containerResponseContext, annotationInjector);
   }
 
   private void setContentType(final ResourceMatch resource) {
-    final MediaType[] mediaTypes = resource.getManifest().getResourceAnnotationProcessor(Produces.class).getMediaTypes();
+    final ServerMediaType[] mediaTypes = resource.getManifest().getResourceAnnotationProcessor(Produces.class).getMediaTypes();
     if (mediaTypes != null)
       containerResponseContext.getStringHeaders().putSingle(HttpHeaders.CONTENT_TYPE, resource.getAccept().toString());
     else
@@ -169,19 +173,20 @@ public class ExecutionContext {
   void service(final ResourceMatch resource, final ContainerRequestContextImpl containerRequestContext, final AnnotationInjector annotationInjector) throws IOException, ServletException {
     setContentType(resource);
 
-    final Object content = resource.service(containerRequestContext, annotationInjector, resourceContext.getParamConverterProviders());
+    final Object content = resource.service(containerRequestContext, annotationInjector, serverContext.getParamConverterProviders());
     if (content instanceof Response)
       setResponse((Response)content, resource.getManifest().getMethodAnnotations(), resource.getAccept());
     else if (content != null)
       setEntity(content, resource.getManifest().getMethodAnnotations(), resource.getAccept());
   }
 
-  void setAbortResponse(final AbortFilterChainException e) throws WebApplicationException {
+  void setAbortResponse(final AbortFilterChainException e) {
     setResponse(e.getResponse(), null, null);
   }
 
+  // [JAX-RS 2.1 3.3.4 1]
   @SuppressWarnings({"rawtypes", "unchecked"})
-  Response setErrorResponse(final Providers providers, final Throwable t) throws WebApplicationException {
+  Response setErrorResponse(final Providers providers, final Throwable t) {
     Class cls = t.getClass();
     do {
       final ExceptionMapper exceptionMapper = providers.getExceptionMapper(cls);
@@ -199,7 +204,7 @@ public class ExecutionContext {
     return null;
   }
 
-  private Response setResponse(final Response response, final Annotation[] annotations, final MediaType mediaType) {
+  private Response setResponse(final Response response, final Annotation[] annotations, final CompatibleMediaType mediaType) {
     containerResponseContext.setEntityStream(null);
 
     // FIXME: Have to hack getting the annotations out of the Response
@@ -228,7 +233,7 @@ public class ExecutionContext {
     return response;
   }
 
-  private void setEntity(final Object entity, final Annotation[] annotations, final MediaType mediaType) {
+  private void setEntity(final Object entity, final Annotation[] annotations, final CompatibleMediaType mediaType) {
     containerResponseContext.setEntity(entity, annotations, mediaType);
   }
 
@@ -240,6 +245,8 @@ public class ExecutionContext {
 
     httpServletResponse.setStatus(containerResponseContext.getStatus());
   }
+
+  private ByteArrayOutputStream entityStream;
 
   @SuppressWarnings("rawtypes")
   private void writeBody(final ResourceMatch resource, final Providers providers) throws IOException {
@@ -270,9 +277,9 @@ public class ExecutionContext {
     containerResponseContext.writeBody(messageBodyWriter);
   }
 
-  void writeResponse(final ResourceMatch resource, final ContainerRequestContext requestContext, final Providers providers) throws IOException {
+  void writeResponse(final ResourceMatch resource, final ContainerRequestContext containerRequestContext, final Providers providers) throws IOException {
     writeHeader();
-    if (!HttpMethod.HEAD.equals(requestContext.getMethod()))
+    if (!HttpMethod.HEAD.equals(containerRequestContext.getMethod()))
       writeBody(resource, providers);
   }
 

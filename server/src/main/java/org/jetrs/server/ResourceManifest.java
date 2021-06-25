@@ -23,21 +23,21 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
 import java.util.List;
+import java.util.Objects;
 
 import javax.annotation.security.DenyAll;
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.ServletException;
 import javax.ws.rs.BadRequestException;
-import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.ForbiddenException;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.NotAuthorizedException;
+import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.ParamConverterProvider;
@@ -45,14 +45,16 @@ import javax.ws.rs.ext.Providers;
 
 import org.jetrs.common.ProviderResource;
 import org.jetrs.common.core.AnnotationInjector;
-import org.jetrs.provider.util.MediaTypes;
+import org.jetrs.provider.ext.header.CompatibleMediaType;
+import org.jetrs.provider.ext.header.MediaTypes;
+import org.jetrs.provider.ext.header.ServerMediaType;
 import org.jetrs.server.container.ContainerRequestContextImpl;
 import org.libj.lang.Identifiers;
 import org.libj.util.ArrayUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ResourceManifest {
+public class ResourceManifest implements Comparable<ResourceManifest> {
   private static final Logger logger = LoggerFactory.getLogger(ResourceManifest.class);
   private static final PermitAll permitAll = new PermitAll() {
     @Override
@@ -85,19 +87,19 @@ public class ResourceManifest {
   private final Object singleton;
   private final Class<?> serviceClass;
   private final PathPattern pathPattern;
-  private final ResourceAnnotationProcessor<Consumes> consumesMatcher;
-  private final ResourceAnnotationProcessor<Produces> producesMatcher;
+  private final MediaTypeAnnotationProcessor<Consumes> consumesMatcher;
+  private final MediaTypeAnnotationProcessor<Produces> producesMatcher;
 
-  ResourceManifest(final HttpMethod httpMethod, final Method method, final Object singleton) {
+  ResourceManifest(final HttpMethod httpMethod, final Method method, final Path classPath, final Path methodPath, final Object singleton) {
     this.httpMethod = httpMethod;
     final Annotation securityAnnotation = findSecurityAnnotation(method);
     this.securityAnnotation = securityAnnotation != null ? securityAnnotation : permitAll;
     this.method = method;
     this.singleton = singleton;
     this.serviceClass = singleton != null ? singleton.getClass() : method.getDeclaringClass();
-    this.pathPattern = new PathPattern(method);
-    this.consumesMatcher = new ResourceAnnotationProcessor<>(method, Consumes.class);
-    this.producesMatcher = new ResourceAnnotationProcessor<>(method, Produces.class);
+    this.pathPattern = new PathPattern(classPath, methodPath);
+    this.consumesMatcher = new MediaTypeAnnotationProcessor<>(method, Consumes.class);
+    this.producesMatcher = new MediaTypeAnnotationProcessor<>(method, Produces.class);
   }
 
   Object getResource() {
@@ -116,24 +118,12 @@ public class ResourceManifest {
     return method.getGenericReturnType();
   }
 
-  MediaType getCompatibleAccept(final ContainerRequestContext containerRequestContext) {
-    if (!httpMethod.value().toUpperCase().equals(containerRequestContext.getMethod()))
-      return null;
+  CompatibleMediaType[] getCompatibleContentType(final ContainerRequestContext containerRequestContext) {
+    return consumesMatcher.getCompatibleMediaType(containerRequestContext.getMediaType(), containerRequestContext.getHeaders().get("Accept-Charset"));
+  }
 
-    final String path = containerRequestContext.getUriInfo().getPath();
-    if (!pathPattern.matches(path))
-      return null;
-
-    final MediaType[] accept = MediaTypes.parse(containerRequestContext.getHeaders().get(HttpHeaders.ACCEPT));
-    final MediaType acceptedType = producesMatcher.getCompatibleMediaType(accept);
-    if (acceptedType == null)
-      return null;
-
-    final MediaType[] contentType = MediaTypes.parse(containerRequestContext.getHeaders().get(HttpHeaders.CONTENT_TYPE));
-    if (consumesMatcher.getCompatibleMediaType(contentType) == null)
-      return null;
-
-    return acceptedType;
+  CompatibleMediaType[] getCompatibleAccept(final ContainerRequestContext containerRequestContext) {
+    return producesMatcher.getCompatibleMediaType(containerRequestContext.getAcceptableMediaTypes(), containerRequestContext.getHeaders().get("Accept-Charset"));
   }
 
   @SuppressWarnings("rawtypes")
@@ -172,7 +162,7 @@ public class ResourceManifest {
     return parameterInstances;
   }
 
-  protected boolean checkHeader(final String headerName, final Class<? extends Annotation> annotationClass, final ContainerRequestContext containerRequestContext) {
+  protected boolean checkContentHeader(final String headerName, final Class<? extends Annotation> annotationClass, final ContainerRequestContext containerRequestContext) {
     final Annotation annotation = getResourceAnnotationProcessor(annotationClass).getAnnotation();
     if (annotation == null) {
       final String message = "@" + annotationClass.getSimpleName() + " annotation missing for " + method.getDeclaringClass().getName() + "." + Identifiers.toClassCase(containerRequestContext.getMethod().toLowerCase()) + "()";
@@ -187,23 +177,21 @@ public class ResourceManifest {
     if (headerValue == null || headerValue.length() == 0)
       return logMissingHeaderWarning(headerName, annotationClass);
 
-    final String[] headerValueParts = headerValue.split(",");
-    final MediaType[] test = MediaTypes.parse(headerValueParts);
-
     final String[] annotationValue = annotationClass == Produces.class ? ((Produces)annotation).value() : annotationClass == Consumes.class ? ((Consumes)annotation).value() : null;
-    final MediaType[] required = MediaTypes.parse(annotationValue);
-    if (MediaTypes.getCompatible(required, test) != null)
+    final ServerMediaType[] required = ServerMediaType.valueOf(annotationValue);
+    final MediaType[] mediaTypes = MediaTypes.parse(headerValue.split(","));
+    if (MediaTypes.getCompatible(required, mediaTypes, null) != null)
       return true;
 
     return logMissingHeaderWarning(headerName, annotationClass);
   }
 
-  ClientErrorException checkAllowed(final ContainerRequestContext containerRequestContext) {
+  private void checkAllowed(final ContainerRequestContext containerRequestContext) {
     if (securityAnnotation instanceof PermitAll)
-      return null;
+      return;
 
     if (securityAnnotation instanceof DenyAll)
-      return new ForbiddenException("@DenyAll");
+      throw new ForbiddenException("@DenyAll");
 
     if (!(securityAnnotation instanceof RolesAllowed))
       throw new UnsupportedOperationException("Unsupported security annotation: " + securityAnnotation.getClass().getName());
@@ -212,7 +200,7 @@ public class ResourceManifest {
     if (containerRequestContext.getSecurityContext().getUserPrincipal() != null)
       for (final String role : rolesAllowed.value())
         if (containerRequestContext.getSecurityContext().isUserInRole(role))
-          return null;
+          return;
 
     final String authenticationScheme = containerRequestContext.getSecurityContext().getAuthenticationScheme();
     final StringBuilder builder = new StringBuilder();
@@ -224,7 +212,7 @@ public class ResourceManifest {
     builder.append("realm=\"").append(roles[0]).append('"');
     final String challenge = builder.toString();
     if (roles.length == 1)
-      return new NotAuthorizedException(challenge);
+      throw new NotAuthorizedException(challenge);
 
     final Object[] challenges = new Object[roles.length - 1];
     final int resetLen = authenticationScheme != null ? authenticationScheme.length() + 1 : 0;
@@ -234,10 +222,11 @@ public class ResourceManifest {
       challenges[i - 1] = builder.toString();
     }
 
-    return new NotAuthorizedException(challenge, challenges);
+    throw new NotAuthorizedException(challenge, challenges);
   }
 
   Object service(final ContainerRequestContextImpl containerRequestContext, final AnnotationInjector annotationInjector, final List<ProviderResource<ParamConverterProvider>> paramConverterProviders) throws IOException, ServletException {
+    checkAllowed(containerRequestContext);
     try {
       return method.invoke(getResource(), getParameters(containerRequestContext, annotationInjector, paramConverterProviders));
     }
@@ -270,12 +259,25 @@ public class ResourceManifest {
   }
 
   @SuppressWarnings("unchecked")
-  <T extends Annotation>ResourceAnnotationProcessor<T> getResourceAnnotationProcessor(final Class<T> annotationClass) {
-    return annotationClass == Consumes.class ? (ResourceAnnotationProcessor<T>)consumesMatcher : annotationClass == Produces.class ? (ResourceAnnotationProcessor<T>)producesMatcher : null;
+  <T extends Annotation>MediaTypeAnnotationProcessor<T> getResourceAnnotationProcessor(final Class<T> annotationClass) {
+    return annotationClass == Consumes.class ? (MediaTypeAnnotationProcessor<T>)consumesMatcher : annotationClass == Produces.class ? (MediaTypeAnnotationProcessor<T>)producesMatcher : null;
   }
 
   boolean isRestricted() {
     return securityAnnotation instanceof DenyAll || securityAnnotation instanceof RolesAllowed;
+  }
+
+  @Override
+  public int compareTo(final ResourceManifest o) {
+    final int c = pathPattern.compareTo(o.pathPattern);
+    if (c != 0)
+      return c;
+
+    // [JAX-RS 2.1 6.7.2 1.f]
+    if (httpMethod == null)
+      return o.httpMethod != null ? 1 : 0;
+
+    return o.httpMethod == null ? -1 : 0;
   }
 
   @Override
@@ -287,13 +289,13 @@ public class ResourceManifest {
       return false;
 
     final ResourceManifest that = (ResourceManifest)obj;
-    return httpMethod.equals(that.httpMethod) && securityAnnotation.equals(that.securityAnnotation) && method.equals(that.method) && serviceClass.equals(that.serviceClass) && pathPattern.equals(that.pathPattern) && consumesMatcher.equals(that.consumesMatcher) && producesMatcher.equals(that.producesMatcher);
+    return Objects.equals(httpMethod, that.httpMethod) && securityAnnotation.equals(that.securityAnnotation) && method.equals(that.method) && serviceClass.equals(that.serviceClass) && pathPattern.equals(that.pathPattern) && consumesMatcher.equals(that.consumesMatcher) && producesMatcher.equals(that.producesMatcher);
   }
 
   @Override
   public int hashCode() {
     int hashCode = 1;
-    hashCode = 31 * hashCode + httpMethod.hashCode();
+    hashCode = 31 * hashCode + Objects.hashCode(httpMethod);
     hashCode = 31 * hashCode + securityAnnotation.hashCode();
     hashCode = 31 * hashCode + method.hashCode();
     hashCode = 31 * hashCode + serviceClass.hashCode();
@@ -305,6 +307,6 @@ public class ResourceManifest {
 
   @Override
   public String toString() {
-    return httpMethod.value() + " " + pathPattern.getPattern();
+    return (httpMethod != null ? httpMethod.value() : "*") + " " + pathPattern;
   }
 }

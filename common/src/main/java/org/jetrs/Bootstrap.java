@@ -19,14 +19,15 @@ package org.jetrs;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseFilter;
-import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
@@ -47,11 +48,11 @@ import org.libj.lang.PackageNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Bootstrap<R> {
+public class Bootstrap<R extends Comparable<? super R>> {
   protected static final Logger logger = LoggerFactory.getLogger(Bootstrap.class);
   private static final String[] excludeStartsWith = {"jdk.", "java.", "javax.", "com.sun.", "sun.", "org.w3c.", "org.xml.", "org.jvnet.", "org.joda.", "org.jcp.", "apple.security."};
 
-  private static boolean acceptPackage(final Package pkg) {
+  protected static boolean acceptPackage(final Package pkg) {
     for (int i = 0; i < excludeStartsWith.length; ++i)
       if (pkg.getName().startsWith(excludeStartsWith[i]))
         return false;
@@ -60,7 +61,7 @@ public class Bootstrap<R> {
   }
 
   @SuppressWarnings("unchecked")
-  protected <T>void addResourceOrProvider(final MultivaluedMap<? super String,? super R> resources, final List<? super ExceptionMappingProviderResource> exceptionMappers, final List<? super EntityReaderProviderResource> entityReaders, final List<? super EntityWriterProviderResource> entityWriters, final List<? super ProviderResource<ContainerRequestFilter>> requestFilters, final List<? super ProviderResource<ContainerResponseFilter>> responseFilters, final List<? super ReaderInterceptorEntityProviderResource> readerInterceptors, final List<? super WriterInterceptorEntityProviderResource> writerInterceptors, final List<? super ProviderResource<ParamConverterProvider>> paramConverterProviders, final Class<? extends T> clazz, final T singleton) throws IllegalAccessException, InstantiationException, InvocationTargetException {
+  protected <T>boolean addResourceOrProvider(final List<Consumer<Set<Class<?>>>> afterAdds, final List<R> resources, final List<? super ExceptionMappingProviderResource> exceptionMappers, final List<? super EntityReaderProviderResource> entityReaders, final List<? super EntityWriterProviderResource> entityWriters, final List<? super ProviderResource<ContainerRequestFilter>> requestFilters, final List<? super ProviderResource<ContainerResponseFilter>> responseFilters, final List<? super ReaderInterceptorEntityProviderResource> readerInterceptors, final List<? super WriterInterceptorEntityProviderResource> writerInterceptors, final List<? super ProviderResource<ParamConverterProvider>> paramConverterProviders, final Class<? extends T> clazz, final T singleton) throws IllegalAccessException, InstantiationException, InvocationTargetException {
     if (clazz.isAnnotationPresent(Provider.class)) {
       if (MessageBodyReader.class.isAssignableFrom(clazz))
         entityReaders.add(new EntityReaderProviderResource((Class<MessageBodyReader<?>>)clazz, (MessageBodyReader<?>)singleton));
@@ -86,46 +87,76 @@ public class Bootstrap<R> {
       if (ContainerResponseFilter.class.isAssignableFrom(clazz))
         responseFilters.add(new ProviderResource<>((Class<ContainerResponseFilter>)clazz, (ContainerResponseFilter)singleton));
     }
+
+    return false;
   }
 
-  public final void init(final Set<?> singletons, final Set<Class<?>> classes, final MultivaluedMap<String,? super R> resources, final List<? super ExceptionMappingProviderResource> exceptionMappers, final List<? super EntityReaderProviderResource> entityReaders, final List<? super EntityWriterProviderResource> entityWriters, final List<? super ProviderResource<ContainerRequestFilter>> requestFilters, final List<? super ProviderResource<ContainerResponseFilter>> responseFilters, final List<? super ReaderInterceptorEntityProviderResource> readerInterceptors, final List<? super WriterInterceptorEntityProviderResource> writerInterceptors, final List<? super ProviderResource<ParamConverterProvider>> paramConverterProviders) throws IllegalAccessException, InstantiationException, InvocationTargetException, PackageNotFoundException, IOException {
+  @SuppressWarnings("unchecked")
+  public final void init(final Set<?> singletons, final Set<Class<?>> classes, final List<R> resources, final List<? super ExceptionMappingProviderResource> exceptionMappers, final List<? super EntityReaderProviderResource> entityReaders, final List<? super EntityWriterProviderResource> entityWriters, final List<? super ProviderResource<ContainerRequestFilter>> requestFilters, final List<? super ProviderResource<ContainerResponseFilter>> responseFilters, final List<? super ReaderInterceptorEntityProviderResource> readerInterceptors, final List<? super WriterInterceptorEntityProviderResource> writerInterceptors, final List<? super ProviderResource<ParamConverterProvider>> paramConverterProviders) throws IllegalAccessException, InstantiationException, InvocationTargetException, PackageNotFoundException, IOException {
+    final List<Consumer<Set<Class<?>>>> afterAdds = new ArrayList<>();
     if (singletons != null || classes != null) {
       if (singletons != null)
         for (final Object singleton : singletons)
           if (singleton != null)
-            addResourceOrProvider(resources, exceptionMappers, entityReaders, entityWriters, requestFilters, responseFilters, readerInterceptors, writerInterceptors, paramConverterProviders, singleton.getClass(), singleton);
+            addResourceOrProvider(afterAdds, resources, exceptionMappers, entityReaders, entityWriters, requestFilters, responseFilters, readerInterceptors, writerInterceptors, paramConverterProviders, singleton.getClass(), singleton);
 
       if (classes != null)
         for (final Class<?> cls : classes)
           if (cls != null)
-            addResourceOrProvider(resources, exceptionMappers, entityReaders, entityWriters, requestFilters, responseFilters, readerInterceptors, writerInterceptors, paramConverterProviders, cls, null);
+            addResourceOrProvider(afterAdds, resources, exceptionMappers, entityReaders, entityWriters, requestFilters, responseFilters, readerInterceptors, writerInterceptors, paramConverterProviders, cls, null);
+
+      if (afterAdds.size() > 0) {
+        final Set<Class<?>> resourceClasses;
+        if (singletons == null) {
+          resourceClasses = classes;
+        }
+        else if (classes != null) {
+          resourceClasses = new HashSet<>(classes.size() + singletons.size());
+          resourceClasses.addAll(classes);
+          for (final Object singleton : singletons)
+            resourceClasses.add(singleton.getClass());
+        }
+        else {
+          resourceClasses = null;
+        }
+
+        for (final Consumer<Set<Class<?>>> afterAdd : afterAdds)
+          afterAdd.accept(resourceClasses);
+      }
     }
     else {
-      final Predicate<Class<?>> initialize = new Predicate<Class<?>>() {
-        private final Set<Class<?>> loadedClasses = new HashSet<>();
-
-        @Override
-        public boolean test(final Class<?> t) {
-          if (!Modifier.isAbstract(t.getModifiers()) && !loadedClasses.contains(t)) {
-            try {
-              addResourceOrProvider(resources, exceptionMappers, entityReaders, entityWriters, requestFilters, responseFilters, readerInterceptors, writerInterceptors, paramConverterProviders, t, null);
-            }
-            catch (final IllegalAccessException | InstantiationException e) {
-              throw new ProviderInstantiationException(e);
-            }
-            catch (final InvocationTargetException e) {
-              throw new ProviderInstantiationException(e.getCause());
-            }
+      final Set<Class<?>>[] resourceClasses = new Set[1];
+      final Set<Class<?>> initedClasses = new HashSet<>();
+      final Predicate<Class<?>> initialize = t -> {
+        if (!Modifier.isAbstract(t.getModifiers()) && !initedClasses.contains(t)) {
+          try {
+            if (addResourceOrProvider(afterAdds, resources, exceptionMappers, entityReaders, entityWriters, requestFilters, responseFilters, readerInterceptors, writerInterceptors, paramConverterProviders, t, null))
+              (resourceClasses[1] == null ? resourceClasses[1] = new HashSet<>() : resourceClasses[1]).add(t);
           }
-
-          loadedClasses.add(t);
-          return false;
+          catch (final IllegalAccessException | InstantiationException e) {
+            throw new ProviderInstantiationException(e);
+          }
+          catch (final InvocationTargetException e) {
+            throw new ProviderInstantiationException(e.getCause());
+          }
         }
+
+        initedClasses.add(t);
+        return false;
       };
 
       for (final Package pkg : Package.getPackages())
         if (acceptPackage(pkg))
           PackageLoader.getContextPackageLoader().loadPackage(pkg, initialize);
+
+      if (resourceClasses[0] != null) {
+        final Set<Class<?>> resourceClasses0 = resourceClasses[0];
+        for (final Consumer<Set<Class<?>>> afterAdd : afterAdds)
+          afterAdd.accept(resourceClasses0);
+      }
     }
+
+    if (resources != null)
+      resources.sort(null);
   }
 }

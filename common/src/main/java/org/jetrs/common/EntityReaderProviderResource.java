@@ -23,6 +23,8 @@ import java.lang.reflect.Type;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.MessageBodyReader;
 
+import org.jetrs.provider.ext.header.CompatibleMediaType;
+
 public class EntityReaderProviderResource extends EntityProviderResource<MessageBodyReader<?>> {
   public EntityReaderProviderResource(final Class<MessageBodyReader<?>> clazz, final MessageBodyReader<?> singleton) throws IllegalAccessException, InstantiationException, InvocationTargetException {
     super(clazz, singleton, MessageBodyReader.class);
@@ -31,12 +33,12 @@ public class EntityReaderProviderResource extends EntityProviderResource<Message
   }
 
   @Override
-  public MediaType getCompatibleMediaType(final MessageBodyReader<?> instance, final Class<?> type, final Type genericType, final Annotation[] annotations, MediaType mediaType) {
+  public CompatibleMediaType[] getCompatibleMediaType(final MessageBodyReader<?> instance, final Class<?> type, final Type genericType, final Annotation[] annotations, MediaType mediaType) {
     // SPEC: 4.2.1 Message Body Reader
     if (mediaType == null)
       mediaType = MediaType.APPLICATION_OCTET_STREAM_TYPE;
 
-    final MediaType matchedType = super.getCompatibleMediaType(instance, type, genericType, annotations, mediaType);
-    return matchedType != null && instance.isReadable(type, genericType, annotations, mediaType) ? matchedType : null;
+    final CompatibleMediaType[] mediaTypes = super.getCompatibleMediaType(instance, type, genericType, annotations, mediaType);
+    return mediaTypes != null && instance.isReadable(type, genericType, annotations, mediaType) ? mediaTypes : null;
   }
 }

@@ -14,7 +14,7 @@
  * program. If not, see <http://opensource.org/licenses/MIT/>.
  */
 
-package org.jetrs.common.util;
+package org.jetrs.provider.util;
 
 import java.util.Arrays;
 import java.util.Comparator;

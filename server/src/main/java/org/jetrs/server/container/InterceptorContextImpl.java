@@ -27,17 +27,16 @@ import java.util.Locale;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.InterceptorContext;
 
-import org.jetrs.provider.ext.delegate.DateHeaderDelegate;
-import org.jetrs.provider.util.MediaTypes;
+import org.jetrs.common.core.HttpHeadersImpl;
+import org.jetrs.provider.ext.header.MediaTypes;
 import org.libj.lang.EnumerationIterator;
 import org.libj.lang.Enumerations;
 
 abstract class InterceptorContextImpl implements InterceptorContext {
   private final Locale locale;
-  final HttpServletRequest request;
+  private final HttpServletRequest request;
   private Collection<String> propertyNames;
   private Annotation[] annotations;
   private Class<?> type;
@@ -48,19 +47,22 @@ abstract class InterceptorContextImpl implements InterceptorContext {
     this.request = request;
   }
 
-  abstract MultivaluedMap<String,String> getStringHeaders();
+  abstract HttpHeadersImpl getStringHeaders();
 
   public final String getHeaderString(final String name) {
     return getStringHeaders().getFirst(name);
   }
 
   public final Date getDate() {
-    final String date = getStringHeaders().getFirst(HttpHeaders.DATE);
-    return date == null ? null : DateHeaderDelegate.parse(date);
+    return (Date)getStringHeaders().getMirrorMap().getFirst(HttpHeaders.DATE);
   }
 
   public final Locale getLanguage() {
     return locale;
+  }
+
+  HttpServletRequest getHttpServletRequest() {
+    return this.request;
   }
 
   @Override

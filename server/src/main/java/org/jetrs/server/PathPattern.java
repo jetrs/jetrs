@@ -16,7 +16,6 @@
 
 package org.jetrs.server;
 
-import java.lang.reflect.Method;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -28,70 +27,81 @@ import org.libj.lang.Strings;
 import org.libj.net.URLs;
 import org.libj.util.Patterns;
 
-public class PathPattern {
+public class PathPattern implements Comparable<PathPattern> {
   private static final Pattern pathExpressionPattern = Pattern.compile("(\\w+)\\s*(:\\s*(.+))?");
-
-  private static String pathExpressionToRegex(final String pathExpression) {
-    final Matcher matcher = pathExpressionPattern.matcher(pathExpression);
-    if (!matcher.find())
-      throw new IllegalArgumentException("Expression \"" + pathExpression + "\" does not match expected format");
-
-    final String name = matcher.group(1);
-    final String regex = matcher.group(3);
-    return regex != null ? "(?<" + name + ">" + regex + ")" : "(?<" + name + ">[^/]+)";
-  }
-
-  private static Pattern createPattern(final String path) {
-    final StringBuilder builder = new StringBuilder();
-    int end = -1;
-    for (int start; (start = path.indexOf('{', end + 1)) > -1;) {
-      builder.append(path, end + 1, start++);
-      end = Strings.indexOfScopeClose(path, '{', '}', start);
-      builder.append(pathExpressionToRegex(path.substring(start, end)));
-    }
-
-    builder.append(path.substring(end + 1));
-    return Patterns.compile(builder.length() != 0 ? builder.toString() : path);
-  }
 
   private static String prependSlash(final Path path) {
     return path == null ? null : path.value().startsWith("/") ? path.value() : "/" + path.value();
   }
 
   private final String uri;
-  private final String decodedUri;
+  private String decodedUri;
+
   private final Pattern pattern;
+  private final int literalChars;
+  private final int defaultGroups;
+  private final int nonDefaultGroups;
 
-  public PathPattern(final Method method) {
-    this(method.getDeclaringClass().getAnnotation(Path.class), method.getAnnotation(Path.class));
-  }
+  PathPattern(final Path classPath, final Path methodPath) {
+    if (classPath == null && methodPath == null)
+      throw new IllegalArgumentException("classPath == null && methodPath == null");
 
-  protected PathPattern(final Path path, final Path methodPath) {
-    if (path == null && methodPath == null)
-      throw new IllegalArgumentException("path == null && methodPath == null");
-
-    final String pathString = methodPath == null ? prependSlash(path) : path == null ? prependSlash(methodPath) : prependSlash(path) + prependSlash(methodPath);
+    final String pathString = methodPath == null ? prependSlash(classPath) : classPath == null ? prependSlash(methodPath) : prependSlash(classPath) + prependSlash(methodPath);
     final int index = pathString.indexOf('{');
     this.uri = index < 0 ? pathString : pathString.substring(0, index);
-    this.decodedUri = URLs.decodePath(uri);
-    this.pattern = createPattern(pathString);
+
+    final StringBuilder builder = new StringBuilder();
+    int literalChars = 0;
+    int defaultGroups = 0;
+    int nonDefaultgroups = 0;
+    int end = -1;
+    for (int start; (start = pathString.indexOf('{', ++end)) > -1;) {
+      literalChars += start - end;
+      builder.append(pathString, end, start++);
+
+      end = Strings.indexOfScopeClose(pathString, '{', '}', start);
+      final String pathExpression = pathString.substring(start, end);
+      final Matcher matcher = pathExpressionPattern.matcher(pathExpression);
+      if (!matcher.find())
+        throw new IllegalArgumentException("Expression \"" + pathExpression + "\" does not match expected format");
+
+      final String name = matcher.group(1);
+      final String regex = matcher.group(3);
+      builder.append("(?<" + name + ">");
+      if (regex != null) {
+        ++nonDefaultgroups;
+        builder.append(regex);
+      }
+      else {
+        ++defaultGroups;
+        builder.append("[^/]+");
+      }
+
+      builder.append(')');
+    }
+
+    builder.append(pathString.substring(end));
+
+    this.pattern = Patterns.compile(builder.length() != 0 ? builder.toString() : pathString);
+    this.literalChars = literalChars;
+    this.defaultGroups = defaultGroups;
+    this.nonDefaultGroups = nonDefaultgroups;
   }
 
-  public String getURI(final boolean decode) {
-    return decode ? this.decodedUri : this.uri;
+  String getURI(final boolean decode) {
+    return !decode ? uri : decodedUri == null ? decodedUri = URLs.decodePath(uri) : decodedUri;
   }
 
-  public Pattern getPattern() {
-    return pattern;
+  private Matcher matcher(final String path) {
+    return pattern.matcher(path);
   }
 
-  public boolean matches(final String path) {
-    final Matcher matcher = pattern.matcher(path);
-    return matcher.matches();
+  boolean matches(final String path) {
+    return matcher(path).matches();
   }
 
   public MultivaluedMap<String,String> getParameters(final String path) {
-    final Matcher matcher = pattern.matcher(path);
+    final Matcher matcher = matcher(path);
     if (!matcher.find())
       return null;
 
@@ -113,6 +123,30 @@ public class PathPattern {
     return parameters;
   }
 
+  // [JAX-RS 2.1 6.7.2 1.e]
+  @Override
+  public int compareTo(final PathPattern o) {
+    if (literalChars > o.literalChars)
+      return -1;
+
+    if (literalChars < o.literalChars)
+      return 1;
+
+    if (defaultGroups > o.defaultGroups)
+      return -1;
+
+    if (defaultGroups < o.defaultGroups)
+      return 1;
+
+    if (nonDefaultGroups > o.nonDefaultGroups)
+      return -1;
+
+    if (nonDefaultGroups < o.nonDefaultGroups)
+      return 1;
+
+    return 0;
+  }
+
   @Override
   public boolean equals(final Object obj) {
     if (obj == this)
@@ -127,5 +161,10 @@ public class PathPattern {
   @Override
   public int hashCode() {
     return 31 + pattern.hashCode();
+  }
+
+  @Override
+  public String toString() {
+    return pattern.toString();
   }
 }
