@@ -45,31 +45,22 @@ import org.jetrs.provider.ext.header.Qualified;
 import org.libj.lang.Numbers;
 import org.libj.util.CollectionUtil;
 import org.libj.util.MirrorMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A {@link HttpHeadersMap} that implements the {@link HttpHeaders} interface,
  * providing a mirrored multi-valued map of headers in {@link String} and
  * {@link Object} representations.
  */
-// FIXME: Multiple message-header fields with the same field-name MAY be
-// FIXME: present in a message if and only if the entire field-value for
-// FIXME: that header field is defined as a comma-separated list [i.e.,
-// FIXME: #(values)]. It MUST be possible to combine the multiple header
-// FIXME: fields into one "field-name: field-value" pair, without changing
-// FIXME: the semantics of the message, by appending each subsequent
-// FIXME: field-value to the first, each separated by a comma. The order
-// FIXME: in which header fields with the same field-name are received is
-// FIXME: therefore significant to the interpretation of the combined field
-// FIXME: value, and thus a proxy MUST NOT change the order of these field
-// FIXME: values when a message is forwarded.
-// FIXME: http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
-// FIXME: Except for COOKIE: https://datatracker.ietf.org/doc/html/rfc6265#section-4.2.1
 public class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeaders {
+  private static final Logger logger = LoggerFactory.getLogger(HttpHeadersImpl.class);
+
   private static final List<Locale> WILDCARD_LOCALE = Arrays.asList(new Locale("*"));
   private static final List<MediaType> WILDCARD_ACCEPT = Arrays.asList(MediaType.WILDCARD_TYPE);
   private static final HashMap<String,char[]> headerWithNonCommaDelimiters = new HashMap<>();
-  private static final char[] comma = new char[] {','};
-  private static final char[] semiComma = new char[] {';', ','};
+  private static final char[] comma = {','};
+  private static final char[] semiComma = {';', ','};
 
   static {
     headerWithNonCommaDelimiters.put(HttpHeaders.COOKIE, semiComma);
@@ -98,25 +89,23 @@ public class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements Ht
     return '\0';
   }
 
-  private static void parseMultiHeaderNoSort(final List<String> values, final String header, final char ... delimiters) {
-    String value = null;
-    char ch;
+  private static void parseMultiHeaderNoSort(final List<String> values, final String headerValue, final char ... delimiters) {
+    char ch = '\0';
     char checkDel = '\0', foundDel = '\0';
-    for (int i = 0, start = -1, end = -1, len = header.length(); i <= len; ++i) {
-      if (i == len || (checkDel = checkDel(ch = header.charAt(i), delimiters, foundDel)) != '\0') {
+    for (int i = 0, start = -1, end = -1, len = headerValue.length(); i <= len; ++i) {
+      if (i == len || (checkDel = checkDel(ch = headerValue.charAt(i), delimiters, foundDel)) != '\0') {
         if (foundDel == '\0')
           foundDel = checkDel;
 
-        value = header.substring(start + 1, end + 1);
-        values.add(value);
-        start = end = -1;
+        values.add(headerValue.substring(start + 1, end + 1));
+        end = -1;
       }
       else if (ch != ' ') {
         end = i;
       }
-      else if (end == -1) {
+
+      if (end == -1)
         start = i;
-      }
     }
   }
 
@@ -201,7 +190,14 @@ public class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements Ht
     super(new MirrorMap.Mirror<String,String,Object>() {
       @Override
       public Object valueToReflection(final String key, final String value) {
-        return value == null ? null : Delegate.lookup(key).fromString(value);
+        if (value == null)
+          return null;
+
+        final Object reflection = Delegate.lookup(key).fromString(value);
+        if (reflection == null)
+          logger.warn("Got null reflection for header name: \"" + key + "\"");
+
+        return reflection;
       }
 
       @Override

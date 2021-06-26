@@ -118,12 +118,12 @@ public class ResourceManifest implements Comparable<ResourceManifest> {
     return method.getGenericReturnType();
   }
 
-  CompatibleMediaType[] getCompatibleContentType(final ContainerRequestContext containerRequestContext) {
-    return consumesMatcher.getCompatibleMediaType(containerRequestContext.getMediaType(), containerRequestContext.getHeaders().get("Accept-Charset"));
+  CompatibleMediaType[] getCompatibleContentType(final MediaType mediaType, final List<String> acceptCharsets) {
+    return consumesMatcher.getCompatibleMediaType(mediaType, acceptCharsets);
   }
 
-  CompatibleMediaType[] getCompatibleAccept(final ContainerRequestContext containerRequestContext) {
-    return producesMatcher.getCompatibleMediaType(containerRequestContext.getAcceptableMediaTypes(), containerRequestContext.getHeaders().get("Accept-Charset"));
+  CompatibleMediaType[] getCompatibleAccept(final List<MediaType> acceptMediaTypes, final List<String> acceptCharsets) {
+    return producesMatcher.getCompatibleMediaType(acceptMediaTypes, acceptCharsets);
   }
 
   @SuppressWarnings("rawtypes")

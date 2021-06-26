@@ -37,8 +37,24 @@ import org.libj.lang.Numbers;
 import org.libj.lang.Strings;
 import org.libj.util.Locales;
 import org.libj.util.SimpleDateFormats;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+//FIXME: Multiple message-header fields with the same field-name MAY be
+//FIXME: present in a message if and only if the entire field-value for
+//FIXME: that header field is defined as a comma-separated list [i.e.,
+//FIXME: #(values)]. It MUST be possible to combine the multiple header
+//FIXME: fields into one "field-name: field-value" pair, without changing
+//FIXME: the semantics of the message, by appending each subsequent
+//FIXME: field-value to the first, each separated by a comma. The order
+//FIXME: in which header fields with the same field-name are received is
+//FIXME: therefore significant to the interpretation of the combined field
+//FIXME: value, and thus a proxy MUST NOT change the order of these field
+//FIXME: values when a message is forwarded.
+//FIXME: http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
+//FIXME: Except for COOKIE: https://datatracker.ietf.org/doc/html/rfc6265#section-4.2.1
 public abstract class Delegate<T> implements RuntimeDelegate.HeaderDelegate<T> {
+  private static final Logger logger = LoggerFactory.getLogger(Delegate.class);
   private static final HashMap<String,Delegate<?>> headerNameToDelegate = new HashMap<>();
   private static final ArrayList<Delegate<?>> delegates = new ArrayList<>();
 
@@ -49,7 +65,7 @@ public abstract class Delegate<T> implements RuntimeDelegate.HeaderDelegate<T> {
     }
 
     @Override
-    public Object fromString(final String value) {
+    Object valueOf(final String value) {
       return Numbers.isNumber(value) ? Long.parseLong(value) : Delegate.DATE.fromString(value);
     }
 
@@ -66,8 +82,8 @@ public abstract class Delegate<T> implements RuntimeDelegate.HeaderDelegate<T> {
     }
 
     @Override
-    public BigDecimal fromString(final String value) {
-      return value == null ? null : new BigDecimal(value);
+    BigDecimal valueOf(final String value) {
+      return new BigDecimal(value);
     }
 
     @Override
@@ -83,7 +99,7 @@ public abstract class Delegate<T> implements RuntimeDelegate.HeaderDelegate<T> {
     }
 
     @Override
-    public Boolean fromString(final String value) {
+    Boolean valueOf(final String value) {
       return Boolean.parseBoolean(value);
     }
 
@@ -100,7 +116,7 @@ public abstract class Delegate<T> implements RuntimeDelegate.HeaderDelegate<T> {
     }
 
     @Override
-    public StrictCacheControl fromString(final String value) {
+    StrictCacheControl valueOf(final String value) {
       return StrictCacheControl.parse(value);
     }
 
@@ -131,8 +147,8 @@ public abstract class Delegate<T> implements RuntimeDelegate.HeaderDelegate<T> {
     }
 
     @Override
-    public QualifiedCharset fromString(final String value) {
-      return value == null ? null : QualifiedCharset.valueOf(value);
+    QualifiedCharset valueOf(final String value) {
+      return QualifiedCharset.valueOf(value);
     }
 
     @Override
@@ -149,8 +165,7 @@ public abstract class Delegate<T> implements RuntimeDelegate.HeaderDelegate<T> {
 
     // FIXME: This should be re-implemented with a char-by-char algorithm
     @Override
-    public NewCookie fromString(final String string) {
-
+    NewCookie valueOf(final String string) {
       final String[] parts = string.split(";");
       final String part0 = parts[0];
       int index = part0.indexOf('=');
@@ -249,7 +264,7 @@ public abstract class Delegate<T> implements RuntimeDelegate.HeaderDelegate<T> {
     }
 
     @Override
-    public Cookie fromString(final String value) {
+    Cookie valueOf(final String value) {
       final int index = value.indexOf('=');
       return index == -1 ? null : new Cookie(value.substring(0, index).trim(), value.substring(index + 1).trim());
     }
@@ -267,13 +282,8 @@ public abstract class Delegate<T> implements RuntimeDelegate.HeaderDelegate<T> {
     }
 
     @Override
-    public Date fromString(final String value) {
-      try {
-        return SimpleDateFormats.ISO_1123.get().parse(value);
-      }
-      catch (final ParseException e) {
-        throw new RuntimeException(e);
-      }
+    Date valueOf(final String value) throws Exception {
+      return SimpleDateFormats.ISO_1123.get().parse(value);
     }
 
     @Override
@@ -289,8 +299,8 @@ public abstract class Delegate<T> implements RuntimeDelegate.HeaderDelegate<T> {
     }
 
     @Override
-    public Locale fromString(final String value) {
-      return value == null ? null : Locales.fromRFC1766(value);
+    Locale valueOf(final String value) {
+      return Locales.fromRFC1766(value);
     }
 
     @Override
@@ -306,7 +316,7 @@ public abstract class Delegate<T> implements RuntimeDelegate.HeaderDelegate<T> {
     }
 
     @Override
-    public Long fromString(final String value) {
+    Long valueOf(final String value) {
       return Numbers.parseLong(value);
     }
 
@@ -323,7 +333,7 @@ public abstract class Delegate<T> implements RuntimeDelegate.HeaderDelegate<T> {
     }
 
     @Override
-    public QualifiedMediaType fromString(final String value) {
+    QualifiedMediaType valueOf(final String value) {
       return MediaTypes.parse(value);
     }
 
@@ -340,8 +350,8 @@ public abstract class Delegate<T> implements RuntimeDelegate.HeaderDelegate<T> {
     }
 
     @Override
-    public Response.StatusType fromString(final String value) {
-      return value == null ? null : Responses.from(value);
+    Response.StatusType valueOf(final String value) {
+      return Responses.from(value);
     }
 
     @Override
@@ -357,7 +367,7 @@ public abstract class Delegate<T> implements RuntimeDelegate.HeaderDelegate<T> {
     }
 
     @Override
-    public String fromString(final String value) {
+    String valueOf(final String value) {
       return value;
     }
 
@@ -374,7 +384,7 @@ public abstract class Delegate<T> implements RuntimeDelegate.HeaderDelegate<T> {
     }
 
     @Override
-    public Tk fromString(final String value) {
+    Tk valueOf(final String value) {
       return Tk.fromString(value);
     }
 
@@ -411,15 +421,12 @@ public abstract class Delegate<T> implements RuntimeDelegate.HeaderDelegate<T> {
     }
 
     @Override
-    public String[] fromString(final String value) {
-      return value == null ? null : value.length() == 0 ? new String[0] : fromString(value, 0, 0);
+    String[] valueOf(final String value) {
+      return value.length() == 0 ? new String[0] : fromString(value, 0, 0);
     }
 
     @Override
     public String toString(final String[] value) {
-      if (value == null)
-        return null;
-
       if (value.length == 0)
         return "";
 
@@ -439,8 +446,8 @@ public abstract class Delegate<T> implements RuntimeDelegate.HeaderDelegate<T> {
     }
 
     @Override
-    public java.net.URI fromString(final String value) {
-      return value == null ? null : java.net.URI.create(value);
+    java.net.URI valueOf(final String value) {
+      return java.net.URI.create(value);
     }
 
     @Override
@@ -456,13 +463,13 @@ public abstract class Delegate<T> implements RuntimeDelegate.HeaderDelegate<T> {
     }
 
     @Override
-    public Object fromString(final String value) {
+    Object valueOf(final String value) {
       return value;
     }
 
     @Override
     public String toString(final Object value) {
-      return value == null ? null : value instanceof String ? (String)value : value.toString();
+      return value instanceof String ? (String)value : value.toString();
     }
   };
 
@@ -491,6 +498,18 @@ public abstract class Delegate<T> implements RuntimeDelegate.HeaderDelegate<T> {
   }
 
   abstract Class<T> getType();
+  abstract T valueOf(String value) throws Exception;
+
+  @Override
+  public final T fromString(final String value) {
+    try {
+      return valueOf(value);
+    }
+    catch (final Exception e) {
+      logger.error("Exception parsing header value: \"" + value + "\"", e);
+      return null;
+    }
+  }
 
   private Delegate(final boolean add, final String ... headerNames) {
     if (add) {
@@ -498,5 +517,10 @@ public abstract class Delegate<T> implements RuntimeDelegate.HeaderDelegate<T> {
       for (final String headerName : headerNames)
         headerNameToDelegate.put(headerName.toLowerCase(), this);
     }
+  }
+
+  @Override
+  public String toString() {
+    return "Delegate<" + (getType() == null ? "null" : getType().getSimpleName()) + ">";
   }
 }

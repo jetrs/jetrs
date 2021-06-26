@@ -140,12 +140,13 @@ public class ServerContext {
         continue;
       }
 
+      final List<String> acceptCharsets = containerRequestContext.getHeaders().get(HttpHeaders.ACCEPT_CHARSET);
       maybeNotSupported = true;
-      if (containerRequestContext.hasEntity() && resource.getCompatibleContentType(containerRequestContext) == null)
+      if (containerRequestContext.hasEntity() && resource.getCompatibleContentType(containerRequestContext.getMediaType(), acceptCharsets) == null)
         continue;
 
       maybeNotAcceptable = true;
-      final CompatibleMediaType[] accepts = resource.getCompatibleAccept(containerRequestContext);
+      final CompatibleMediaType[] accepts = resource.getCompatibleAccept(containerRequestContext.getAcceptableMediaTypes(), acceptCharsets);
       if (accepts == null)
         continue;
 
