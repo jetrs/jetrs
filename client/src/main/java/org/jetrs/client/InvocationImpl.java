@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.CookieHandler;
 import java.net.CookieManager;
+import java.net.CookiePolicy;
+import java.net.CookieStore;
 import java.net.HttpCookie;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -62,8 +64,19 @@ import org.jetrs.provider.util.ProviderUtil;
 import org.jetrs.provider.util.Responses;
 import org.libj.util.CollectionUtil;
 import org.libj.util.Dates;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class InvocationImpl implements Invocation {
+  private static final Logger logger = LoggerFactory.getLogger(InvocationImpl.class);
+
+  private static final CookieStore cookieStore;
+  static {
+    final CookieManager m = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
+    CookieHandler.setDefault(m);
+    cookieStore = m.getCookieStore();
+  }
+
   private final ClientImpl client;
   private final ProvidersImpl providers;
   private final URL url;
@@ -140,34 +153,27 @@ public class InvocationImpl implements Invocation {
       final StatusType status = reasonPhrase != null ? Responses.from(responseCode, reasonPhrase) : Responses.from(responseCode);
       final HttpHeadersImpl headers = new HttpHeadersImpl(connection.getHeaderFields());
 
-      final CookieManager cookieManager = new CookieManager();
-      CookieHandler.setDefault(cookieManager);
-
-      final List<String> setCookies = headers.get(HttpHeaders.SET_COOKIE);
+      final List<HttpCookie> httpCookies = cookieStore.getCookies();
       final Map<String,NewCookie> cookies;
-      if (setCookies != null) {
-        cookies = new HashMap<>();
-        final List<HttpCookie> httpCookies = cookieManager.getCookieStore().getCookies();
-        for (final String setCookie : setCookies) {
-          try {
-            cookieManager.getCookieStore().add(null, HttpCookie.parse(setCookie).get(0));
-          }
-          catch (final IllegalArgumentException e) {
-            continue;
-          }
-
-          for (final HttpCookie httpCookie : httpCookies) {
-            final Date expiry = Dates.addTime(headers.getDate(), 0, 0, (int)httpCookie.getMaxAge());
-            final NewCookie cookie = new NewCookie(httpCookie.getName(), httpCookie.getValue(), httpCookie.getPath(), httpCookie.getDomain(), httpCookie.getVersion(), httpCookie.getComment(), (int)httpCookie.getMaxAge(), expiry, httpCookie.getSecure(), httpCookie.isHttpOnly());
-            cookies.put(cookie.getName(), cookie);
-          }
-        }
-      }
-      else {
+      if (httpCookies.size() == 0) {
         cookies = null;
       }
+      else {
+        cookies = new HashMap<>(httpCookies.size());
+        for (final HttpCookie httpCookie : httpCookies) {
+          final Date expiry = Dates.addTime(headers.getDate(), 0, 0, (int)httpCookie.getMaxAge());
+          final NewCookie cookie = new NewCookie(httpCookie.getName(), httpCookie.getValue(), httpCookie.getPath(), httpCookie.getDomain(), httpCookie.getVersion(), httpCookie.getComment(), (int)httpCookie.getMaxAge(), expiry, httpCookie.getSecure(), httpCookie.isHttpOnly());
+          cookies.put(cookie.getName(), cookie);
+        }
+      }
 
-      return new ResponseImpl(providers, null, status, headers, cookies, 200 <= responseCode && responseCode < 400 ? connection.getInputStream() : connection.getErrorStream(), null);
+      return new ResponseImpl(providers, null, status, headers, cookies, 200 <= responseCode && responseCode < 400 ? connection.getInputStream() : connection.getErrorStream(), null) {
+        @Override
+        public void close() {
+          super.close();
+          connection.disconnect();
+        }
+      };
     }
     catch (final IOException e) {
       throw new ProcessingException(e);
