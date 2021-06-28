@@ -98,9 +98,16 @@ public final class ParameterUtil {
     if (parameterType == Short.class || parameterType == short.class)
       return Short.valueOf(values.get(0));
 
-    // FIXME: What if it's out of range of char?
-    if (parameterType == Character.class || parameterType == char.class)
-      return Character.valueOf((char)Integer.parseInt(values.get(0)));
+    if (parameterType == Character.class || parameterType == char.class) {
+      final int value = Integer.parseInt(values.get(0));
+      if (value < Character.MIN_VALUE)
+        throw new NumberFormatException(values.get(0) + " is less than Character.MIN_VALUE");
+
+      if (value > Character.MAX_VALUE)
+        throw new NumberFormatException(values.get(0) + " is greater than Character.MAX_VALUE");
+
+      return Character.valueOf((char)value);
+    }
 
     if (parameterType == Byte.class || parameterType == byte.class)
       return Byte.valueOf(values.get(0));
@@ -126,7 +133,7 @@ public final class ParameterUtil {
       return method.invoke(null, CollectionUtil.toString(values, ';'));
     }
     catch (final IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException e) {
-      // FIXME: This error is kinda hidden in the logs, but it should somehow be highlighted to be fixed?!
+      // FIXME: This error is kind of hidden in the logs, but it should somehow be highlighted to be fixed?!
       logger.error(e.getMessage(), e);
       return e instanceof InvocationTargetException ? e.getCause() : e;
     }

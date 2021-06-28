@@ -106,7 +106,8 @@ class ServerBootstrap extends Bootstrap<ResourceManifest> {
           added = true;
         }
         else if (classPath != null || methodPath != null) {
-          // This is for the case of "JAX-RS 2.1 3.4.1: Sub-Resource Locator"
+          // FIXME: This is for the case of "JAX-RS 2.1 3.4.1: Sub-Resource Locator"
+          // FIXME: Need to use a Digraph or RefDigraph
           final Class<?> returnType = method.getReturnType();
           if (!returnType.isAnnotation() && !returnType.isAnonymousClass() && !returnType.isArray() && !returnType.isEnum() && !returnType.isInterface() && !returnType.isPrimitive() && !returnType.isSynthetic() && returnType != Void.class && acceptPackage(returnType.getPackage())) {
             afterAdd.add(resourceClasses -> {

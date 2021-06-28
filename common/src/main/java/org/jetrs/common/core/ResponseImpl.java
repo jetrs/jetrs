@@ -81,8 +81,8 @@ public class ResponseImpl extends Response {
 
   @Override
   public Object getEntity() {
-    if (entity instanceof InputStream && closed)
-      throw new IllegalStateException("response has been closed");
+    if (closed && entity instanceof InputStream)
+      throw new IllegalStateException("Response has been closed");
 
     return entity;
   }
@@ -187,8 +187,8 @@ public class ResponseImpl extends Response {
 
   @Override
   public void close() {
+    this.closed = true;
     if (entity instanceof InputStream) {
-      this.closed = true;
       try {
         ((InputStream)entity).close();
       }

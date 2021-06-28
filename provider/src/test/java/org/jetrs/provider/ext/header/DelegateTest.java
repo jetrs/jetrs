@@ -22,7 +22,7 @@ import org.junit.Test;
 
 public class DelegateTest {
   @Test
-  public void testParse() {
+  public void testParseStringArray() {
     assertArrayEquals(new String[0], Delegate.STRING_ARRAY.fromString(""));
     assertArrayEquals(new String[] {"one"}, Delegate.STRING_ARRAY.fromString("one"));
     assertArrayEquals(new String[] {"one", "two"}, Delegate.STRING_ARRAY.fromString("one, two"));

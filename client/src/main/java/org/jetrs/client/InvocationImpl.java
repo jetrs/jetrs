@@ -64,17 +64,14 @@ import org.jetrs.provider.util.ProviderUtil;
 import org.jetrs.provider.util.Responses;
 import org.libj.util.CollectionUtil;
 import org.libj.util.Dates;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class InvocationImpl implements Invocation {
-  private static final Logger logger = LoggerFactory.getLogger(InvocationImpl.class);
-
   private static final CookieStore cookieStore;
+
   static {
-    final CookieManager m = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
-    CookieHandler.setDefault(m);
-    cookieStore = m.getCookieStore();
+    final CookieManager cookieManager = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
+    CookieHandler.setDefault(cookieManager);
+    cookieStore = cookieManager.getCookieStore();
   }
 
   private final ClientImpl client;
@@ -170,8 +167,12 @@ public class InvocationImpl implements Invocation {
       return new ResponseImpl(providers, null, status, headers, cookies, 200 <= responseCode && responseCode < 400 ? connection.getInputStream() : connection.getErrorStream(), null) {
         @Override
         public void close() {
-          super.close();
-          connection.disconnect();
+          try {
+            super.close();
+          }
+          finally {
+            connection.disconnect();
+          }
         }
       };
     }

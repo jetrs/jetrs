@@ -810,4 +810,14 @@ public class HttpHeadersImplTest extends RuntimeDelegateTest {
     assertSame(list.getMirrorList(), headers.get(key));
     assertSame(list, headers.getMirrorMap().get(key));
   }
+
+  @Test
+  public void testParseMultiHeaderNoSort() {
+    final String value = "text/html,text/html,application/xhtml+xml,text/html,application/xhtml+xml,application/xml;q=0.9,text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9";
+    final String[] expected = value.split(",");
+    final ArrayList<String> values = new ArrayList<>(expected.length);
+    HttpHeadersImpl.parseMultiHeaderNoSort(values, value, ',');
+    final String[] actual = values.toArray(new String[values.size()]);
+    assertArrayEquals(expected, actual);
+  }
 }
