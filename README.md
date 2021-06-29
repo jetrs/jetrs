@@ -2,7 +2,7 @@
 
 **NOTE: This README it outdated!**
 
-[![Build Status](https://travis-ci.org/jetrs/jetrs.svg?branch=master)](https://travis-ci.org/jetrs/jetrs)
+[![Build Status](https://github.com/jetrs/jetrs/workflows/build.yml/badge.svg)](https://github.com/jetrs/jetrs/actions/workflows/build.yml)
 [![Coverage Status](https://coveralls.io/repos/github/jetrs/jetrs/badge.svg)](https://coveralls.io/github/jetrs/jetrs)
 [![Javadocs](https://www.javadoc.io/badge/org.jetrs/jetrs.svg)](https://www.javadoc.io/doc/org.jetrs/jetrs)
 [![Released Version](https://img.shields.io/maven-central/v/org.jetrs/jetrs.svg)](https://mvnrepository.com/artifact/org.jetrs/jetrs)
