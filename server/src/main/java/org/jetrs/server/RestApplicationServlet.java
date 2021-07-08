@@ -118,8 +118,8 @@ abstract class RestApplicationServlet extends RestHttpServlet {
     }
   }
 
-  private AnnotationInjector createAnnotationInjector(final ContainerRequestContext containerRequestContext, final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse, final HttpHeaders headers, final ServerContext serverContext) {
-    final AnnotationInjector annotationInjector = new AnnotationInjector(containerRequestContext, new RequestImpl(httpServletRequest.getMethod()), getServletConfig(), getServletContext(), httpServletRequest, httpServletResponse, headers, serverContext.getConfiguration(), serverContext.getApplication());
+  private AnnotationInjector createAnnotationInjector(final ContainerRequestContext containerRequestContext, final ContainerResponseContextImpl containerResponseContext, final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse, final HttpHeaders headers, final ServerContext serverContext) {
+    final AnnotationInjector annotationInjector = new AnnotationInjector(containerRequestContext, containerResponseContext, new RequestImpl(httpServletRequest.getMethod()), getServletConfig(), getServletContext(), httpServletRequest, httpServletResponse, headers, serverContext.getConfiguration(), serverContext.getApplication());
     annotationInjector.setProviders(serverContext.getProviders(annotationInjector));
     return annotationInjector;
   }
@@ -142,7 +142,7 @@ abstract class RestApplicationServlet extends RestHttpServlet {
     final ContainerRequestContextImpl containerRequestContext; // NOTE: This weird construct is done this way to at least somehow make the two objects cohesive
     httpServletRequest.setRequestContext(containerRequestContext = new ContainerRequestContextImpl(httpServletRequest, executionContext, serverContext.getReaderInterceptors()));
 
-    final AnnotationInjector annotationInjector = createAnnotationInjector(containerRequestContext, httpServletRequest, httpServletResponse, requestHeaders, serverContext);
+    final AnnotationInjector annotationInjector = createAnnotationInjector(containerRequestContext, containerResponseContext, httpServletRequest, httpServletResponse, requestHeaders, serverContext);
     final Providers providers = serverContext.getProviders(annotationInjector);
 
     ResourceMatch resource = null;

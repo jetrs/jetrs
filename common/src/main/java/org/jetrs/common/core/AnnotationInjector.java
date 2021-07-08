@@ -39,6 +39,7 @@ import javax.ws.rs.MatrixParam;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Context;
@@ -65,32 +66,9 @@ import org.slf4j.LoggerFactory;
 public class AnnotationInjector {
   private static final Logger logger = LoggerFactory.getLogger(AnnotationInjector.class);
 
-  private static final Class<?>[] contextTypes = {
-    // ResourceContext.class,
-    Application.class,
-    Configuration.class,
-    Providers.class,
-    SecurityContext.class,
-    UriInfo.class,
-    Request.class,
-    HttpHeaders.class,
-    HttpServletRequest.class,
-    HttpServletResponse.class,
-    ServletConfig.class,
-    ServletContext.class
-  };
-
-  private static Class<?> getAssignableContextClass(final Class<?> clazz) {
-    for (final Class<?> contextType : contextTypes)
-      if (contextType.isAssignableFrom(clazz))
-        return contextType;
-
-    return null;
-  }
-
   private static final Comparator<Constructor<?>> parameterCountComparator = Comparator.comparingInt(Constructor::getParameterCount);
 
-  public static final AnnotationInjector CONTEXT_ONLY = new AnnotationInjector(null, null, null, null, null, null, null, null, null);
+  public static final AnnotationInjector CONTEXT_ONLY = new AnnotationInjector(null, null, null, null, null, null, null, null, null, null);
 
   @SuppressWarnings("unchecked")
   private static final Class<Annotation>[] paramAnnotationTypes = new Class[] {QueryParam.class, PathParam.class, MatrixParam.class, CookieParam.class, HeaderParam.class};
@@ -129,6 +107,7 @@ public class AnnotationInjector {
   }
 
   private final ContainerRequestContext containerRequestContext;
+  private final ContainerResponseContext containerResponseContext;
   private final Request request;
   private final HttpHeaders httpHeaders;
   private final ServletConfig servletConfig;
@@ -140,8 +119,9 @@ public class AnnotationInjector {
   // NOTE: Have to leave this non-final because there is a circular reference in the createAnnotationInjector() factory method
   private Providers providers;
 
-  public AnnotationInjector(final ContainerRequestContext containerRequestContext, final Request request, final ServletConfig servletConfig, final ServletContext servletContext, final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse, final HttpHeaders httpHeaders, final Configuration configuration, final Application application) {
+  public AnnotationInjector(final ContainerRequestContext containerRequestContext, final ContainerResponseContext containerResponseContext, final Request request, final ServletConfig servletConfig, final ServletContext servletContext, final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse, final HttpHeaders httpHeaders, final Configuration configuration, final Application application) {
     this.containerRequestContext = containerRequestContext;
+    this.containerResponseContext = containerResponseContext;
     this.request = request;
     this.httpHeaders = httpHeaders;
     this.servletConfig = servletConfig;
@@ -158,44 +138,49 @@ public class AnnotationInjector {
 
   @SuppressWarnings("unchecked")
   public <T>T getContextObject(final Class<T> clazz) {
-    final Class<?> contextClass = getAssignableContextClass(clazz);
-    if (contextClass == null)
-      throw new IllegalArgumentException(getClass().getSimpleName() + " configuration does not allow injection of object of class " + clazz.getName());
+    // FIXME: Support ResourceContext
+    // if (ResourceContext.class.isAssignableFrom(clazz))
 
-    if (Request.class.isAssignableFrom(contextClass))
-      return (T)request;
+    if (ContainerRequestContext.class.isAssignableFrom(clazz))
+      return (T)containerRequestContext;
 
-    if (HttpHeaders.class.isAssignableFrom(contextClass))
-      return (T)httpHeaders;
-
-    if (ServletConfig.class.isAssignableFrom(contextClass))
-      return (T)servletConfig;
-
-    if (ServletContext.class.isAssignableFrom(contextClass))
-      return (T)servletContext;
-
-    if (HttpServletRequest.class.isAssignableFrom(contextClass))
-      return (T)httpServletRequest;
-
-    if (HttpServletResponse.class.isAssignableFrom(contextClass))
-      return (T)httpServletResponse;
-
-    if (UriInfo.class.isAssignableFrom(contextClass))
+    if (UriInfo.class.isAssignableFrom(clazz))
       return (T)containerRequestContext.getUriInfo();
 
-    if (Configuration.class.isAssignableFrom(contextClass))
-      return (T)configuration;
-
-    if (Application.class.isAssignableFrom(contextClass))
-      return (T)application;
-
-    if (SecurityContext.class.isAssignableFrom(contextClass))
+    if (SecurityContext.class.isAssignableFrom(clazz))
       return (T)containerRequestContext.getSecurityContext();
 
-    if (Providers.class.isAssignableFrom(contextClass))
+    if (Request.class.isAssignableFrom(clazz))
+      return (T)request;
+
+    if (HttpHeaders.class.isAssignableFrom(clazz))
+      return (T)httpHeaders;
+
+    if (ServletConfig.class.isAssignableFrom(clazz))
+      return (T)servletConfig;
+
+    if (ServletContext.class.isAssignableFrom(clazz))
+      return (T)servletContext;
+
+    if (HttpServletRequest.class.isAssignableFrom(clazz))
+      return (T)httpServletRequest;
+
+    if (HttpServletResponse.class.isAssignableFrom(clazz))
+      return (T)httpServletResponse;
+
+    if (Configuration.class.isAssignableFrom(clazz))
+      return (T)configuration;
+
+    if (Application.class.isAssignableFrom(clazz))
+      return (T)application;
+
+    if (Providers.class.isAssignableFrom(clazz))
       return (T)providers;
 
-    throw new IllegalStateException("Should have returned a @Context object");
+    if (ContainerResponseContext.class.isAssignableFrom(clazz))
+      return (T)containerResponseContext;
+
+    throw new IllegalArgumentException(getClass().getSimpleName() + " configuration does not allow injection of object of class " + clazz.getName());
   }
 
   public Object getParamObject(final Annotation annotation, final Class<?> parameterType, final Annotation[] annotations, final Type genericParameterType, final List<ProviderResource<ParamConverterProvider>> paramConverterProviders) {

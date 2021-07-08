@@ -74,4 +74,9 @@ public class ProviderResource<T> {
       throw new ProviderInstantiationException(e.getCause());
     }
   }
+
+  @Override
+  public String toString() {
+    return "Class: " + getProviderClass().getName() + ", Priority: " + getPriority();
+  }
 }

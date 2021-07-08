@@ -22,6 +22,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import javax.annotation.Priority;
+import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseContext;
@@ -35,16 +36,19 @@ import org.slf4j.LoggerFactory;
 
 final class ContainerFilters {
   private static final Logger logger = LoggerFactory.getLogger(ContainerFilters.class);
+  private static final int defaultPriority = Priorities.USER;
+
+  private static final Comparator<ProviderResource<?>> priorityComparator = Comparator.nullsFirst((o1, o2) -> {
+    final Priority p1 = o1.getProviderClass().getAnnotation(Priority.class);
+    final Priority p2 = o2.getProviderClass().getAnnotation(Priority.class);
+    final int v1 = p1 != null ? p1.value() : defaultPriority;
+    final int v2 = p2 != null ? p2.value() : defaultPriority;
+    return Integer.compare(v1, v2);
+  });
 
   private final List<ProviderResource<ContainerRequestFilter>> preMatchContainerRequestFilters = new ArrayList<>();
   private final List<ProviderResource<ContainerRequestFilter>> containerRequestFilters = new ArrayList<>();
   private final List<ProviderResource<ContainerResponseFilter>> containerResponseFilters = new ArrayList<>();
-
-  private static final Comparator<Object> priorityComparator = Comparator.nullsFirst((o1, o2) -> {
-    final Priority p1 = o1.getClass().getAnnotation(Priority.class);
-    final Priority p2 = o2.getClass().getAnnotation(Priority.class);
-    return p1 == null ? p2 == null ? 0 : 1 : p2 == null ? -1 : Integer.compare(p1.value(), p2.value());
-  });
 
   ContainerFilters(final List<? extends ProviderResource<ContainerRequestFilter>> requestFilters, final List<? extends ProviderResource<ContainerResponseFilter>> responseFilters) {
     for (final ProviderResource<ContainerRequestFilter> requestFilter : requestFilters)
