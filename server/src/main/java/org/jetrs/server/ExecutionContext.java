@@ -283,17 +283,39 @@ public class ExecutionContext {
       writeBody(resource, providers);
   }
 
-  void commitResponse() throws IOException {
+  void commitResponse(final ContainerRequestContext containerRequestContext) throws IOException {
     if (httpServletResponse.isCommitted())
       return;
 
-    if (entityStream != null && entityStream == containerResponseContext.getOutputStream()) {
-      final byte[] bytes = entityStream.toByteArray();
-      httpServletResponse.addHeader(HttpHeaders.CONTENT_LENGTH, String.valueOf(bytes.length));
-      httpServletResponse.getOutputStream().write(bytes);
-    }
+    try {
+      if (entityStream != null) {
+        final byte[] bytes = entityStream.toByteArray();
+        httpServletResponse.addHeader(HttpHeaders.CONTENT_LENGTH, String.valueOf(bytes.length));
+        httpServletResponse.getOutputStream().write(bytes);
+      }
 
-    // @see ServletResponse#getOutputStream :: "Calling flush() on the ServletOutputStream commits the response."
-    httpServletResponse.getOutputStream().flush();
+      // @see ServletResponse#getOutputStream :: "Calling flush() on the ServletOutputStream commits the response."
+      httpServletResponse.getOutputStream().flush();
+    }
+    finally {
+      // Absolutely positively assert that the streams are closed
+      if (containerRequestContext.getEntityStream() != null) {
+        try {
+          containerRequestContext.getEntityStream().close();
+        }
+        catch (final Throwable t) {
+          logger.error(t.getMessage(), t);
+        }
+      }
+
+      if (containerResponseContext.getOutputStream() != null) {
+        try {
+          containerResponseContext.getOutputStream().close();
+        }
+        catch (final Throwable t) {
+          logger.error(t.getMessage(), t);
+        }
+      }
+    }
   }
 }

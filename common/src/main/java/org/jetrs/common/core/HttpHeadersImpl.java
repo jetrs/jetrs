@@ -18,6 +18,7 @@ package org.jetrs.common.core;
 
 import java.net.URI;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
@@ -155,16 +156,16 @@ public class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements Ht
 
     while (headerNames.hasMoreElements()) {
       final String headerName = headerNames.nextElement();
-      final Enumeration<String> enumeration = request.getHeaders(headerName);
-      if (!enumeration.hasMoreElements())
+      final Enumeration<String> headerValues = request.getHeaders(headerName);
+      if (headerValues == null || !headerValues.hasMoreElements())
         continue;
 
       final List<String> values = getValues(headerName);
       final char[] delimiters = getHeaderValueDelimiters(headerName);
       do {
-        parseHeaderValuesFromString(values, enumeration.nextElement(), delimiters);
+        parseHeaderValuesFromString(values, headerValues.nextElement(), delimiters);
       }
-      while (enumeration.hasMoreElements());
+      while (headerValues.hasMoreElements());
     }
   }
 
@@ -178,9 +179,23 @@ public class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements Ht
    */
   public HttpHeadersImpl(final HttpServletResponse response) {
     this();
-    if (response != null)
-      for (final String header : response.getHeaders(HttpHeaders.ALLOW))
-        add(HttpHeaders.ALLOW, header);
+    if (response == null)
+      return;
+
+    final Collection<String> headerNames = response.getHeaderNames();
+    if (headerNames == null)
+      return;
+
+    for (final String headerName : headerNames) {
+      final Collection<String> headerValues = response.getHeaders(headerName);
+      if (headerValues == null || headerValues.size() == 0)
+        continue;
+
+      final List<String> values = getValues(headerName);
+      final char[] delimiters = getHeaderValueDelimiters(headerName);
+      for (final String headerValue : headerValues)
+        parseHeaderValuesFromString(values, headerValue, delimiters);
+    }
   }
 
   /**

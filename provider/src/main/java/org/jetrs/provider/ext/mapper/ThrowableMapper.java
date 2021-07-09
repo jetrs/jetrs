@@ -50,7 +50,11 @@ public class ThrowableMapper<T extends Throwable> implements ExceptionMapper<T> 
       }
     }
 
-    response.getStringHeaders().putSingle(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON);
-    return Response.fromResponse(response).entity(builder.append('}').toString()).build();
+    builder.append('}');
+
+    return Response.fromResponse(response)
+      .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+      .entity(builder.toString())
+      .build();
   }
 }

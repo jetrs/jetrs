@@ -35,19 +35,21 @@ import org.libj.lang.EnumerationIterator;
 import org.libj.lang.Enumerations;
 
 abstract class InterceptorContextImpl implements InterceptorContext {
-  private final Locale locale;
+  final HttpHeadersImpl headers;
   private final HttpServletRequest request;
   private Collection<String> propertyNames;
   private Annotation[] annotations;
   private Class<?> type;
   private Type genericType;
 
-  protected InterceptorContextImpl(final Locale locale, final HttpServletRequest request) {
-    this.locale = locale;
+  protected InterceptorContextImpl(final HttpServletRequest request, final HttpHeadersImpl headers) {
     this.request = request;
+    this.headers = headers;
   }
 
-  abstract HttpHeadersImpl getStringHeaders();
+  public final HttpHeadersImpl getStringHeaders() {
+    return headers;
+  }
 
   public final String getHeaderString(final String name) {
     return getStringHeaders().getFirst(name);
@@ -57,12 +59,12 @@ abstract class InterceptorContextImpl implements InterceptorContext {
     return (Date)getStringHeaders().getMirrorMap().getFirst(HttpHeaders.DATE);
   }
 
-  public final Locale getLanguage() {
-    return locale;
+  final HttpServletRequest getHttpServletRequest() {
+    return this.request;
   }
 
-  HttpServletRequest getHttpServletRequest() {
-    return this.request;
+  public final Locale getLanguage() {
+    return headers.getLanguage();
   }
 
   @Override

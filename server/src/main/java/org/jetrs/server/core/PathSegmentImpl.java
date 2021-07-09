@@ -54,7 +54,7 @@ public class PathSegmentImpl implements PathSegment {
     final MultivaluedMap<String,String> matrixParameters = new MultivaluedHashMap<>();
     int semi = -1;
     int equals = -1;
-    for (int i = 0; i < matrix.length(); ++i) {
+    for (int i = 0, len = matrix.length(); i < len; ++i) {
       final char ch = matrix.charAt(i);
       if (ch == '=') {
         equals = i;

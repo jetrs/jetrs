@@ -46,12 +46,10 @@ import org.jetrs.provider.util.ProviderUtil;
 
 public class ContainerResponseContextImpl extends InterceptorContextImpl implements ContainerResponseContext, WriterInterceptorContext {
   private final WriterInterceptor[] writerInterceptors;
-  private final HttpHeadersImpl headers;
   private Response.StatusType status;
 
   public ContainerResponseContextImpl(final HttpServletRequest request, final HttpServletResponse response, final WriterInterceptor[] writerInterceptors) {
-    super(response.getLocale(), request);
-    this.headers = new HttpHeadersImpl(response);
+    super(request, new HttpHeadersImpl(response));
     this.writerInterceptors = writerInterceptors;
     this.status = Response.Status.fromStatusCode(response.getStatus());
   }
@@ -79,11 +77,6 @@ public class ContainerResponseContextImpl extends InterceptorContextImpl impleme
   @Override
   public MultivaluedMap<String,Object> getHeaders() {
     return headers.getMirrorMap();
-  }
-
-  @Override
-  public HttpHeadersImpl getStringHeaders() {
-    return headers;
   }
 
   @Override

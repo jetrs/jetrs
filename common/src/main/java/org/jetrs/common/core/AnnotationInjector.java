@@ -72,6 +72,7 @@ public class AnnotationInjector {
 
   @SuppressWarnings("unchecked")
   private static final Class<Annotation>[] paramAnnotationTypes = new Class[] {QueryParam.class, PathParam.class, MatrixParam.class, CookieParam.class, HeaderParam.class};
+  // FIXME: Support `AsyncResponse` (JAX-RS 2.1 8.2)
 
   private static String toString(final Executable source) {
     final StringBuilder builder = new StringBuilder();
@@ -140,6 +141,9 @@ public class AnnotationInjector {
   public <T>T getContextObject(final Class<T> clazz) {
     // FIXME: Support ResourceContext
     // if (ResourceContext.class.isAssignableFrom(clazz))
+
+    // FIXME: Support ResourceContext (JAX-RS 2.1 6.5.1)
+    // if (ResourceInfo.class.isAssignableFrom(clazz))
 
     if (ContainerRequestContext.class.isAssignableFrom(clazz))
       return (T)containerRequestContext;

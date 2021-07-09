@@ -221,7 +221,7 @@ abstract class RestApplicationServlet extends RestHttpServlet {
     }
     finally {
       // (7) Commit Response
-      executionContext.commitResponse();
+      executionContext.commitResponse(containerRequestContext);
     }
   }
 }

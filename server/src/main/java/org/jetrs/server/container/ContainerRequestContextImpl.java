@@ -28,7 +28,6 @@ import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Cookie;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Request;
@@ -39,38 +38,20 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.ReaderInterceptorContext;
 
-import org.jetrs.common.core.HttpHeadersImpl;
 import org.jetrs.server.AbortFilterChainException;
 import org.jetrs.server.ExecutionContext;
 import org.jetrs.server.core.DefaultSecurityContext;
 import org.jetrs.server.core.UriInfoImpl;
 
 public class ContainerRequestContextImpl extends InterceptorContextImpl implements ContainerRequestContext, ReaderInterceptorContext {
-  private static Locale getAcceptableLanguage(final HttpHeaders requestHeaders) {
-    final List<Locale> list = requestHeaders.getAcceptableLanguages();
-    return list == null || list.size() == 0 ? null : list.get(0);
-  }
-
+  private final UriInfo uriInfo;
   private final ReaderInterceptor[] readerInterceptors;
 
-  private final HttpHeadersImpl headers;
-  private final List<MediaType> accept;
-  private final List<Locale> acceptLanguages;
-  private final UriInfo uriInfo;
-
   public ContainerRequestContextImpl(final HttpServletRequest httpServletRequest, final ExecutionContext executionContext, final ReaderInterceptor[] readerInterceptors) {
-    super(getAcceptableLanguage(executionContext.getRequestHeaders()), httpServletRequest);
-    this.readerInterceptors = readerInterceptors;
+    super(httpServletRequest, executionContext.getRequestHeaders());
     this.method = httpServletRequest.getMethod();
-    this.headers = executionContext.getRequestHeaders();
-    this.accept = headers.getAcceptableMediaTypes();
-    this.acceptLanguages = headers.getAcceptableLanguages();
     this.uriInfo = new UriInfoImpl(httpServletRequest, executionContext);
-  }
-
-  @Override
-  HttpHeadersImpl getStringHeaders() {
-    return headers.getRequestHeaders();
+    this.readerInterceptors = readerInterceptors;
   }
 
   @Override
@@ -110,17 +91,17 @@ public class ContainerRequestContextImpl extends InterceptorContextImpl implemen
 
   @Override
   public MultivaluedMap<String,String> getHeaders() {
-    return headers.getRequestHeaders();
+    return headers;
   }
 
   @Override
   public List<MediaType> getAcceptableMediaTypes() {
-    return accept;
+    return headers.getAcceptableMediaTypes();
   }
 
   @Override
   public List<Locale> getAcceptableLanguages() {
-    return acceptLanguages;
+    return headers.getAcceptableLanguages();
   }
 
   @Override
@@ -135,7 +116,7 @@ public class ContainerRequestContextImpl extends InterceptorContextImpl implemen
 
   @Override
   public boolean hasEntity() {
-    return headers.getLength() > 0;
+    return getEntityStream() != null;
   }
 
   private InputStream entityStream;

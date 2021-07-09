@@ -40,7 +40,6 @@ import org.jetrs.common.core.HttpHeadersImpl;
 import org.jetrs.common.core.ResponseImpl;
 import org.jetrs.provider.util.Responses;
 import org.jetrs.server.ServerContext;
-import org.libj.util.Locales;
 
 public class ResponseBuilderImpl extends Response.ResponseBuilder implements Cloneable {
   private final ServerContext serverContext;
@@ -103,9 +102,7 @@ public class ResponseBuilderImpl extends Response.ResponseBuilder implements Clo
 
   @Override
   public Response.ResponseBuilder allow(final String ... methods) {
-    for (final String method : methods)
-      headers.add(HttpHeaders.ALLOW, method);
-
+    headers.addAll(HttpHeaders.ALLOW, methods);
     return this;
   }
 
@@ -131,27 +128,29 @@ public class ResponseBuilderImpl extends Response.ResponseBuilder implements Clo
 
   @Override
   public Response.ResponseBuilder header(final String name, final Object value) {
-    if (value != null)
-      headers.getMirrorMap().add(name, value);
+    if (value == null)
+      headers.remove(name);
+    else if (value instanceof String)
+      headers.add(name, (String)value);
     else
-      headers.getMirrorMap().remove(name);
+      headers.getMirrorMap().add(name, value);
 
     return this;
   }
 
   @Override
   public Response.ResponseBuilder replaceAll(final MultivaluedMap<String,Object> headers) {
-    final MultivaluedMap<String,Object> mirrorMap = this.headers.getMirrorMap();
-    mirrorMap.clear();
+    this.headers.clear();
     for (final Map.Entry<String,List<Object>> entry : headers.entrySet())
-      mirrorMap.addAll(entry.getKey(), entry.getValue());
+      for (final Object value : entry.getValue())
+        if (value != null)
+          header(entry.getKey(), value);
 
     return this;
   }
 
   @Override
   public Response.ResponseBuilder language(final String language) {
-    headers.getMirrorMap().putSingle(HttpHeaders.CONTENT_LANGUAGE, Locales.parse(language));
     headers.putSingle(HttpHeaders.CONTENT_LANGUAGE, language);
     return this;
   }
