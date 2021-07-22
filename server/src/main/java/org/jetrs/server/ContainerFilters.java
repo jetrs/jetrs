@@ -55,8 +55,8 @@ final class ContainerFilters {
       (requestFilter.getProviderClass().isAnnotationPresent(PreMatching.class) ? preMatchContainerRequestFilters : containerRequestFilters).add(requestFilter);
 
     for (final ProviderResource<ContainerResponseFilter> responseFilter : responseFilters) {
-      if (responseFilter.getProviderClass().isAnnotationPresent(PreMatching.class))
-        logger.warn("@PreMatching annotation is not applicable to ContainerResponseFilter");
+      if (logger.isDebugEnabled() && responseFilter.getProviderClass().isAnnotationPresent(PreMatching.class))
+        logger.debug("@PreMatching annotation is not applicable to ContainerResponseFilter");
 
       containerResponseFilters.add(responseFilter);
     }

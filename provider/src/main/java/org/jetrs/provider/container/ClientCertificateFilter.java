@@ -149,16 +149,40 @@ public abstract class ClientCertificateFilter implements ContainerRequestFilter 
     return clientCertChain;
   }
 
-  private X509Certificate getCertificateFromHeader(final ContainerRequestContext requestContext, final String headerName) {
-    String value = requestContext.getHeaders().getFirst(Objects.requireNonNull(headerName));
-    if (value == null || (value = value.trim()).length() == 0)
-      return null;
-
-    value = Strings.trimStartEnd(value, '"', '"').trim();
+  private static X509Certificate[] getCertificateChain(final X509Certificate clientCert, final Set<X509Certificate> trustedRootCerts, final Set<X509Certificate> intermediateCerts) {
     try {
-      final X509Certificate cert = decodePem(value);
+      final X509Certificate[] certificateChain = buildCertificateChain(clientCert, trustedRootCerts, new HashSet<>(intermediateCerts));
+      if (logger.isDebugEnabled())
+        logger.debug("Client certificate (valid): SubjectDN=[" + clientCert.getSubjectDN() + "] SerialNumber=[" + clientCert.getSerialNumber() + "]");
+
+      return certificateChain;
+    }
+    catch (final CertPathBuilderException e) {
+      if ("unable to find valid certification path to requested target".equals(e.getMessage())) {
+        if (logger.isDebugEnabled())
+          logger.debug("Client certificate (invalid): SubjectDN=[" + clientCert.getSubjectDN() + "] SerialNumber=[" + clientCert.getSerialNumber() + "]");
+
+        return null;
+      }
+
+      throw new UnsupportedOperationException(e);
+    }
+    catch (final InvalidAlgorithmParameterException | NoSuchAlgorithmException e) {
+      throw new UnsupportedOperationException(e);
+    }
+  }
+
+  private X509Certificate getCertificateFromHeader(final ContainerRequestContext requestContext, final String headerName) {
+    String headerValue = requestContext.getHeaders().getFirst(Objects.requireNonNull(headerName));
+    return headerValue == null || (headerValue = headerValue.trim()).length() == 0 ? null : getCertificateFromHeader(headerName, headerValue);
+  }
+
+  private X509Certificate getCertificateFromHeader(final String headerName, String valueValue) {
+    valueValue = Strings.trimStartEnd(valueValue, '"', '"').trim();
+    try {
+      final X509Certificate cert = decodePem(valueValue);
       if (cert == null)
-        logger.warn("Invalid X.509 certificate in header \"" + headerName + "\": " + value);
+        logger.warn("Invalid X.509 certificate in header \"" + headerName + "\": " + valueValue);
       else if (logger.isDebugEnabled())
         logger.debug("Valid X.509 certificate in header \"" + headerName + "\"");
 
@@ -263,28 +287,7 @@ public abstract class ClientCertificateFilter implements ContainerRequestFilter 
    */
   protected X509Certificate[] getCertificateChain(final ContainerRequestContext requestContext, final String clientCertHeader, final Set<X509Certificate> trustedRootCerts, final Set<X509Certificate> intermediateCerts) {
     final X509Certificate clientCert = getCertificateFromHeader(requestContext, clientCertHeader);
-    if (clientCert == null)
-      return null;
-
-    if (logger.isDebugEnabled())
-      logger.debug("Client certificate: SubjectDN=[" + clientCert.getSubjectDN() + "] SerialNumber=[" + clientCert.getSerialNumber() + "]");
-
-    try {
-      return buildCertificateChain(clientCert, trustedRootCerts, new HashSet<>(intermediateCerts));
-    }
-    catch (final CertPathBuilderException e) {
-      if ("unable to find valid certification path to requested target".equals(e.getMessage())) {
-        if (logger.isDebugEnabled())
-          logger.debug("Client certificate: invalid");
-
-        return null;
-      }
-
-      throw new UnsupportedOperationException(e);
-    }
-    catch (final InvalidAlgorithmParameterException | NoSuchAlgorithmException e) {
-      throw new UnsupportedOperationException(e);
-    }
+    return clientCert == null ? null : getCertificateChain(clientCert, trustedRootCerts, intermediateCerts);
   }
 
   /**
