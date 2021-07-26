@@ -274,7 +274,7 @@ final class UriEncoder {
    * @param string input string
    * @return replaced output
    */
-  @SuppressWarnings({"ConstantConditions", "null"})
+  @SuppressWarnings("null")
   static CharSequence replaceBraces(final String string) {
     CharSequence sequence = string;
     char[] chars = null;
