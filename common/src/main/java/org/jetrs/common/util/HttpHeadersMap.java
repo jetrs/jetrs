@@ -147,60 +147,80 @@ public class HttpHeadersMap<V,R> extends MirrorMultivaluedMap<String,V,R> {
     super(toCloneable(values), toCloneable(reflections), mirror);
   }
 
-  private static String toLowerCase(final Object key) {
-    return key == null ? null : key.toString().toLowerCase();
+  /**
+   * Returns the provided header name in lower-case characters after validating
+   * that each character conforms to RFC 7230.
+   *
+   * @param headerName The header name.
+   * @return the provided header name in lower-case characters after validating
+   *         that each character conforms to RFC 7230.
+   * @see <a href="https://datatracker.ietf.org/doc/html/rfc7230">RFC 7230</a>
+   */
+  private static String format(final Object headerName) {
+    if (headerName == null)
+      return null;
+
+    final String str = headerName.toString();
+    final char[] chars = str.toCharArray();
+    for (int i = 0, ch; i < chars.length; ++i) {
+      ch = chars[i];
+      if (!('a' <= ch && ch <= 'z') && !('A' <= ch && ch <= 'Z') && !('0' <= ch && ch <= '9') && ch != '!' && ch != '#' && ch != '$' && ch != '%' && ch != '&' && ch != '\'' && ch != '*' && ch != '+' && ch != '-' && ch != '.' && ch != '^' && ch != '_' && ch != '`' && ch != '|' && ch != '~')
+        throw new IllegalArgumentException("Illegal header name: \"" + headerName + "\"");
+    }
+
+    return str.toLowerCase();
   }
 
   @Override
   protected Object beforeGet(final Object key) {
-    return super.beforeGet(toLowerCase(key));
+    return super.beforeGet(format(key));
   }
 
   @Override
   public boolean containsKey(final Object key) {
-    return super.containsKey(toLowerCase(key));
+    return super.containsKey(format(key));
   }
 
   @Override
   public void add(final String key, final V value) {
-    super.add(toLowerCase(key), value);
+    super.add(format(key), value);
   }
 
   @Override
   @SuppressWarnings("unchecked")
   public void addAll(final String key, final V ... newValues) {
-    super.addAll(toLowerCase(key), newValues);
+    super.addAll(format(key), newValues);
   }
 
   @Override
   public void addAll(final String key, final List<V> valueList) {
-    super.addAll(toLowerCase(key), valueList);
+    super.addAll(format(key), valueList);
   }
 
   @Override
   public void addFirst(final String key, final V value) {
-    super.addFirst(toLowerCase(key), value);
+    super.addFirst(format(key), value);
   }
 
   @Override
   public void putSingle(final String key, final V value) {
-    super.putSingle(toLowerCase(key), value);
+    super.putSingle(format(key), value);
   }
 
   @Override
   protected MirrorList<V,R> put(final String key, final List<V> oldValue, final List<V> newValue) {
-    return super.put(toLowerCase(key), oldValue, newValue);
+    return super.put(format(key), oldValue, newValue);
   }
 
   @Override
   public void putAll(final Map<? extends String,? extends List<V>> m) {
     for (final Map.Entry<? extends String,? extends List<V>> entry : m.entrySet())
-      put(toLowerCase(entry.getKey()), entry.getValue());
+      put(format(entry.getKey()), entry.getValue());
   }
 
   @Override
   public boolean remove(final Object key, final Object value) {
-    return super.remove(toLowerCase(key), value);
+    return super.remove(format(key), value);
   }
 
   @Override

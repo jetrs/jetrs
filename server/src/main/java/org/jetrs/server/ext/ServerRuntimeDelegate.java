@@ -20,10 +20,10 @@ import javax.servlet.http.HttpServlet;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
+import org.jetrs.common.core.ResponseBuilderImpl;
 import org.jetrs.common.ext.RuntimeDelegateImpl;
 import org.jetrs.server.EndpointFactory;
 import org.jetrs.server.ServerContext;
-import org.jetrs.server.core.ResponseBuilderImpl;
 
 public class ServerRuntimeDelegate extends RuntimeDelegateImpl {
   private final ServerContext serverContext;
@@ -50,6 +50,6 @@ public class ServerRuntimeDelegate extends RuntimeDelegateImpl {
     if (serverContext == null)
       throw new IllegalStateException("Server environment has not yet initialized");
 
-    return new ResponseBuilderImpl(serverContext);
+    return new ResponseBuilderImpl(serverContext.getProviders(null), serverContext.getReaderInterceptors());
   }
 }

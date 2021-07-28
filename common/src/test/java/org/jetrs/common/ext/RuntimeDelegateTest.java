@@ -16,6 +16,7 @@
 
 package org.jetrs.common.ext;
 
+import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.ext.RuntimeDelegate;
 
 public abstract class RuntimeDelegateTest {
@@ -24,5 +25,9 @@ public abstract class RuntimeDelegateTest {
   }
 
   public static class TestRuntimeDelegate extends RuntimeDelegateImpl {
+    @Override
+    public ResponseBuilder createResponseBuilder() {
+      throw new UnsupportedOperationException();
+    }
   }
 }

@@ -145,6 +145,19 @@ public class HttpHeadersImplTest extends RuntimeDelegateTest {
   }
 
   @Test
+  public void testInvalidHeaderName() {
+    try {
+      final HttpHeadersImpl headers = new HttpHeadersImpl();
+      headers.put("Invalid()", null);
+      fail("Expected IllegalArgumentException");
+    }
+    catch (final IllegalArgumentException e) {
+      if (!"Illegal header name: \"Invalid()\"".equals(e.getMessage()))
+        throw e;
+    }
+  }
+
+  @Test
   public void testAddFirst() {
     final String name = HttpHeaders.ACCEPT;
     final MediaType value = MediaTypes.parse("application/json;q=.5");

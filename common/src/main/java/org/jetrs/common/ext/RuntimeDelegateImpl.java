@@ -20,7 +20,6 @@ import java.util.ServiceConfigurationError;
 
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Link;
-import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.Variant.VariantListBuilder;
 import javax.ws.rs.ext.RuntimeDelegate;
@@ -75,12 +74,8 @@ public abstract class RuntimeDelegateImpl extends RuntimeDelegate {
   }
 
   @Override
-  public ResponseBuilder createResponseBuilder() {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
   public UriBuilder createUriBuilder() {
+    // TODO:
     return new UriBuilderImpl();
   }
 

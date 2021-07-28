@@ -16,7 +16,14 @@
 
 package org.jetrs.client.ext;
 
+import javax.ws.rs.core.Response.ResponseBuilder;
+
+import org.jetrs.common.core.ResponseBuilderImpl;
 import org.jetrs.common.ext.RuntimeDelegateImpl;
 
 public class ClientRuntimeDelegate extends RuntimeDelegateImpl {
+  @Override
+  public ResponseBuilder createResponseBuilder() {
+    return new ResponseBuilderImpl(null, null);
+  }
 }

@@ -14,7 +14,7 @@
  * program. If not, see <http://opensource.org/licenses/MIT/>.
  */
 
-package org.jetrs.server.core;
+package org.jetrs.common.core;
 
 import java.lang.annotation.Annotation;
 import java.net.URI;
@@ -35,27 +35,29 @@ import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Variant;
+import javax.ws.rs.ext.Providers;
+import javax.ws.rs.ext.ReaderInterceptor;
 
-import org.jetrs.common.core.HttpHeadersImpl;
-import org.jetrs.common.core.ResponseImpl;
 import org.jetrs.provider.util.Responses;
-import org.jetrs.server.ServerContext;
 
 public class ResponseBuilderImpl extends Response.ResponseBuilder implements Cloneable {
-  private final ServerContext serverContext;
+  private final Providers providers;
+  private final ReaderInterceptor[] readerInterceptors;
   private final HttpHeadersImpl headers;
   private int status;
   private String reasonPhrase;
   private Object entity;
   private Annotation[] annotations;
 
-  public ResponseBuilderImpl(final ServerContext serverContext) {
-    this.serverContext = serverContext;
+  public ResponseBuilderImpl(final Providers providers, final ReaderInterceptor[] readerInterceptors) {
+    this.providers = providers;
+    this.readerInterceptors = readerInterceptors;
     this.headers = new HttpHeadersImpl();
   }
 
   private ResponseBuilderImpl(final ResponseBuilderImpl copy) {
-    this.serverContext = copy.serverContext;
+    this.providers = copy.providers;
+    this.readerInterceptors = copy.readerInterceptors;
     this.headers = copy.headers.clone();
     this.status = copy.status;
     this.reasonPhrase = copy.reasonPhrase;
@@ -68,10 +70,7 @@ public class ResponseBuilderImpl extends Response.ResponseBuilder implements Clo
   public Response build() {
     // FIXME: Need to reset the builder to a "blank state", as is documented in the javadocs of this method
     final Response.StatusType statusType = reasonPhrase != null ? Responses.from(status, reasonPhrase) : Responses.from(status);
-    if (serverContext == null)
-      return null;
-
-    return new ResponseImpl(serverContext.getProviders(null), serverContext.getReaderInterceptors(), statusType, headers, cookies, entity, annotations);
+    return new ResponseImpl(providers, readerInterceptors, statusType, headers, cookies, entity, annotations);
   }
 
   @Override
