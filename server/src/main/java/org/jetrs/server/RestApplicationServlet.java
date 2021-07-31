@@ -206,7 +206,12 @@ abstract class RestApplicationServlet extends RestHttpServlet {
         // (5b) Filter Response
         stage = Stage.FILTER_RESPONSE;
         executionContext.filterContainerResponse(containerRequestContext, annotationInjector);
+      }
+      catch (final IOException | RuntimeException e1) {
+        e.addSuppressed(e1);
+      }
 
+      try {
         // (6b) Write Response
         stage = Stage.WRITE_RESPONSE;
         executionContext.writeResponse(resource, containerRequestContext, providers);
@@ -215,8 +220,8 @@ abstract class RestApplicationServlet extends RestHttpServlet {
         if (!(e1 instanceof WebApplicationException))
           httpServletResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 
-        e1.addSuppressed(e);
-        throw e1;
+        e.addSuppressed(e1);
+        throw e;
       }
     }
     finally {

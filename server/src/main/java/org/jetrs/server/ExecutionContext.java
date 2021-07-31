@@ -71,9 +71,9 @@ public class ExecutionContext {
 
   private boolean filterAndMatchWasCalled;
   private ResourceMatch resourceMatch;
-  private List<String> matchedURIs;
-  private List<String> decodedMatchedURIs;
-  private List<Object> matchedResources;
+  private List<String> matchedURIs = Collections.emptyList();
+  private List<String> decodedMatchedURIs = Collections.emptyList();
+  private List<Object> matchedResources = Collections.emptyList();
 
   ResourceMatch filterAndMatch(final ContainerRequestContext containerRequestContext, final AnnotationInjector annotationInjector) {
     if (filterAndMatchWasCalled)
