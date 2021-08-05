@@ -75,7 +75,9 @@ class ServerBootstrap extends Bootstrap<ResourceManifest> {
 
   private static <T>void add(final HttpMethod httpMethodAnnotation, final Method method, final Path classPath, final Path methodPath, final List<? super ResourceManifest> resources, final Class<? extends T> clazz, final T singleton) {
     final ResourceManifest manifest = new ResourceManifest(httpMethodAnnotation, method, classPath, methodPath, singleton);
-    logger.info((httpMethodAnnotation != null ? httpMethodAnnotation.value() : "*") + " " + manifest.getPathPattern().toString() + " -> " + clazz.getSimpleName() + "." + method.getName() + "()");
+    if (logger.isDebugEnabled())
+      logger.debug((httpMethodAnnotation != null ? httpMethodAnnotation.value() : "*") + " " + manifest.getPathPattern().toString() + " -> " + clazz.getSimpleName() + "." + method.getName() + "()");
+
     resources.add(manifest);
   }
 
