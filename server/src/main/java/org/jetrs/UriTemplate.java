@@ -102,10 +102,10 @@ class UriTemplate implements Comparable<UriTemplate> {
     final StringBuilder builder = new StringBuilder(baseUri);
     addLeadingRemoveTrailing(builder, classPath);
     addLeadingRemoveTrailing(builder, methodPath);
-    if (Strings.containsIgnoreCase(builder, "orgs"))
-      System.out.println();
     this.uriTemplate = builder.toString();
+
     builder.setLength(0);
+    builder.append('^');
 
     int literalChars = 0;
     int allGroups = 0;
@@ -137,7 +137,7 @@ class UriTemplate implements Comparable<UriTemplate> {
     }
 
     literalChars += append(builder, chars, end, chars.length);
-    builder.append("(/.*)?");
+    builder.append("(/.*)?$");
 
     this.regex = builder.toString();
     this.pattern = Patterns.compile(regex);

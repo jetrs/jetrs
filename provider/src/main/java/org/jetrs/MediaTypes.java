@@ -66,11 +66,13 @@ final class MediaTypes {
         if (!o2.isWildcardSubtype())
           return 1;
       }
-      else if (o2.isWildcardSubtype())
+      else if (o2.isWildcardSubtype()) {
         return -1;
+      }
     }
-    else if (o2.isWildcardType())
+    else if (o2.isWildcardType()) {
       return -1;
+    }
 
     final double q1 = getQuality("q", o1);
     final double q2 = getQuality("q", o2);

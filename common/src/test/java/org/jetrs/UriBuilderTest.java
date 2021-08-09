@@ -360,7 +360,7 @@ public class UriBuilderTest extends RuntimeDelegateTest {
       .path(UriBuilderResource.class.getMethod("get"))
       .path(UriBuilderResource.class.getMethod("locator"))
       .build();
-    Assert.assertEquals(URI.create("http://localhost:8080/base/method/locator"), uri);
+    Assert.assertEquals(URI.create("http://localhost:8080/base/method/locator/"), uri);
   }
 
   @Test

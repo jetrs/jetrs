@@ -19,6 +19,7 @@ package org.jetrs;
 import static org.junit.Assert.*;
 
 import java.lang.annotation.Annotation;
+import java.util.regex.Matcher;
 
 import javax.ws.rs.Path;
 
@@ -44,8 +45,8 @@ public class UriTemplateTest {
     }
   }
 
-  private static String pathToUriTemplate(final String classPath, final String methodPath) {
-    return new UriTemplate("", classPath == null ? null : new TestPath(classPath), methodPath == null ? null : new TestPath(methodPath)).getRegex();
+  private static UriTemplate pathToUriTemplate(final String classPath, final String methodPath) {
+    return new UriTemplate("", classPath == null ? null : new TestPath(classPath), methodPath == null ? null : new TestPath(methodPath));
   }
 
   private static Path newPath(final String value) {
@@ -130,20 +131,33 @@ public class UriTemplateTest {
   }
 
   @Test
+  public void testMultiArgMatcher() {
+    final String arg1 = "20bbaa58fd0ab49c6f6dc184f289abc7";
+    final String arg2 = "e685667db65e4a928a4e5a8c21cc7c0f";
+    final UriTemplate uriTemplate = pathToUriTemplate("test", "{arg1:[\\da-z]{32}}/literal/{arg2}");
+    final String requestPath = "/test/" + arg1 + "/literal/" + arg2;
+    final Matcher matcher = uriTemplate.matcher(requestPath);
+    assertTrue(matcher.find());
+    assertEquals(requestPath, matcher.group(0));
+    assertEquals(arg1, matcher.group(1));
+    assertEquals(arg2, matcher.group(2));
+  }
+
+  @Test
   public void test() {
-    assertEquals("/foo/(?<id>[^/]+?)(/.*)?", pathToUriTemplate("/foo", "{id}"));
-    assertEquals("/foo/bar/(?<id>[^/]+?)(/.*)?", pathToUriTemplate("/foo", "bar/{id}"));
-    assertEquals("/foo/(?<id>[^/]+?)/bar(/.*)?", pathToUriTemplate("/foo", "{id}/bar"));
+    assertEquals("^/foo/(?<id>[^/]+?)(/.*)?$", pathToUriTemplate("/foo", "{id}").getRegex());
+    assertEquals("^/foo/bar/(?<id>[^/]+?)(/.*)?$", pathToUriTemplate("/foo", "bar/{id}").getRegex());
+    assertEquals("^/foo/(?<id>[^/]+?)/bar(/.*)?$", pathToUriTemplate("/foo", "{id}/bar").getRegex());
 
-    assertEquals("/foo/bar/(?<id>([^/]+?))(/.*)?", pathToUriTemplate("/foo", "bar/{id:([^/]+?)}"));
-    assertEquals("/foo/bar/(?<id>[^/]+?)(/.*)?", pathToUriTemplate("/foo", "bar/{id:[^/]+?}"));
-    assertEquals("/foo/bar/(?<id>([^/]+?))/(?<name>[^/]+?)(/.*)?", pathToUriTemplate("/foo", "bar/{id:([^/]+?)}/{name}"));
-    assertEquals("/foo/bar/(?<id>[^/]+?)/(?<name>[^/]+?)(/.*)?", pathToUriTemplate("/foo", "bar/{id:[^/]+?}/{name}"));
-    assertEquals("/foo/(?<id>([^/]+?))/bar/(?<name>[^/]+?)/hi(/.*)?", pathToUriTemplate("/foo", "{id:([^/]+?)}/bar/{name}/hi"));
-    assertEquals("/foo/(?<id>[^/]+?)/bar/(?<name>[^/]+?)/hi(/.*)?", pathToUriTemplate("/foo", "{id:[^/]+?}/bar/{name}/hi"));
-    assertEquals("/foo/bar/(?<id>([^/]+?))/blank/(?<name>[^/]+?)(/.*)?", pathToUriTemplate("/foo", "bar/{id:([^/]+?)}/blank/{name}"));
-    assertEquals("/foo/bar/(?<id>[^/]+?)/blank/(?<name>[^/]+?)(/.*)?", pathToUriTemplate("/foo", "bar/{id:[^/]+?}/blank/{name}"));
+    assertEquals("^/foo/bar/(?<id>([^/]+?))(/.*)?$", pathToUriTemplate("/foo", "bar/{id:([^/]+?)}").getRegex());
+    assertEquals("^/foo/bar/(?<id>[^/]+?)(/.*)?$", pathToUriTemplate("/foo", "bar/{id:[^/]+?}").getRegex());
+    assertEquals("^/foo/bar/(?<id>([^/]+?))/(?<name>[^/]+?)(/.*)?$", pathToUriTemplate("/foo", "bar/{id:([^/]+?)}/{name}").getRegex());
+    assertEquals("^/foo/bar/(?<id>[^/]+?)/(?<name>[^/]+?)(/.*)?$", pathToUriTemplate("/foo", "bar/{id:[^/]+?}/{name}").getRegex());
+    assertEquals("^/foo/(?<id>([^/]+?))/bar/(?<name>[^/]+?)/hi(/.*)?$", pathToUriTemplate("/foo", "{id:([^/]+?)}/bar/{name}/hi").getRegex());
+    assertEquals("^/foo/(?<id>[^/]+?)/bar/(?<name>[^/]+?)/hi(/.*)?$", pathToUriTemplate("/foo", "{id:[^/]+?}/bar/{name}/hi").getRegex());
+    assertEquals("^/foo/bar/(?<id>([^/]+?))/blank/(?<name>[^/]+?)(/.*)?$", pathToUriTemplate("/foo", "bar/{id:([^/]+?)}/blank/{name}").getRegex());
+    assertEquals("^/foo/bar/(?<id>[^/]+?)/blank/(?<name>[^/]+?)(/.*)?$", pathToUriTemplate("/foo", "bar/{id:[^/]+?}/blank/{name}").getRegex());
 
-    assertEquals("/(?<country>[a-zA-Z]{2})(?<p>/?)(?<state>([a-zA-Z]{2})?)(/.*)?", pathToUriTemplate(null, "{country:[a-zA-Z]{2}}{p:/?}{state:([a-zA-Z]{2})?}"));
+    assertEquals("^/(?<country>[a-zA-Z]{2})(?<p>/?)(?<state>([a-zA-Z]{2})?)(/.*)?$", pathToUriTemplate(null, "{country:[a-zA-Z]{2}}{p:/?}{state:([a-zA-Z]{2})?}").getRegex());
   }
 }

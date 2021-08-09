@@ -48,7 +48,7 @@ public class RootService1 {
   }
 
   @GET
-  @Path("/2")
+  @Path("/2/")
   public Response get2() {
     return Response.ok("GET").build();
   }

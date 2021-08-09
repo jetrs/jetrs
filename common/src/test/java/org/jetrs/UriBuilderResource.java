@@ -27,7 +27,7 @@ import javax.ws.rs.core.UriBuilder;
 @Path("/resource")
 public class UriBuilderResource {
   @GET
-  @Path("/method")
+  @Path("method")
   public String get() {
     final UriBuilder builder = UriBuilder
       .fromPath("/customers/{id}")
@@ -40,7 +40,7 @@ public class UriBuilderResource {
   }
 
   @GET
-  @Path("/locator")
+  @Path("locator/")
   public String locator() {
     final UriBuilder builder = UriBuilder
       .fromPath("/customers/{id}")
@@ -52,7 +52,7 @@ public class UriBuilderResource {
   }
 
   @GET
-  @Path("/test3")
+  @Path("/test3/")
   public String test3UriBuilder() {
     final UriBuilder builder = UriBuilder
       .fromPath("/customers/{id}")

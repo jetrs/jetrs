@@ -18,6 +18,7 @@ package org.jetrs;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Comparator;
 import java.util.List;
 
 import javax.servlet.ServletException;
@@ -27,6 +28,29 @@ import javax.ws.rs.ext.ParamConverterProvider;
 import org.libj.lang.Assertions;
 
 class ResourceMatch implements Comparable<ResourceMatch> {
+  private static final Comparator<MultivaluedMap<String,String>> PATH_PARAMETERS_COMPARATOR = new Comparator<MultivaluedMap<String,String>>() {
+    @Override
+    public int compare(final MultivaluedMap<String,String> o1, final MultivaluedMap<String,String> o2) {
+      int s1 = o1.size();
+      int s2 = o2.size();
+      if (s1 > s2)
+        return -1;
+
+      if (s1 < s2)
+        return 1;
+
+      s1 = o1.values().toString().length();
+      s2 = o2.values().toString().length();
+      if (s1 > s2)
+        return -1;
+
+      if (s1 < s2)
+        return 1;
+
+      return 0;
+    }
+  };
+
   private final ResourceManifest manifest;
   private final Class<?> resourceClass;
   private Object singleton;
@@ -71,7 +95,11 @@ class ResourceMatch implements Comparable<ResourceMatch> {
 
   @Override
   public int compareTo(final ResourceMatch o) {
-    final int c = manifest.compareTo(o.manifest);
+    int c = manifest.compareTo(o.manifest);
+    if (c != 0)
+      return c;
+
+    c = PATH_PARAMETERS_COMPARATOR.compare(getPathParameters(), o.getPathParameters());
     return c != 0 ? c : MediaTypes.QUALITY_COMPARATOR.compare(accept, o.accept);
   }
 
