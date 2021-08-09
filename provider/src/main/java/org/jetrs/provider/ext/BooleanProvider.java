@@ -27,11 +27,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.ext.MessageBodyReader;
-import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
-import org.jetrs.provider.util.ProviderUtil;
+import org.jetrs.MessageBodyProvider;
 
 /**
  * JAX-RS 2.1 Section 4.2.4
@@ -39,7 +37,7 @@ import org.jetrs.provider.util.ProviderUtil;
 @Provider
 @Consumes("text/plain")
 @Produces("text/plain")
-public class BooleanProvider implements MessageBodyReader<Boolean>, MessageBodyWriter<Boolean> {
+public class BooleanProvider extends MessageBodyProvider<Boolean> {
   @Override
   public boolean isReadable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
     return type == Boolean.class;
@@ -47,7 +45,7 @@ public class BooleanProvider implements MessageBodyReader<Boolean>, MessageBodyW
 
   @Override
   public Boolean readFrom(final Class<Boolean> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,String> httpHeaders, final InputStream entityStream) throws IOException, WebApplicationException {
-    return Boolean.valueOf(ProviderUtil.toString(entityStream, mediaType.getParameters().get(MediaType.CHARSET_PARAMETER)));
+    return Boolean.valueOf(MessageBodyProvider.toString(entityStream, mediaType.getParameters().get(MediaType.CHARSET_PARAMETER)));
   }
 
   @Override
@@ -62,6 +60,6 @@ public class BooleanProvider implements MessageBodyReader<Boolean>, MessageBodyW
 
   @Override
   public void writeTo(final Boolean t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,Object> httpHeaders, final OutputStream entityStream) throws IOException, WebApplicationException {
-    entityStream.write(ProviderUtil.toBytes(t, mediaType));
+    entityStream.write(MessageBodyProvider.toBytes(t, mediaType));
   }
 }

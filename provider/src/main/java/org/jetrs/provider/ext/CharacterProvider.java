@@ -29,13 +29,9 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.ext.MessageBodyReader;
-import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
-import org.jetrs.provider.ext.header.MediaTypes;
-import org.jetrs.provider.util.MultivaluedMaps;
-import org.jetrs.provider.util.ProviderUtil;
+import org.jetrs.MessageBodyProvider;
 
 /**
  * JAX-RS 2.1 Section 4.2.4
@@ -43,18 +39,18 @@ import org.jetrs.provider.util.ProviderUtil;
 @Provider
 @Consumes("text/plain")
 @Produces("text/plain")
-public class CharacterProvider implements MessageBodyReader<Character>, MessageBodyWriter<Character> {
+public class CharacterProvider extends MessageBodyProvider<Character> {
   @Override
   public boolean isReadable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
-    return type == Character.class && MediaTypes.TEXT_PLAIN.isCompatible(mediaType);
+    return type == Character.class && MediaType.TEXT_PLAIN_TYPE.isCompatible(mediaType);
   }
 
   @Override
   public Character readFrom(final Class<Character> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,String> httpHeaders, final InputStream entityStream) throws IOException, BadRequestException {
-    if (MultivaluedMaps.getFirstOrDefault(httpHeaders, HttpHeaders.CONTENT_LENGTH, Long.MAX_VALUE, Long::parseLong) == 0)
+    if (getFirstOrDefault(httpHeaders, HttpHeaders.CONTENT_LENGTH, Long.MAX_VALUE, Long::parseLong) == 0)
       return null;
 
-    final String data = ProviderUtil.toString(entityStream, mediaType.getParameters().get(MediaType.CHARSET_PARAMETER));
+    final String data = MessageBodyProvider.toString(entityStream, mediaType.getParameters().get(MediaType.CHARSET_PARAMETER));
     if (data.length() > 1)
       throw new BadRequestException();
 
@@ -73,6 +69,6 @@ public class CharacterProvider implements MessageBodyReader<Character>, MessageB
 
   @Override
   public void writeTo(final Character t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,Object> httpHeaders, final OutputStream entityStream) throws IOException, WebApplicationException {
-    entityStream.write(ProviderUtil.toBytes(t, mediaType));
+    entityStream.write(MessageBodyProvider.toBytes(t, mediaType));
   }
 }

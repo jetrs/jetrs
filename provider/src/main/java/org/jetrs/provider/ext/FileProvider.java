@@ -30,10 +30,9 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.ext.MessageBodyReader;
-import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
+import org.jetrs.MessageBodyProvider;
 import org.libj.util.function.BiObjBiLongConsumer;
 import org.libj.util.function.Throwing;
 
@@ -41,7 +40,7 @@ import org.libj.util.function.Throwing;
  * JAX-RS 2.1 Section 4.2.4
  */
 @Provider
-public class FileProvider implements MessageBodyReader<File>, MessageBodyWriter<File> {
+public class FileProvider extends MessageBodyProvider<File> {
   static long writeTo(final Object range, final File file, final OutputStream out, final BiObjBiLongConsumer<? super RandomAccessFile,? super OutputStream> consumer) throws IOException {
     final String rangeString;
     final int start;

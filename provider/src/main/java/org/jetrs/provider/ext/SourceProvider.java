@@ -25,8 +25,6 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.ext.MessageBodyReader;
-import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 import javax.xml.transform.Source;
 import javax.xml.transform.TransformerException;
@@ -34,7 +32,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
-import org.jetrs.provider.ext.header.MediaTypes;
+import org.jetrs.MessageBodyProvider;
 
 /**
  * JAX-RS 2.1 Section 4.2.4
@@ -42,12 +40,12 @@ import org.jetrs.provider.ext.header.MediaTypes;
 @Provider
 @Consumes({"text/xml", "application/xml", "application/*+xml"})
 @Produces({"text/xml", "application/xml", "application/*+xml"})
-public class SourceProvider implements MessageBodyReader<Source>, MessageBodyWriter<Source> {
+public class SourceProvider extends MessageBodyProvider<Source> {
   private static final TransformerFactory transformerFactory = TransformerFactory.newInstance();
 
   @Override
   public boolean isReadable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
-    return Source.class.isAssignableFrom(type) && (MediaTypes.TEXT_XML.isCompatible(mediaType) || MediaTypes.APPLICATION_XML.isCompatible(mediaType) || "application".equals(mediaType.getType()) && mediaType.getSubtype().endsWith("+xml"));
+    return Source.class.isAssignableFrom(type) && (MediaType.TEXT_XML_TYPE.isCompatible(mediaType) || MediaType.APPLICATION_XML_TYPE.isCompatible(mediaType) || "application".equals(mediaType.getType()) && mediaType.getSubtype().endsWith("+xml"));
   }
 
   @Override

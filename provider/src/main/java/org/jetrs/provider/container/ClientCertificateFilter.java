@@ -37,13 +37,13 @@ import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 
+import org.libj.lang.Assertions;
 import org.libj.lang.Strings;
 import org.openjax.security.cert.X509Certificates;
 import org.slf4j.Logger;
@@ -80,9 +80,12 @@ public abstract class ClientCertificateFilter implements ContainerRequestFilter 
    *          certificates are to be added.
    * @throws KeyStoreException If the keystore has not been initialized
    *           (loaded).
-   * @throws NullPointerException If any parameter is null.
+   * @throws IllegalArgumentException If any parameter is null.
    */
   protected static void readTrustStore(final KeyStore keyStore, final Set<X509Certificate> trustedRootCerts, final Set<X509Certificate> intermediateCerts) throws KeyStoreException {
+    Assertions.assertNotNull(keyStore);
+    Assertions.assertNotNull(trustedRootCerts);
+    Assertions.assertNotNull(intermediateCerts);
     for (final Enumeration<String> aliases = keyStore.aliases(); aliases.hasMoreElements();) {
       final String alias = aliases.nextElement();
       if (keyStore.isCertificateEntry(alias)) {
@@ -142,11 +145,7 @@ public abstract class ClientCertificateFilter implements ContainerRequestFilter 
     if (logger.isDebugEnabled())
       logger.debug("Certification path built with " + certPath.getCertificates().size() + " X.509 Certificates");
 
-    final X509Certificate[] clientCertChain = convertCertPathtoX509CertArray(certPath.getCertificates(), 0, 0);
-    if (clientCertChain != null && logger.isDebugEnabled())
-      logger.debug("Client certificate: Chain DN: " + Arrays.stream(clientCertChain).map(c -> c.getSubjectDN().toString()).collect(Collectors.joining(",", "{", "}")));
-
-    return clientCertChain;
+    return convertCertPathtoX509CertArray(certPath.getCertificates(), 0, 0);
   }
 
   private static X509Certificate[] getCertificateChain(final X509Certificate clientCert, final Set<X509Certificate> trustedRootCerts, final Set<X509Certificate> intermediateCerts) {
@@ -173,7 +172,7 @@ public abstract class ClientCertificateFilter implements ContainerRequestFilter 
   }
 
   private X509Certificate getCertificateFromHeader(final ContainerRequestContext requestContext, final String headerName) {
-    String headerValue = requestContext.getHeaders().getFirst(Objects.requireNonNull(headerName));
+    String headerValue = requestContext.getHeaders().getFirst(Assertions.assertNotNull(headerName));
     return headerValue == null || (headerValue = headerValue.trim()).length() == 0 ? null : getCertificateFromHeader(headerName, headerValue);
   }
 
@@ -239,14 +238,14 @@ public abstract class ClientCertificateFilter implements ContainerRequestFilter 
    *         is encountered) specifying the additional chain certificates in the
    *         provided {@link ContainerRequestContext}, or {@code null} if the
    *         specified header does not exist or the certificate is not valid.
-   * @throws NullPointerException If any parameter is null.
+   * @throws IllegalArgumentException If any parameter is null.
    */
   protected X509Certificate[] getCertificateChain(final ContainerRequestContext requestContext, final String clientCertHeader, final String clientCertChainHeaderPrefix) {
     final X509Certificate clientCert = getCertificateFromHeader(requestContext, clientCertHeader);
     if (clientCert == null)
       return null;
 
-    final X509Certificate[] clientCertChain = getCertificateChain(requestContext, Objects.requireNonNull(clientCertChainHeaderPrefix), 0, 1);
+    final X509Certificate[] clientCertChain = getCertificateChain(requestContext, Assertions.assertNotNull(clientCertChainHeaderPrefix), 0, 1);
     clientCertChain[0] = clientCert;
 
     if (logger.isDebugEnabled())
@@ -283,7 +282,7 @@ public abstract class ClientCertificateFilter implements ContainerRequestFilter 
    *         and {@code intermediateCerts} specifying the {@link KeyStore Trust
    *         Store}, or {@code null} if the specified header does not exist or
    *         the certificate is not valid.
-   * @throws NullPointerException If any parameter is null.
+   * @throws IllegalArgumentException If any parameter is null.
    */
   protected X509Certificate[] getCertificateChain(final ContainerRequestContext requestContext, final String clientCertHeader, final Set<X509Certificate> trustedRootCerts, final Set<X509Certificate> intermediateCerts) {
     final X509Certificate clientCert = getCertificateFromHeader(requestContext, clientCertHeader);

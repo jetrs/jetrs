@@ -36,23 +36,16 @@ import javax.ws.rs.ext.Provider;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
 
-import org.jetrs.common.EntityReaderProviderResource;
-import org.jetrs.common.EntityWriterProviderResource;
-import org.jetrs.common.ExceptionMappingProviderResource;
-import org.jetrs.common.ProviderInstantiationException;
-import org.jetrs.common.ProviderResource;
-import org.jetrs.common.ReaderInterceptorEntityProviderResource;
-import org.jetrs.common.WriterInterceptorEntityProviderResource;
 import org.libj.lang.PackageLoader;
 import org.libj.lang.PackageNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Bootstrap<R extends Comparable<? super R>> {
-  protected static final Logger logger = LoggerFactory.getLogger(Bootstrap.class);
+class Bootstrap<R extends Comparable<? super R>> {
+  static final Logger logger = LoggerFactory.getLogger(Bootstrap.class);
   private static final String[] excludeStartsWith = {"jdk.", "java.", "javax.", "com.sun.", "sun.", "org.w3c.", "org.xml.", "org.jvnet.", "org.joda.", "org.jcp.", "apple.security."};
 
-  protected static boolean acceptPackage(final Package pkg) {
+  static boolean acceptPackage(final Package pkg) {
     for (int i = 0; i < excludeStartsWith.length; ++i)
       if (pkg.getName().startsWith(excludeStartsWith[i]))
         return false;
@@ -61,7 +54,7 @@ public class Bootstrap<R extends Comparable<? super R>> {
   }
 
   @SuppressWarnings("unchecked")
-  protected <T>boolean addResourceOrProvider(final List<Consumer<Set<Class<?>>>> afterAdds, final List<R> resources, final List<? super ExceptionMappingProviderResource> exceptionMappers, final List<? super EntityReaderProviderResource> entityReaders, final List<? super EntityWriterProviderResource> entityWriters, final List<? super ProviderResource<ContainerRequestFilter>> requestFilters, final List<? super ProviderResource<ContainerResponseFilter>> responseFilters, final List<? super ReaderInterceptorEntityProviderResource> readerInterceptors, final List<? super WriterInterceptorEntityProviderResource> writerInterceptors, final List<? super ProviderResource<ParamConverterProvider>> paramConverterProviders, final Class<? extends T> clazz, final T singleton) throws IllegalAccessException, InstantiationException, InvocationTargetException {
+  <T>boolean addResourceOrProvider(final List<Consumer<Set<Class<?>>>> afterAdds, final List<R> resources, final List<? super ExceptionMappingProviderResource> exceptionMappers, final List<? super EntityReaderProviderResource> entityReaders, final List<? super EntityWriterProviderResource> entityWriters, final List<? super ProviderResource<ContainerRequestFilter>> requestFilters, final List<? super ProviderResource<ContainerResponseFilter>> responseFilters, final List<? super ReaderInterceptorEntityProviderResource> readerInterceptors, final List<? super WriterInterceptorEntityProviderResource> writerInterceptors, final List<? super ProviderResource<ParamConverterProvider>> paramConverterProviders, final Class<? extends T> clazz, final T singleton, final boolean scanned) throws IllegalAccessException, InstantiationException, InvocationTargetException {
     if (clazz.isAnnotationPresent(Provider.class)) {
       if (MessageBodyReader.class.isAssignableFrom(clazz))
         entityReaders.add(new EntityReaderProviderResource((Class<MessageBodyReader<?>>)clazz, (MessageBodyReader<?>)singleton));
@@ -87,23 +80,26 @@ public class Bootstrap<R extends Comparable<? super R>> {
       if (ContainerResponseFilter.class.isAssignableFrom(clazz))
         responseFilters.add(new ProviderResource<>((Class<ContainerResponseFilter>)clazz, (ContainerResponseFilter)singleton));
     }
+    else if (!scanned) {
+      logger.warn("Ignored resource class " + clazz.getName() + " due to absent @Provider annotation");
+    }
 
     return false;
   }
 
   @SuppressWarnings("unchecked")
-  public final void init(final Set<?> singletons, final Set<Class<?>> classes, final List<R> resources, final List<? super ExceptionMappingProviderResource> exceptionMappers, final List<? super EntityReaderProviderResource> entityReaders, final List<? super EntityWriterProviderResource> entityWriters, final List<? super ProviderResource<ContainerRequestFilter>> requestFilters, final List<? super ProviderResource<ContainerResponseFilter>> responseFilters, final List<? super ReaderInterceptorEntityProviderResource> readerInterceptors, final List<? super WriterInterceptorEntityProviderResource> writerInterceptors, final List<? super ProviderResource<ParamConverterProvider>> paramConverterProviders) throws IllegalAccessException, InstantiationException, InvocationTargetException, PackageNotFoundException, IOException {
+  final void init(final Set<?> singletons, final Set<Class<?>> classes, final List<R> resources, final List<? super ExceptionMappingProviderResource> exceptionMappers, final List<? super EntityReaderProviderResource> entityReaders, final List<? super EntityWriterProviderResource> entityWriters, final List<? super ProviderResource<ContainerRequestFilter>> requestFilters, final List<? super ProviderResource<ContainerResponseFilter>> responseFilters, final List<? super ReaderInterceptorEntityProviderResource> readerInterceptors, final List<? super WriterInterceptorEntityProviderResource> writerInterceptors, final List<? super ProviderResource<ParamConverterProvider>> paramConverterProviders) throws IllegalAccessException, InstantiationException, InvocationTargetException, PackageNotFoundException, IOException {
     final List<Consumer<Set<Class<?>>>> afterAdds = new ArrayList<>();
     if (singletons != null || classes != null) {
       if (singletons != null)
         for (final Object singleton : singletons)
           if (singleton != null)
-            addResourceOrProvider(afterAdds, resources, exceptionMappers, entityReaders, entityWriters, requestFilters, responseFilters, readerInterceptors, writerInterceptors, paramConverterProviders, singleton.getClass(), singleton);
+            addResourceOrProvider(afterAdds, resources, exceptionMappers, entityReaders, entityWriters, requestFilters, responseFilters, readerInterceptors, writerInterceptors, paramConverterProviders, singleton.getClass(), singleton, false);
 
       if (classes != null)
         for (final Class<?> cls : classes)
           if (cls != null)
-            addResourceOrProvider(afterAdds, resources, exceptionMappers, entityReaders, entityWriters, requestFilters, responseFilters, readerInterceptors, writerInterceptors, paramConverterProviders, cls, null);
+            addResourceOrProvider(afterAdds, resources, exceptionMappers, entityReaders, entityWriters, requestFilters, responseFilters, readerInterceptors, writerInterceptors, paramConverterProviders, cls, null, false);
 
       if (afterAdds.size() > 0) {
         final Set<Class<?>> resourceClasses;
@@ -130,7 +126,7 @@ public class Bootstrap<R extends Comparable<? super R>> {
       final Predicate<Class<?>> initialize = t -> {
         if (!Modifier.isAbstract(t.getModifiers()) && !initedClasses.contains(t)) {
           try {
-            if (addResourceOrProvider(afterAdds, resources, exceptionMappers, entityReaders, entityWriters, requestFilters, responseFilters, readerInterceptors, writerInterceptors, paramConverterProviders, t, null))
+            if (addResourceOrProvider(afterAdds, resources, exceptionMappers, entityReaders, entityWriters, requestFilters, responseFilters, readerInterceptors, writerInterceptors, paramConverterProviders, t, null, true))
               (resourceClasses[1] == null ? resourceClasses[1] = new HashSet<>() : resourceClasses[1]).add(t);
           }
           catch (final IllegalAccessException | InstantiationException e) {

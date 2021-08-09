@@ -27,11 +27,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.ext.MessageBodyReader;
-import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
-import org.jetrs.provider.util.ProviderUtil;
+import org.jetrs.MessageBodyProvider;
 import org.libj.lang.Numbers;
 
 /**
@@ -40,7 +38,7 @@ import org.libj.lang.Numbers;
 @Provider
 @Consumes("text/plain")
 @Produces("text/plain")
-public class NumberProvider implements MessageBodyReader<Number>, MessageBodyWriter<Number> {
+public class NumberProvider extends MessageBodyProvider<Number> {
   @Override
   public boolean isReadable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
     return type.isPrimitive() && type != boolean.class && type != char.class || Number.class.isAssignableFrom(type);
@@ -48,7 +46,7 @@ public class NumberProvider implements MessageBodyReader<Number>, MessageBodyWri
 
   @Override
   public Number readFrom(final Class<Number> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,String> httpHeaders, final InputStream entityStream) throws IOException, WebApplicationException {
-    final String str = ProviderUtil.toString(entityStream, mediaType.getParameters().get(MediaType.CHARSET_PARAMETER));
+    final String str = MessageBodyProvider.toString(entityStream, mediaType.getParameters().get(MediaType.CHARSET_PARAMETER));
     return Numbers.parseNumber(str, type);
   }
 
@@ -64,6 +62,6 @@ public class NumberProvider implements MessageBodyReader<Number>, MessageBodyWri
 
   @Override
   public void writeTo(final Number t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,Object> httpHeaders, final OutputStream entityStream) throws IOException, WebApplicationException {
-    entityStream.write(ProviderUtil.toBytes(t, mediaType));
+    entityStream.write(MessageBodyProvider.toBytes(t, mediaType));
   }
 }

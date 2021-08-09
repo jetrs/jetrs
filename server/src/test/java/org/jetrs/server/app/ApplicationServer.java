@@ -31,16 +31,20 @@ import org.jetrs.provider.ext.BytesProvider;
 import org.jetrs.provider.ext.InputStreamProvider;
 import org.jetrs.provider.ext.StringProvider;
 import org.jetrs.provider.ext.mapper.WebApplicationExceptionMapper;
+import org.jetrs.server.app.filter.Filter1;
 import org.jetrs.server.app.service.FileUploadService;
 import org.jetrs.server.app.service.RootService1;
+import org.jetrs.server.app.service.RootService2;
 import org.libj.util.function.Throwing;
 import org.openjax.jetty.EmbeddedServletContainer;
 import org.openjax.jetty.UncaughtServletExceptionHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@ApplicationPath("/*")
+@ApplicationPath(ApplicationServer.applicationPath)
 public class ApplicationServer extends Application implements AutoCloseable {
+  public static final String applicationPath = "/foo";
+
   private static final Logger logger = LoggerFactory.getLogger(ApplicationServer.class);
 
   public static final String mimeType = "application/vnd.pano.fire.v1+json";
@@ -108,6 +112,7 @@ public class ApplicationServer extends Application implements AutoCloseable {
 
     // Specific
     singletons.add(new RootService1());
+    singletons.add(new RootService2());
     singletons.add(new FileUploadService());
     return singletons;
   }
@@ -115,6 +120,7 @@ public class ApplicationServer extends Application implements AutoCloseable {
   @Override
   public Set<Class<?>> getClasses() {
     final Set<Class<?>> classes = new HashSet<>();
+    classes.add(Filter1.class);
     // Must be a class resource, because it has a member @Context reference
     return classes;
   }

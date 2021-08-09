@@ -27,18 +27,16 @@ import java.nio.charset.Charset;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.ext.MessageBodyReader;
-import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
-import org.jetrs.provider.util.ProviderUtil;
+import org.jetrs.MessageBodyProvider;
 import org.libj.io.Readers;
 
 /**
  * JAX-RS 2.1 Section 4.2.4
  */
 @Provider
-public class StringProvider implements MessageBodyReader<String>, MessageBodyWriter<String> {
+public class StringProvider extends MessageBodyProvider<String> {
   @Override
   public boolean isReadable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
     return type == String.class;
@@ -46,7 +44,7 @@ public class StringProvider implements MessageBodyReader<String>, MessageBodyWri
 
   @Override
   public String readFrom(final Class<String> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,String> httpHeaders, final InputStream entityStream) throws IOException, WebApplicationException {
-    final Charset charset = ProviderUtil.getCharset(mediaType);
+    final Charset charset = MessageBodyProvider.getCharset(mediaType);
     return Readers.readFully(new InputStreamReader(entityStream, charset));
   }
 
@@ -62,7 +60,7 @@ public class StringProvider implements MessageBodyReader<String>, MessageBodyWri
 
   @Override
   public void writeTo(final String t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,Object> httpHeaders, final OutputStream entityStream) throws IOException, WebApplicationException {
-    final Charset charset = ProviderUtil.getCharset(mediaType);
+    final Charset charset = MessageBodyProvider.getCharset(mediaType);
     entityStream.write(t.getBytes(charset));
   }
 }

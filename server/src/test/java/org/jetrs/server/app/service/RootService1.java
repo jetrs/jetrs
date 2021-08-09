@@ -26,49 +26,49 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 
-@Path("root1")
+@Path("root1/")
 public class RootService1 {
   @GET
-  @Path("1")
+  @Path("1/")
   @Produces("text/plain")
   public Response get1() {
     return Response.ok("GET").build();
   }
 
   @OPTIONS
-  @Path("1")
+  @Path("/1")
   public Response options1() {
     return Response.ok().header("Access-Control-Allow-Methods", "GET,POST").build();
   }
 
   @HEAD
-  @Path("2")
+  @Path("2/")
   public Response head2() {
     return Response.ok("HEAD").build();
   }
 
   @GET
-  @Path("2")
+  @Path("/2")
   public Response get2() {
     return Response.ok("GET").build();
   }
 
   @POST
-  @Path("1/{id:[\\da-z]{32}}")
+  @Path("/1/{id:[\\da-z]{32}}")
   @Consumes("text/plain")
   public Response post1(@PathParam("id") final String uuid, final String data) {
     return Response.ok("POST").build();
   }
 
   @POST
-  @Path("1/{id:[\\d]+}")
+  @Path("1/{id:[\\d]+}/")
   @Consumes("text/plain")
   public Response post1(@PathParam("id") final int id, final String data) {
     return Response.ok("POST").build();
   }
 
   @POST
-  @Path("1/{id:[\\d]+}")
+  @Path("/1/{id:[\\d]+}/")
   @Consumes("text/plain")
   public Response post1(@PathParam("id") final long id, final String data) {
     return Response.ok("POST").build();

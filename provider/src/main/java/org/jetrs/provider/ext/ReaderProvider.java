@@ -28,18 +28,16 @@ import java.nio.charset.Charset;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.ext.MessageBodyReader;
-import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
-import org.jetrs.provider.util.ProviderUtil;
+import org.jetrs.MessageBodyProvider;
 import org.libj.io.ReaderInputStream;
 
 /**
  * JAX-RS 2.1 Section 4.2.4
  */
 @Provider
-public class ReaderProvider implements MessageBodyReader<Reader>, MessageBodyWriter<Reader> {
+public class ReaderProvider extends MessageBodyProvider<Reader> {
   @Override
   public boolean isReadable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
     return Reader.class.isAssignableFrom(type);
@@ -66,7 +64,7 @@ public class ReaderProvider implements MessageBodyReader<Reader>, MessageBodyWri
     if (ch == -1)
       return;
 
-    final Charset charset = ProviderUtil.getCharset(mediaType);
+    final Charset charset = MessageBodyProvider.getCharset(mediaType);
     entityStream.write(String.valueOf(ch).getBytes(charset));
     try (final InputStream in = new ReaderInputStream(t, charset)) {
       while ((ch = in.read()) != -1) {

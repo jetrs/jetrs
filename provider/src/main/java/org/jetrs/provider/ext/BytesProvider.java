@@ -26,18 +26,16 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.ext.MessageBodyReader;
-import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
-import org.jetrs.provider.util.MultivaluedMaps;
+import org.jetrs.MessageBodyProvider;
 import org.libj.io.Streams;
 
 /**
  * JAX-RS 2.1 Section 4.2.4
  */
 @Provider
-public class BytesProvider implements MessageBodyReader<byte[]>, MessageBodyWriter<byte[]> {
+public class BytesProvider extends MessageBodyProvider<byte[]> {
   @Override
   public boolean isReadable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
     return type == byte[].class;
@@ -45,7 +43,7 @@ public class BytesProvider implements MessageBodyReader<byte[]>, MessageBodyWrit
 
   @Override
   public byte[] readFrom(final Class<byte[]> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,String> httpHeaders, final InputStream entityStream) throws IOException, WebApplicationException {
-    if (MultivaluedMaps.getFirstOrDefault(httpHeaders, HttpHeaders.CONTENT_LENGTH, Long.MAX_VALUE, Long::parseLong) == 0)
+    if (getFirstOrDefault(httpHeaders, HttpHeaders.CONTENT_LENGTH, Long.MAX_VALUE, Long::parseLong) == 0)
       return new byte[0];
 
     return Streams.readBytes(entityStream);

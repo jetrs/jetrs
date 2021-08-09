@@ -34,10 +34,9 @@ import java.nio.file.Files;
 import javax.activation.DataSource;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.ext.MessageBodyReader;
-import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
+import org.jetrs.MessageBodyProvider;
 import org.libj.io.Streams;
 import org.libj.lang.ObjectUtil;
 
@@ -45,7 +44,7 @@ import org.libj.lang.ObjectUtil;
  * JAX-RS 2.1 Section 4.2.4
  */
 @Provider
-public class DataSourceProvider implements MessageBodyReader<DataSource>, MessageBodyWriter<DataSource> {
+public class DataSourceProvider extends MessageBodyProvider<DataSource> {
   private static final int DEFAULT_BUFFER_SIZE = 65536;
 
   private final int bufferSize;
