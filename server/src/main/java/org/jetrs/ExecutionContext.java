@@ -71,8 +71,8 @@ class ExecutionContext {
     if (resourceMatches == null)
       throw new NotFoundException();
 
-    if (resourceMatches.size() > 1) {
-      final StringBuilder builder = new StringBuilder("Multiple resources match request to " + containerRequestContext.getUriInfo() + ": {");
+    if (resourceMatches.size() > 1 && resourceMatches.get(0).compareTo(resourceMatches.get(1)) == 0) {
+      final StringBuilder builder = new StringBuilder("Multiple resources match ambiguously for request to \"" + containerRequestContext.getUriInfo() + "\": {");
       for (final ResourceMatch resource : resourceMatches)
         builder.append('"').append(resource).append("\", ");
 
