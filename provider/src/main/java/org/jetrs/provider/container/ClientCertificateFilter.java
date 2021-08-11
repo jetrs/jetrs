@@ -18,25 +18,10 @@ package org.jetrs.provider.container;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertPath;
-import java.security.cert.CertPathBuilder;
-import java.security.cert.CertPathBuilderException;
-import java.security.cert.CertStore;
-import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
-import java.security.cert.CollectionCertStoreParameters;
-import java.security.cert.PKIXBuilderParameters;
-import java.security.cert.TrustAnchor;
-import java.security.cert.X509CertSelector;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -68,109 +53,6 @@ public abstract class ClientCertificateFilter implements ContainerRequestFilter 
     return pem.trim();
   }
 
-  /**
-   * Read the certificates in the provided {@linkplain KeyStore Trust Store}
-   * into the specified {@code trustedRootCerts} and {@code intermediateCerts}
-   * {@linkplain Set sets}.
-   *
-   * @param keyStore The {@link KeyStore} representing the Trust Store.
-   * @param trustedRootCerts The {@linkplain Set set} to which root (self-issued
-   *          certificates) are to be added.
-   * @param intermediateCerts The {@linkplain Set set} to which intermediate
-   *          certificates are to be added.
-   * @throws KeyStoreException If the keystore has not been initialized
-   *           (loaded).
-   * @throws IllegalArgumentException If any parameter is null.
-   */
-  protected static void readTrustStore(final KeyStore keyStore, final Set<X509Certificate> trustedRootCerts, final Set<X509Certificate> intermediateCerts) throws KeyStoreException {
-    Assertions.assertNotNull(keyStore);
-    Assertions.assertNotNull(trustedRootCerts);
-    Assertions.assertNotNull(intermediateCerts);
-    for (final Enumeration<String> aliases = keyStore.aliases(); aliases.hasMoreElements();) {
-      final String alias = aliases.nextElement();
-      if (keyStore.isCertificateEntry(alias)) {
-        final Certificate cert = keyStore.getCertificate(alias);
-        if (cert instanceof X509Certificate) {
-          final X509Certificate x509Cert = (X509Certificate)cert;
-          (X509Certificates.isSelfIssued(x509Cert) ? trustedRootCerts : intermediateCerts).add(x509Cert);
-        }
-      }
-    }
-  }
-
-  private static X509Certificate[] convertCertPathtoX509CertArray(final List<? extends Certificate> certs, final int index, final int depth) {
-    if (index == certs.size())
-      return depth == 0 ? null : new X509Certificate[depth];
-
-    final Certificate cert = certs.get(index);
-    final X509Certificate[] x509Certificates = convertCertPathtoX509CertArray(certs, index + 1, cert instanceof X509Certificate ? depth + 1 : depth);
-    if (cert instanceof X509Certificate)
-      x509Certificates[depth] = (X509Certificate)cert;
-
-    return x509Certificates;
-  }
-
-  /**
-   * The {@code $ssl_client_escaped_cert} variable of NginX does not provide the
-   * CA chain, so it must be rebuilt from the @{@code clientCert},
-   * {@code trustedRootCerts} and {@code intermediateCerts}.
-   */
-  private static X509Certificate[] buildCertificateChain(final X509Certificate clientCert, final Set<X509Certificate> trustedRootCerts, final Set<X509Certificate> intermediateCerts) throws CertPathBuilderException, InvalidAlgorithmParameterException, NoSuchAlgorithmException {
-    // Create the selector that specifies the starting certificate
-    final X509CertSelector targetConstraints = new X509CertSelector();
-    targetConstraints.setCertificate(clientCert);
-
-    // Create the trust anchors (set of root CA certificates)
-    final HashSet<TrustAnchor> trustAnchors = new HashSet<>();
-    for (final X509Certificate trustedRootCert : trustedRootCerts)
-      trustAnchors.add(new TrustAnchor(trustedRootCert, null));
-
-    // Configure the PKIX certificate builder algorithm parameters
-    final PKIXBuilderParameters pkixBuilderParameters = new PKIXBuilderParameters(trustAnchors, targetConstraints);
-
-    // Disable CRL checks, as it's possibly done after depending on the settings
-    pkixBuilderParameters.setRevocationEnabled(false);
-    pkixBuilderParameters.setExplicitPolicyRequired(false);
-    pkixBuilderParameters.setAnyPolicyInhibited(false);
-    pkixBuilderParameters.setPolicyQualifiersRejected(false);
-    pkixBuilderParameters.setMaxPathLength(-1);
-
-    // Adding the list of intermediate certificates + end client certificate
-    intermediateCerts.add(clientCert);
-    pkixBuilderParameters.addCertStore(CertStore.getInstance("Collection", new CollectionCertStoreParameters(intermediateCerts)));
-
-    // Build and verify the certification chain (revocation status excluded)
-    final CertPathBuilder certPathBuilder = CertPathBuilder.getInstance("PKIX");
-    final CertPath certPath = certPathBuilder.build(pkixBuilderParameters).getCertPath();
-    if (logger.isDebugEnabled())
-      logger.debug("Certification path built with " + certPath.getCertificates().size() + " X.509 Certificates");
-
-    return convertCertPathtoX509CertArray(certPath.getCertificates(), 0, 0);
-  }
-
-  private static X509Certificate[] getCertificateChain(final X509Certificate clientCert, final Set<X509Certificate> trustedRootCerts, final Set<X509Certificate> intermediateCerts) {
-    try {
-      final X509Certificate[] certificateChain = buildCertificateChain(clientCert, trustedRootCerts, new HashSet<>(intermediateCerts));
-      if (logger.isDebugEnabled())
-        logger.debug("Client certificate (valid): SubjectDN=[" + clientCert.getSubjectDN() + "] SerialNumber=[" + clientCert.getSerialNumber() + "]");
-
-      return certificateChain;
-    }
-    catch (final CertPathBuilderException e) {
-      if ("unable to find valid certification path to requested target".equals(e.getMessage())) {
-        if (logger.isDebugEnabled())
-          logger.debug("Client certificate (invalid): SubjectDN=[" + clientCert.getSubjectDN() + "] SerialNumber=[" + clientCert.getSerialNumber() + "]");
-
-        return null;
-      }
-
-      throw new UnsupportedOperationException(e);
-    }
-    catch (final InvalidAlgorithmParameterException | NoSuchAlgorithmException e) {
-      throw new UnsupportedOperationException(e);
-    }
-  }
-
   private X509Certificate getCertificateFromHeader(final ContainerRequestContext requestContext, final String headerName) {
     String headerValue = requestContext.getHeaders().getFirst(Assertions.assertNotNull(headerName));
     return headerValue == null || (headerValue = headerValue.trim()).length() == 0 ? null : getCertificateFromHeader(headerName, headerValue);
@@ -193,6 +75,11 @@ public abstract class ClientCertificateFilter implements ContainerRequestFilter 
     }
   }
 
+  /**
+   * The {@code $ssl_client_escaped_cert} variable of NginX does not provide the
+   * CA chain, so it must be rebuilt from the {@code clientCert},
+   * {@code trustedRootCerts} and {@code intermediateCerts}.
+   */
   private X509Certificate[] getCertificateChain(final ContainerRequestContext requestContext, final String clientCertChainHeaderPrefix, final int index, final int depth) {
     final X509Certificate clientCert = getCertChainFromHeader(requestContext, clientCertChainHeaderPrefix, index);
     if (clientCert == null)
@@ -241,11 +128,14 @@ public abstract class ClientCertificateFilter implements ContainerRequestFilter 
    * @throws IllegalArgumentException If any parameter is null.
    */
   protected X509Certificate[] getCertificateChain(final ContainerRequestContext requestContext, final String clientCertHeader, final String clientCertChainHeaderPrefix) {
+    Assertions.assertNotNull(requestContext);
+    Assertions.assertNotNull(clientCertHeader);
+    Assertions.assertNotNull(clientCertChainHeaderPrefix);
     final X509Certificate clientCert = getCertificateFromHeader(requestContext, clientCertHeader);
     if (clientCert == null)
       return null;
 
-    final X509Certificate[] clientCertChain = getCertificateChain(requestContext, Assertions.assertNotNull(clientCertChainHeaderPrefix), 0, 1);
+    final X509Certificate[] clientCertChain = getCertificateChain(requestContext, clientCertChainHeaderPrefix, 0, 1);
     clientCertChain[0] = clientCert;
 
     if (logger.isDebugEnabled())
@@ -286,7 +176,7 @@ public abstract class ClientCertificateFilter implements ContainerRequestFilter 
    */
   protected X509Certificate[] getCertificateChain(final ContainerRequestContext requestContext, final String clientCertHeader, final Set<X509Certificate> trustedRootCerts, final Set<X509Certificate> intermediateCerts) {
     final X509Certificate clientCert = getCertificateFromHeader(requestContext, clientCertHeader);
-    return clientCert == null ? null : getCertificateChain(clientCert, trustedRootCerts, intermediateCerts);
+    return clientCert == null ? null : X509Certificates.getCertificatePath(clientCert, trustedRootCerts, intermediateCerts);
   }
 
   /**
