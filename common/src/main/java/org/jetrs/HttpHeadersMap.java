@@ -169,9 +169,8 @@ class HttpHeadersMap<V,R> extends MirrorMultivaluedMap<String,V,R> {
       return null;
 
     final String str = headerName.toString();
-    final char[] chars = str.toCharArray();
-    for (int i = 0, ch; i < chars.length; ++i) {
-      ch = chars[i];
+    for (int i = 0, len = str.length(), ch; i < len; ++i) {
+      ch = str.charAt(i);
       if (!('a' <= ch && ch <= 'z') && !('A' <= ch && ch <= 'Z') && !('0' <= ch && ch <= '9') && ch != '!' && ch != '#' && ch != '$' && ch != '%' && ch != '&' && ch != '\'' && ch != '*' && ch != '+' && ch != '-' && ch != '.' && ch != '^' && ch != '_' && ch != '`' && ch != '|' && ch != '~')
         throw new IllegalArgumentException("Illegal header name: \"" + headerName + "\"");
     }

@@ -41,10 +41,12 @@ public class BytesProvider extends MessageBodyProvider<byte[]> {
     return type == byte[].class;
   }
 
+  private static final byte[] EMPTY_BYTES = {};
+
   @Override
   public byte[] readFrom(final Class<byte[]> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,String> httpHeaders, final InputStream entityStream) throws IOException, WebApplicationException {
     if (getFirstOrDefault(httpHeaders, HttpHeaders.CONTENT_LENGTH, Long.MAX_VALUE, Long::parseLong) == 0)
-      return new byte[0];
+      return EMPTY_BYTES;
 
     return Streams.readBytes(entityStream);
   }

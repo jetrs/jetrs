@@ -229,7 +229,7 @@ class AnnotationInjector {
     throw new InstantiationException("No suitable constructor found on " + (isResource ? "resource" : "provider") + " " + clazz.getName());
   }
 
-  private static Field[] EMPTY_FIELDS = new Field[0];
+  private static Field[] EMPTY_FIELDS = {};
 
   static Field[] getContextFields(final Object instance) {
     final Field[] fields = Classes.getDeclaredFieldsDeep(instance.getClass());
