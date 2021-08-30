@@ -384,7 +384,7 @@ abstract class Delegate<T> implements RuntimeDelegate.HeaderDelegate<T> {
 
     @Override
     Tk valueOf(final String value) {
-      return Tk.fromString(value);
+      return Tk.valueOf(value);
     }
 
     @Override
