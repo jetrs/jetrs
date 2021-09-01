@@ -27,6 +27,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
 
 @Path("root2/")
+@SuppressWarnings("unused")
 public class RootService2 {
   private static String string(final ContainerRequestContext containerRequestContext) {
     final UriInfo uriInfo = containerRequestContext.getUriInfo();

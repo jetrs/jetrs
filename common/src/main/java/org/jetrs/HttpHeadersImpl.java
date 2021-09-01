@@ -263,14 +263,14 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
   }
 
   @Override
-  @SuppressWarnings({"unchecked"})
+  @SuppressWarnings("unchecked")
   public List<MediaType> getAcceptableMediaTypes() {
     final MirrorQualityList<?,String> headers = getMirrorMap().get(HttpHeaders.ACCEPT);
     return headers == null || headers.size() == 0 ? WILDCARD_ACCEPT : (List<MediaType>)headers;
   }
 
   @Override
-  @SuppressWarnings({"unchecked"})
+  @SuppressWarnings("unchecked")
   public List<Locale> getAcceptableLanguages() {
     final MirrorQualityList<?,String> headers = getMirrorMap().get(HttpHeaders.ACCEPT_LANGUAGE);
     return headers == null || headers.size() == 0 ? WILDCARD_LOCALE : (List<Locale>)headers;
