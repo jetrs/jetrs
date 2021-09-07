@@ -103,12 +103,11 @@ public abstract class ClientCertificateFilter implements ContainerRequestFilter 
    * the additional chain certificates in the provided
    * {@link ContainerRequestContext}, or {@code null} if the specified header
    * does not exist or the certificate is not valid.
-   * <p>
-   * <b>Note:</b> The {@code clientCertHeader} header must contain the client
-   * certificate, and the header values specified by the
-   * {@code clientCertChainHeaderPrefix} header name prefix must provide the
-   * additional chain certificates.
    *
+   * @implNote The {@code clientCertHeader} header must contain the client
+   *           certificate, and the header values specified by the
+   *           {@code clientCertChainHeaderPrefix} header name prefix must
+   *           provide the additional chain certificates.
    * @param requestContext The {@link ContainerRequestContext} providing the
    *          header values of the request.
    * @param clientCertHeader The header name containing a base64-encoded
@@ -151,12 +150,12 @@ public abstract class ClientCertificateFilter implements ContainerRequestFilter 
    * {@code intermediateCerts} specifying the {@linkplain KeyStore Trust Store},
    * or {@code null} if the specified header does not exist or the certificate
    * is not valid.
-   * <p>
-   * <b>Note:</b> The specified header must contain the client certificate, and
-   * not the full certificate chain. The full certificate chain is rebuilt from
-   * the {@linkplain KeyStore Trust Store} specified {@code trustedRootCerts}
-   * and {@code intermediateCerts}.
    *
+   * @implNote The {@code clientCertHeader} header must contain the client
+   *           certificate, and not the full certificate chain. The full
+   *           certificate chain is rebuilt from the {@linkplain KeyStore Trust
+   *           Store} specified {@code trustedRootCerts} and
+   *           {@code intermediateCerts}.
    * @param requestContext The {@link ContainerRequestContext} providing the
    *          header values of the request.
    * @param clientCertHeader The header name containing a base64-encoded
