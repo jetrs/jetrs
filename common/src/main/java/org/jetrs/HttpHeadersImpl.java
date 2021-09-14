@@ -223,26 +223,26 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
       /**
        * Gets the quality attribute from a strongly typed header object (i.e.
        * {@link MediaType#getParameters() mediaType.getParameters().get("q")}),
-       * and returns a {@link org.libj.lang.Numbers.Compound compound}
+       * and returns a {@link org.libj.lang.Numbers.Composite composite}
        * {@code long} containing the {@code float} quality value and {@code int}
        * ending index of the attribute in the string.
        *
        * @param value The object to parse.
        * @param index The index from which to start parsing (ignored).
-       * @return A {@link org.libj.lang.Numbers.Compound compound} {@code long}
-       *         containing the {@code float} quality value and {@code int}
-       *         ending index of the attribute in the string.
+       * @return A {@link org.libj.lang.Numbers.Composite composite}
+       *         {@code long} containing the {@code float} quality value and
+       *         {@code int} ending index of the attribute in the string.
        */
       @Override
       public long reflectionToQuality(final Object value, final int index) {
         if (value == null)
-          return Numbers.Compound.encode(1f, index);
+          return Numbers.Composite.encode(1f, index);
 
         if (value instanceof String || !(value instanceof Qualified))
           return HeaderUtil.getQualityFromString(value.toString(), index);
 
         final Float quality = ((Qualified)value).getQuality();
-        return Numbers.Compound.encode(quality != null ? quality : 1f, index);
+        return Numbers.Composite.encode(quality != null ? quality : 1f, index);
       }
     });
   }

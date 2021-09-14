@@ -45,25 +45,25 @@ class MirrorQualityList<V,R> extends MirrorList<V,R> implements Cloneable {
    */
   interface Qualifier<V,R> {
     /**
-     * Returns a {@link org.libj.lang.Numbers.Compound#encode(float,int)
-     * compound} quality-and-index {@code long} comprised of the quality
+     * Returns a {@link org.libj.lang.Numbers.Composite#encode(float,int)
+     * composite} quality-and-index {@code long} comprised of the quality
      * dereferenced from the value object of type {@code <V>}, and some index of
      * type {@code int} that could be used to further direct downstream parsing.
      *
      * @param value The value of type {@code <V>} from which to dereference the
      *          quality.
      * @param index An index of type {@code int}.
-     * @return A {@link org.libj.lang.Numbers.Compound#encode(float,int)
-     *         compound} quality-and-index {@code long} comprised of the quality
-     *         dereferenced from the value object of type {@code <V>}, and some
-     *         index of type {@code int} that could be used to further direct
-     *         downstream parsing.
+     * @return A {@link org.libj.lang.Numbers.Composite#encode(float,int)
+     *         composite} quality-and-index {@code long} comprised of the
+     *         quality dereferenced from the value object of type {@code <V>},
+     *         and some index of type {@code int} that could be used to further
+     *         direct downstream parsing.
      */
     long valueToQuality(V value, int index);
 
     /**
-     * Returns a {@link org.libj.lang.Numbers.Compound#encode(float,int)
-     * compound} quality-and-index {@code long} comprised of the quality
+     * Returns a {@link org.libj.lang.Numbers.Composite#encode(float,int)
+     * composite} quality-and-index {@code long} comprised of the quality
      * dereferenced from the reflection value object of type {@code <R>}, and
      * some index of type {@code int} that could be used to further direct
      * downstream parsing.
@@ -71,11 +71,11 @@ class MirrorQualityList<V,R> extends MirrorList<V,R> implements Cloneable {
      * @param reflection The reflection value of type {@code <R>} from which to
      *          dereference the quality.
      * @param index An index of type {@code int}.
-     * @return A {@link org.libj.lang.Numbers.Compound#encode(float,int)
-     *         compound} quality-and-index {@code long} comprised of the quality
-     *         dereferenced from the value object of type {@code <R>}, and some
-     *         index of type {@code int} that could be used to further direct
-     *         downstream parsing.
+     * @return A {@link org.libj.lang.Numbers.Composite#encode(float,int)
+     *         composite} quality-and-index {@code long} comprised of the
+     *         quality dereferenced from the value object of type {@code <R>},
+     *         and some index of type {@code int} that could be used to further
+     *         direct downstream parsing.
      */
     long reflectionToQuality(R reflection, int index);
 
@@ -283,7 +283,7 @@ class MirrorQualityList<V,R> extends MirrorList<V,R> implements Cloneable {
   private boolean sort(final int index, boolean needsSort) {
     final V value = get(index);
     final long qualityAndIndex = qualifier.valueToQuality(value, 0);
-    final float quality = Numbers.Compound.decodeFloat(qualityAndIndex, 0);
+    final float quality = Numbers.Composite.decodeFloat(qualityAndIndex, 0);
     needsSort |= quality != 1f;
     if (index == 0 ? !needsSort : !sort(index - 1, needsSort))
       return false;
@@ -390,7 +390,7 @@ class MirrorQualityList<V,R> extends MirrorList<V,R> implements Cloneable {
   protected Object beforeAdd(final int index, final V element, final Object preventDefault) {
     final boolean unlocked = unlock();
     final long qualityAndIndex = qualifier.valueToQuality(element, 0);
-    final float quality = Numbers.Compound.decodeFloat(qualityAndIndex, 0);
+    final float quality = Numbers.Composite.decodeFloat(qualityAndIndex, 0);
     add(index, element, quality);
     lock(unlocked);
     return preventDefault;

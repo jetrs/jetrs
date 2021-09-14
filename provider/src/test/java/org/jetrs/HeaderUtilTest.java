@@ -22,20 +22,20 @@ import org.junit.Test;
 import org.libj.lang.Numbers;
 
 public class HeaderUtilTest {
-  private static void assertCompound(final float quality, final int index, final long actual) {
-    assertEquals(quality, Numbers.Compound.decodeFloat(actual, 0), 0.0000001f);
-    assertEquals(index, Numbers.Compound.decodeShort(actual, 3));
+  private static void assertComposite(final float quality, final int index, final long actual) {
+    assertEquals(quality, Numbers.Composite.decodeFloat(actual, 0), 0.0000001f);
+    assertEquals(index, Numbers.Composite.decodeShort(actual, 3));
   }
 
   @Test
   public void testQualityFunction() {
-    assertCompound(0.1f, 6, HeaderUtil.getQualityFromString("q=0.1;", 0));
-    assertCompound(0.8f, 12, HeaderUtil.getQualityFromString("en-GB;q= .8 ,en;q=0.8", 3));
-    assertCompound(0f, 14, HeaderUtil.getQualityFromString("en-GB;q =0.0; ,fr;q=0.4", 5));
-    assertCompound(1f, 11, HeaderUtil.getQualityFromString("en-GB; q=1 ; q=0  ;;, fr;q=0.4", 1));
-    assertCompound(0f, 15, HeaderUtil.getQualityFromString("en-GB; q =0    ; foo=bar,,,", 7));
-    assertCompound(0.4f, 25, HeaderUtil.getQualityFromString("en-GB;q= 0.8 0 ; fr;q=0.4,", 6));
-    assertCompound(1f, -1, HeaderUtil.getQualityFromString("en-GB;q= 0.8 0 , fr;q=0.4,", 6));
-    assertCompound(1f, -1, HeaderUtil.getQualityFromString("en-GB;rq=0.8;;;;;", 5));
+    assertComposite(0.1f, 6, HeaderUtil.getQualityFromString("q=0.1;", 0));
+    assertComposite(0.8f, 12, HeaderUtil.getQualityFromString("en-GB;q= .8 ,en;q=0.8", 3));
+    assertComposite(0f, 14, HeaderUtil.getQualityFromString("en-GB;q =0.0; ,fr;q=0.4", 5));
+    assertComposite(1f, 11, HeaderUtil.getQualityFromString("en-GB; q=1 ; q=0  ;;, fr;q=0.4", 1));
+    assertComposite(0f, 15, HeaderUtil.getQualityFromString("en-GB; q =0    ; foo=bar,,,", 7));
+    assertComposite(0.4f, 25, HeaderUtil.getQualityFromString("en-GB;q= 0.8 0 ; fr;q=0.4,", 6));
+    assertComposite(1f, -1, HeaderUtil.getQualityFromString("en-GB;q= 0.8 0 , fr;q=0.4,", 6));
+    assertComposite(1f, -1, HeaderUtil.getQualityFromString("en-GB;rq=0.8;;;;;", 5));
   }
 }

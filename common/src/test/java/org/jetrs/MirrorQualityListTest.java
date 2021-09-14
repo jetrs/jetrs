@@ -40,12 +40,12 @@ public class MirrorQualityListTest {
     }, new MirrorQualityList.Qualifier<String,Float>() {
       @Override
       public long valueToQuality(final String value, final int index) {
-        return Numbers.Compound.encode(Float.parseFloat(value), index);
+        return Numbers.Composite.encode(Float.parseFloat(value), index);
       }
 
       @Override
       public long reflectionToQuality(final Float reflection, final int index) {
-        return Numbers.Compound.encode(reflection, index);
+        return Numbers.Composite.encode(reflection, index);
       }
     });
   }

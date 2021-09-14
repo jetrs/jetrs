@@ -34,8 +34,8 @@ class QualifiedCharset extends Charset implements Equatable, Qualified {
       return new QualifiedCharset(value);
 
     final long idx = HeaderUtil.getQualityFromString(value, c);
-    final float quality = Numbers.Compound.decodeFloat(idx, 0);
-    final int start = Numbers.Compound.decodeShort(idx, 2);
+    final float quality = Numbers.Composite.decodeFloat(idx, 0);
+    final int start = Numbers.Composite.decodeShort(idx, 2);
     return new QualifiedCharset(value.substring(0, start), quality);
   }
 

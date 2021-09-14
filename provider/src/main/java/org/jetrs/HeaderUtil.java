@@ -21,21 +21,21 @@ import org.libj.lang.Numbers;
 final class HeaderUtil {
   /**
    * Parses the quality attribute from a raw header string (i.e.
-   * {@code "fr-CH;q=0.8"}), and returns a {@link org.libj.lang.Numbers.Compound
-   * compound} {@code long} containing the {@code float} quality value and two
-   * {@code short}s representing the start and end indexes of the attribute in
-   * the string.
+   * {@code "fr-CH;q=0.8"}), and returns a
+   * {@link org.libj.lang.Numbers.Composite composite} {@code long} containing
+   * the {@code float} quality value and two {@code short}s representing the
+   * start and end indexes of the attribute in the string.
    *
    * @param str The string to parse.
    * @param i The index from which to start parsing.
-   * @return A {@link org.libj.lang.Numbers.Compound compound} {@code long}
+   * @return A {@link org.libj.lang.Numbers.Composite composite} {@code long}
    *         containing the {@code float} quality value and two {@code short}s
    *         representing the start and end indexes of the attribute in the
    *         string.
    */
   static long getQualityFromString(final String str, int i) {
     if (str == null)
-      return Numbers.Compound.encode(1f, (short)-1, (short)-1);
+      return Numbers.Composite.encode(1f, (short)-1, (short)-1);
 
     boolean dotSeen = false;
     boolean qFinished = false;
@@ -87,11 +87,11 @@ final class HeaderUtil {
     }
 
     if (builder == null || builder.length() == 0)
-      return Numbers.Compound.encode(1f, (short)-1, (short)-1);
+      return Numbers.Composite.encode(1f, (short)-1, (short)-1);
 
     // FIXME: Can we avoid Float.parseFloat?
     final float quality = Float.parseFloat(builder.toString());
-    return Numbers.Compound.encode(quality, (short)start, (short)i);
+    return Numbers.Composite.encode(quality, (short)start, (short)i);
   }
 
   private HeaderUtil() {
