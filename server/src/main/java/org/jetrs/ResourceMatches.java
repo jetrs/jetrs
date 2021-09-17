@@ -27,11 +27,22 @@ import org.libj.util.TransList;
 class ResourceMatches extends ArrayList<ResourceMatch> {
   private static final long serialVersionUID = 3784142771798643436L;
 
-  private final List<String> matchedURIs;
-  private final List<Object> matchedResources;
+  private final AnnotationInjector annotationInjector;
+  private List<Object> matchedResources;
+  private List<String> matchedURIsEncoded;
+  private List<String> matchedURIsDecoded;
 
   ResourceMatches(final AnnotationInjector annotationInjector) {
-    this.matchedResources = new TransList<>(this, (i, s) -> {
+    this.annotationInjector = annotationInjector;
+  }
+
+  @Override
+  public boolean add(final ResourceMatch e) {
+    return !super.contains(e) && super.add(e);
+  }
+
+  List<Object> getMatchedResources() {
+    return matchedResources == null ? matchedResources = new TransList<>(this, (i, s) -> {
       try {
         return s.getResourceInstance(annotationInjector);
       }
@@ -44,23 +55,13 @@ class ResourceMatches extends ArrayList<ResourceMatch> {
 
         throw new InternalServerErrorException(e.getCause());
       }
-    }, null);
-    this.matchedURIs = new TransList<>(this, (i, s) -> {
-      return s.getURI();
-    }, null);
+    }, null) : matchedResources;
   }
 
-  @Override
-  public boolean add(final ResourceMatch e) {
-    return !super.contains(e) && super.add(e);
-  }
-
-  List<Object> getMatchedResources() {
-    return this.matchedResources;
-  }
-
-  // FIXME: Implement `decode`
   List<String> getMatchedURIs(final boolean decode) {
-    return this.matchedURIs;
+    if (decode)
+      return matchedURIsDecoded == null ? matchedURIsDecoded = new TransList<>(this, (i, s) -> s.getURI(true), null) : matchedURIsDecoded;
+
+    return matchedURIsEncoded == null ? matchedURIsEncoded = new TransList<>(this, (i, s) -> s.getURI(false), null) : matchedURIsEncoded;
   }
 }

@@ -26,6 +26,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.ParamConverterProvider;
 
 import org.libj.lang.Assertions;
+import org.libj.net.URLs;
 
 class ResourceMatch implements Comparable<ResourceMatch> {
   private static final Comparator<MultivaluedMap<String,String>> PATH_PARAMETERS_COMPARATOR = new Comparator<MultivaluedMap<String,String>>() {
@@ -55,16 +56,17 @@ class ResourceMatch implements Comparable<ResourceMatch> {
   private final Class<?> resourceClass;
   private Object singleton;
 
-  private final String uri;
+  private final String uriEncoded;
+  private String uriDecoded;
   private final CompatibleMediaType accept;
   private final MultivaluedMap<String,String> pathParameters;
 
-  ResourceMatch(final ResourceManifest manifest, final String uri, final CompatibleMediaType accept, final MultivaluedMap<String,String> pathParameters) {
+  ResourceMatch(final ResourceManifest manifest, final String uriEncoded, final CompatibleMediaType accept, final MultivaluedMap<String,String> pathParameters) {
     this.manifest = Assertions.assertNotNull(manifest);
     this.resourceClass = manifest.getResourceClass();
     this.singleton = manifest.getSingleton();
 
-    this.uri = Assertions.assertNotNull(uri);
+    this.uriEncoded = Assertions.assertNotNull(uriEncoded);
     this.accept = Assertions.assertNotNull(accept);
     this.pathParameters = Assertions.assertNotNull(pathParameters);
   }
@@ -73,8 +75,8 @@ class ResourceMatch implements Comparable<ResourceMatch> {
     return manifest;
   }
 
-  String getURI() {
-    return uri;
+  String getURI(final boolean decode) {
+    return !decode ? uriEncoded : uriDecoded == null ? uriDecoded = URLs.decodePath(uriEncoded) : uriDecoded;
   }
 
   Object getResourceInstance(final AnnotationInjector annotationInjector) throws IllegalAccessException, InstantiationException, InvocationTargetException {

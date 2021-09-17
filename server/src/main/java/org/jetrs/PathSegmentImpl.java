@@ -16,7 +16,6 @@
 
 package org.jetrs;
 
-import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.PathSegment;
@@ -24,19 +23,67 @@ import javax.ws.rs.core.PathSegment;
 import org.libj.net.URLs;
 
 class PathSegmentImpl implements PathSegment {
-  private final String path;
-  private final String matrix;
+  private static final MultivaluedHashMap<String,String> emptyMap = new MultivaluedHashMap<>(); // FIXME: Make this unmodifiable
 
-  PathSegmentImpl(final String path) {
-    final int semi = path.indexOf(';');
-    if (semi != -1) {
-      this.path = path.substring(0, semi);
-      this.matrix = path.substring(semi + 1);
+  private final String pathEncoded;
+  private final String path;
+  private final MultivaluedMap<String,String> matrixParameters;
+
+  PathSegmentImpl(final String pathEncoded, final boolean decode) {
+    this.pathEncoded = pathEncoded;
+    final int semicolon = pathEncoded.indexOf(';');
+    if (semicolon < 0) {
+      this.path = decode ? URLs.decodePath(pathEncoded) : pathEncoded;
+      this.matrixParameters = null;
     }
     else {
-      this.path = path;
-      this.matrix = null;
+      this.path = decode ? URLs.decodePath(pathEncoded.substring(0, semicolon)) : pathEncoded.substring(0, semicolon);
+      this.matrixParameters = new MultivaluedHashMap<>();
+
+      int i = semicolon + 1;
+      final int len = pathEncoded.length();
+
+      do {
+        final String param;
+        final int j = pathEncoded.indexOf(';', i);
+        if (j < 0) {
+          param = pathEncoded.substring(i);
+          i = len;
+        }
+        else {
+          param = pathEncoded.substring(i, j);
+          ++i;
+        }
+
+        if (param.length() > 0) {
+          final int eq = param.indexOf('=');
+          final String name;
+          final String value;
+          if (eq < 0) {
+            name = param;
+            value = null;
+          }
+          else {
+            name = param.substring(0, eq);
+            value = param.substring(eq + 1);
+          }
+
+          if (decode)
+            matrixParameters.add(URLs.decodePath(name), value == null ? null : URLs.decodePath(value));
+          else
+            matrixParameters.add(name, value);
+        }
+      }
+      while (i < len);
     }
+  }
+
+  String getPathEncoded() {
+    return this.pathEncoded;
+  }
+
+  boolean hasMatrixParams() {
+    return matrixParameters != null;
   }
 
   @Override
@@ -44,33 +91,22 @@ class PathSegmentImpl implements PathSegment {
     return path;
   }
 
-  private MultivaluedMap<String,String> matrixParameters;
-
   @Override
   public MultivaluedMap<String,String> getMatrixParameters() {
-    if (matrix == null || matrixParameters != null)
-      return matrixParameters;
+    return matrixParameters == null ? emptyMap : matrixParameters;
+  }
 
-    final MultivaluedMap<String,String> matrixParameters = new MultivaluedHashMap<>();
-    int semi = -1;
-    int equals = -1;
-    for (int i = 0, len = matrix.length(); i < len; ++i) {
-      final char ch = matrix.charAt(i);
-      if (ch == '=') {
-        equals = i;
-      }
-      else if (ch == ';' || i == matrix.length() - 1) {
-        if (equals == -1)
-          throw new BadRequestException();
+  @Override
+  public String toString() {
+    final StringBuilder builder = new StringBuilder();
+    if (path != null)
+      builder.append(path);
 
-        final String key = matrix.substring(semi + 1, equals);
-        final String value = matrix.substring(equals + 1, i);
-        matrixParameters.putSingle(URLs.decodePath(key), URLs.decodePath(value));
-        semi = i;
-        equals = -1;
-      }
-    }
+    if (matrixParameters != null)
+      for (final String name : matrixParameters.keySet())
+        for (final String value : matrixParameters.get(name))
+          builder.append(';').append(name).append('=').append(value);
 
-    return this.matrixParameters = matrixParameters;
+    return builder.toString();
   }
 }

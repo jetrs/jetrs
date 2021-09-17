@@ -24,7 +24,7 @@ public class Filter1 implements ContainerRequestFilter {
 
   @Override
   public void filter(final ContainerRequestContext requestContext) throws IOException {
-    final String baseUri = uriInfo.getBaseUri().toString();
+    final String baseUri = uriInfo.getBaseUri().getRawPath();
     assertTrue(baseUri.startsWith("/") && baseUri.endsWith("/"));
     assertFalse(uriInfo.getPath().startsWith("/"));
     assertFalse(uriInfo.getPath().endsWith("/"));

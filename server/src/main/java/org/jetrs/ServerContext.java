@@ -114,7 +114,7 @@ class ServerContext implements RuntimeContext<AnnotationInjector> {
 
   private ResourceMatches filterAndMatch(final ContainerRequestContext containerRequestContext, final AnnotationInjector annotationInjector, final String methodOverride, final boolean throwException) {
     final UriInfo uriInfo = containerRequestContext.getUriInfo();
-    final String requestUri = uriInfo.getBaseUri().toString() + uriInfo.getPath();
+    final String requestUri = uriInfo.getBaseUri().getRawPath() + uriInfo.getPath();
     List<String> maybeNotAllowed = null;
     boolean maybeNotSupported = false;
     boolean maybeNotAcceptable = false;
