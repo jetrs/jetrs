@@ -72,7 +72,7 @@ abstract class Invoker<R> {
     return method("TRACE", null);
   }
 
-  public abstract R method(final String name, final Entity<?> entity);
+  public abstract R method(String name, Entity<?> entity);
 
   Invocation build(final String method, final Entity<?> entity, final HttpHeadersImpl requestHeaders, final List<Cookie> cookies, final CacheControl cacheControl) {
     client.assertNotClosed();
