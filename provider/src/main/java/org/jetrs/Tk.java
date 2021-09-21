@@ -29,7 +29,7 @@ public final class Tk implements Comparable<Tk> {
   public static final Tk TRACKING;
   public static final Tk UPDATED;
 
-  private static int index = 0;
+  private static byte index = 0;
 
   private static final Tk[] values = {
     UNDER_CONSTRUCTION = new Tk('!', "under construction"),
@@ -62,7 +62,7 @@ public final class Tk implements Comparable<Tk> {
     return values;
   }
 
-  private final int ordinal;
+  private final byte ordinal;
   private final char symbol;
   private final String name;
   private final String description;
@@ -74,7 +74,7 @@ public final class Tk implements Comparable<Tk> {
     this.description = description;
   }
 
-  public int ordinal() {
+  public byte ordinal() {
     return ordinal;
   }
 
