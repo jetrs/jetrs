@@ -21,8 +21,6 @@ import javax.ws.rs.core.PathSegment;
 import org.libj.lang.WrappedArrayList;
 
 public class PathSegmentList extends WrappedArrayList<PathSegment> {
-  private static final long serialVersionUID = 2821716410584481251L;
-
   private static PathSegment[] parseSegments(final String pathEncoded, final int len, final int i, final int depth, final boolean decode) {
     final String segment;
     final int j = pathEncoded.indexOf('/', i);

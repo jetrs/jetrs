@@ -25,8 +25,6 @@ import javax.ws.rs.InternalServerErrorException;
 import org.libj.util.TransList;
 
 class ResourceMatches extends ArrayList<ResourceMatch> {
-  private static final long serialVersionUID = 3784142771798643436L;
-
   private final AnnotationInjector annotationInjector;
   private List<Object> matchedResources;
   private List<String> matchedURIsEncoded;

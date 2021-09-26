@@ -34,8 +34,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Providers;
 
 abstract class RestApplicationServlet extends RestHttpServlet {
-  private static final long serialVersionUID = 3700080355780006441L;
-
   RestApplicationServlet(final Application application) {
     super(application);
     if (application != null && getClass().getAnnotation(WebServlet.class) == null)

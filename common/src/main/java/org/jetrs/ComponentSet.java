@@ -26,7 +26,6 @@ import java.util.TreeSet;
 import org.libj.util.TransSet;
 
 class ComponentSet implements Cloneable, Serializable {
-  private static final long serialVersionUID = 20638934997557381L;
   private static final Comparator<Component> comparator = new Comparator<Component>() {
     @Override
     public int compare(final Component o1, final Component o2) {

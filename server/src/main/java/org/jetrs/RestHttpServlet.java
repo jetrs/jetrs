@@ -32,8 +32,6 @@ import javax.ws.rs.ext.ParamConverterProvider;
 import javax.ws.rs.ext.RuntimeDelegate;
 
 abstract class RestHttpServlet extends HttpServlet {
-  private static final long serialVersionUID = 6825431027711735886L;
-
   private ServerContext serverContext;
 
   ServerContext getServerContext() {

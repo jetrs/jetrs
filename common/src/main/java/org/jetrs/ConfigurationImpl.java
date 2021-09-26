@@ -30,8 +30,6 @@ import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Feature;
 
 class ConfigurationImpl implements Cloneable, Configuration, Serializable {
-  private static final long serialVersionUID = -4595863016265219044L;
-
   private final RuntimeType runtimeType;
   private Map<String,Object> properties;
 

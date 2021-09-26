@@ -16,6 +16,8 @@
 
 package org.jetrs;
 
+import static org.libj.lang.Assertions.*;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -43,7 +45,6 @@ import javax.ws.rs.ext.Providers;
 import javax.ws.rs.ext.ReaderInterceptor;
 
 import org.libj.io.Streams;
-import org.libj.lang.Assertions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -111,7 +112,7 @@ class ResponseImpl extends Response {
 
   @SuppressWarnings({"rawtypes", "unchecked"})
   private <T>T readEntity(final Class<T> rawType, final Type genericType, final Annotation[] annotations) throws IllegalStateException, ResponseProcessingException {
-    Assertions.assertNotNull(rawType);
+    assertNotNull(rawType);
     if (!(entity instanceof InputStream))
       throw new IllegalStateException("Entity is not an instance of InputStream");
 

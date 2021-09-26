@@ -16,6 +16,8 @@
 
 package org.jetrs;
 
+import static org.libj.lang.Assertions.*;
+
 import java.lang.reflect.InvocationTargetException;
 import java.util.function.BiFunction;
 
@@ -27,7 +29,6 @@ import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.Variant.VariantListBuilder;
 import javax.ws.rs.ext.RuntimeDelegate;
 
-import org.libj.lang.Assertions;
 import org.libj.lang.Classes;
 
 public class RuntimeDelegateImpl extends RuntimeDelegate {
@@ -60,7 +61,7 @@ public class RuntimeDelegateImpl extends RuntimeDelegate {
   @Override
   @SuppressWarnings("unchecked")
   public <T>T createEndpoint(final Application application, final Class<T> endpointType) {
-    Assertions.assertNotNull(application, "application is null");
+    assertNotNull(application, "application is null");
     if (endpointFactory == null)
       throw new UnsupportedOperationException("No endpoint types are supported: No container available");
 
@@ -69,10 +70,7 @@ public class RuntimeDelegateImpl extends RuntimeDelegate {
 
   @Override
   public <T>HeaderDelegate<T> createHeaderDelegate(final Class<T> type) {
-    if (type == null)
-      throw new IllegalArgumentException("type == null");
-
-    return Delegate.lookup(type);
+    return Delegate.lookup(assertNotNull(type, "type is null"));
   }
 
   @Override

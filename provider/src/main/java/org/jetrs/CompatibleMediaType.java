@@ -16,6 +16,8 @@
 
 package org.jetrs;
 
+import static org.libj.lang.Assertions.*;
+
 import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
@@ -89,7 +91,7 @@ class CompatibleMediaType extends MediaType {
    * @throws IllegalArgumentException If {@code mediaType} is null.
    */
   CompatibleMediaType(final MediaType mediaType, final Map<String,String> parameters, final int distance) {
-    super(Assertions.assertNotNull(mediaType).getType(), mediaType.getSubtype(), parameters);
+    super(assertNotNull(mediaType).getType(), mediaType.getSubtype(), parameters);
     this.distance = distance;
   }
 

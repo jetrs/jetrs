@@ -16,6 +16,8 @@
 
 package org.jetrs;
 
+import static org.libj.lang.Assertions.*;
+
 import java.net.URI;
 import java.util.Collections;
 import java.util.List;
@@ -28,7 +30,6 @@ import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
-import org.libj.lang.Assertions;
 import org.libj.lang.Strings;
 import org.libj.net.URIComponent;
 import org.libj.net.URIs;
@@ -53,7 +54,7 @@ class UriInfoImpl implements UriInfo {
   private final int queryIndex;
 
   UriInfoImpl(final HttpServletRequest httpServletRequest, final ExecutionContext executionContext) {
-    this.httpServletRequest = Assertions.assertNotNull(httpServletRequest, "httpServletRequest is null");
+    this.httpServletRequest = assertNotNull(httpServletRequest, "httpServletRequest is null");
     this.executionContext = executionContext;
     this.absoluteUri = getAbsoluteUri(httpServletRequest);
     this.contextPath = httpServletRequest.getContextPath() + httpServletRequest.getServletPath();
@@ -263,7 +264,7 @@ class UriInfoImpl implements UriInfo {
    */
   @Override
   public URI resolve(final URI uri) {
-    return getBaseUri().resolve(Assertions.assertNotNull(uri));
+    return getBaseUri().resolve(assertNotNull(uri));
   }
 
   /**
@@ -273,7 +274,7 @@ class UriInfoImpl implements UriInfo {
    */
   @Override
   public URI relativize(final URI uri) {
-    Assertions.assertNotNull(uri);
+    assertNotNull(uri);
     return URIs.relativize(getRequestUri(), uri.getScheme() != null || uri.getHost() != null ? uri : getBaseUriBuilder()
       .replaceQuery(null)
       .path(uri.getPath())

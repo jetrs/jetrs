@@ -16,6 +16,8 @@
 
 package org.jetrs;
 
+import static org.libj.lang.Assertions.*;
+
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collection;
@@ -37,7 +39,6 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
-import org.libj.lang.Assertions;
 import org.libj.lang.Numbers;
 import org.libj.util.CollectionUtil;
 import org.libj.util.MirrorMap;
@@ -114,7 +115,7 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
    */
   HttpHeadersImpl(final Map<String,List<String>> headers) {
     this();
-    for (final Map.Entry<String,List<String>> entry : Assertions.assertNotNull(headers).entrySet())
+    for (final Map.Entry<String,List<String>> entry : assertNotNull(headers).entrySet())
       addAll(entry.getKey(), entry.getValue());
   }
 
@@ -128,7 +129,7 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
   HttpHeadersImpl(final MultivaluedMap<String,Object> headers) {
     this();
     final MirrorMultivaluedMap<String,Object,String> mirrorMap = getMirrorMap();
-    for (final Map.Entry<String,List<Object>> entry : Assertions.assertNotNull(headers).entrySet())
+    for (final Map.Entry<String,List<Object>> entry : assertNotNull(headers).entrySet())
       mirrorMap.addAll(entry.getKey(), entry.getValue());
   }
 

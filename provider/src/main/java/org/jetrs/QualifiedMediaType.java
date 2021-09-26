@@ -16,11 +16,12 @@
 
 package org.jetrs;
 
+import static org.libj.lang.Assertions.*;
+
 import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
 
-import org.libj.lang.Assertions;
 import org.libj.lang.Numbers;
 
 class QualifiedMediaType extends MediaType implements Qualified {
@@ -76,7 +77,7 @@ class QualifiedMediaType extends MediaType implements Qualified {
    * @throws IllegalArgumentException If {@code mediaType} is null.
    */
   QualifiedMediaType(final MediaType mediaType) {
-    super(Assertions.assertNotNull(mediaType).getType(), mediaType.getSubtype(), mediaType.getParameters());
+    super(assertNotNull(mediaType).getType(), mediaType.getSubtype(), mediaType.getParameters());
   }
 
   @Override

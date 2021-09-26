@@ -19,8 +19,6 @@ package org.jetrs;
 import java.util.LinkedList;
 
 class DirectiveList<D extends Enum<D>> extends LinkedList<D> {
-  private static final long serialVersionUID = 1724872570085550861L;
-
   @Override
   public boolean add(final D e) {
     remove(e);

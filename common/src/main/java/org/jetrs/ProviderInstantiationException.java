@@ -17,8 +17,6 @@
 package org.jetrs;
 
 public class ProviderInstantiationException extends RuntimeException {
-  private static final long serialVersionUID = 2780692372789106176L;
-
   public ProviderInstantiationException() {
   }
 

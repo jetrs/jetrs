@@ -16,13 +16,14 @@
 
 package org.jetrs;
 
+import static org.libj.lang.Assertions.*;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.jetrs.MirrorQualityList.Qualifier;
-import org.libj.lang.Assertions;
 import org.libj.util.MirrorList;
 import org.libj.util.MirrorMap;
 
@@ -101,8 +102,8 @@ class HttpHeadersMap<V,R> extends MirrorMultivaluedMap<String,V,R> {
         }, qualifier);
       }
     });
-    Assertions.assertNotNull(mirror);
-    Assertions.assertNotNull(qualifier);
+    assertNotNull(mirror);
+    assertNotNull(qualifier);
   }
 
   /**

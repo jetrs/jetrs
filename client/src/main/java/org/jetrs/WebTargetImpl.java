@@ -16,6 +16,8 @@
 
 package org.jetrs;
 
+import static org.libj.lang.Assertions.*;
+
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.util.Map;
@@ -72,19 +74,19 @@ class WebTargetImpl implements ConfigurableImpl<WebTarget>, WebTarget {
 
   @Override
   public WebTarget resolveTemplate(final String name, final Object value) {
-    uriBuilder.resolveTemplate(Assertions.assertNotNull(name), value);
+    uriBuilder.resolveTemplate(assertNotNull(name), value);
     return this;
   }
 
   @Override
   public WebTarget resolveTemplate(final String name, final Object value, final boolean encodeSlashInPath) {
-    uriBuilder.resolveTemplate(Assertions.assertNotNull(name), value, encodeSlashInPath);
+    uriBuilder.resolveTemplate(assertNotNull(name), value, encodeSlashInPath);
     return this;
   }
 
   @Override
   public WebTarget resolveTemplateFromEncoded(final String name, final Object value) {
-    uriBuilder.resolveTemplate(Assertions.assertNotNull(name), value);
+    uriBuilder.resolveTemplate(assertNotNull(name), value);
     return this;
   }
 

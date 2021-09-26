@@ -16,16 +16,16 @@
 
 package org.jetrs;
 
-import java.lang.reflect.InvocationTargetException;
+import static org.libj.lang.Assertions.*;
 
-import org.libj.lang.Assertions;
+import java.lang.reflect.InvocationTargetException;
 
 abstract class TypeProviderResource<T> extends ProviderResource<T> {
   private final Class<?> type;
 
   TypeProviderResource(final Class<T> clazz, final T singleton, final Class<?> type) throws IllegalAccessException, InstantiationException, InvocationTargetException {
     super(clazz, singleton);
-    this.type = Assertions.assertNotNull(type);
+    this.type = assertNotNull(type, "type is null");
   }
 
   Class<?> getType() {

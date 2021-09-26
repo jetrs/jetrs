@@ -16,6 +16,8 @@
 
 package org.jetrs;
 
+import static org.libj.lang.Assertions.*;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
@@ -27,7 +29,6 @@ import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
 
-import org.libj.lang.Assertions;
 import org.libj.lang.Numbers;
 import org.libj.lang.Strings;
 
@@ -146,8 +147,8 @@ final class MediaTypes {
   }
 
   private static CompatibleMediaType[] getCompatible(final ServerMediaType[] serverTypes, final MediaType[] clientTypes, final List<String> acceptCharsets, int index1, final int index2, final int depth) {
-    Assertions.assertNotNull(serverTypes);
-    Assertions.assertNotNull(clientTypes);
+    assertNotNull(serverTypes);
+    assertNotNull(clientTypes);
     if (index2 == clientTypes.length) {
       if (++index1 == serverTypes.length)
         return depth == 0 ? WILDCARD_COMPATIBLE_TYPE : new CompatibleMediaType[depth];
@@ -328,8 +329,8 @@ final class MediaTypes {
    *           {@code clientType} is null.
    */
   static CompatibleMediaType getCompatible(final ServerMediaType serverType, final MediaType clientType, final List<String> acceptCharsets) {
-    Assertions.assertNotNull(serverType);
-    Assertions.assertNotNull(clientType);
+    assertNotNull(serverType);
+    assertNotNull(clientType);
     if (serverType.isWildcardType()) {
       // {*/?}+{?/?}
       if (clientType.isWildcardType()) {
@@ -745,7 +746,7 @@ final class MediaTypes {
    * @throws IllegalArgumentException If {@code mediaType} is null.
    */
   static String toString(final MediaType mediaType) {
-    Assertions.assertNotNull(mediaType);
+    assertNotNull(mediaType);
     final StringBuilder builder = new StringBuilder();
     builder.append(mediaType.getType()).append('/').append(mediaType.getSubtype());
     if (mediaType.getParameters() != null) {

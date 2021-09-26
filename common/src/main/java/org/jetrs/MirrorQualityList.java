@@ -16,10 +16,11 @@
 
 package org.jetrs;
 
+import static org.libj.lang.Assertions.*;
+
 import java.util.List;
 import java.util.ListIterator;
 
-import org.libj.lang.Assertions;
 import org.libj.lang.Numbers;
 import org.libj.lang.ObjectUtil;
 import org.libj.util.CollectionUtil;
@@ -164,7 +165,7 @@ class MirrorQualityList<V,R> extends MirrorList<V,R> implements Cloneable {
    */
   <CloneableValues extends List<V> & Cloneable,CloneableReflections extends List<R> & Cloneable>MirrorQualityList(final CloneableValues values, final CloneableReflections reflections, final Mirror<V,R> mirror, final Qualifier<V,R> qualifier) {
     super(values, reflections, mirror);
-    this.qualifier = Assertions.assertNotNull(qualifier);
+    this.qualifier = assertNotNull(qualifier);
   }
 
   /**

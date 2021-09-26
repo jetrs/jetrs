@@ -19,7 +19,6 @@ package org.jetrs;
 import javax.ws.rs.core.Response;
 
 public class AbortFilterChainException extends RuntimeException {
-  private static final long serialVersionUID = -5400569556631732839L;
   private final Response response;
 
   public AbortFilterChainException(final Response response) {

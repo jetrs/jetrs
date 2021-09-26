@@ -16,6 +16,8 @@
 
 package org.jetrs;
 
+import static org.libj.lang.Assertions.*;
+
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Comparator;
@@ -25,7 +27,6 @@ import javax.servlet.ServletException;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.ParamConverterProvider;
 
-import org.libj.lang.Assertions;
 import org.libj.net.URLs;
 
 class ResourceMatch implements Comparable<ResourceMatch> {
@@ -62,13 +63,13 @@ class ResourceMatch implements Comparable<ResourceMatch> {
   private final MultivaluedMap<String,String> pathParameters;
 
   ResourceMatch(final ResourceManifest manifest, final String uriEncoded, final CompatibleMediaType accept, final MultivaluedMap<String,String> pathParameters) {
-    this.manifest = Assertions.assertNotNull(manifest);
+    this.manifest = assertNotNull(manifest);
     this.resourceClass = manifest.getResourceClass();
     this.singleton = manifest.getSingleton();
 
-    this.uriEncoded = Assertions.assertNotNull(uriEncoded);
-    this.accept = Assertions.assertNotNull(accept);
-    this.pathParameters = Assertions.assertNotNull(pathParameters);
+    this.uriEncoded = assertNotNull(uriEncoded);
+    this.accept = assertNotNull(accept);
+    this.pathParameters = assertNotNull(pathParameters);
   }
 
   ResourceManifest getManifest() {

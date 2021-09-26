@@ -16,6 +16,8 @@
 
 package org.jetrs.provider.container;
 
+import static org.libj.lang.Assertions.*;
+
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.security.KeyStore;
@@ -54,7 +56,7 @@ public abstract class ClientCertificateFilter implements ContainerRequestFilter 
   }
 
   private X509Certificate getCertificateFromHeader(final ContainerRequestContext requestContext, final String headerName) {
-    String headerValue = requestContext.getHeaders().getFirst(Assertions.assertNotNull(headerName));
+    String headerValue = requestContext.getHeaders().getFirst(assertNotNull(headerName));
     return headerValue == null || (headerValue = headerValue.trim()).length() == 0 ? null : getCertificateFromHeader(headerName, headerValue);
   }
 
@@ -127,9 +129,9 @@ public abstract class ClientCertificateFilter implements ContainerRequestFilter 
    * @throws IllegalArgumentException If any parameter is null.
    */
   protected X509Certificate[] getCertificateChain(final ContainerRequestContext requestContext, final String clientCertHeader, final String clientCertChainHeaderPrefix) {
-    Assertions.assertNotNull(requestContext);
-    Assertions.assertNotNull(clientCertHeader);
-    Assertions.assertNotNull(clientCertChainHeaderPrefix);
+    assertNotNull(requestContext);
+    assertNotNull(clientCertHeader);
+    assertNotNull(clientCertChainHeaderPrefix);
     final X509Certificate clientCert = getCertificateFromHeader(requestContext, clientCertHeader);
     if (clientCert == null)
       return null;
