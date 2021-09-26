@@ -22,8 +22,6 @@ import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
 
-import org.libj.lang.Assertions;
-
 class CompatibleMediaType extends MediaType {
   /** A {@link CompatibleMediaType} constant representing wildcard {@value #WILDCARD} media type. */
   final static CompatibleMediaType WILDCARD_TYPE = new CompatibleMediaType(MediaType.WILDCARD_TYPE, null, 0);

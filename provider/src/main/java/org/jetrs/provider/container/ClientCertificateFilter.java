@@ -30,7 +30,6 @@ import java.util.stream.Collectors;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 
-import org.libj.lang.Assertions;
 import org.libj.lang.Strings;
 import org.openjax.security.cert.X509Certificates;
 import org.slf4j.Logger;

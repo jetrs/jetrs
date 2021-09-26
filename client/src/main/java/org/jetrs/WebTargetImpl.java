@@ -30,8 +30,6 @@ import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriBuilder;
 
-import org.libj.lang.Assertions;
-
 class WebTargetImpl implements ConfigurableImpl<WebTarget>, WebTarget {
   private final ClientImpl client;
   private final ProvidersImpl providers;
