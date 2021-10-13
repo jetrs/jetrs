@@ -35,7 +35,6 @@ import org.jetrs.server.app.filter.Filter1;
 import org.jetrs.server.app.service.FileUploadService;
 import org.jetrs.server.app.service.RootService1;
 import org.jetrs.server.app.service.RootService2;
-import org.libj.util.function.Throwing;
 import org.openjax.jetty.EmbeddedServletContainer;
 import org.openjax.jetty.UncaughtServletExceptionHandler;
 import org.slf4j.Logger;
@@ -47,28 +46,13 @@ public class ApplicationServer extends Application implements AutoCloseable {
 
   private static final Logger logger = LoggerFactory.getLogger(ApplicationServer.class);
 
-  public static final String mimeType = "application/vnd.pano.fire.v1+json";
+  public static final String mimeType = "application/vnd.jetrs.v1+json";
 
   public static void main(final String[] args) throws Exception {
-    start();
-  }
-
-  public static ApplicationServer start() {
-    final ApplicationServer instance = new ApplicationServer();
-    new Thread() {
-      @Override
-      public void run() {
-        try {
-          instance.container.start();
-          instance.container.join();
-        }
-        catch (final Exception e) {
-          Throwing.rethrow(e);
-        }
-      }
-    }.start();
-
-    return instance;
+    try (final ApplicationServer instance = new ApplicationServer()) {
+      instance.start();
+      instance.container.join();
+    }
   }
 
   private final EmbeddedServletContainer container;
@@ -125,6 +109,14 @@ public class ApplicationServer extends Application implements AutoCloseable {
     return classes;
   }
 
+  public void start() throws Exception {
+    container.start();
+  }
+
+  public int getContainerPort() {
+    return container.getPort();
+  }
+
   @Override
   public void close() {
     if (container != null) {
@@ -135,9 +127,5 @@ public class ApplicationServer extends Application implements AutoCloseable {
         e.printStackTrace();
       }
     }
-  }
-
-  public int getContainerPort() {
-    return container.getPort();
   }
 }
