@@ -19,11 +19,12 @@ package org.jetrs;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
+import org.libj.lang.Strings;
 
 public class DelegateTest {
   @Test
   public void testParseStringArray() {
-    assertArrayEquals(new String[0], Delegate.STRING_ARRAY.fromString(""));
+    assertArrayEquals(Strings.EMPTY_ARRAY, Delegate.STRING_ARRAY.fromString(""));
     assertArrayEquals(new String[] {"one"}, Delegate.STRING_ARRAY.fromString("one"));
     assertArrayEquals(new String[] {"one", "two"}, Delegate.STRING_ARRAY.fromString("one, two"));
     assertArrayEquals(new String[] {"one", "two", "three"}, Delegate.STRING_ARRAY.fromString("one, two, three"));

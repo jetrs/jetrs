@@ -421,7 +421,7 @@ abstract class Delegate<T> implements RuntimeDelegate.HeaderDelegate<T> {
 
     @Override
     String[] valueOf(final String value) {
-      return value.length() == 0 ? new String[0] : fromString(value, 0, 0);
+      return value.length() == 0 ? Strings.EMPTY_ARRAY : fromString(value, 0, 0);
     }
 
     @Override

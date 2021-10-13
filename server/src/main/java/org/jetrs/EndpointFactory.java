@@ -33,6 +33,7 @@ import javax.servlet.http.HttpServlet;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
 
+import org.libj.lang.Strings;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
@@ -150,7 +151,7 @@ final class EndpointFactory implements BiFunction<Application,Class<?>,HttpServl
 
         @Override
         public String[] value() {
-          return new String[0];
+          return Strings.EMPTY_ARRAY;
         }
 
         @Override
