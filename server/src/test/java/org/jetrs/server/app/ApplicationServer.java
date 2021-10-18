@@ -50,7 +50,6 @@ public class ApplicationServer extends Application implements AutoCloseable {
 
   public static void main(final String[] args) throws Exception {
     try (final ApplicationServer instance = new ApplicationServer()) {
-      instance.start();
       instance.container.join();
     }
   }
@@ -73,6 +72,7 @@ public class ApplicationServer extends Application implements AutoCloseable {
         .build();
 
       this.container.start();
+      System.err.println("http://localhost:" + getContainerPort() + applicationPath);
     }
     catch (final RuntimeException t) {
       close();

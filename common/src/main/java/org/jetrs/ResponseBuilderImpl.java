@@ -42,7 +42,7 @@ class ResponseBuilderImpl extends Response.ResponseBuilder implements Cloneable 
   private final Providers providers;
   private final ReaderInterceptor[] readerInterceptors;
   private final HttpHeadersImpl headers;
-  private int status;
+  private int statusCode;
   private String reasonPhrase;
   private Object entity;
   private Annotation[] annotations;
@@ -57,7 +57,7 @@ class ResponseBuilderImpl extends Response.ResponseBuilder implements Cloneable 
     this.providers = copy.providers;
     this.readerInterceptors = copy.readerInterceptors;
     this.headers = copy.headers.clone();
-    this.status = copy.status;
+    this.statusCode = copy.statusCode;
     this.reasonPhrase = copy.reasonPhrase;
     this.entity = copy.entity;
     this.annotations = copy.annotations;
@@ -67,19 +67,19 @@ class ResponseBuilderImpl extends Response.ResponseBuilder implements Cloneable 
   @Override
   public Response build() {
     // FIXME: Need to reset the builder to a "blank state", as is documented in the javadocs of this method
-    final Response.StatusType statusType = reasonPhrase != null ? Responses.from(status, reasonPhrase) : Responses.from(status);
-    return new ResponseImpl(providers, readerInterceptors, statusType, headers, cookies, entity, annotations);
+    final Response.StatusType statusInfo = reasonPhrase != null ? Responses.from(statusCode, reasonPhrase) : Responses.from(statusCode);
+    return new ResponseImpl(providers, readerInterceptors, statusCode, statusInfo, headers, cookies, entity, annotations);
   }
 
   @Override
   public Response.ResponseBuilder status(final int status) {
-    this.status = status;
+    this.statusCode = status;
     return this;
   }
 
   @Override
   public ResponseBuilder status(final int status, final String reasonPhrase) {
-    this.status = status;
+    this.statusCode = status;
     this.reasonPhrase = reasonPhrase;
     return this;
   }

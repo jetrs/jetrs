@@ -137,9 +137,9 @@ class InvocationImpl implements Invocation {
         providers = this.providers;
       }
 
-      final int responseCode = connection.getResponseCode();
+      final int statusCode = connection.getResponseCode();
       final String reasonPhrase = connection.getResponseMessage();
-      final StatusType status = reasonPhrase != null ? Responses.from(responseCode, reasonPhrase) : Responses.from(responseCode);
+      final StatusType statusInfo = reasonPhrase != null ? Responses.from(statusCode, reasonPhrase) : Responses.from(statusCode);
       final HttpHeadersImpl headers = new HttpHeadersImpl(connection.getHeaderFields());
 
       final List<HttpCookie> httpCookies = cookieStore.getCookies();
@@ -156,7 +156,7 @@ class InvocationImpl implements Invocation {
         }
       }
 
-      return new ResponseImpl(providers, null, status, headers, cookies, 200 <= responseCode && responseCode < 400 ? connection.getInputStream() : connection.getErrorStream(), null) {
+      return new ResponseImpl(providers, null, statusCode, statusInfo, headers, cookies, 200 <= statusCode && statusCode < 400 ? connection.getInputStream() : connection.getErrorStream(), null) {
         @Override
         public void close() {
           try {

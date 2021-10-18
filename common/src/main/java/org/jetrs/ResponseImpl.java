@@ -53,17 +53,19 @@ class ResponseImpl extends Response {
 
   private final Providers providers;
   private final Object[] readerInterceptors;
-  private final Response.StatusType status;
+  private final int statusCode;
+  private final Response.StatusType statusInfo;
   private final HttpHeadersImpl headers;
   private final Map<String,NewCookie> cookies;
   private Object entity;
   final Annotation[] annotations; // FIXME: annotations are not being used, but they need to be used by the MessageBodyWriter.. there's no API to get them out of this class
   private boolean closed;
 
-  ResponseImpl(final Providers providers, final Object[] readerInterceptors, final Response.StatusType status, final HttpHeadersImpl headers, final Map<String,NewCookie> cookies, final Object entity, final Annotation[] annotations) {
+  ResponseImpl(final Providers providers, final Object[] readerInterceptors, final int statusCode, final Response.StatusType statusInfo, final HttpHeadersImpl headers, final Map<String,NewCookie> cookies, final Object entity, final Annotation[] annotations) {
     this.providers = providers;
     this.readerInterceptors = readerInterceptors;
-    this.status = status;
+    this.statusCode = statusCode;
+    this.statusInfo = statusInfo;
     this.headers = headers;
     this.cookies = cookies;
     this.entity = entity;
@@ -72,12 +74,12 @@ class ResponseImpl extends Response {
 
   @Override
   public int getStatus() {
-    return status.getStatusCode();
+    return statusCode;
   }
 
   @Override
   public StatusType getStatusInfo() {
-    return status;
+    return statusInfo;
   }
 
   @Override

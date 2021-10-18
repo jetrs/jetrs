@@ -72,6 +72,15 @@ public class ApplicationServerTest {
   }
 
   @Test
+  public void testMatchRoot404() throws Exception {
+    final Response response = client.target(serviceUrl)
+      .request()
+      .get();
+
+    assertResponse(404, response, String.class);
+  }
+
+  @Test
   public void testMatchGet1() throws Exception {
     final Response response = client.target(serviceUrl + "/root1/1")
       .request()

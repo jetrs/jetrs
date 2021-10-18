@@ -75,6 +75,10 @@ class UriInfoImpl implements UriInfo {
 
     this.pathIndex = pathIndex += contextPath.length() + 1;
     this.queryIndex = absoluteUri.indexOf('?', pathIndex);
+
+    if (absoluteUri.length() < pathIndex) {
+      pathEncoded = pathDecoded = "";
+    }
   }
 
   // Must not have leading '/'
@@ -151,6 +155,9 @@ class UriInfoImpl implements UriInfo {
   public URI getBaseUri() {
     if (baseUri != null)
       return baseUri;
+
+    if (absoluteUri.length() < pathIndex) // this can happen if the absoluteUri is the basePath without the trailing '/'
+      return baseUri = URI.create(absoluteUri + "/");
 
     final StringBuilder basePath = new StringBuilder();
     basePath.append(absoluteUri, 0, pathIndex);
