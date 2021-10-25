@@ -51,7 +51,7 @@
     <dependency>
       <groupId>org.openjax</groupId>
       <artifactId>jetty</artifactId>
-      <version>9.4.42-SNAPSHOT</version>
+      <version>9.4.44-SNAPSHOT</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
