@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.net.URI;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
@@ -65,9 +66,9 @@ class ResponseImpl extends Response {
     this.providers = providers;
     this.readerInterceptors = readerInterceptors;
     this.statusCode = statusCode;
-    this.statusInfo = statusInfo;
-    this.headers = headers;
-    this.cookies = cookies;
+    this.statusInfo = assertNotNull(statusInfo);
+    this.headers = assertNotNull(headers);
+    this.cookies = cookies != null ? cookies : Collections.EMPTY_MAP;
     this.entity = entity;
     this.annotations = annotations;
   }

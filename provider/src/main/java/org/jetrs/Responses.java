@@ -17,7 +17,9 @@
 package org.jetrs;
 
 import java.util.Arrays;
-import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -29,10 +31,10 @@ import javax.ws.rs.core.Response.StatusType;
  */
 final class Responses {
   private static final Status[] statuses = Status.values();
+  private static final Map<String,StatusType> codeReasonToStatus = new HashMap<>();
   private static final int[] statusCodes = new int[statuses.length];
 
   static {
-    Arrays.sort(statuses, Comparator.comparingInt(Status::getStatusCode));
     for (int i = 0; i < statuses.length; ++i)
       statusCodes[i] = statuses[i].getStatusCode();
   }
@@ -59,41 +61,54 @@ final class Responses {
    * @return The matching {@link Status} or {@code null} if there is no match.
    */
   static StatusType from(final int statusCode) {
-    final int index = Arrays.binarySearch(statusCodes, statusCode);
-    return index < 0 ? null : statuses[index];
+    return from(statusCode, null);
   }
 
   /**
-   * Convert a numerical status code into the corresponding {@link StatusType}.
+   * Convert a numerical status code into a {@link StatusType}.
    *
    * @param statusCode The numerical status code.
    * @param reasonPhrase The reason phrase.
-   * @return The matching {@link StatusType} or {@code null} if there is no
-   *         match.
+   * @return The {@link StatusType} or {@code null} if
+   *         {@code statusCode == -1}.
+   * @throws IllegalArgumentException If {@code statusCode < -1}.
    */
   static StatusType from(final int statusCode, final String reasonPhrase) {
-    final StatusType statusType = from(statusCode);
-    if (statusType != null && statusType.getReasonPhrase().equals(reasonPhrase))
-      return statusType;
+    if (statusCode < -1)
+      throw new IllegalArgumentException();
 
-    return new StatusType() {
-      @Override
-      public int getStatusCode() {
-        return statusCode;
-      }
+    if (statusCode == -1)
+      return null;
 
-      @Override
-      // FIXME: This returns a null family for unknown status codes
-      public Family getFamily() {
-        final StatusType statusType = from(statusCode);
-        return statusType == null ? null : statusType.getFamily();
-      }
+    final int index = Arrays.binarySearch(statusCodes, statusCode);
+    if (index >= 0) {
+      final StatusType status = statuses[index];
+      if (Objects.equals(reasonPhrase, status.getReasonPhrase()))
+        return status;
+    }
 
-      @Override
-      public String getReasonPhrase() {
-        return reasonPhrase;
-      }
-    };
+    final String codeReason = statusCode + reasonPhrase;
+    StatusType status = codeReasonToStatus.get(codeReason);
+    if (status == null) {
+      codeReasonToStatus.put(codeReason, status = new StatusType() {
+        @Override
+        public int getStatusCode() {
+          return statusCode;
+        }
+
+        @Override
+        public String getReasonPhrase() {
+          return reasonPhrase;
+        }
+
+        @Override
+        public Family getFamily() {
+          return Family.familyOf(statusCode);
+        }
+      });
+    }
+
+    return status;
   }
 
   private Responses() {

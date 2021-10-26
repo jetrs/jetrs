@@ -67,7 +67,7 @@ class ResponseBuilderImpl extends Response.ResponseBuilder implements Cloneable 
   @Override
   public Response build() {
     // FIXME: Need to reset the builder to a "blank state", as is documented in the javadocs of this method
-    final Response.StatusType statusInfo = reasonPhrase != null ? Responses.from(statusCode, reasonPhrase) : Responses.from(statusCode);
+    final Response.StatusType statusInfo = Responses.from(statusCode, reasonPhrase);
     return new ResponseImpl(providers, readerInterceptors, statusCode, statusInfo, headers, cookies, entity, annotations);
   }
 
