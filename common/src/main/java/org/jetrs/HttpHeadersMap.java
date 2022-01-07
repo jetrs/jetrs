@@ -247,7 +247,6 @@ class HttpHeadersMap<V,R> extends MirrorMultivaluedMap<String,V,R> {
   }
 
   @Override
-  @SuppressWarnings("unlikely-arg-type")
   public MirrorQualityList<V,R> get(final Object key) {
     return (MirrorQualityList<V,R>)super.get(key);
   }
@@ -263,7 +262,6 @@ class HttpHeadersMap<V,R> extends MirrorMultivaluedMap<String,V,R> {
   }
 
   @Override
-  @SuppressWarnings("unlikely-arg-type")
   public MirrorQualityList<V,R> remove(final Object key) {
     return (MirrorQualityList<V,R>)super.remove(key);
   }

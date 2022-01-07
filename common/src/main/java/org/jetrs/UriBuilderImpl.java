@@ -42,7 +42,6 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
   private static final Pattern squareHostBrackets = Pattern.compile("(\\[(([0-9A-Fa-f]{0,4}:){2,7})([0-9A-Fa-f]{0,4})%?.*\\]):(\\d+)");
   private static final Pattern hostPortPattern = Pattern.compile("([^/:]+):(\\d+)");
 
-  @SuppressWarnings("unlikely-arg-type")
   private static final class TemplateParametersMap extends HashMap<String,Object> {
     private final Object[] parameterValues;
     private int index;

@@ -428,7 +428,6 @@ class MirrorQualityList<V,R> extends MirrorList<V,R> implements Cloneable {
   }
 
   @Override
-  @SuppressWarnings("unlikely-arg-type")
   public int indexOf(final Object o) {
     return super.indexOf(o);
   }

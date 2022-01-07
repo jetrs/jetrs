@@ -71,7 +71,6 @@ abstract class InterceptorContextImpl implements InterceptorContext {
   }
 
   @Override
-  @SuppressWarnings("unlikely-arg-type")
   public final Collection<String> getPropertyNames() {
     return propertyNames == null ? propertyNames = new Collection<String>() {
       private EnumerationIterator<String> iterator;

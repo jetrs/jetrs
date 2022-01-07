@@ -167,7 +167,7 @@ class MirrorMultivaluedMap<K,V,R> extends MirrorMap<K,List<V>,List<R>> implement
   }
 
   @Override
-  @SuppressWarnings({"unchecked", "unlikely-arg-type"})
+  @SuppressWarnings("unchecked")
   public MirrorList<V,R> get(final Object key) {
     return (MirrorList<V,R>)super.get(key);
   }
@@ -185,7 +185,7 @@ class MirrorMultivaluedMap<K,V,R> extends MirrorMap<K,List<V>,List<R>> implement
   }
 
   @Override
-  @SuppressWarnings({"unchecked", "unlikely-arg-type"})
+  @SuppressWarnings("unchecked")
   public MirrorList<V,R> remove(final Object key) {
     return (MirrorList<V,R>)super.remove(key);
   }
