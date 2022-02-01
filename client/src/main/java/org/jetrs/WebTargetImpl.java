@@ -49,6 +49,8 @@ class WebTargetImpl implements ConfigurableImpl<WebTarget>, WebTarget {
     this.readTimeout = readTimeout;
   }
 
+  // FIXME: Need to return new instances for the builder methods, because: "Create a new WebTarget instance..."
+
   @Override
   public Configuration getConfiguration() {
     return config;
