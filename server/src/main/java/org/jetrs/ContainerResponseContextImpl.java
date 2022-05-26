@@ -22,6 +22,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -42,10 +43,10 @@ import javax.ws.rs.ext.WriterInterceptor;
 import javax.ws.rs.ext.WriterInterceptorContext;
 
 class ContainerResponseContextImpl extends InterceptorContextImpl implements ContainerResponseContext, WriterInterceptorContext {
-  private final WriterInterceptor[] writerInterceptors;
+  private final List<WriterInterceptorEntityProviderResource> writerInterceptors;
   private Response.StatusType status;
 
-  ContainerResponseContextImpl(final HttpServletRequest request, final HttpServletResponse response, final WriterInterceptor[] writerInterceptors) {
+  ContainerResponseContextImpl(final HttpServletRequest request, final HttpServletResponse response, final List<WriterInterceptorEntityProviderResource> writerInterceptors) {
     super(request, new HttpHeadersImpl(response));
     this.writerInterceptors = writerInterceptors;
     this.status = Response.Status.fromStatusCode(response.getStatus());
@@ -206,21 +207,24 @@ class ContainerResponseContextImpl extends InterceptorContextImpl implements Con
   @Override
   @SuppressWarnings("unchecked")
   public void proceed() throws IOException {
-    if (writerInterceptors == null || ++interceptorIndex == writerInterceptors.length) {
+    if (writerInterceptors == null || ++interceptorIndex == writerInterceptors.size()) {
       MessageBodyProvider.writeTo(messageBodyWriter, getEntity(), getEntityClass(), getEntityType(), getEntityAnnotations(), getMediaType(), getHeaders(), getEntityStream());
       getEntityStream().close();
     }
-    else if (interceptorIndex < writerInterceptors.length) {
-      writerInterceptors[interceptorIndex].aroundWriteTo(this);
+    else if (interceptorIndex < writerInterceptors.size()) {
+      final WriterInterceptor writerInterceptor = writerInterceptors.get(interceptorIndex).getSingletonOrNewInstance(annotationInjector);
+      writerInterceptor.aroundWriteTo(this);
     }
   }
 
   private int interceptorIndex = -1;
 
+  private AnnotationInjector annotationInjector;
   @SuppressWarnings("rawtypes")
   private MessageBodyWriter messageBodyWriter;
 
-  void writeBody(final MessageBodyWriter<?> messageBodyWriter) throws IOException {
+  void writeBody(final AnnotationInjector annotationInjector, final MessageBodyWriter<?> messageBodyWriter) throws IOException {
+    this.annotationInjector = annotationInjector;
     this.messageBodyWriter = messageBodyWriter;
     proceed();
   }

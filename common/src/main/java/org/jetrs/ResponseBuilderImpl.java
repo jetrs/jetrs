@@ -36,18 +36,17 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Variant;
 import javax.ws.rs.ext.Providers;
-import javax.ws.rs.ext.ReaderInterceptor;
 
 class ResponseBuilderImpl extends Response.ResponseBuilder implements Cloneable {
   private final Providers providers;
-  private final ReaderInterceptor[] readerInterceptors;
+  private final List<ReaderInterceptorEntityProviderResource> readerInterceptors;
   private final HttpHeadersImpl headers;
   private int statusCode;
   private String reasonPhrase;
   private Object entity;
   private Annotation[] annotations;
 
-  ResponseBuilderImpl(final Providers providers, final ReaderInterceptor[] readerInterceptors) {
+  ResponseBuilderImpl(final Providers providers, final List<ReaderInterceptorEntityProviderResource> readerInterceptors) {
     this.providers = providers;
     this.readerInterceptors = readerInterceptors;
     this.headers = new HttpHeadersImpl();

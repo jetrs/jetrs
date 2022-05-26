@@ -75,7 +75,8 @@ public class RuntimeDelegateImpl extends RuntimeDelegate {
 
   @Override
   public ResponseBuilder createResponseBuilder() {
-    return runtimeContext == null ? null : new ResponseBuilderImpl(runtimeContext.getProviders(null), runtimeContext.getReaderInterceptors());
+    // FIXME: Need to figure out the logic if `runtimeContext == null`.
+    return runtimeContext == null ? new ResponseBuilderImpl(null, null) : new ResponseBuilderImpl(runtimeContext.getProviders(null), runtimeContext.getReaderInterceptors());
   }
 
   @Override

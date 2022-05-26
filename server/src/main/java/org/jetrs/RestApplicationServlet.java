@@ -129,7 +129,7 @@ abstract class RestApplicationServlet extends RestHttpServlet {
 
       // (6a) Write Response
       stage = Stage.WRITE_RESPONSE;
-      executionContext.writeResponse(resourceMatch, containerRequestContext, providers);
+      executionContext.writeResponse(annotationInjector, resourceMatch, containerRequestContext, providers);
     }
     catch (final IOException | RuntimeException | ServletException e) {
       if (!(e instanceof AbortFilterChainException)) {
@@ -171,7 +171,7 @@ abstract class RestApplicationServlet extends RestHttpServlet {
       try {
         // (6b) Write Response
         stage = Stage.WRITE_RESPONSE;
-        executionContext.writeResponse(resourceMatch, containerRequestContext, providers);
+        executionContext.writeResponse(annotationInjector, resourceMatch, containerRequestContext, providers);
       }
       catch (final IOException | RuntimeException e1) {
         if (!(e1 instanceof WebApplicationException))

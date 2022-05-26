@@ -172,7 +172,7 @@ class ResourceManifest implements ResourceInfo, Comparable<ResourceManifest> {
         containerRequestContext.setType(parameter.getType());
         containerRequestContext.setGenericType(parameter.getType().getGenericSuperclass());
         containerRequestContext.setAnnotations(parameter.getAnnotations());
-        parameterInstances[i] = containerRequestContext.readBody(messageBodyReader);
+        parameterInstances[i] = containerRequestContext.readBody(annotationInjector, messageBodyReader);
       }
       else {
         parameterInstances[i] = getParamObject(containerRequestContext, annotationInjector, paramAnnotation, parameter.getType(), annotations, genericParameterType, paramConverterProviders);

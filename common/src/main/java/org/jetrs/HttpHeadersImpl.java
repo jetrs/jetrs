@@ -56,10 +56,13 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
   private static final List<Locale> WILDCARD_LOCALE = Arrays.asList(new Locale("*"));
   private static final List<MediaType> WILDCARD_ACCEPT = Arrays.asList(MediaType.WILDCARD_TYPE);
   private static final HashMap<String,char[]> headerWithNonCommaDelimiters = new HashMap<>();
+  private static final char[] none = {};
   private static final char[] comma = {','};
   private static final char[] semiComma = {';', ','};
 
   static {
+    // FIXME: Go through the list of all headers and pick out the ones that (1) have delimiters, (2) do not have delimiters
+    headerWithNonCommaDelimiters.put(HttpHeaders.DATE, none);
     headerWithNonCommaDelimiters.put(HttpHeaders.COOKIE, semiComma);
   }
 

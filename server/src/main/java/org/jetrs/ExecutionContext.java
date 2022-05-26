@@ -180,9 +180,19 @@ class ExecutionContext {
 
   private void writeHeader() {
     final MultivaluedMap<String,String> containerResponseHeaders = containerResponseContext.getStringHeaders();
-    for (final Map.Entry<String,List<String>> entry : containerResponseHeaders.entrySet())
-      for (final String header : entry.getValue())
-        httpServletResponse.addHeader(entry.getKey(), header);
+    for (final Map.Entry<String,List<String>> entry : containerResponseHeaders.entrySet()) {
+      final List<String> values = entry.getValue();
+      if (values.size() == 0)
+        continue;
+
+      int i = -1;
+      final String name = entry.getKey();
+      if (httpServletResponse.containsHeader(name))
+        httpServletResponse.setHeader(name, values.get(++i));
+
+      for (final int len = values.size(); ++i < len;)
+        httpServletResponse.addHeader(entry.getKey(), values.get(i));
+    }
 
     httpServletResponse.setStatus(containerResponseContext.getStatus());
   }
@@ -190,7 +200,7 @@ class ExecutionContext {
   private ByteArrayOutputStream entityStream;
 
   @SuppressWarnings("rawtypes")
-  private void writeBody(final ResourceMatch resource, final Providers providers) throws IOException {
+  private void writeBody(final AnnotationInjector annotationInjector, final ResourceMatch resource, final Providers providers) throws IOException {
     final Object entity = containerResponseContext.getEntity();
     if (entity == null)
       return;
@@ -215,13 +225,14 @@ class ExecutionContext {
       containerResponseContext.setEntityStream(entityStream = new ByteArrayOutputStream(1024));
 
     // Start WriterInterceptor process chain
-    containerResponseContext.writeBody(messageBodyWriter);
+    containerResponseContext.writeBody(annotationInjector, messageBodyWriter);
   }
 
-  void writeResponse(final ResourceMatch resource, final ContainerRequestContext containerRequestContext, final Providers providers) throws IOException {
-    writeHeader();
+  void writeResponse(final AnnotationInjector annotationInjector, final ResourceMatch resource, final ContainerRequestContext containerRequestContext, final Providers providers) throws IOException {
     if (!HttpMethod.HEAD.equals(containerRequestContext.getMethod()))
-      writeBody(resource, providers);
+      writeBody(annotationInjector, resource, providers);
+
+    writeHeader(); // Headers have to be written at the end, because WriteInterceptor(s) may modify the response headers.
   }
 
   void commitResponse(final ContainerRequestContext containerRequestContext) throws IOException {

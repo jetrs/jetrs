@@ -331,7 +331,7 @@ public class HttpHeadersImplTest extends RuntimeDelegateTest {
 
   @Test
   public void testDate() {
-    test(HttpHeaders.DATE, Date.class, "Thu, 31 May 2007 20:35:00 GMT", "Tue, 10 Aug 2010 09:56:13 GMT", "Tue, 11 Sep 2001 20:35:00 GMT");
+    test(HttpHeaders.DATE, Date.class, "Thu, 31 May 2007 20:35:00 GMT", "Tue, 10 Aug 2010 09:56:13 GMT", "Thu, 26 May 2022 12:45:34 GMT");
   }
 
   @Test

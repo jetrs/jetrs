@@ -16,10 +16,11 @@
 
 package org.jetrs;
 
+import java.util.List;
+
 import javax.ws.rs.ext.Providers;
-import javax.ws.rs.ext.ReaderInterceptor;
 
 interface RuntimeContext<I> {
   Providers getProviders(final I injector);
-  ReaderInterceptor[] getReaderInterceptors();
+  List<ReaderInterceptorEntityProviderResource> getReaderInterceptors();
 }

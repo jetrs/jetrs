@@ -36,8 +36,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.ParamConverterProvider;
 import javax.ws.rs.ext.Providers;
-import javax.ws.rs.ext.ReaderInterceptor;
-import javax.ws.rs.ext.WriterInterceptor;
 
 class ServerContext implements RuntimeContext<AnnotationInjector> {
   private final Application application;
@@ -45,8 +43,8 @@ class ServerContext implements RuntimeContext<AnnotationInjector> {
   private final List<ResourceManifest> resources;
   private final ContainerFilters containerFilters;
   private final ProvidersImpl providers;
-  private final ReaderInterceptor[] readerInterceptors;
-  private final WriterInterceptor[] writerInterceptors;
+  private final List<ReaderInterceptorEntityProviderResource> readerInterceptors;
+  private final List<WriterInterceptorEntityProviderResource> writerInterceptors;
   private final List<ProviderResource<ParamConverterProvider>> paramConverterProviders;
 
   ServerContext(final Application application, final List<ResourceManifest> resources, final ContainerFilters containerFilters, final ProvidersImpl providers, final List<ReaderInterceptorEntityProviderResource> readerInterceptors, final List<WriterInterceptorEntityProviderResource> writerInterceptors, final List<ProviderResource<ParamConverterProvider>> paramConverterProviders) {
@@ -56,26 +54,8 @@ class ServerContext implements RuntimeContext<AnnotationInjector> {
     this.containerFilters = containerFilters;
     this.providers = providers;
     this.paramConverterProviders = paramConverterProviders;
-
-    if (readerInterceptors.size() > 0) {
-      readerInterceptors.sort(ProvidersImpl.providerResourceComparator);
-      this.readerInterceptors = new ReaderInterceptor[readerInterceptors.size()];
-      for (int i = 0, len = readerInterceptors.size(); i < len; ++i)
-        this.readerInterceptors[i] = readerInterceptors.get(i).getMatchInstance();
-    }
-    else {
-      this.readerInterceptors = null;
-    }
-
-    if (writerInterceptors.size() > 0) {
-      writerInterceptors.sort(ProvidersImpl.providerResourceComparator);
-      this.writerInterceptors = new WriterInterceptor[writerInterceptors.size()];
-      for (int i = 0, len = readerInterceptors.size(); i < len; ++i)
-        this.writerInterceptors[i] = writerInterceptors.get(i).getMatchInstance();
-    }
-    else {
-      this.writerInterceptors = null;
-    }
+    this.readerInterceptors = readerInterceptors;
+    this.writerInterceptors = writerInterceptors;
   }
 
   Application getApplication() {
@@ -96,11 +76,11 @@ class ServerContext implements RuntimeContext<AnnotationInjector> {
   }
 
   @Override
-  public ReaderInterceptor[] getReaderInterceptors() {
+  public List<ReaderInterceptorEntityProviderResource> getReaderInterceptors() {
     return this.readerInterceptors;
   }
 
-  WriterInterceptor[] getWriterInterceptors() {
+  List<WriterInterceptorEntityProviderResource> getWriterInterceptors() {
     return this.writerInterceptors;
   }
 

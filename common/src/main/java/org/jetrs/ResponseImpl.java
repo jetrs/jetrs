@@ -26,6 +26,7 @@ import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -43,7 +44,6 @@ import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.Providers;
-import javax.ws.rs.ext.ReaderInterceptor;
 
 import org.libj.io.Streams;
 import org.slf4j.Logger;
@@ -53,7 +53,7 @@ class ResponseImpl extends Response {
   private static final Logger logger = LoggerFactory.getLogger(ResponseImpl.class);
 
   private final Providers providers;
-  private final Object[] readerInterceptors;
+  private final List<ReaderInterceptorEntityProviderResource> readerInterceptors;
   private final int statusCode;
   private final Response.StatusType statusInfo;
   private final HttpHeadersImpl headers;
@@ -62,7 +62,7 @@ class ResponseImpl extends Response {
   final Annotation[] annotations; // FIXME: annotations are not being used, but they need to be used by the MessageBodyWriter.. there's no API to get them out of this class
   private boolean closed;
 
-  ResponseImpl(final Providers providers, final Object[] readerInterceptors, final int statusCode, final Response.StatusType statusInfo, final HttpHeadersImpl headers, final Map<String,NewCookie> cookies, final Object entity, final Annotation[] annotations) {
+  ResponseImpl(final Providers providers, final List<ReaderInterceptorEntityProviderResource> readerInterceptors, final int statusCode, final Response.StatusType statusInfo, final HttpHeadersImpl headers, final Map<String,NewCookie> cookies, final Object entity, final Annotation[] annotations) {
     this.providers = providers;
     this.readerInterceptors = readerInterceptors;
     this.statusCode = statusCode;
@@ -141,11 +141,11 @@ class ResponseImpl extends Response {
 
         @Override
         public Object proceed() throws IOException {
-          if (++interceptorIndex == readerInterceptors.length)
+          if (++interceptorIndex == readerInterceptors.size())
             return lastProceeded = ((MessageBodyReader)messageBodyReader).readFrom(getType(), getGenericType(), getAnnotations(), getMediaType(), getHeaders(), getInputStream());
 
-          if (interceptorIndex < readerInterceptors.length)
-            return lastProceeded = ((ReaderInterceptor)readerInterceptors[interceptorIndex]).aroundReadFrom(this);
+          if (interceptorIndex < readerInterceptors.size())
+            return lastProceeded = (readerInterceptors.get(interceptorIndex).getSingletonOrNewInstance(null)).aroundReadFrom(this); // FIXME: null for AnnotationInjector
 
           return lastProceeded;
         }

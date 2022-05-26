@@ -101,6 +101,9 @@ abstract class RestHttpServlet extends HttpServlet {
         classes = null;
       }
 
+      readerInterceptors.sort(ProvidersImpl.providerResourceComparator);
+      writerInterceptors.sort(ProvidersImpl.providerResourceComparator);
+
       bootstrap.init(singletons, classes, resources, exceptionMappers, entityReaders, entityWriters, requestFilters, responseFilters, readerInterceptors, writerInterceptors, paramConverterProviders);
       this.serverContext = new ServerContext(application, resources, new ContainerFilters(requestFilters, responseFilters), new ProvidersImpl(exceptionMappers, entityReaders, entityWriters), readerInterceptors, writerInterceptors, paramConverterProviders);
       RuntimeDelegate.setInstance(new RuntimeDelegateImpl(this.serverContext));
