@@ -28,7 +28,6 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -125,12 +124,13 @@ class InvocationImpl implements Invocation {
       if (entity != null) {
         providers = new ProvidersImpl(this.providers, new AnnotationInjector(null, null, new RequestImpl(method), null, null, null, null, new HttpHeadersImpl(connection.getRequestProperties()), null, null));
         connection.setDoOutput(true);
-        final MessageBodyWriter messageBodyWriter = providers.getMessageBodyWriter(entity.getEntity().getClass(), null, entity.getAnnotations(), entity.getMediaType());
+        final Class<?> entityClass = entity.getEntity().getClass();
+        final MessageBodyWriter messageBodyWriter = providers.getMessageBodyWriter(entityClass, null, entity.getAnnotations(), entity.getMediaType());
         if (messageBodyWriter == null)
-          throw new ProcessingException("Provider not found for " + entity.getEntity().getClass().getName());
+          throw new ProcessingException("Provider not found for " + entityClass.getName());
 
         final OutputStream entityStream = connection.getOutputStream();
-        MessageBodyProvider.writeTo(messageBodyWriter, entity.getEntity(), entity.getEntity().getClass(), null, entity.getAnnotations(), entity.getMediaType(), headers == null ? null : headers.getMirrorMap(), entityStream);
+        MessageBodyProvider.writeTo(messageBodyWriter, entity.getEntity(), entityClass, null, entity.getAnnotations(), entity.getMediaType(), headers == null ? null : headers.getMirrorMap(), entityStream);
         entityStream.flush();
       }
       else {
@@ -249,13 +249,13 @@ class InvocationImpl implements Invocation {
 
     @Override
     public Invocation.Builder accept(final MediaType ... mediaTypes) {
-      getHeaders().getMirrorMap().put(HttpHeaders.ACCEPT, Arrays.asList(mediaTypes));
+      getHeaders().getMirrorMap().put(HttpHeaders.ACCEPT, Arrays.asList((Object[])mediaTypes));
       return this;
     }
 
     @Override
     public Invocation.Builder acceptLanguage(final Locale ... locales) {
-      getHeaders().getMirrorMap().put(HttpHeaders.ACCEPT_LANGUAGE, Arrays.asList(locales));
+      getHeaders().getMirrorMap().put(HttpHeaders.ACCEPT_LANGUAGE, Arrays.asList((Object[])locales));
       return this;
     }
 
@@ -459,25 +459,31 @@ class InvocationImpl implements Invocation {
       client.assertNotClosed();
       return new AsyncInvokerImpl(client, providers, url, requestHeaders, cookies, cacheControl, executorService, connectTimeout, readTimeout);
     }
+
+    @Override
+    public String toString() {
+      final StringBuilder str = new StringBuilder();
+      appendHeaders(str, getHeaders());
+      str.append(url);
+      return str.toString();
+    }
+  }
+
+  private static void appendHeaders(final StringBuilder str, final HttpHeadersMap<String,Object> headers) {
+    for (final Map.Entry<String,List<String>> entry : headers.entrySet())
+      for (final String value : entry.getValue())
+        str.append("-H '").append(entry.getKey()).append(": ").append(value.replace("'", "\\'")).append("' ");
   }
 
   @Override
   public String toString() {
-    final StringBuilder builder = new StringBuilder();
-    builder.append("{\n  \"url\": \"" + url + "\",");
-    builder.append("\n  \"method\": \"").append(method).append("\",");
-    builder.append("\n  \"headers\": {");
+    final StringBuilder str = new StringBuilder();
+    str.append("-X").append(method).append(' ');
+    appendHeaders(str, headers);
+    if (entity != null)
+      str.append(" -d '").append(entity.toString().replace("'", "\\'")).append("' ");
 
-    final Iterator<Map.Entry<String,List<String>>> iterator = headers.entrySet().iterator();
-    for (int i = 0; iterator.hasNext(); ++i) {
-      final Map.Entry<String,List<String>> entry = iterator.next();
-      if (i > 0)
-        builder.append(',');
-
-      builder.append("\n    \"").append(entry.getKey()).append("\": [").append(CollectionUtil.toString(entry.getValue(), "\", \"")).append(']');
-    }
-
-    builder.append("\n  }\n}");
-    return builder.toString();
+    str.append(url);
+    return str.toString();
   }
 }
