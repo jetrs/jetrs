@@ -52,6 +52,7 @@ import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.StatusType;
 import javax.ws.rs.ext.MessageBodyWriter;
+import javax.ws.rs.ext.Providers;
 
 import org.libj.util.CollectionUtil;
 import org.libj.util.Dates;
@@ -66,7 +67,7 @@ class InvocationImpl implements Invocation {
   }
 
   private final ClientImpl client;
-  private final ProvidersImpl providers;
+  private final ClientRequestContext requestContext;
   private final URL url;
   private final String method;
   private final Entity<?> entity;
@@ -77,9 +78,9 @@ class InvocationImpl implements Invocation {
   private final long connectTimeout;
   private final long readTimeout;
 
-  InvocationImpl(final ClientImpl client, final ProvidersImpl providers, final URL url, final String method, final Entity<?> entity, final HttpHeadersMap<String,Object> headers, final List<Cookie> cookies, final CacheControl cacheControl, final ExecutorService executorService, final long connectTimeout, final long readTimeout) {
+  InvocationImpl(final ClientImpl client, final ClientRuntimeContext runtimeContext, final URL url, final String method, final Entity<?> entity, final HttpHeadersMap<String,Object> headers, final List<Cookie> cookies, final CacheControl cacheControl, final ExecutorService executorService, final long connectTimeout, final long readTimeout) {
     this.client = client;
-    this.providers = providers;
+    this.requestContext = runtimeContext.newRequestContext(new RequestImpl(method));
     this.url = url;
     this.method = method;
     this.entity = entity;
@@ -120,9 +121,8 @@ class InvocationImpl implements Invocation {
       else
         connection.setUseCaches(false);
 
-      final ProvidersImpl providers;
+      final Providers providers = requestContext.getProviders();
       if (entity != null) {
-        providers = new ProvidersImpl(this.providers, new AnnotationInjector(null, null, new RequestImpl(method), null, null, null, null, new HttpHeadersImpl(connection.getRequestProperties()), null, null));
         connection.setDoOutput(true);
         final Class<?> entityClass = entity.getEntity().getClass();
         final MessageBodyWriter messageBodyWriter = providers.getMessageBodyWriter(entityClass, null, entity.getAnnotations(), entity.getMediaType());
@@ -132,9 +132,6 @@ class InvocationImpl implements Invocation {
         final OutputStream entityStream = connection.getOutputStream();
         MessageBodyProvider.writeTo(messageBodyWriter, entity.getEntity(), entityClass, null, entity.getAnnotations(), entity.getMediaType(), headers == null ? null : headers.getMirrorMap(), entityStream);
         entityStream.flush();
-      }
-      else {
-        providers = this.providers;
       }
 
       final int statusCode = connection.getResponseCode();
@@ -227,17 +224,17 @@ class InvocationImpl implements Invocation {
     private List<Cookie> cookies;
     private CacheControl cacheControl;
 
-    BuilderImpl(final ClientImpl client, final ProvidersImpl providers, final URL url, final ExecutorService executorService, final long connectTimeout, final long readTimeout) {
-      super(client, providers, url, executorService, connectTimeout, readTimeout);
+    BuilderImpl(final ClientImpl client, final ClientRuntimeContext runtimeContext, final URL url, final ExecutorService executorService, final long connectTimeout, final long readTimeout) {
+      super(client, runtimeContext, url, executorService, connectTimeout, readTimeout);
     }
 
-    BuilderImpl(final ClientImpl client, final ProvidersImpl providers, final URL url, final ExecutorService executorService, final long connectTimeout, final long readTimeout, final String ... acceptedResponseTypes) {
-      this(client, providers, url, executorService, connectTimeout, readTimeout);
+    BuilderImpl(final ClientImpl client, final ClientRuntimeContext runtimeContext, final URL url, final ExecutorService executorService, final long connectTimeout, final long readTimeout, final String ... acceptedResponseTypes) {
+      this(client, runtimeContext, url, executorService, connectTimeout, readTimeout);
       accept(acceptedResponseTypes);
     }
 
-    BuilderImpl(final ClientImpl client, final ProvidersImpl providers, final URL url, final ExecutorService executorService, final long connectTimeout, final long readTimeout, final MediaType ... acceptedResponseTypes) {
-      this(client, providers, url, executorService, connectTimeout, readTimeout);
+    BuilderImpl(final ClientImpl client, final ClientRuntimeContext runtimeContext, final URL url, final ExecutorService executorService, final long connectTimeout, final long readTimeout, final MediaType ... acceptedResponseTypes) {
+      this(client, runtimeContext, url, executorService, connectTimeout, readTimeout);
       accept(acceptedResponseTypes);
     }
 
@@ -457,7 +454,7 @@ class InvocationImpl implements Invocation {
     @Override
     public AsyncInvoker async() {
       client.assertNotClosed();
-      return new AsyncInvokerImpl(client, providers, url, requestHeaders, cookies, cacheControl, executorService, connectTimeout, readTimeout);
+      return new AsyncInvokerImpl(client, runtimeContext, url, requestHeaders, cookies, cacheControl, executorService, connectTimeout, readTimeout);
     }
 
     @Override

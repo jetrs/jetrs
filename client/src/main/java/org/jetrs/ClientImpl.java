@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
@@ -30,12 +29,9 @@ import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.container.ContainerRequestFilter;
-import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.ext.ParamConverterProvider;
 
 import org.libj.lang.PackageNotFoundException;
 
@@ -56,29 +52,33 @@ class ClientImpl implements Client, ConfigurableImpl<Client> {
     this.readTimeout = readTimeout;
   }
 
-  private ProvidersImpl providers;
+  private ClientRuntimeContext runtimeContext;
   private Set<?> singletons;
   private Set<Class<?>> classes;
 
-  private ProvidersImpl buildProviders() {
-    if (providers != null && (singletons != null ? singletons.equals(config.getInstances()) : config.getInstances() == null) && (classes != null ? classes.equals(config.getClasses()) : config.getClasses() == null))
-      return providers;
+  private ClientRuntimeContext buildProviders() {
+    if (runtimeContext != null && (singletons != null ? singletons.equals(config.getInstances()) : config.getInstances() == null) && (classes != null ? classes.equals(config.getClasses()) : config.getClasses() == null))
+      return runtimeContext;
 
     try {
-      final ArrayList<ExceptionMappingProviderResource> exceptionMappers = new ArrayList<>();
-      final ArrayList<EntityReaderProviderResource> entityReaders = new ArrayList<>();
-      final ArrayList<EntityWriterProviderResource> entityWriters = new ArrayList<>();
-      final ArrayList<ProviderResource<ContainerRequestFilter>> requestFilters = new ArrayList<>();
-      final ArrayList<ProviderResource<ContainerResponseFilter>> responseFilters = new ArrayList<>();
-      final ArrayList<ReaderInterceptorEntityProviderResource> readerInterceptors = new ArrayList<>();
-      final ArrayList<WriterInterceptorEntityProviderResource> writerInterceptors = new ArrayList<>();
-      final ArrayList<ProviderResource<ParamConverterProvider>> paramConverterProviders = new ArrayList<>();
+      final ReaderInterceptorProviders.FactoryList readerInterceptorEntityProviderFactories = new ReaderInterceptorProviders.FactoryList();
+      final WriterInterceptorProviders.FactoryList writerInterceptorEntityProviderFactories = new WriterInterceptorProviders.FactoryList();
+      final MessageBodyReaderProviders.FactoryList messageBodyReaderEntityProviderFactories = new MessageBodyReaderProviders.FactoryList();
+      final MessageBodyWriterProviders.FactoryList messageBodyWriterEntityProviderFactories = new MessageBodyWriterProviders.FactoryList();
+      final ExceptionMapperProviders.FactoryList exceptionMapperEntityProviderFactories = new ExceptionMapperProviders.FactoryList();
 
-      final Bootstrap<?> bootstrap = new Bootstrap<>();
-      bootstrap.init(config.getInstances(), config.getClasses(), null, exceptionMappers, entityReaders, entityWriters, requestFilters, responseFilters, readerInterceptors, writerInterceptors, paramConverterProviders);
+      final Bootstrap<?> bootstrap = new Bootstrap<>(
+        readerInterceptorEntityProviderFactories,
+        writerInterceptorEntityProviderFactories,
+        messageBodyReaderEntityProviderFactories,
+        messageBodyWriterEntityProviderFactories,
+        exceptionMapperEntityProviderFactories
+      );
+
+      bootstrap.init(config.getInstances(), config.getClasses(), null);
       this.singletons = config.getInstances();
       this.classes = config.getClasses();
-      return providers = new ProvidersImpl(exceptionMappers, entityReaders, entityWriters);
+      return new ClientRuntimeContext(readerInterceptorEntityProviderFactories, writerInterceptorEntityProviderFactories, messageBodyReaderEntityProviderFactories, messageBodyWriterEntityProviderFactories, exceptionMapperEntityProviderFactories);
     }
     catch (final IllegalAccessException | PackageNotFoundException e) {
       throw new RuntimeException(e);

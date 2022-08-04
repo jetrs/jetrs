@@ -1,4 +1,4 @@
-/* Copyright (c) 2021 JetRS
+/* Copyright (c) 2022 JetRS
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -16,30 +16,38 @@
 
 package org.jetrs;
 
-import static org.libj.lang.Assertions.*;
-
 import javax.ws.rs.core.Request;
 
-abstract class RuntimeContext {
-  final ReaderInterceptorProviders.FactoryList readerInterceptorEntityProviderFactories;
-  final WriterInterceptorProviders.FactoryList writerInterceptorEntityProviderFactories;
-  final MessageBodyReaderProviders.FactoryList messageBodyReaderEntityProviderFactories;
-  final MessageBodyWriterProviders.FactoryList messageBodyWriterEntityProviderFactories;
-  final ExceptionMapperProviders.FactoryList exceptionMapperEntityProviderFactories;
+public class ClientRuntimeContext extends RuntimeContext {
+  ClientRuntimeContext() {
+    this(
+      ReaderInterceptorProviders.FactoryList.EMPTY_LIST,
+      WriterInterceptorProviders.FactoryList.EMPTY_LIST,
+      MessageBodyReaderProviders.FactoryList.EMPTY_LIST,
+      MessageBodyWriterProviders.FactoryList.EMPTY_LIST,
+      ExceptionMapperProviders.FactoryList.EMPTY_LIST
+    );
+  }
 
-  RuntimeContext(
+  ClientRuntimeContext(
     final ReaderInterceptorProviders.FactoryList readerInterceptorEntityProviderFactories,
     final WriterInterceptorProviders.FactoryList writerInterceptorEntityProviderFactories,
     final MessageBodyReaderProviders.FactoryList messageBodyReaderEntityProviderFactories,
     final MessageBodyWriterProviders.FactoryList messageBodyWriterEntityProviderFactories,
     final ExceptionMapperProviders.FactoryList exceptionMapperEntityProviderFactories
   ) {
-    this.readerInterceptorEntityProviderFactories = assertNotNull(readerInterceptorEntityProviderFactories);
-    this.writerInterceptorEntityProviderFactories = assertNotNull(writerInterceptorEntityProviderFactories);
-    this.messageBodyReaderEntityProviderFactories = assertNotNull(messageBodyReaderEntityProviderFactories);
-    this.messageBodyWriterEntityProviderFactories = assertNotNull(messageBodyWriterEntityProviderFactories);
-    this.exceptionMapperEntityProviderFactories = assertNotNull(exceptionMapperEntityProviderFactories);
+    super(readerInterceptorEntityProviderFactories, writerInterceptorEntityProviderFactories, messageBodyReaderEntityProviderFactories, messageBodyWriterEntityProviderFactories, exceptionMapperEntityProviderFactories);
   }
 
-  abstract RequestContext newRequestContext(Request request);
+  @Override
+  ClientRequestContext newRequestContext(final Request request) {
+    return new ClientRequestContext(
+      request,
+      readerInterceptorEntityProviderFactories,
+      writerInterceptorEntityProviderFactories,
+      messageBodyReaderEntityProviderFactories,
+      messageBodyWriterEntityProviderFactories,
+      exceptionMapperEntityProviderFactories
+    );
+  }
 }

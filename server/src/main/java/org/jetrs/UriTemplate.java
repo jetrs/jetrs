@@ -21,12 +21,61 @@ import java.util.regex.Pattern;
 
 import javax.ws.rs.Path;
 
-import org.libj.lang.Strings;
 import org.libj.net.URIComponent;
 import org.libj.util.Patterns;
 
 class UriTemplate implements Comparable<UriTemplate> {
-  private static final Pattern pathExpressionPattern = Pattern.compile("(\\w+)\\s*(:\\s*(.+))?");
+  static final String DEL = "ZZZ";
+  private static final char ESCAPE = 'Z';
+  private static final char NO_ESCAPE = '\0';
+  private static final char[] ESCAPE_MAP = {
+    '_', 'W',
+    '.', 'X',
+    '-', 'Y',
+    ESCAPE, ESCAPE
+  };
+
+  private static boolean isValidPathStart(final char ch) {
+    return Character.isAlphabetic(ch) || Character.isDigit(ch) || ch == '_';
+  }
+
+  private static boolean isValidPathPart(final char ch) {
+    return isValidPathStart(ch) || ch == '.' || ch == '-';
+  }
+
+  private static char getEscapeChar(final char ch) {
+    if (Character.isDigit(ch) || Character.isAlphabetic(ch) && ch != ESCAPE)
+      return NO_ESCAPE;
+
+    for (int i = 0; i < ESCAPE_MAP.length; i += 2)
+      if (ESCAPE_MAP[i] == ch)
+        return ESCAPE_MAP[++i];
+
+    throw new IllegalStateException("Unexpected char: '" + ch + "'");
+  }
+
+  private static String escapeName(final String uriTemplate, int i, final int end) {
+    char ch = uriTemplate.charAt(i);
+    if (!isValidPathStart(ch))
+      throw new IllegalArgumentException("Invalid URI template start ('" + ch + "' at index " + i + "): " + uriTemplate);
+
+    final StringBuilder b = new StringBuilder();
+    for (char escape;;) {
+      if ((escape = getEscapeChar(ch)) != NO_ESCAPE)
+        b.append(ESCAPE).append(escape);
+      else
+        b.append(ch);
+
+      if (++i == end)
+        break;
+
+      ch = uriTemplate.charAt(i);
+      if (!isValidPathPart(ch))
+        throw new IllegalArgumentException("Invalid URI template part ('" + ch + "' at index " + i + ": " + uriTemplate);
+    }
+
+    return b.append(DEL).append(i).toString();
+  }
 
   static boolean addLeadingRemoveTrailing(final StringBuilder builder, final Path path) {
     final String value;
@@ -60,14 +109,13 @@ class UriTemplate implements Comparable<UriTemplate> {
 
   // FIXME: This does URI-Encode...
   // FIXME: URL-Encode baseUri, but don't double-encode %-encoded values
-  private static int append(final StringBuilder builder, final char[] chars, final int start, final int end) {
+  private static int appendLiteral(final StringBuilder builder, final String uriTemplate, final int len, final int start, final int end) {
     // Append the literal path, first with URI encode, then with regex escape
-    for (int i = start; i < end; ++i) {
-      final char ch = chars[i];
-      if (ch == '/') {
-        builder.append('/');
-      }
-      else {
+    int repeatedSlashes = 0;
+    char ch, prev = '\0';
+    for (int i = start; i < end; ++i, prev = ch) {
+      ch = uriTemplate.charAt(i);
+      if (ch != '/') {
         final String en = URIComponent.encode(ch);
         if (en.length() > 1) {
           builder.append(en);
@@ -79,18 +127,29 @@ class UriTemplate implements Comparable<UriTemplate> {
           builder.append(ch);
         }
       }
+      else if (prev == '/') {
+        ++repeatedSlashes;
+      }
+      else {
+        builder.append('/');
+      }
     }
 
-    return end - start;
+    final int builderLen = builder.length() - 1;
+    if (end == len && builder.charAt(builderLen) == '/') {
+      builder.setLength(builderLen);
+      ++repeatedSlashes;
+    }
+
+    return end - start - repeatedSlashes;
   }
 
   private final String uriTemplate;
-  private final String regex;
   private final Pattern pattern;
-  private final String[] groupNames;
-  private final int literalChars;
-  private final int allGroups;
-  private final int nonDefaultGroups;
+  private final String[] pathSegmentParamNames;
+  private int literalChars;
+  private int allGroups;
+  private int nonDefaultGroups;
 
   UriTemplate(final String baseUri, final Path classPath, final Path methodPath) {
     if (baseUri.length() > 0 && (!baseUri.startsWith("/") || baseUri.endsWith("/")))
@@ -107,56 +166,168 @@ class UriTemplate implements Comparable<UriTemplate> {
     builder.setLength(0);
     builder.append('^');
 
-    int literalChars = 0;
-    int allGroups = 0;
-    int nonDefaultGroups = 0;
-    int end = -1;
-    final char[] chars = uriTemplate.toCharArray();
-    for (int start; (start = uriTemplate.indexOf('{', ++end)) > -1;) {
-      literalChars += append(builder, chars, end, start);
-      end = Strings.indexOfScopeClose(uriTemplate, '{', '}', ++start);
+    this.pathSegmentParamNames = parsePathParams(builder, null, uriTemplate, uriTemplate.length(), -1, 0);
 
-      final String pathExpression = uriTemplate.substring(start, end);
-      final Matcher matcher = pathExpressionPattern.matcher(pathExpression);
-      if (!matcher.find())
-        throw new IllegalArgumentException("Expression \"" + pathExpression + "\" does not match expected format");
-
-      final String name = matcher.group(1);
-      final String regex = matcher.group(3);
-      builder.append("(?<" + name + ">");
-      if (regex != null) {
-        ++nonDefaultGroups;
-        builder.append(regex);
-      }
-      else {
-        ++allGroups;
-        builder.append("[^/]+?");
-      }
-
-      builder.append(')');
-    }
-
-    literalChars += append(builder, chars, end, chars.length);
     builder.append("(/.*)?$");
 
-    this.regex = builder.toString();
-    this.pattern = Patterns.compile(regex);
-    this.groupNames = Patterns.getGroupNames(regex);
-    this.literalChars = literalChars;
+    this.pattern = Patterns.compile(builder.toString());
     this.allGroups = allGroups + nonDefaultGroups;
-    this.nonDefaultGroups = nonDefaultGroups;
+  }
+
+  /**
+   * @param regex The {@link StringBuilder} to be used for construction of the matching regex for this {@link UriTemplate}.
+   * @param value The {@link StringBuilder} to be used for construction of the regex values of path parameters.
+   * @param uriTemplate The URI template to parse.
+   * @param len The length of the {@code uriTemplate} string.
+   * @param i The character index of iteration into the {@code uriTemplate} string.
+   * @param depth The depth of regex name groups.
+   * @return An array of regex name groups corresponding to path parameter names.
+   * @see Path#value()
+   */
+  String[] parsePathParams(final StringBuilder regex, StringBuilder value, final String uriTemplate, final int len, int i, final int depth) {
+    int start = uriTemplate.indexOf('{', ++i);
+    if (start < 0) {
+      literalChars += appendLiteral(regex, uriTemplate, len, i, len);
+      return new String[depth];
+    }
+
+    literalChars += appendLiteral(regex, uriTemplate, len, i, start);
+
+    char ch;
+    i = ++start;
+    String name = null;
+    for (int mark = -1; i < len; ++i) {
+      ch = uriTemplate.charAt(i);
+      if (Character.isWhitespace(ch)) {
+        if (name == null) {
+          if (i - start != 0) {
+            name = escapeName(uriTemplate, start, i);
+            start = -1;
+            continue;
+          }
+
+          start = i + 1;
+        }
+      }
+      else if (ch == ':') {
+        if (mark == -1) {
+          mark = i;
+          if (name == null) {
+            if (i - start == 0)
+              throw new IllegalArgumentException("Expression \"" + uriTemplate + "\" does not match expected format: \"(\\w+)\\s*(:\\s*(.+))?\" at index 0");
+
+            name = escapeName(uriTemplate, start, i);
+            start = -1;
+          }
+
+          continue;
+        }
+      }
+      else if (ch == '}') {
+        if (i - start == 0)
+          throw new IllegalArgumentException("Expression \"" + uriTemplate + "\" does not match expected format: \"(\\w+)\\s*(:\\s*(.+))?\" at index 0");
+
+        if (name == null) {
+          name = escapeName(uriTemplate, start, i);
+          start = -1;
+        }
+
+        break;
+      }
+      else if (mark != -1) {
+        if (value == null)
+          value = new StringBuilder();
+
+        start = i;
+        boolean escaped = false;
+        boolean wsp = false;
+        for (int j = 0, noWsp = 0, scope = 1; i < len; ch = uriTemplate.charAt(++i)) {
+          if (escaped) {
+            escaped = false;
+            if (ch == 'k')
+              j = -1;
+          }
+          else if (wsp = Character.isWhitespace(ch)) {
+            ++noWsp;
+          }
+          else if (ch == '{') {
+            ++scope;
+          }
+          else if (ch == '}' && --scope == 0) {
+            if (noWsp > 0)
+              value.setLength(value.length() - noWsp);
+
+            break;
+          }
+          else if (ch == '\\') {
+            escaped = true;
+          }
+          else {
+            if (j == 0)
+              j = ch == '(' ? 1 : 0;
+            else if (j == 1)
+              j = ch == '?' ? 2 : 0;
+            else if (j == 2)
+              j = ch == '<' ? 3 : 0;
+            else if (j == 3) {
+              value.append(ESCAPE); // prepend all named groups with ESCAPE char so they may never collide with generated named groups
+              j = 0;
+            }
+            else if (j == -1)
+              j = ch == '<' ? -2 : 0;
+            else if (j == -2) {
+              value.append(ESCAPE); // prepend all named group back references with ESCAPE char so they may never collide with generated named groups
+              j = 0;
+            }
+          }
+
+          if (!wsp && noWsp > 0) {
+            if (noWsp == value.length())
+              value.setLength(0);
+
+            noWsp = 0;
+          }
+
+          value.append(ch);
+        }
+
+        break;
+      }
+      else if (name != null) {
+        throw new IllegalArgumentException("Expression \"" + uriTemplate + "\" does not match expected format at index " + i);
+      }
+    }
+
+    if (name == null)
+      throw new IllegalArgumentException("Expression \"" + uriTemplate + "\" does not match expected format: \"(\\w+)\\s*(:\\s*(.+))?\" at index 0");
+
+    if (i == -1)
+      throw new IllegalArgumentException("Expression \"" + uriTemplate + "\" does not match expected format at index " + start);
+
+    regex.append("(?<").append(name).append(">");
+
+    if (value != null && value.length() > 0) {
+      regex.append(value);
+      value.setLength(0);
+      regex.append(')');
+      ++nonDefaultGroups;
+    }
+    else {
+      regex.append("[^/]+?)");
+      ++allGroups;
+    }
+
+    final String[] pathParamNames = parsePathParams(regex, value, uriTemplate, len, i, depth + 1);
+    pathParamNames[depth] = name;
+    return pathParamNames;
   }
 
   Matcher matcher(final String path) {
     return pattern.matcher(path);
   }
 
-  String[] getGroupNames() {
-    return this.groupNames;
-  }
-
-  String getRegex() {
-    return this.regex;
+  String[] getPathParamNames() {
+    return pathSegmentParamNames;
   }
 
   // [JAX-RS 2.1 3.7.2 2.f]
@@ -192,16 +363,12 @@ class UriTemplate implements Comparable<UriTemplate> {
       return false;
 
     final UriTemplate that = (UriTemplate)obj;
-    return literalChars == that.literalChars && allGroups == that.allGroups && nonDefaultGroups == that.nonDefaultGroups &&  regex.equals(that.regex);
+    return literalChars == that.literalChars && allGroups == that.allGroups && nonDefaultGroups == that.nonDefaultGroups && uriTemplate.equals(that.uriTemplate);
   }
 
   @Override
   public int hashCode() {
-    int hashCode = 1;
-    hashCode = 31 * hashCode + literalChars;
-    hashCode = 31 * hashCode + allGroups;
-    hashCode = 31 * hashCode + nonDefaultGroups;
-    return 31 * hashCode + regex.hashCode();
+    return uriTemplate.hashCode();
   }
 
   @Override

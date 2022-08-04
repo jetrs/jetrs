@@ -30,29 +30,27 @@ class PathSegmentImpl implements PathSegment {
   private final MultivaluedMap<String,String> matrixParameters;
 
   PathSegmentImpl(final String pathEncoded, final boolean decode) {
-    this.pathEncoded = pathEncoded;
     final int semicolon = pathEncoded.indexOf(';');
     if (semicolon < 0) {
-      this.path = decode ? URLs.decodePath(pathEncoded) : pathEncoded;
-      this.matrixParameters = null;
+      this.matrixParameters = emptyMap;
+      this.pathEncoded = pathEncoded;
     }
     else {
-      this.path = decode ? URLs.decodePath(pathEncoded.substring(0, semicolon)) : pathEncoded.substring(0, semicolon);
       this.matrixParameters = new MultivaluedHashMap<>();
 
-      int i = semicolon + 1;
+      int i = semicolon;
       final int len = pathEncoded.length();
 
       do {
         final String param;
-        final int j = pathEncoded.indexOf(';', i);
+        final int j = pathEncoded.indexOf(';', ++i);
         if (j < 0) {
           param = pathEncoded.substring(i);
           i = len;
         }
         else {
           param = pathEncoded.substring(i, j);
-          ++i;
+          i = j;
         }
 
         if (param.length() > 0) {
@@ -75,7 +73,11 @@ class PathSegmentImpl implements PathSegment {
         }
       }
       while (i < len);
+
+      this.pathEncoded = pathEncoded.substring(0, semicolon);
     }
+
+    this.path = decode ? URLs.decodePath(this.pathEncoded) : this.pathEncoded;
   }
 
   String getPathEncoded() {
@@ -93,7 +95,7 @@ class PathSegmentImpl implements PathSegment {
 
   @Override
   public MultivaluedMap<String,String> getMatrixParameters() {
-    return matrixParameters == null ? emptyMap : matrixParameters;
+    return matrixParameters;
   }
 
   @Override

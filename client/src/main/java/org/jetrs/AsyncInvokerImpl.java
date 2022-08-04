@@ -25,6 +25,7 @@ import javax.ws.rs.HttpMethod;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.AsyncInvoker;
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.InvocationCallback;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Cookie;
@@ -36,8 +37,8 @@ class AsyncInvokerImpl extends Invoker<Future<Response>> implements AsyncInvoker
   private final List<Cookie> cookies;
   private final CacheControl cacheControl;
 
-  AsyncInvokerImpl(final ClientImpl client, final ProvidersImpl providers, final URL url, final HttpHeadersImpl requestHeaders, final List<Cookie> cookies, final CacheControl cacheControl, final ExecutorService executorService, final long connectTimeout, final long readTimeout) {
-    super(client, providers, url, executorService, connectTimeout, readTimeout);
+  AsyncInvokerImpl(final ClientImpl client, final ClientRuntimeContext runtimeContext, final URL url, final HttpHeadersImpl requestHeaders, final List<Cookie> cookies, final CacheControl cacheControl, final ExecutorService executorService, final long connectTimeout, final long readTimeout) {
+    super(client, runtimeContext, url, executorService, connectTimeout, readTimeout);
     this.requestHeaders = requestHeaders;
     this.cookies = cookies;
     this.cacheControl = cacheControl;
@@ -173,8 +174,10 @@ class AsyncInvokerImpl extends Invoker<Future<Response>> implements AsyncInvoker
   @Override
   public <T>Future<T> method(final String name, final Entity<?> entity, final Class<T> responseType) {
     client.assertNotClosed();
+    final Invocation invocation = build(name, entity, requestHeaders, cookies, cacheControl);
+    runtimeContext.newRequestContext(new RequestImpl(name));
     return getExecutorService().submit(() -> {
-      try (final Response response = build(name, entity, requestHeaders, cookies, cacheControl).invoke()) {
+      try (final Response response = invocation.invoke()) {
         return response.readEntity(responseType);
       }
     });

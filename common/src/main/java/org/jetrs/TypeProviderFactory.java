@@ -16,12 +16,19 @@
 
 package org.jetrs;
 
+import static org.libj.lang.Assertions.*;
+
 import java.lang.reflect.InvocationTargetException;
 
-import javax.ws.rs.ext.ReaderInterceptor;
+abstract class TypeProviderFactory<T> extends ProviderFactory<T> {
+  private final Class<?> type;
 
-class ReaderInterceptorEntityProviderResource extends EntityProviderResource<ReaderInterceptor> {
-  ReaderInterceptorEntityProviderResource(final Class<ReaderInterceptor> clazz, final ReaderInterceptor singleton) throws IllegalAccessException, InstantiationException, InvocationTargetException {
-    super(clazz, singleton, ReaderInterceptor.class);
+  TypeProviderFactory(final Class<T> clazz, final T singleton, final Class<?> type) throws IllegalAccessException, InstantiationException, InvocationTargetException {
+    super(clazz, singleton);
+    this.type = assertNotNull(type, "type is null");
+  }
+
+  Class<?> getType() {
+    return this.type;
   }
 }

@@ -16,6 +16,7 @@
 
 package org.jetrs;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
 
@@ -24,7 +25,7 @@ import javax.ws.rs.Priorities;
 
 import org.libj.lang.Classes;
 
-class ProviderResource<T> {
+class ProviderFactory<T> {
   static Class<?> getGenericInterfaceFirstTypeArgument(final Class<?> cls, final Class<?> interfaceType, final Class<?> defaultValue) {
     final Type[] typeArguments = Classes.getGenericInterfaceTypeArguments(cls, interfaceType);
     return typeArguments.length > 0 && typeArguments[0] instanceof Class ? (Class<?>)typeArguments[0] : defaultValue;
@@ -33,39 +34,30 @@ class ProviderResource<T> {
   private final Class<T> clazz;
   private final T singleton;
   private final int priority;
-  private final T matchInstance;
 
-  ProviderResource(final Class<T> clazz, final T singleton) throws IllegalAccessException, InstantiationException, InvocationTargetException {
+  ProviderFactory(final Class<T> clazz, final T singleton) {
     this.clazz = clazz;
     this.singleton = singleton;
     final Priority priority = clazz.getAnnotation(Priority.class);
     this.priority = priority == null ? Priorities.USER : priority.value();
-    this.matchInstance = singleton != null ? singleton : AnnotationInjector.CONTEXT_ONLY.newProviderInstance(clazz);
   }
 
   final Class<T> getProviderClass() {
-    return this.clazz;
+    return clazz;
   }
 
   final int getPriority() {
-    return this.priority;
+    return priority;
   }
 
-  final T getMatchInstance() {
-    return this.matchInstance;
-  }
+  final T getSingletonOrNewInstance(final RequestContext requestContext) {
+    if (singleton != null)
+      return singleton;
 
-  final T getSingletonOrNewInstance(final AnnotationInjector annotationInjector) {
     try {
-      if (annotationInjector == null)
-        return singleton != null ? singleton : clazz.getConstructor().newInstance();
-
-      final T instance = singleton != null ? singleton : annotationInjector.newProviderInstance(clazz);
-      annotationInjector.injectFields(instance, true);
-      return instance;
+      return requestContext.newInstance(clazz, false);
     }
-    catch (final IllegalAccessException | InstantiationException | NoSuchMethodException e) {
-      // This should not happen, because an instance of this class would have already been instantiated once in the constructor for the matchInstance instance
+    catch (final IllegalAccessException | InstantiationException | IOException e) {
       throw new ProviderInstantiationException(e);
     }
     catch (final InvocationTargetException e) {
@@ -74,6 +66,7 @@ class ProviderResource<T> {
 
       throw new ProviderInstantiationException(e.getCause());
     }
+
   }
 
   @Override

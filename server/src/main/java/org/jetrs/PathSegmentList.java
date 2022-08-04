@@ -20,7 +20,7 @@ import javax.ws.rs.core.PathSegment;
 
 import org.libj.lang.WrappedArrayList;
 
-public class PathSegmentList extends WrappedArrayList<PathSegment> {
+class PathSegmentList extends WrappedArrayList<PathSegment> {
   private static PathSegment[] parseSegments(final String pathEncoded, final int len, final int i, final int depth, final boolean decode) {
     final String segment;
     final int j = pathEncoded.indexOf('/', i);
@@ -44,7 +44,7 @@ public class PathSegmentList extends WrappedArrayList<PathSegment> {
 
   PathSegmentList(final PathSegmentList pathSegmentList, final boolean decode) {
     super(new PathSegment[pathSegmentList.array.length]);
-    final PathSegmentImpl[] pathSegments = (PathSegmentImpl[])array;
+    final PathSegmentImpl[] pathSegments = (PathSegmentImpl[])pathSegmentList.array;
     for (int i = 0; i < array.length; ++i)
       array[i] = new PathSegmentImpl(pathSegments[i].getPathEncoded(), decode);
   }

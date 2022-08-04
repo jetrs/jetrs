@@ -21,11 +21,9 @@ import static org.libj.lang.Assertions.*;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Comparator;
-import java.util.List;
 
 import javax.servlet.ServletException;
 import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.ext.ParamConverterProvider;
 
 import org.libj.net.URLs;
 
@@ -55,20 +53,25 @@ class ResourceMatch implements Comparable<ResourceMatch> {
 
   private final ResourceManifest manifest;
   private final Class<?> resourceClass;
-  private Object singleton;
+  private Object instance;
 
   private final String uriEncoded;
   private String uriDecoded;
   private final CompatibleMediaType accept;
+  private final String[] pathSegmentParamNames;
   private final MultivaluedMap<String,String> pathParameters;
+  private final long[] regionStartEnds;
 
-  ResourceMatch(final ResourceManifest manifest, final String uriEncoded, final CompatibleMediaType accept, final MultivaluedMap<String,String> pathParameters) {
+  ResourceMatch(final ResourceManifest manifest, final String uriEncoded, final CompatibleMediaType accept, final String[] pathSegmentParamNames, final long[] regionStartEnds, final MultivaluedMap<String,String> pathParameters) {
     this.manifest = assertNotNull(manifest);
     this.resourceClass = manifest.getResourceClass();
-    this.singleton = manifest.getSingleton();
+    this.instance = manifest.getSingleton();
 
     this.uriEncoded = assertNotNull(uriEncoded);
     this.accept = assertNotNull(accept);
+
+    this.pathSegmentParamNames = assertNotNull(pathSegmentParamNames);
+    this.regionStartEnds = assertNotNull(regionStartEnds);
     this.pathParameters = assertNotNull(pathParameters);
   }
 
@@ -76,24 +79,36 @@ class ResourceMatch implements Comparable<ResourceMatch> {
     return manifest;
   }
 
-  String getURI(final boolean decode) {
-    return !decode ? uriEncoded : uriDecoded == null ? uriDecoded = URLs.decodePath(uriEncoded) : uriDecoded;
+  String[] getPathParamNames() {
+    return pathSegmentParamNames;
   }
 
-  Object getResourceInstance(final AnnotationInjector annotationInjector) throws IllegalAccessException, InstantiationException, InvocationTargetException {
-    return singleton == null ? singleton = annotationInjector.newResourceInstance(resourceClass) : singleton;
+  long[] getRegionStartEnds() {
+    return regionStartEnds;
+  }
+
+  String getUriEncoded() {
+    return uriEncoded;
+  }
+
+  String getUriDecoded() {
+    return uriDecoded == null ? uriDecoded = URLs.decodePath(uriEncoded) : uriDecoded;
+  }
+
+  Object getResourceInstance(final ServerRequestContext requestContext) throws IllegalAccessException, InstantiationException, IOException, InvocationTargetException {
+    return instance == null ? instance = requestContext.newInstance(resourceClass, true) : instance;
   }
 
   CompatibleMediaType getAccept() {
-    return this.accept;
+    return accept;
   }
 
   MultivaluedMap<String,String> getPathParameters() {
     return pathParameters;
   }
 
-  Object service(final ContainerRequestContextImpl containerRequestContext, final AnnotationInjector annotationInjector, final List<ProviderResource<ParamConverterProvider>> paramConverterProviders) throws IOException, ServletException {
-    return manifest.service(this, containerRequestContext, annotationInjector, paramConverterProviders);
+  Object service(final ServerRequestContext requestContext) throws IOException, ServletException {
+    return manifest.service(this, requestContext);
   }
 
   @Override

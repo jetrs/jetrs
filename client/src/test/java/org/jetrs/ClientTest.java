@@ -24,6 +24,7 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.jetrs.provider.ext.StringProvider;
@@ -45,7 +46,7 @@ public class ClientTest {
   @Test
   public void testPut() {
     stubFor(put("/put")
-      .withHeader("Content-Type", containing("text/plain"))
+      .withHeader("Content-Type", containing(MediaType.TEXT_PLAIN))
       .willReturn(ok()
         .withHeader("Content-Type", "text/xml")
         .withBody("<response>SUCCESS</response>")));
@@ -82,7 +83,7 @@ public class ClientTest {
   @Test
   public void testPost() {
     stubFor(post("/post")
-      .withHeader("Content-Type", containing("text/plain"))
+      .withHeader("Content-Type", containing(MediaType.TEXT_PLAIN))
       .willReturn(ok()
         .withHeader("Content-Type", "text/xml")
         .withBody("<response>SUCCESS</response>")));

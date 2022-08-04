@@ -26,7 +26,6 @@ import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.Collections;
 import java.util.Date;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -53,7 +52,7 @@ class ResponseImpl extends Response {
   private static final Logger logger = LoggerFactory.getLogger(ResponseImpl.class);
 
   private final Providers providers;
-  private final List<ReaderInterceptorEntityProviderResource> readerInterceptors;
+  private final ReaderInterceptorProviders.ContextList readerInterceptorContexts;
   private final int statusCode;
   private final Response.StatusType statusInfo;
   private final HttpHeadersImpl headers;
@@ -62,9 +61,9 @@ class ResponseImpl extends Response {
   final Annotation[] annotations; // FIXME: annotations are not being used, but they need to be used by the MessageBodyWriter.. there's no API to get them out of this class
   private boolean closed;
 
-  ResponseImpl(final Providers providers, final List<ReaderInterceptorEntityProviderResource> readerInterceptors, final int statusCode, final Response.StatusType statusInfo, final HttpHeadersImpl headers, final Map<String,NewCookie> cookies, final Object entity, final Annotation[] annotations) {
+  ResponseImpl(final Providers providers, final ReaderInterceptorProviders.ContextList readerInterceptorContexts, final int statusCode, final Response.StatusType statusInfo, final HttpHeadersImpl headers, final Map<String,NewCookie> cookies, final Object entity, final Annotation[] annotations) {
     this.providers = providers;
-    this.readerInterceptors = readerInterceptors;
+    this.readerInterceptorContexts = readerInterceptorContexts;
     this.statusCode = statusCode;
     this.statusInfo = assertNotNull(statusInfo);
     this.headers = assertNotNull(headers);
@@ -132,7 +131,7 @@ class ResponseImpl extends Response {
 
     try {
       final InputStream in = closed ? new ByteArrayInputStream(entityBuffer) : (InputStream)entity;
-      if (readerInterceptors == null)
+      if (readerInterceptorContexts == null)
         return (T)(entity = messageBodyReader.readFrom(rawType, genericType, annotations, mediaType, headers, in));
 
       final ReaderInterceptorContextImpl readerInterceptorContext = new ReaderInterceptorContextImpl(rawType, genericType, annotations, headers, in) {
@@ -141,11 +140,11 @@ class ResponseImpl extends Response {
 
         @Override
         public Object proceed() throws IOException {
-          if (++interceptorIndex == readerInterceptors.size())
+          if (++interceptorIndex == readerInterceptorContexts.size())
             return lastProceeded = ((MessageBodyReader)messageBodyReader).readFrom(getType(), getGenericType(), getAnnotations(), getMediaType(), getHeaders(), getInputStream());
 
-          if (interceptorIndex < readerInterceptors.size())
-            return lastProceeded = (readerInterceptors.get(interceptorIndex).getSingletonOrNewInstance(null)).aroundReadFrom(this); // FIXME: null for AnnotationInjector
+          if (interceptorIndex < readerInterceptorContexts.size())
+            return lastProceeded = (readerInterceptorContexts.getInstance(interceptorIndex)).aroundReadFrom(this); // FIXME: null for Injector
 
           return lastProceeded;
         }

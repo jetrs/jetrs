@@ -46,16 +46,16 @@ class UriInfoImpl implements UriInfo {
   }
 
   private final HttpServletRequest httpServletRequest;
-  private final ExecutionContext executionContext;
+  private final ServerRequestContext requestContext;
 
   private final String absoluteUri;
   private final String contextPath;
   private final int pathIndex;
   private final int queryIndex;
 
-  UriInfoImpl(final HttpServletRequest httpServletRequest, final ExecutionContext executionContext) {
+  UriInfoImpl(final HttpServletRequest httpServletRequest, final ServerRequestContext requestContext) {
     this.httpServletRequest = assertNotNull(httpServletRequest, "httpServletRequest is null");
-    this.executionContext = executionContext;
+    this.requestContext = requestContext;
     this.absoluteUri = getAbsoluteUri(httpServletRequest);
     this.contextPath = httpServletRequest.getContextPath() + httpServletRequest.getServletPath();
 
@@ -194,14 +194,14 @@ class UriInfoImpl implements UriInfo {
 
   @Override
   public MultivaluedMap<String,String> getPathParameters(final boolean decode) {
-    if (executionContext.getResourceMatches() == null)
+    if (requestContext.getResourceMatches() == null)
       return EMPTY_MAP;
 
     // FIXME: Note that this code always picks the 1st ResourceMatch to obtain the PathParameters.
     // FIXME: This is done under the assumption that it is not possible to have a situation where
     // FIXME: any other ResourceMatch would be retrieved. Is this truly the case?!
     if (pathParametersEncoded == null)
-      pathParametersEncoded = executionContext.getResourceMatches().get(0).getPathParameters();
+      pathParametersEncoded = requestContext.getResourceMatches().get(0).getPathParameters();
 
     if (!decode)
       return pathParametersEncoded;
@@ -256,12 +256,13 @@ class UriInfoImpl implements UriInfo {
 
   @Override
   public List<String> getMatchedURIs(final boolean decode) {
-    return executionContext.getResourceMatches() != null ? executionContext.getResourceMatches().getMatchedURIs(decode) : Collections.EMPTY_LIST;
+    return requestContext.getResourceMatches() != null ? requestContext.getResourceMatches().getMatchedURIs(decode) : Collections.EMPTY_LIST;
   }
 
   @Override
   public List<Object> getMatchedResources() {
-    return executionContext.getResourceMatches() != null ? executionContext.getResourceMatches().getMatchedResources() : Collections.EMPTY_LIST;
+    // FIXME: Not tested
+    return requestContext.getResourceMatches() != null ? requestContext.getResourceMatches().getMatchedResources(requestContext) : Collections.EMPTY_LIST;
   }
 
   /**

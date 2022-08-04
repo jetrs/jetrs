@@ -26,9 +26,10 @@ public class Filter1 implements ContainerRequestFilter {
   public void filter(final ContainerRequestContext requestContext) throws IOException {
     final String baseUri = uriInfo.getBaseUri().getRawPath();
     assertTrue(baseUri.startsWith("/") && baseUri.endsWith("/"));
-    assertFalse(uriInfo.getPath().startsWith("/"));
-    assertFalse(uriInfo.getPath().endsWith("/"));
-    if ("2/filter".equals(uriInfo.getPath())) {
+
+    final String path = uriInfo.getPath();
+    assertFalse("Path does not start with '/'", path.startsWith("/"));
+    if ("2/filter".equals(path)) {
       try {
         assertEquals(RootService2.class, resourceInfo.getResourceClass());
         assertEquals(RootService2.class.getMethod("get2Filter", ContainerRequestContext.class), resourceInfo.getResourceMethod());

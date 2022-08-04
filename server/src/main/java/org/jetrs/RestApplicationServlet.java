@@ -27,13 +27,16 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.Providers;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 abstract class RestApplicationServlet extends RestHttpServlet {
+  private static final Logger logger = LoggerFactory.getLogger(RestApplicationServlet.class);
+
   RestApplicationServlet(final Application application) {
     super(application);
     if (application != null && getClass().getAnnotation(WebServlet.class) == null)
@@ -73,12 +76,6 @@ abstract class RestApplicationServlet extends RestHttpServlet {
     }
   }
 
-  private AnnotationInjector createAnnotationInjector(final ContainerRequestContext containerRequestContext, final ContainerResponseContextImpl containerResponseContext, final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse, final HttpHeaders headers, final ServerContext serverContext) {
-    final AnnotationInjector annotationInjector = new AnnotationInjector(containerRequestContext, containerResponseContext, new RequestImpl(httpServletRequest.getMethod()), getServletConfig(), getServletContext(), httpServletRequest, httpServletResponse, headers, serverContext.getConfiguration(), serverContext.getApplication());
-    annotationInjector.setProviders(serverContext.getProviders(annotationInjector));
-    return annotationInjector;
-  }
-
   private enum Stage {
     FILTER_REQUEST_PRE_MATCH,
     MATCH,
@@ -89,16 +86,18 @@ abstract class RestApplicationServlet extends RestHttpServlet {
   }
 
   private void service(final HttpServletRequestImpl httpServletRequest, final HttpServletResponse httpServletResponse) throws IOException, ServletException {
-    final ServerContext serverContext = getServerContext();
-    final ContainerResponseContextImpl containerResponseContext = new ContainerResponseContextImpl(httpServletRequest, httpServletResponse, serverContext.getWriterInterceptors());
+    final ServerRuntimeContext serverContext = getServerContext();
     final HttpHeadersImpl requestHeaders = new HttpHeadersImpl(httpServletRequest);
-    final ExecutionContext executionContext = new ExecutionContext(requestHeaders, httpServletResponse, containerResponseContext, serverContext);
+
+    final ServerRequestContext requestContext = serverContext.newRequestContext(new RequestImpl(httpServletRequest.getMethod()));
+    requestContext.init(requestHeaders, serverContext.getConfiguration(), serverContext.getApplication(), getServletConfig(), getServletContext(), httpServletRequest, httpServletResponse);
+
+    final ContainerResponseContextImpl containerResponseContext = new ContainerResponseContextImpl(httpServletRequest, httpServletResponse, requestContext);
+    requestContext.setContainerResponseContext(containerResponseContext);
 
     final ContainerRequestContextImpl containerRequestContext; // NOTE: This weird construct is done this way to at least somehow make the two objects cohesive
-    httpServletRequest.setRequestContext(containerRequestContext = new ContainerRequestContextImpl(httpServletRequest, executionContext, serverContext.getReaderInterceptors()));
-
-    final AnnotationInjector annotationInjector = createAnnotationInjector(containerRequestContext, containerResponseContext, httpServletRequest, httpServletResponse, requestHeaders, serverContext);
-    final Providers providers = serverContext.getProviders(annotationInjector);
+    httpServletRequest.setRequestContext(containerRequestContext = new ContainerRequestContextImpl(httpServletRequest, requestContext));
+    requestContext.setContainerRequestContext(containerRequestContext);
 
     ResourceMatch resourceMatch = null;
     Stage stage = null;
@@ -106,30 +105,32 @@ abstract class RestApplicationServlet extends RestHttpServlet {
     try {
       // (1) Filter Request (Pre-Match)
       stage = Stage.FILTER_REQUEST_PRE_MATCH;
-      executionContext.filterPreMatchContainerRequest(containerRequestContext, annotationInjector);
+      requestContext.filterPreMatchContainerRequest();
 
       // (2) Match
       stage = Stage.MATCH;
-      resourceMatch = executionContext.filterAndMatch(containerRequestContext, annotationInjector);
+      resourceMatch = requestContext.filterAndMatch();
+      requestContext.setResourceMatch(resourceMatch);
+
       final ResourceManifest resourceManifest = resourceMatch.getManifest();
-      annotationInjector.setResourceInfo(resourceManifest);
+      requestContext.setResourceInfo(resourceManifest);
 
       // (3) Filter Request
       stage = Stage.FILTER_REQUEST;
-      executionContext.filterContainerRequest(containerRequestContext, annotationInjector);
+      requestContext.filterContainerRequest();
 
       // (4a) Service
       stage = Stage.SERVICE;
       httpServletRequest.setResourceManifest(resourceManifest);
-      executionContext.service(resourceMatch, containerRequestContext, annotationInjector);
+      requestContext.service();
 
       // (5a) Filter Response
       stage = Stage.FILTER_RESPONSE;
-      executionContext.filterContainerResponse(containerRequestContext, annotationInjector);
+      requestContext.filterContainerResponse();
 
       // (6a) Write Response
       stage = Stage.WRITE_RESPONSE;
-      executionContext.writeResponse(annotationInjector, resourceMatch, containerRequestContext, providers);
+      requestContext.writeResponse();
     }
     catch (final IOException | RuntimeException | ServletException e) {
       if (!(e instanceof AbortFilterChainException)) {
@@ -137,7 +138,7 @@ abstract class RestApplicationServlet extends RestHttpServlet {
         // (4b) Error
         final Response response;
         try {
-          response = executionContext.setErrorResponse(providers, e);
+          response = requestContext.setErrorResponse(e);
         }
         catch (final RuntimeException e1) {
           if (!(e1 instanceof WebApplicationException))
@@ -151,18 +152,20 @@ abstract class RestApplicationServlet extends RestHttpServlet {
           httpServletResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
           throw e;
         }
+
+        logger.info(e.getMessage(), e);
       }
       else if (stage == Stage.FILTER_RESPONSE) {
         throw new IllegalStateException("ContainerRequestContext.abortWith(Response) cannot be called from response filter chain");
       }
       else {
-        executionContext.setAbortResponse((AbortFilterChainException)e);
+        requestContext.setAbortResponse((AbortFilterChainException)e);
       }
 
       try {
         // (5b) Filter Response
         stage = Stage.FILTER_RESPONSE;
-        executionContext.filterContainerResponse(containerRequestContext, annotationInjector);
+        requestContext.filterContainerResponse();
       }
       catch (final IOException | RuntimeException e1) {
         e.addSuppressed(e1);
@@ -171,7 +174,7 @@ abstract class RestApplicationServlet extends RestHttpServlet {
       try {
         // (6b) Write Response
         stage = Stage.WRITE_RESPONSE;
-        executionContext.writeResponse(annotationInjector, resourceMatch, containerRequestContext, providers);
+        requestContext.writeResponse();
       }
       catch (final IOException | RuntimeException e1) {
         if (!(e1 instanceof WebApplicationException))
@@ -183,7 +186,7 @@ abstract class RestApplicationServlet extends RestHttpServlet {
     }
     finally {
       // (7) Commit Response
-      executionContext.commitResponse(containerRequestContext);
+      requestContext.commitResponse();
     }
   }
 }

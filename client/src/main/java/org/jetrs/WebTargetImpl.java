@@ -32,16 +32,16 @@ import javax.ws.rs.core.UriBuilder;
 
 class WebTargetImpl implements ConfigurableImpl<WebTarget>, WebTarget {
   private final ClientImpl client;
-  private final ProvidersImpl providers;
+  private final ClientRuntimeContext runtimeContext;
   private final Configuration config;
   private final UriBuilder uriBuilder;
   private final ExecutorService executorService;
   private final long connectTimeout;
   private final long readTimeout;
 
-  WebTargetImpl(final ClientImpl client, final ProvidersImpl providers, final Configuration config, final UriBuilder uriBuilder, final ExecutorService executorService, final long connectTimeout, final long readTimeout) {
+  WebTargetImpl(final ClientImpl client, final ClientRuntimeContext runtimeContext, final Configuration config, final UriBuilder uriBuilder, final ExecutorService executorService, final long connectTimeout, final long readTimeout) {
     this.client = client;
-    this.providers = providers;
+    this.runtimeContext = runtimeContext;
     this.config = config;
     this.uriBuilder = uriBuilder;
     this.executorService = executorService;
@@ -124,7 +124,7 @@ class WebTargetImpl implements ConfigurableImpl<WebTarget>, WebTarget {
   public Invocation.Builder request() {
     client.assertNotClosed();
     try {
-      return new InvocationImpl.BuilderImpl(client, providers, getUri().toURL(), executorService, connectTimeout, readTimeout);
+      return new InvocationImpl.BuilderImpl(client, runtimeContext, getUri().toURL(), executorService, connectTimeout, readTimeout);
     }
     catch (final MalformedURLException e) {
       throw new ProcessingException(e);
@@ -135,7 +135,7 @@ class WebTargetImpl implements ConfigurableImpl<WebTarget>, WebTarget {
   public Invocation.Builder request(final String ... acceptedResponseTypes) {
     client.assertNotClosed();
     try {
-      return new InvocationImpl.BuilderImpl(client, providers, getUri().toURL(), executorService, connectTimeout, readTimeout, acceptedResponseTypes);
+      return new InvocationImpl.BuilderImpl(client, runtimeContext, getUri().toURL(), executorService, connectTimeout, readTimeout, acceptedResponseTypes);
     }
     catch (final MalformedURLException e) {
       throw new ProcessingException(e);
@@ -146,7 +146,7 @@ class WebTargetImpl implements ConfigurableImpl<WebTarget>, WebTarget {
   public Invocation.Builder request(final MediaType ... acceptedResponseTypes) {
     client.assertNotClosed();
     try {
-      return new InvocationImpl.BuilderImpl(client, providers, getUri().toURL(), executorService, connectTimeout, readTimeout, acceptedResponseTypes);
+      return new InvocationImpl.BuilderImpl(client, runtimeContext, getUri().toURL(), executorService, connectTimeout, readTimeout, acceptedResponseTypes);
     }
     catch (final MalformedURLException e) {
       throw new ProcessingException(e);

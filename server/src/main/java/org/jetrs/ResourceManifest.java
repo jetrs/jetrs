@@ -21,11 +21,9 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 import javax.annotation.security.DenyAll;
@@ -34,27 +32,14 @@ import javax.annotation.security.RolesAllowed;
 import javax.servlet.ServletException;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.CookieParam;
 import javax.ws.rs.ForbiddenException;
-import javax.ws.rs.HeaderParam;
 import javax.ws.rs.HttpMethod;
-import javax.ws.rs.MatrixParam;
 import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ResourceInfo;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.ext.MessageBodyReader;
-import javax.ws.rs.ext.ParamConverterProvider;
-import javax.ws.rs.ext.Providers;
 
 import org.libj.util.ArrayUtil;
 import org.slf4j.Logger;
@@ -104,9 +89,9 @@ class ResourceManifest implements ResourceInfo, Comparable<ResourceManifest> {
     this.resourceClass = method.getDeclaringClass();
     this.singleton = singleton;
     if (singleton != null) {
-      final Field[] fields = AnnotationInjector.getContextFields(singleton);
+      final Field[] fields = ServerRequestContext.getContextFields(singleton);
       if (fields.length > 0)
-        logger.warn("Fields with @Context annotation " + Arrays.toString(fields) + " will not be injected on singleton of class " + resourceClass.getName());
+        logger.warn("Fields with injectable annotations " + Arrays.toString(fields) + " will not be injected on singleton of class " + resourceClass.getName());
     }
 
     this.uriTemplate = new UriTemplate(baseUri, classPath, methodPath);
@@ -116,16 +101,16 @@ class ResourceManifest implements ResourceInfo, Comparable<ResourceManifest> {
 
   @Override
   public Method getResourceMethod() {
-    return this.resourceMethod;
+    return resourceMethod;
   }
 
   @Override
   public Class<?> getResourceClass() {
-    return this.resourceClass;
+    return resourceClass;
   }
 
   Object getSingleton() {
-    return this.singleton;
+    return singleton;
   }
 
   Annotation[] getMethodAnnotations() {
@@ -146,90 +131,6 @@ class ResourceManifest implements ResourceInfo, Comparable<ResourceManifest> {
 
   CompatibleMediaType[] getCompatibleAccept(final List<MediaType> acceptMediaTypes, final List<String> acceptCharsets) {
     return producesMatcher.getCompatibleMediaType(acceptMediaTypes, acceptCharsets);
-  }
-
-  @SuppressWarnings("rawtypes")
-  private Object[] getParameters(final ContainerRequestContextImpl containerRequestContext, final AnnotationInjector annotationInjector, final List<ProviderResource<ParamConverterProvider>> paramConverterProviders) throws IOException {
-    final Parameter[] parameters = resourceMethod.getParameters();
-    final Type[] genericParameterTypes = resourceMethod.getGenericParameterTypes();
-    final Annotation[][] parameterAnnotations = resourceMethod.getParameterAnnotations();
-    if (parameters.length == 0)
-      return ArrayUtil.EMPTY_ARRAY;
-
-    final Object[] parameterInstances = new Object[parameters.length];
-    for (int i = 0; i < parameters.length; ++i) {
-      final Parameter parameter = parameters[i];
-      final Type genericParameterType = genericParameterTypes[i];
-      final Annotation[] annotations = parameterAnnotations[i];
-      final Annotation paramAnnotation = AnnotationInjector.getInjectableAnnotation(parameter, annotations);
-      if (paramAnnotation == null) {
-        final Providers providers = annotationInjector.getContextObject(Providers.class);
-        final MessageBodyReader messageBodyReader = providers.getMessageBodyReader(parameter.getType(), genericParameterType, annotations, containerRequestContext.getMediaType());
-        if (messageBodyReader == null)
-          throw new WebApplicationException("Could not find MessageBodyReader for type: " + parameter.getType().getName());
-
-        // FIXME: Why is there a return type for ReaderInterceptorContext#proceed()? And it's of type Object. What type is ReaderInterceptorContext supposed to return? It should be InputStream, but then it makes it redundant.
-        containerRequestContext.setType(parameter.getType());
-        containerRequestContext.setGenericType(parameter.getType().getGenericSuperclass());
-        containerRequestContext.setAnnotations(parameter.getAnnotations());
-        parameterInstances[i] = containerRequestContext.readBody(annotationInjector, messageBodyReader);
-      }
-      else {
-        parameterInstances[i] = getParamObject(containerRequestContext, annotationInjector, paramAnnotation, parameter.getType(), annotations, genericParameterType, paramConverterProviders);
-        if (parameterInstances[i] instanceof Exception)
-          throw new BadRequestException((Exception)parameterInstances[i]);
-      }
-    }
-
-    return parameterInstances;
-  }
-
-  private Object getParamObject(final ContainerRequestContextImpl containerRequestContext, final AnnotationInjector annotationInjector, final Annotation annotation, final Class<?> parameterType, final Annotation[] annotations, final Type genericParameterType, final List<ProviderResource<ParamConverterProvider>> paramConverterProviders) {
-    if (annotation.annotationType() == QueryParam.class) {
-      final boolean decode = ParameterUtil.decode(annotations);
-      return ParameterUtil.convertParameter(parameterType, genericParameterType, annotations, containerRequestContext.getUriInfo().getQueryParameters(decode).get(((QueryParam)annotation).value()), paramConverterProviders);
-    }
-
-    if (annotation.annotationType() == PathParam.class) {
-      final boolean decode = ParameterUtil.decode(annotations);
-      final String pathParam = ((PathParam)annotation).value();
-      final MultivaluedMap<String,String> pathParameters = containerRequestContext.getUriInfo().getPathParameters(decode);
-      final List<String> values = pathParameters.get(pathParam);
-      // FIXME: Another useful warning would be: notify if more than 1 @PathParam annotations specify the same name
-      if (values == null)
-        logger.warn("@PathParam(\"" + pathParam + "\") not found in URI template of @Path(\"" + uriTemplate + "\") on method: " + resourceMethod.getDeclaringClass().getName() + "." + resourceMethod.getName() + "(" + ArrayUtil.toString(resourceMethod.getParameterTypes(), ',', Class::getName) + ")");
-
-      return ParameterUtil.convertParameter(parameterType, genericParameterType, annotations, values, paramConverterProviders);
-    }
-
-    if (annotation.annotationType() == MatrixParam.class) {
-      final boolean decode = ParameterUtil.decode(annotations);
-      final List<PathSegment> pathSegments = containerRequestContext.getUriInfo().getPathSegments(decode);
-      // FIXME: Is it the last PathSegment that from which to get the matrix?
-      final PathSegment pathSegment = pathSegments.get(pathSegments.size() - 1);
-      final MultivaluedMap<String,String> matrixParameters = pathSegment.getMatrixParameters();
-      return matrixParameters == null ? null : matrixParameters.get(((MatrixParam)annotation).value());
-    }
-
-    if (annotation.annotationType() == CookieParam.class) {
-      final Map<String,Cookie> cookies = containerRequestContext.getCookies();
-      if (cookies == null)
-        return null;
-
-      final String cookieParam = ((CookieParam)annotation).value();
-      return cookies.get(cookieParam);
-    }
-
-    if (annotation.annotationType() == HeaderParam.class) {
-      final String headerParam = ((HeaderParam)annotation).value();
-      return containerRequestContext.getHeaderString(headerParam);
-    }
-
-    if (annotation.annotationType() == Context.class) {
-      return annotationInjector.getContextObject(parameterType);
-    }
-
-    throw new UnsupportedOperationException("Unsupported param annotation type: " + annotation.annotationType());
   }
 
   boolean checkContentHeader(final String headerName, final Class<? extends Annotation> annotationClass, final ContainerRequestContext containerRequestContext) {
@@ -295,10 +196,11 @@ class ResourceManifest implements ResourceInfo, Comparable<ResourceManifest> {
     throw new NotAuthorizedException(challenge, challenges);
   }
 
-  Object service(final ResourceMatch resourceMatch, final ContainerRequestContextImpl containerRequestContext, final AnnotationInjector annotationInjector, final List<ProviderResource<ParamConverterProvider>> paramConverterProviders) throws IOException, ServletException {
-    checkAllowed(containerRequestContext);
+  Object service(final ResourceMatch resourceMatch, final ServerRequestContext requestContext) throws IOException, ServletException {
+    checkAllowed(requestContext.getContainerRequestContext());
     try {
-      return resourceMethod.invoke(resourceMatch.getResourceInstance(annotationInjector), getParameters(containerRequestContext, annotationInjector, paramConverterProviders));
+      final Object instance = resourceMatch.getResourceInstance(requestContext);
+      return requestContext.invokeMethod(instance, resourceMethod);
     }
     catch (final IllegalAccessException | InstantiationException e) {
       throw new ServletException(e);

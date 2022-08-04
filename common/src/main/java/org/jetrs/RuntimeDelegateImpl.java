@@ -34,11 +34,11 @@ import org.libj.lang.Classes;
 public class RuntimeDelegateImpl extends RuntimeDelegate {
   private static final String endpointFactoryClass = "org.jetrs.EndpointFactory";
 
-  private final RuntimeContext<?> runtimeContext;
+  private final RuntimeContext runtimeContext;
   private final BiFunction<Application,Class<?>,HttpServlet> endpointFactory;
 
   @SuppressWarnings("unchecked")
-  RuntimeDelegateImpl(final RuntimeContext<?> runtimeContext) {
+  RuntimeDelegateImpl(final RuntimeContext runtimeContext) {
     this.runtimeContext = runtimeContext;
     final Class<?> cls = Classes.forNameOrNull(endpointFactoryClass, true, Thread.currentThread().getContextClassLoader());
     if (cls == null) {
@@ -76,7 +76,11 @@ public class RuntimeDelegateImpl extends RuntimeDelegate {
   @Override
   public ResponseBuilder createResponseBuilder() {
     // FIXME: Need to figure out the logic if `runtimeContext == null`.
-    return runtimeContext == null ? new ResponseBuilderImpl(null, null) : new ResponseBuilderImpl(runtimeContext.getProviders(null), runtimeContext.getReaderInterceptors());
+    if (runtimeContext == null)
+      return new ResponseBuilderImpl(null, null);
+
+    final RequestContext serviceContext = runtimeContext.newRequestContext(null);
+    return new ResponseBuilderImpl(serviceContext.getProviders(), serviceContext.getReaderInterceptorFactoryList().newContextList(serviceContext));
   }
 
   @Override

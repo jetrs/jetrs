@@ -23,10 +23,10 @@ import java.lang.reflect.Type;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.core.MediaType;
 
-abstract class EntityProviderResource<T> extends TypeProviderResource<T> {
+abstract class MessageBodyProviderFactory<T> extends TypeProviderFactory<T> {
   private final ServerMediaType[] allowedTypes;
 
-  EntityProviderResource(final Class<T> clazz, final T singleton, final Class<?> interfaceType) throws IllegalAccessException, InstantiationException, InvocationTargetException {
+  MessageBodyProviderFactory(final Class<T> clazz, final T singleton, final Class<?> interfaceType) throws IllegalAccessException, InstantiationException, InvocationTargetException {
     super(clazz, singleton, getGenericInterfaceFirstTypeArgument(clazz, interfaceType, Object.class));
     final Consumes consumes = clazz.getAnnotation(Consumes.class);
     this.allowedTypes = consumes == null ? null : ServerMediaType.valueOf(consumes.value());

@@ -23,8 +23,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import javax.ws.rs.client.Client;
@@ -40,6 +43,7 @@ import org.jetrs.server.app.ApplicationServer;
 import org.junit.AfterClass;
 import org.junit.Test;
 import org.libj.io.Streams;
+import org.libj.lang.Strings;
 
 public class ApplicationServerTest {
   private static final Random random = new Random();
@@ -52,6 +56,137 @@ public class ApplicationServerTest {
     client.register(new NumberProvider());
     client.register(new BytesProvider());
     client.register(new StringProvider());
+  }
+
+  public static String encodeLexicographically(final Map<String,?> map) {
+    final List<String> list = new ArrayList<>(map.size());
+    for (final Map.Entry<String,?> entry : map.entrySet())
+      list.add(entry.getKey() + ":" + String.valueOf(entry.getValue()));
+
+    list.sort(null);
+    return list.toString();
+  }
+
+  private static final int numTests = 100;
+
+  @Test
+  public void testTypeBoolean() throws Exception {
+    for (int i = 0; i < numTests; ++i) {
+      final boolean a = random.nextBoolean();
+      final boolean b = random.nextBoolean();
+      final boolean c = random.nextBoolean();
+      final Response response = client.target(serviceUrl + "/type/boolean/a" + a + "/" + b + "b/c" + c + "d")
+        .request()
+        .get();
+
+      final String data = assertResponse(200, response, String.class);
+      assertEquals("" + a + b + c, data);
+    }
+  }
+
+  @Test
+  public void testTypeChar() throws Exception {
+    for (int i = 0; i < numTests; ++i) {
+      final char a = Strings.getRandomAlpha(1).charAt(0);
+      final char b = Strings.getRandomAlpha(1).charAt(0);
+      final char c = Strings.getRandomAlpha(1).charAt(0);
+      final Response response = client.target(serviceUrl + "/type/char/a" + a + "/" + b + "b/c" + c + "d")
+        .request()
+        .get();
+
+      final String data = assertResponse(200, response, String.class);
+      assertEquals("" + a + b + c, data);
+    }
+  }
+
+  @Test
+  public void testTypeByte() throws Exception {
+    for (int i = 0; i < numTests; ++i) {
+      final byte a = (byte)random.nextInt();
+      final byte b = (byte)random.nextInt();
+      final byte c = (byte)random.nextInt();
+      final Response response = client.target(serviceUrl + "/type/byte/a" + a + "/" + b + "b/c" + c + "d")
+        .request()
+        .get();
+
+      final String data = assertResponse(200, response, String.class);
+      assertEquals(a + b + c, Integer.parseInt(data));
+    }
+  }
+
+  @Test
+  public void testTypeShort() throws Exception {
+    for (int i = 0; i < numTests; ++i) {
+      final short a = (short)random.nextInt();
+      final short b = (short)random.nextInt();
+      final short c = (short)random.nextInt();
+      final Response response = client.target(serviceUrl + "/type/short/a" + a + "/" + b + "b/c" + c + "d")
+        .request()
+        .get();
+
+      final String data = assertResponse(200, response, String.class);
+      assertEquals(a + b + c, Integer.parseInt(data));
+    }
+  }
+
+  @Test
+  public void testTypeInt() throws Exception {
+    for (int i = 0; i < numTests; ++i) {
+      final int a = random.nextInt();
+      final int b = random.nextInt();
+      final int c = random.nextInt();
+      final Response response = client.target(serviceUrl + "/type/int/a" + a + "/" + b + "b/c" + c + "d")
+        .request()
+        .get();
+
+      final String data = assertResponse(200, response, String.class);
+      assertEquals(a + b + c, Integer.parseInt(data));
+    }
+  }
+
+  @Test
+  public void testTypeLong() throws Exception {
+    for (int i = 0; i < numTests; ++i) {
+      final long a = random.nextLong();
+      final long b = random.nextLong();
+      final long c = random.nextLong();
+      final Response response = client.target(serviceUrl + "/type/long/a" + a + "/" + b + "b/c" + c + "d")
+        .request()
+        .get();
+
+      final String data = assertResponse(200, response, String.class);
+      assertEquals(a + b + c, Long.parseLong(data));
+    }
+  }
+
+  @Test
+  public void testTypeFloat() throws Exception {
+    for (int i = 0; i < numTests; ++i) {
+      final float a = random.nextFloat();
+      final float b = random.nextFloat();
+      final float c = random.nextFloat();
+      final Response response = client.target(serviceUrl + "/type/float/a" + a + "/" + b + "b/c" + c + "d")
+        .request()
+        .get();
+
+      final String data = assertResponse(200, response, String.class);
+      assertEquals(a + b + c, Float.parseFloat(data), 0);
+    }
+  }
+
+  @Test
+  public void testTypeDouble() throws Exception {
+    for (int i = 0; i < numTests; ++i) {
+      final double a = random.nextDouble();
+      final double b = random.nextDouble();
+      final double c = random.nextDouble();
+      final Response response = client.target(serviceUrl + "/type/double/a" + a + "/" + b + "b/c" + c + "d")
+        .request()
+        .get();
+
+      final String data = assertResponse(200, response, String.class);
+      assertEquals(a + b + c, Double.parseDouble(data), 0);
+    }
   }
 
   @Test
@@ -69,6 +204,86 @@ public class ApplicationServerTest {
       out.close();
       connection.getInputStream();
     }
+  }
+
+  @Test
+  public void testBookService0() throws Exception {
+    final Response response = client.target(serviceUrl + "/books/aaabb;a=b/xxx;x=x/some;c=d/amazingly/cool/stuff")
+      .request()
+      .get();
+
+    final String data = assertResponse(200, response, String.class);
+    assertEquals("aaabb:bb:xxx:xxx|some|amazingly|cool", data);
+  }
+
+  @Test
+  public void testBookService01() throws Exception {
+    final Response response = client.target(serviceUrl + "/books/aaab/xxx;x=x/a/lot;r=r/of/stuff")
+      .request()
+      .get();
+
+    final String data = assertResponse(200, response, String.class);
+    assertEquals("aaab:b:xxx:xxx|a|lot|of", data);
+  }
+
+  @Test
+  public void testBookService1() throws Exception {
+    final Response response = client.target(serviceUrl + "/books/2011;author=jim/bla;country=th")
+      .request()
+      .get();
+
+    final String data = assertResponse(200, response, String.class);
+    assertEquals("getBooks is called, years: [2011], segs: [2011;author=jim], author: jim, country: th", data);
+  }
+
+  @Test
+  public void testBookService12() throws Exception {
+    final Response response = client.target(serviceUrl + "/books/2011;author=bob/2012;author=joe;country=fr/2013")
+      .request()
+      .get();
+
+    final String data = assertResponse(200, response, String.class);
+    assertEquals("getBooks is called, years: [2011/2012/2013], segs: [2011;author=bob, 2012;country=fr;author=joe, 2013], author: bob, country: fr", data);
+  }
+
+  @Test
+  public void testBookService2() throws Exception {
+    final Response response = client.target(serviceUrl + "/books/2011;country=usa/2012/2013;author=mkyong")
+      .request()
+      .get();
+
+    final String data = assertResponse(200, response, String.class);
+    assertEquals("getBooks is called, years: [2011/2012/2013], segs: [2011;country=usa, 2012, 2013;author=mkyong], author: mkyong, country: usa", data);
+  }
+
+  @Test
+  public void testBookService3() throws Exception {
+    final Response response = client.target(serviceUrl + "/books/2011;author=mkyong;country=malaysia")
+      .request()
+      .get();
+
+    final String data = assertResponse(200, response, String.class);
+    assertEquals("getBooks is called, years: [2011], segs: [2011;country=malaysia;author=mkyong], author: mkyong, country: malaysia", data);
+  }
+
+  @Test
+  public void testBookService4() throws Exception {
+    final Response response = client.target(serviceUrl + "/books/query/aA/BaCb/cDc/ba///////foo/bar/hi/hello/good/bye")
+      .request()
+      .get();
+
+    final String data = assertResponse(200, response, String.class);
+    assertEquals("List of Books order by: [aA, BaCb] :: [BaCb, ba, , , , , , , foo, bar, hi, hello, good, bye] :: null", data);
+  }
+
+  @Test
+  public void testBookService6() throws Exception {
+    final Response response = client.target(serviceUrl + "/books/categories1;name=cat;name=bla;cat=hemi/static;stat=foo/objects1;name=green;value=ok")
+      .request()
+      .get();
+
+    final String data = assertResponse(200, response, String.class);
+    assertEquals("{books}: [] | {categories1}: [cat:[hemi], name:[cat, bla]] | {static}: [stat:[foo]] | {objects1}: [name:[green], value:[ok]] | {categories1}: [cat:[hemi], name:[cat, bla]] | {objects1}: [name:[green], value:[ok]] | cat | cat | bla | green", data);
   }
 
   @Test

@@ -24,6 +24,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 @Path("root1/")
@@ -31,7 +32,7 @@ import javax.ws.rs.core.Response;
 public class RootService1 {
   @GET
   @Path("1/")
-  @Produces("text/plain")
+  @Produces(MediaType.TEXT_PLAIN)
   public Response get1() {
     return Response.ok("GET").build();
   }
@@ -56,21 +57,21 @@ public class RootService1 {
 
   @POST
   @Path("/1/{id:[\\da-z]{32}}")
-  @Consumes("text/plain")
+  @Consumes(MediaType.TEXT_PLAIN)
   public Response post1(@PathParam("id") final String uuid, final String data) {
     return Response.ok("POST").build();
   }
 
   @POST
   @Path("1/{id:[\\d]+}/")
-  @Consumes("text/plain")
+  @Consumes(MediaType.TEXT_PLAIN)
   public Response post1(@PathParam("id") final int id, final String data) {
     return Response.ok("POST").build();
   }
 
   @POST
   @Path("/1/{id:[\\d]+}/")
-  @Consumes("text/plain")
+  @Consumes(MediaType.TEXT_PLAIN)
   public Response post1(@PathParam("id") final long id, final String data) {
     return Response.ok("POST").build();
   }

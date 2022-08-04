@@ -39,22 +39,22 @@ import javax.ws.rs.ext.Providers;
 
 class ResponseBuilderImpl extends Response.ResponseBuilder implements Cloneable {
   private final Providers providers;
-  private final List<ReaderInterceptorEntityProviderResource> readerInterceptors;
+  private final ReaderInterceptorProviders.ContextList readerInterceptorContexts;
   private final HttpHeadersImpl headers;
   private int statusCode;
   private String reasonPhrase;
   private Object entity;
   private Annotation[] annotations;
 
-  ResponseBuilderImpl(final Providers providers, final List<ReaderInterceptorEntityProviderResource> readerInterceptors) {
+  ResponseBuilderImpl(final Providers providers, final ReaderInterceptorProviders.ContextList readerInterceptorContexts) {
     this.providers = providers;
-    this.readerInterceptors = readerInterceptors;
+    this.readerInterceptorContexts = readerInterceptorContexts;
     this.headers = new HttpHeadersImpl();
   }
 
   private ResponseBuilderImpl(final ResponseBuilderImpl copy) {
     this.providers = copy.providers;
-    this.readerInterceptors = copy.readerInterceptors;
+    this.readerInterceptorContexts = copy.readerInterceptorContexts;
     this.headers = copy.headers.clone();
     this.statusCode = copy.statusCode;
     this.reasonPhrase = copy.reasonPhrase;
@@ -67,7 +67,7 @@ class ResponseBuilderImpl extends Response.ResponseBuilder implements Cloneable 
   public Response build() {
     // FIXME: Need to reset the builder to a "blank state", as is documented in the javadocs of this method
     final Response.StatusType statusInfo = Responses.from(statusCode, reasonPhrase);
-    return new ResponseImpl(providers, readerInterceptors, statusCode, statusInfo, headers, cookies, entity, annotations);
+    return new ResponseImpl(providers, readerInterceptorContexts, statusCode, statusInfo, headers, cookies, entity, annotations);
   }
 
   @Override

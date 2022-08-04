@@ -34,24 +34,24 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.MessageBodyReader;
-import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.ReaderInterceptorContext;
 
 class ContainerRequestContextImpl extends InterceptorContextImpl implements ContainerRequestContext, ReaderInterceptorContext {
-  private final UriInfo uriInfo;
-  private final List<ReaderInterceptorEntityProviderResource> readerInterceptors;
+  private final UriInfoImpl uriInfo;
+  private final ServerRequestContext requestContext;
+  private final ReaderInterceptorProviders.FactoryList readerInterceptorEntityProviderFactories;
 
-  ContainerRequestContextImpl(final HttpServletRequest httpServletRequest, final ExecutionContext executionContext, final List<ReaderInterceptorEntityProviderResource> readerInterceptors) {
-    super(httpServletRequest, executionContext.getRequestHeaders());
+  ContainerRequestContextImpl(final HttpServletRequest httpServletRequest, final ServerRequestContext requestContext) {
+    super(httpServletRequest, requestContext.getRequestHeaders());
     this.method = httpServletRequest.getMethod();
-    this.uriInfo = new UriInfoImpl(httpServletRequest, executionContext);
-    this.readerInterceptors = readerInterceptors;
+    this.uriInfo = new UriInfoImpl(httpServletRequest, requestContext);
+    this.requestContext = requestContext;
+    this.readerInterceptorEntityProviderFactories = requestContext.getReaderInterceptorFactoryList();
   }
 
   @Override
-  public UriInfo getUriInfo() {
+  public UriInfoImpl getUriInfo() {
     return uriInfo;
   }
 
@@ -191,26 +191,22 @@ class ContainerRequestContextImpl extends InterceptorContextImpl implements Cont
   @Override
   @SuppressWarnings("unchecked")
   public Object proceed() throws IOException, WebApplicationException {
-    if (readerInterceptors == null || ++interceptorIndex == readerInterceptors.size())
-      return lastProceeded = messageBodyReader.readFrom(getType(), getGenericType(), getAnnotations(), getMediaType(), getHeaders(), getInputStream());
+    if (++interceptorIndex < readerInterceptorEntityProviderFactories.size())
+      return readerInterceptorEntityProviderFactories.getInstance(interceptorIndex, requestContext).aroundReadFrom(this);
 
-    if (interceptorIndex < readerInterceptors.size()) {
-      final ReaderInterceptor readerInterceptor = readerInterceptors.get(interceptorIndex).getSingletonOrNewInstance(annotationInjector);
-      return lastProceeded = readerInterceptor.aroundReadFrom(this);
-    }
+    if (interceptorIndex == readerInterceptorEntityProviderFactories.size())
+      bodyObject = messageBodyReader.readFrom(getType(), getGenericType(), getAnnotations(), getMediaType(), getHeaders(), getInputStream());
 
-    return lastProceeded;
+    return bodyObject;
   }
 
+  private Object bodyObject;
   private int interceptorIndex = -1;
-  private Object lastProceeded;
 
-  private AnnotationInjector annotationInjector;
   @SuppressWarnings("rawtypes")
   private MessageBodyReader messageBodyReader;
 
-  Object readBody(final AnnotationInjector annotationInjector, final MessageBodyReader<?> messageBodyReader) throws IOException {
-    this.annotationInjector = annotationInjector;
+  Object readBody(final MessageBodyReader<?> messageBodyReader) throws IOException {
     this.messageBodyReader = messageBodyReader;
     return proceed();
   }

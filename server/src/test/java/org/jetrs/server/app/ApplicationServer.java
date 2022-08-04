@@ -29,9 +29,12 @@ import javax.ws.rs.ext.RuntimeDelegate;
 
 import org.jetrs.provider.ext.BytesProvider;
 import org.jetrs.provider.ext.InputStreamProvider;
+import org.jetrs.provider.ext.NumberProvider;
 import org.jetrs.provider.ext.StringProvider;
 import org.jetrs.provider.ext.mapper.WebApplicationExceptionMapper;
 import org.jetrs.server.app.filter.Filter1;
+import org.jetrs.server.app.service.BookService;
+import org.jetrs.server.app.service.CoreTypeService;
 import org.jetrs.server.app.service.FileUploadService;
 import org.jetrs.server.app.service.RootService1;
 import org.jetrs.server.app.service.RootService2;
@@ -92,12 +95,14 @@ public class ApplicationServer extends Application implements AutoCloseable {
     singletons.add(new StringProvider());
     singletons.add(new InputStreamProvider());
     singletons.add(new BytesProvider());
+    singletons.add(new NumberProvider());
     singletons.add(new WebApplicationExceptionMapper(true));
 
     // Specific
     singletons.add(new RootService1());
     singletons.add(new RootService2());
     singletons.add(new FileUploadService());
+    singletons.add(new BookService());
     return singletons;
   }
 
@@ -105,6 +110,7 @@ public class ApplicationServer extends Application implements AutoCloseable {
   public Set<Class<?>> getClasses() {
     final Set<Class<?>> classes = new HashSet<>();
     classes.add(Filter1.class);
+    classes.add(CoreTypeService.class);
     // Must be a class resource, because it has a member @Context reference
     return classes;
   }

@@ -16,6 +16,7 @@
 
 package org.jetrs;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,26 +26,21 @@ import javax.ws.rs.InternalServerErrorException;
 import org.libj.util.TransList;
 
 class ResourceMatches extends ArrayList<ResourceMatch> {
-  private final AnnotationInjector annotationInjector;
   private List<Object> matchedResources;
   private List<String> matchedURIsEncoded;
   private List<String> matchedURIsDecoded;
-
-  ResourceMatches(final AnnotationInjector annotationInjector) {
-    this.annotationInjector = annotationInjector;
-  }
 
   @Override
   public boolean add(final ResourceMatch e) {
     return !super.contains(e) && super.add(e);
   }
 
-  List<Object> getMatchedResources() {
+  List<Object> getMatchedResources(final ServerRequestContext requestContext) {
     return matchedResources == null ? matchedResources = new TransList<>(this, (i, s) -> {
       try {
-        return s.getResourceInstance(annotationInjector);
+        return s.getResourceInstance(requestContext);
       }
-      catch (final IllegalAccessException | InstantiationException e) {
+      catch (final IllegalAccessException | InstantiationException | IOException e) {
         throw new InternalServerErrorException(e);
       }
       catch (final InvocationTargetException e) {
@@ -58,8 +54,8 @@ class ResourceMatches extends ArrayList<ResourceMatch> {
 
   List<String> getMatchedURIs(final boolean decode) {
     if (decode)
-      return matchedURIsDecoded == null ? matchedURIsDecoded = new TransList<>(this, (i, s) -> s.getURI(true), null) : matchedURIsDecoded;
+      return matchedURIsDecoded == null ? matchedURIsDecoded = new TransList<>(this, (i, s) -> s.getUriDecoded(), null) : matchedURIsDecoded;
 
-    return matchedURIsEncoded == null ? matchedURIsEncoded = new TransList<>(this, (i, s) -> s.getURI(false), null) : matchedURIsEncoded;
+    return matchedURIsEncoded == null ? matchedURIsEncoded = new TransList<>(this, (i, s) -> s.getUriEncoded(), null) : matchedURIsEncoded;
   }
 }

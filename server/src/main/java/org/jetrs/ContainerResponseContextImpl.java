@@ -22,7 +22,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -43,13 +42,15 @@ import javax.ws.rs.ext.WriterInterceptor;
 import javax.ws.rs.ext.WriterInterceptorContext;
 
 class ContainerResponseContextImpl extends InterceptorContextImpl implements ContainerResponseContext, WriterInterceptorContext {
-  private final List<WriterInterceptorEntityProviderResource> writerInterceptors;
+  private final WriterInterceptorProviders.FactoryList writerInterceptorEntityProviderFactories;
+  private final ServerRequestContext requestContext;
   private Response.StatusType status;
 
-  ContainerResponseContextImpl(final HttpServletRequest request, final HttpServletResponse response, final List<WriterInterceptorEntityProviderResource> writerInterceptors) {
+  ContainerResponseContextImpl(final HttpServletRequest request, final HttpServletResponse response, final ServerRequestContext requestContext) {
     super(request, new HttpHeadersImpl(response));
-    this.writerInterceptors = writerInterceptors;
     this.status = Response.Status.fromStatusCode(response.getStatus());
+    this.requestContext = requestContext;
+    this.writerInterceptorEntityProviderFactories = requestContext.getWriterInterceptorFactoryList();
   }
 
   @Override
@@ -207,24 +208,25 @@ class ContainerResponseContextImpl extends InterceptorContextImpl implements Con
   @Override
   @SuppressWarnings("unchecked")
   public void proceed() throws IOException {
-    if (writerInterceptors == null || ++interceptorIndex == writerInterceptors.size()) {
+    if (++interceptorIndex < writerInterceptorEntityProviderFactories.size()) {
+      final WriterInterceptor writerInterceptor = writerInterceptorEntityProviderFactories.getInstance(interceptorIndex, requestContext);
+      writerInterceptor.aroundWriteTo(this);
+    }
+    else if (interceptorIndex == writerInterceptorEntityProviderFactories.size()) {
       MessageBodyProvider.writeTo(messageBodyWriter, getEntity(), getEntityClass(), getEntityType(), getEntityAnnotations(), getMediaType(), getHeaders(), getEntityStream());
       getEntityStream().close();
     }
-    else if (interceptorIndex < writerInterceptors.size()) {
-      final WriterInterceptor writerInterceptor = writerInterceptors.get(interceptorIndex).getSingletonOrNewInstance(annotationInjector);
-      writerInterceptor.aroundWriteTo(this);
+    else {
+      throw new IllegalStateException();
     }
   }
 
   private int interceptorIndex = -1;
 
-  private AnnotationInjector annotationInjector;
   @SuppressWarnings("rawtypes")
   private MessageBodyWriter messageBodyWriter;
 
-  void writeBody(final AnnotationInjector annotationInjector, final MessageBodyWriter<?> messageBodyWriter) throws IOException {
-    this.annotationInjector = annotationInjector;
+  void writeBody(final MessageBodyWriter<?> messageBodyWriter) throws IOException {
     this.messageBodyWriter = messageBodyWriter;
     proceed();
   }

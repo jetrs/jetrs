@@ -29,15 +29,15 @@ import javax.ws.rs.core.HttpHeaders;
 
 abstract class Invoker<R> {
   final ClientImpl client;
-  final ProvidersImpl providers;
+  final ClientRuntimeContext runtimeContext;
   final URL url;
   final ExecutorService executorService;
   final long connectTimeout;
   final long readTimeout;
 
-  Invoker(final ClientImpl client, final ProvidersImpl providers, final URL url, final ExecutorService executorService, final long connectTimeout, final long readTimeout) {
+  Invoker(final ClientImpl client, final ClientRuntimeContext runtimeContext, final URL url, final ExecutorService executorService, final long connectTimeout, final long readTimeout) {
     this.client = client;
-    this.providers = providers;
+    this.runtimeContext = runtimeContext;
     this.url = url;
     this.executorService = executorService;
     this.connectTimeout = connectTimeout;
@@ -80,6 +80,6 @@ abstract class Invoker<R> {
     if (entity != null && entity.getMediaType() != null && headers.getMediaType() == null)
       headers.getMirrorMap().putSingle(HttpHeaders.CONTENT_TYPE, entity.getMediaType());
 
-    return new InvocationImpl(client, providers, url, method, entity, headers, cookies, cacheControl, executorService, connectTimeout, readTimeout);
+    return new InvocationImpl(client, runtimeContext, url, method, entity, headers, cookies, cacheControl, executorService, connectTimeout, readTimeout);
   }
 }
