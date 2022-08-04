@@ -96,7 +96,7 @@ final class ParameterUtil {
         container = newCollection(parameterType);
       }
       else if (parameterType.isArray()) {
-        memberClass = parameterType.componentType();
+        memberClass = parameterType.getComponentType();
         container = Array.newInstance(memberClass, values.size());
       }
       else {

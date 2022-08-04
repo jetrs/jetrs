@@ -350,7 +350,7 @@ class ServerRequestContext extends RequestContext {
         return null;
       }
 
-      if ((Set.class.isAssignableFrom(clazz) || List.class.isAssignableFrom(clazz) || SortedSet.class.isAssignableFrom(clazz)) && (Class<?>)((ParameterizedType)type).getActualTypeArguments()[0] == PathSegment.class || clazz.isArray() && clazz.componentType() == PathSegment.class) {
+      if ((Set.class.isAssignableFrom(clazz) || List.class.isAssignableFrom(clazz) || SortedSet.class.isAssignableFrom(clazz)) && (Class<?>)((ParameterizedType)type).getActualTypeArguments()[0] == PathSegment.class || clazz.isArray() && clazz.getComponentType() == PathSegment.class) {
         final List<PathSegment> pathSegments = uriInfo.getPathSegments(decode);
 
         int segStart = 0, segEnd;
@@ -390,7 +390,7 @@ class ServerRequestContext extends RequestContext {
             }
           }
 
-          return clazz.isArray() ? matchedSegments.toArray((Object[])Array.newInstance(clazz.componentType(), matchedSegments.size())) : matchedSegments;
+          return clazz.isArray() ? matchedSegments.toArray((Object[])Array.newInstance(clazz.getComponentType(), matchedSegments.size())) : matchedSegments;
         }
         catch (final IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException e) {
           // FIXME: This error is kind of hidden in the logs, but it should somehow be highlighted to be fixed?!
