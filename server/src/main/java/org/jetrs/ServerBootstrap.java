@@ -39,8 +39,13 @@ import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.container.PreMatching;
+import javax.ws.rs.ext.ExceptionMapper;
+import javax.ws.rs.ext.MessageBodyReader;
+import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.ParamConverterProvider;
 import javax.ws.rs.ext.Provider;
+import javax.ws.rs.ext.ReaderInterceptor;
+import javax.ws.rs.ext.WriterInterceptor;
 
 import org.libj.lang.PackageNotFoundException;
 
@@ -92,21 +97,21 @@ class ServerBootstrap extends Bootstrap<ResourceManifest> {
   }
 
   private final String baseUri;
-  private final ParamConverterProviders.FactoryList paramConverterEntityProviderFactories;
-  private final ContainerRequestFilterProviders.FactoryList preMatchContainerRequestFilterEntityProviderFactories;
-  private final ContainerRequestFilterProviders.FactoryList containerRequestFilterEntityProviderFactories;
-  private final ContainerResponseFilterProviders.FactoryList containerResponseFilterEntityProviderFactories;
+  private final List<ProviderFactory<ParamConverterProvider>> paramConverterEntityProviderFactories;
+  private final List<ProviderFactory<ContainerRequestFilter>> preMatchContainerRequestFilterEntityProviderFactories;
+  private final List<ProviderFactory<ContainerRequestFilter>> containerRequestFilterEntityProviderFactories;
+  private final List<ProviderFactory<ContainerResponseFilter>> containerResponseFilterEntityProviderFactories;
 
   ServerBootstrap(final String baseUri,
-    final ReaderInterceptorProviders.FactoryList readerInterceptorEntityProviderFactories,
-    final WriterInterceptorProviders.FactoryList writerInterceptorEntityProviderFactories,
-    final MessageBodyReaderProviders.FactoryList messageBodyReaderEntityProviderFactories,
-    final MessageBodyWriterProviders.FactoryList messageBodyWriterEntityProviderFactories,
-    final ExceptionMapperProviders.FactoryList exceptionMapperEntityProviderFactories,
-    final ParamConverterProviders.FactoryList paramConverterEntityProviderFactories,
-    final ContainerRequestFilterProviders.FactoryList preMatchContainerRequestFilterEntityProviderFactories,
-    final ContainerRequestFilterProviders.FactoryList containerRequestFilterEntityProviderFactories,
-    final ContainerResponseFilterProviders.FactoryList containerResponseFilterEntityProviderFactories
+    final List<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorEntityProviderFactories,
+    final List<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorEntityProviderFactories,
+    final List<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderEntityProviderFactories,
+    final List<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterEntityProviderFactories,
+    final List<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperEntityProviderFactories,
+    final List<ProviderFactory<ParamConverterProvider>> paramConverterEntityProviderFactories,
+    final List<ProviderFactory<ContainerRequestFilter>> preMatchContainerRequestFilterEntityProviderFactories,
+    final List<ProviderFactory<ContainerRequestFilter>> containerRequestFilterEntityProviderFactories,
+    final List<ProviderFactory<ContainerResponseFilter>> containerResponseFilterEntityProviderFactories
   ) {
     super(readerInterceptorEntityProviderFactories, writerInterceptorEntityProviderFactories, messageBodyReaderEntityProviderFactories, messageBodyWriterEntityProviderFactories, exceptionMapperEntityProviderFactories);
     this.baseUri = baseUri;
@@ -120,13 +125,13 @@ class ServerBootstrap extends Bootstrap<ResourceManifest> {
   <T>boolean addResourceOrProvider(final List<Consumer<Set<Class<?>>>> afterAdd, final List<ResourceManifest> resources, final Class<? extends T> clazz, final T singleton, final boolean scanned) throws IllegalAccessException, InstantiationException, InvocationTargetException {
     if (clazz.isAnnotationPresent(Provider.class)) {
       if (ParamConverterProvider.class.isAssignableFrom(clazz))
-        paramConverterEntityProviderFactories.superAdd(new ParamConverterProviders.Factory((Class<ParamConverterProvider>)clazz, (ParamConverterProvider)singleton));
+        paramConverterEntityProviderFactories.add(new ParamConverterProviderFactory((Class<ParamConverterProvider>)clazz, (ParamConverterProvider)singleton));
 
       if (ContainerRequestFilter.class.isAssignableFrom(clazz))
-        (clazz.isAnnotationPresent(PreMatching.class) ? preMatchContainerRequestFilterEntityProviderFactories : containerRequestFilterEntityProviderFactories).superAdd(new ContainerRequestFilterProviders.Factory((Class<ContainerRequestFilter>)clazz, (ContainerRequestFilter)singleton));
+        (clazz.isAnnotationPresent(PreMatching.class) ? preMatchContainerRequestFilterEntityProviderFactories : containerRequestFilterEntityProviderFactories).add(new ContainerRequestFilterProviderFactory((Class<ContainerRequestFilter>)clazz, (ContainerRequestFilter)singleton));
 
       if (ContainerResponseFilter.class.isAssignableFrom(clazz)) {
-        containerResponseFilterEntityProviderFactories.superAdd(new ContainerResponseFilterProviders.Factory((Class<ContainerResponseFilter>)clazz, (ContainerResponseFilter)singleton));
+        containerResponseFilterEntityProviderFactories.add(new ContainerResponseFilterProviderFactory((Class<ContainerResponseFilter>)clazz, (ContainerResponseFilter)singleton));
         if (logger.isDebugEnabled() && clazz.isAnnotationPresent(PreMatching.class))
           logger.debug("@PreMatching annotation is not applicable to ContainerResponseFilter");
       }
@@ -176,8 +181,8 @@ class ServerBootstrap extends Bootstrap<ResourceManifest> {
   @Override
   void init(final Set<?> singletons, final Set<Class<?>> classes, final List<ResourceManifest> resources) throws IllegalAccessException, InstantiationException, InvocationTargetException, PackageNotFoundException, IOException {
     super.init(singletons, classes, resources);
-    preMatchContainerRequestFilterEntityProviderFactories.superSort(priorityComparator);
-    containerRequestFilterEntityProviderFactories.superSort(priorityComparator);
-    containerResponseFilterEntityProviderFactories.superSort(priorityComparator);
+    preMatchContainerRequestFilterEntityProviderFactories.sort(priorityComparator);
+    containerRequestFilterEntityProviderFactories.sort(priorityComparator);
+    containerResponseFilterEntityProviderFactories.sort(priorityComparator);
   }
 }

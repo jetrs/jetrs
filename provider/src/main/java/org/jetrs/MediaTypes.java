@@ -35,17 +35,12 @@ import org.libj.lang.Strings;
 /**
  * Utility class with convenience functions for the {@link MediaType} class.
  *
- * @see <a href=
- *      "https://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.7">rfc2616</a>
- * @see <a href=
- *      "https://datatracker.ietf.org/doc/html/rfc6838#section-4.2.8">Structured
- *      Syntax Name Suffixes</a>
- * @see <a href=
- *      "https://datatracker.ietf.org/doc/html/draft-ietf-appsawg-media-type-regs-14#section-6">Structured
- *      Syntax Suffix Registration Procedures</a>
- * @see <a href=
- *      "https://datatracker.ietf.org/doc/html/draft-ietf-appsawg-media-type-suffix-regs-02#section-3.1">The
- *      +json Structured Syntax Suffix</a>
+ * @see <a href= "https://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.7">rfc2616</a>
+ * @see <a href= "https://datatracker.ietf.org/doc/html/rfc6838#section-4.2.8">Structured Syntax Name Suffixes</a>
+ * @see <a href= "https://datatracker.ietf.org/doc/html/draft-ietf-appsawg-media-type-regs-14#section-6">Structured Syntax Suffix
+ *      Registration Procedures</a>
+ * @see <a href= "https://datatracker.ietf.org/doc/html/draft-ietf-appsawg-media-type-suffix-regs-02#section-3.1">The +json
+ *      Structured Syntax Suffix</a>
  */
 final class MediaTypes {
   static final CompatibleMediaType[] WILDCARD_COMPATIBLE_TYPE = {CompatibleMediaType.WILDCARD_TYPE};
@@ -120,25 +115,18 @@ final class MediaTypes {
   }
 
   /**
-   * Returns an array of {@link CompatibleMediaType}s by evaluating the provided
-   * {@link ServerMediaType}s, {@link MediaType}s and "Accept-Charset" header
-   * values for compatibility.
+   * Returns an array of {@link CompatibleMediaType}s by evaluating the provided {@link ServerMediaType}s, {@link MediaType}s and
+   * "Accept-Charset" header values for compatibility.
    *
-   * @implNote The "Accept-Charset" header values are only considered if a
-   *           {@code charset} parameter is not present on the provided
+   * @implNote The "Accept-Charset" header values are only considered if a {@code charset} parameter is not present on the provided
    *           {@link ServerMediaType}s.
-   * @param serverTypes The {@link ServerMediaType}s sorted on the "qs"
-   *          parameter in descending order.
-   * @param clientTypes The client {@link MediaType}s sorted on the "q"
-   *          parameter in descending order.
-   * @param acceptCharsets Value of "Accept-Charsets" header, or {@code null} if
-   *          no such header was provided.
-   * @return An array of {@link CompatibleMediaType}s by evaluating the provided
-   *         {@link ServerMediaType}s, {@link MediaType}s and "Accept-Charset"
-   *         header values for compatibility.
-   * @throws IllegalArgumentException If {@code serverTypes}, any member of
-   *           {@code serverTypes}, {@code clientTypes}, or any member of
-   *           {@code clientTypes} is null.
+   * @param serverTypes The {@link ServerMediaType}s sorted on the "qs" parameter in descending order.
+   * @param clientTypes The client {@link MediaType}s sorted on the "q" parameter in descending order.
+   * @param acceptCharsets Value of "Accept-Charsets" header, or {@code null} if no such header was provided.
+   * @return An array of {@link CompatibleMediaType}s by evaluating the provided {@link ServerMediaType}s, {@link MediaType}s and
+   *         "Accept-Charset" header values for compatibility.
+   * @throws IllegalArgumentException If {@code serverTypes}, any member of {@code serverTypes}, {@code clientTypes}, or any member
+   *           of {@code clientTypes} is null.
    */
   static CompatibleMediaType[] getCompatible(final ServerMediaType[] serverTypes, final MediaType[] clientTypes, final List<String> acceptCharsets) {
     final CompatibleMediaType[] mediaTypes = getCompatible(serverTypes, clientTypes, acceptCharsets, 0, 0, 0);
@@ -167,25 +155,18 @@ final class MediaTypes {
   }
 
   /**
-   * Returns an array of {@link CompatibleMediaType}s by evaluating the provided
-   * {@link ServerMediaType}s, {@link MediaType}s and "Accept-Charset" header
-   * values for compatibility.
+   * Returns an array of {@link CompatibleMediaType}s by evaluating the provided {@link ServerMediaType}s, {@link MediaType}s and
+   * "Accept-Charset" header values for compatibility.
    *
-   * @implNote The "Accept-Charset" header values are only considered if a
-   *           {@code charset} parameter is not present on the provided
+   * @implNote The "Accept-Charset" header values are only considered if a {@code charset} parameter is not present on the provided
    *           {@link ServerMediaType}s.
-   * @param serverTypes The {@link ServerMediaType}s sorted on the "qs"
-   *          parameter in descending order.
-   * @param clientTypes The client {@link MediaType}s sorted on the "q"
-   *          parameter in descending order.
-   * @param acceptCharsets Value of "Accept-Charsets" header, or {@code null} if
-   *          no such header was provided.
-   * @return An array of {@link CompatibleMediaType}s by evaluating the provided
-   *         {@link ServerMediaType}s, {@link MediaType}s and "Accept-Charset"
-   *         header values for compatibility.
-   * @throws IllegalArgumentException If {@code serverTypes}, any member of
-   *           {@code serverTypes}, {@code clientTypes}, or any member of
-   *           {@code clientTypes} is null.
+   * @param serverTypes The {@link ServerMediaType}s sorted on the "qs" parameter in descending order.
+   * @param clientTypes The client {@link MediaType}s sorted on the "q" parameter in descending order.
+   * @param acceptCharsets Value of "Accept-Charsets" header, or {@code null} if no such header was provided.
+   * @return An array of {@link CompatibleMediaType}s by evaluating the provided {@link ServerMediaType}s, {@link MediaType}s and
+   *         "Accept-Charset" header values for compatibility.
+   * @throws IllegalArgumentException If {@code serverTypes}, any member of {@code serverTypes}, {@code clientTypes}, or any member
+   *           of {@code clientTypes} is null.
    */
   static CompatibleMediaType[] getCompatible(final ServerMediaType[] serverTypes, final List<MediaType> clientTypes, final List<String> acceptCharsets) {
     final CompatibleMediaType[] mediaTypes = getCompatible(serverTypes, clientTypes, acceptCharsets, 0, 0, 0);
@@ -212,23 +193,17 @@ final class MediaTypes {
   }
 
   /**
-   * Returns an array of {@link CompatibleMediaType}s by evaluating the provided
-   * {@link ServerMediaType}s, {@link MediaType} and "Accept-Charset" header
-   * values for compatibility.
+   * Returns an array of {@link CompatibleMediaType}s by evaluating the provided {@link ServerMediaType}s, {@link MediaType} and
+   * "Accept-Charset" header values for compatibility.
    *
-   * @implNote The "Accept-Charset" header values are only considered if a
-   *           {@code charset} parameter is not present on the provided
+   * @implNote The "Accept-Charset" header values are only considered if a {@code charset} parameter is not present on the provided
    *           {@link ServerMediaType}.
-   * @param serverTypes The {@link ServerMediaType}s sorted on the "qs"
-   *          parameter in descending order.
+   * @param serverTypes The {@link ServerMediaType}s sorted on the "qs" parameter in descending order.
    * @param clientType The client {@link MediaType}.
-   * @param acceptCharsets Value of "Accept-Charsets" header, or {@code null} if
-   *          no such header was provided.
-   * @return An array of {@link CompatibleMediaType}s by evaluating the provided
-   *         {@link ServerMediaType}s, {@link MediaType} and "Accept-Charset"
-   *         header values for compatibility.
-   * @throws IllegalArgumentException If {@code serverTypes}, any member of
-   *           {@code serverTypes}, or {@code clientType} is null.
+   * @param acceptCharsets Value of "Accept-Charsets" header, or {@code null} if no such header was provided.
+   * @return An array of {@link CompatibleMediaType}s by evaluating the provided {@link ServerMediaType}s, {@link MediaType} and
+   *         "Accept-Charset" header values for compatibility.
+   * @throws IllegalArgumentException If {@code serverTypes}, any member of {@code serverTypes}, or {@code clientType} is null.
    */
   static CompatibleMediaType[] getCompatible(final ServerMediaType[] serverTypes, final MediaType clientType, final List<String> acceptCharsets) {
     final CompatibleMediaType[] mediaTypes = getCompatible(serverTypes, clientType, acceptCharsets, 0, 0);
@@ -250,23 +225,17 @@ final class MediaTypes {
   }
 
   /**
-   * Returns an array of {@link CompatibleMediaType}s by evaluating the provided
-   * {@link ServerMediaType}s, {@link MediaType} and "Accept-Charset" header
-   * values for compatibility.
+   * Returns an array of {@link CompatibleMediaType}s by evaluating the provided {@link ServerMediaType}s, {@link MediaType} and
+   * "Accept-Charset" header values for compatibility.
    *
-   * @implNote The "Accept-Charset" header values are only considered if a
-   *           {@code charset} parameter is not present on the provided
+   * @implNote The "Accept-Charset" header values are only considered if a {@code charset} parameter is not present on the provided
    *           {@link ServerMediaType}.
-   * @param serverTypes The {@link ServerMediaType}s sorted on the "qs"
-   *          parameter in descending order.
+   * @param serverTypes The {@link ServerMediaType}s sorted on the "qs" parameter in descending order.
    * @param clientType The client {@link MediaType}.
-   * @param acceptCharsets Value of "Accept-Charsets" header, or {@code null} if
-   *          no such header was provided.
-   * @return An array of {@link CompatibleMediaType}s by evaluating the provided
-   *         {@link ServerMediaType}s, {@link MediaType} and "Accept-Charset"
-   *         header values for compatibility.
-   * @throws IllegalArgumentException If {@code serverTypes}, any member of
-   *           {@code serverTypes}, or {@code clientType} is null.
+   * @param acceptCharsets Value of "Accept-Charsets" header, or {@code null} if no such header was provided.
+   * @return An array of {@link CompatibleMediaType}s by evaluating the provided {@link ServerMediaType}s, {@link MediaType} and
+   *         "Accept-Charset" header values for compatibility.
+   * @throws IllegalArgumentException If {@code serverTypes}, any member of {@code serverTypes}, or {@code clientType} is null.
    */
   static CompatibleMediaType[] getCompatible(final List<ServerMediaType> serverTypes, final MediaType clientType, final List<String> acceptCharsets) {
     final CompatibleMediaType[] mediaTypes = getCompatible(serverTypes, clientType, acceptCharsets, 0, 0);
@@ -309,24 +278,17 @@ final class MediaTypes {
   }
 
   /**
-   * Returns a {@link CompatibleMediaType} by evaluating the provided
-   * {@link ServerMediaType}, {@link MediaType} and "Accept-Charset" header
-   * values for compatibility, or {@code null} if the arguments are not
-   * compatible.
+   * Returns a {@link CompatibleMediaType} by evaluating the provided {@link ServerMediaType}, {@link MediaType} and
+   * "Accept-Charset" header values for compatibility, or {@code null} if the arguments are not compatible.
    *
-   * @implNote The "Accept-Charset" header values are only considered if a
-   *           {@code charset} parameter is not present on the provided
+   * @implNote The "Accept-Charset" header values are only considered if a {@code charset} parameter is not present on the provided
    *           {@link ServerMediaType}.
    * @param serverType The {@link ServerMediaType}.
    * @param clientType The client {@link MediaType}.
-   * @param acceptCharsets Value of "Accept-Charsets" header, or {@code null} if
-   *          no such header was provided.
-   * @return A {@link CompatibleMediaType} by evaluating the provided
-   *         {@link ServerMediaType}, {@link MediaType} and "Accept-Charset"
-   *         header values for compatibility, or {@code null} if the arguments
-   *         are not compatible.
-   * @throws IllegalArgumentException If {@code serverType} or
-   *           {@code clientType} is null.
+   * @param acceptCharsets Value of "Accept-Charsets" header, or {@code null} if no such header was provided.
+   * @return A {@link CompatibleMediaType} by evaluating the provided {@link ServerMediaType}, {@link MediaType} and
+   *         "Accept-Charset" header values for compatibility, or {@code null} if the arguments are not compatible.
+   * @throws IllegalArgumentException If {@code serverType} or {@code clientType} is null.
    */
   static CompatibleMediaType getCompatible(final ServerMediaType serverType, final MediaType clientType, final List<String> acceptCharsets) {
     assertNotNull(serverType);
@@ -529,8 +491,7 @@ final class MediaTypes {
   }
 
   /**
-   * Parses the specified collection of strings and returns an array of
-   * {@link MediaType} objects.
+   * Parses the specified collection of strings and returns an array of {@link MediaType} objects.
    *
    * @param strings The collection of strings.
    * @return An array of {@link MediaType} objects.
@@ -540,8 +501,7 @@ final class MediaTypes {
   }
 
   /**
-   * Parses the specified collection of strings and returns an array of
-   * {@link MediaType} objects.
+   * Parses the specified collection of strings and returns an array of {@link MediaType} objects.
    *
    * @param <T> The type of the {@link MediaType} to be returned.
    * @param cls The {@link Class} of the {@link MediaType} to be returned.
@@ -564,8 +524,7 @@ final class MediaTypes {
   }
 
   /**
-   * Parses the specified enumeration of strings and returns an array of
-   * {@link MediaType} objects.
+   * Parses the specified enumeration of strings and returns an array of {@link MediaType} objects.
    *
    * @param enumeration The enumeration of strings.
    * @return An array of {@link MediaType} objects.
@@ -575,12 +534,10 @@ final class MediaTypes {
   }
 
   /**
-   * Parses the specified enumeration of strings and returns an array of
-   * {@link MediaType} objects.
+   * Parses the specified enumeration of strings and returns an array of {@link MediaType} objects.
    *
    * @param <T> The type of the {@link MediaType} to be returned.
-   * @param cls The {@link Class} of the {@link MediaType} to be
-   *          returned.
+   * @param cls The {@link Class} of the {@link MediaType} to be returned.
    * @param enumeration The enumeration of strings.
    * @return An array of {@link MediaType} objects.
    */
@@ -600,8 +557,7 @@ final class MediaTypes {
   }
 
   /**
-   * Parses the specified array of strings and returns an array of
-   * {@link MediaType} objects.
+   * Parses the specified array of strings and returns an array of {@link MediaType} objects.
    *
    * @param strings The the strings array.
    * @return An array of {@link MediaType} objects.
@@ -611,12 +567,10 @@ final class MediaTypes {
   }
 
   /**
-   * Parses the specified array of strings and returns an array of
-   * {@link MediaType} objects.
+   * Parses the specified array of strings and returns an array of {@link MediaType} objects.
    *
    * @param <T> The type of the {@link MediaType} to be returned.
-   * @param cls The {@link Class} of the {@link MediaType} to be
-   *          returned.
+   * @param cls The {@link Class} of the {@link MediaType} to be returned.
    * @param strings The the strings array.
    * @return An array of {@link MediaType} objects.
    */
@@ -652,28 +606,24 @@ final class MediaTypes {
   }
 
   /**
-   * Parses the specified string and returns the corresponding {@link MediaType}
-   * objects, or {@code null} if the specified string is null or is empty.
+   * Parses the specified string and returns the corresponding {@link MediaType} objects, or {@code null} if the specified string is
+   * null or is empty.
    *
    * @param string The the string.
-   * @return The corresponding {@link MediaType} object, or {@code null} if the
-   *         specified string is null.
+   * @return The corresponding {@link MediaType} object, or {@code null} if the specified string is null.
    */
   static QualifiedMediaType parse(final String string) {
     return parse(QualifiedMediaType.class, string);
   }
 
   /**
-   * Parses the specified string and returns the corresponding
-   * {@link MediaType} objects, or {@code null} if the specified string
-   * is null or is empty.
+   * Parses the specified string and returns the corresponding {@link MediaType} objects, or {@code null} if the specified string is
+   * null or is empty.
    *
    * @param <T> The type of the {@link MediaType} to be returned.
-   * @param cls The {@link Class} of the {@link MediaType} to be
-   *          returned.
+   * @param cls The {@link Class} of the {@link MediaType} to be returned.
    * @param string The the string.
-   * @return The corresponding {@link MediaType} object, or
-   *         {@code null} if the specified string is null.
+   * @return The corresponding {@link MediaType} object, or {@code null} if the specified string is null.
    */
   // FIXME: Reimplement with char-by-char algorithm
   // FIXME: What are the legal name and sub-name spec? Need to properly throw IllegalArgumentException!
@@ -736,6 +686,10 @@ final class MediaTypes {
     while ((start = end) < len - 1);
 
     return (T)(cls == ServerMediaType.class ? new ServerMediaType(type, subtype, parameters) : cls == QualifiedMediaType.class ? new QualifiedMediaType(type, subtype, parameters) : new QualifiedMediaType(type, subtype, parameters));
+  }
+
+  static MediaType cloneWithoutParameters(final MediaType mediaType) {
+    return new MediaType(mediaType.getType(), mediaType.getSubtype());
   }
 
   /**

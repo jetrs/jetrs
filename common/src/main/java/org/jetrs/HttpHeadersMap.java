@@ -28,8 +28,7 @@ import org.libj.util.MirrorList;
 import org.libj.util.MirrorMap;
 
 /**
- * A {@link MirrorMultivaluedMap} that uses lists of type
- * {@link MirrorQualityList}, which automatically sort header values based on
+ * A {@link MirrorMultivaluedMap} that uses lists of type {@link MirrorQualityList}, which automatically sort header values based on
  * quality (i.e. {@code "q=0.2"}).
  *
  * @param <V> The type of value elements in this map.
@@ -48,19 +47,14 @@ class HttpHeadersMap<V,R> extends MirrorMultivaluedMap<String,V,R> {
   }
 
   /**
-   * Creates a new {@link HttpHeadersMap} with a default
-   * {@link org.jetrs.MirrorMultivaluedMap.Mirror} that instantiates lists of
+   * Creates a new {@link HttpHeadersMap} with a default {@link org.jetrs.MirrorMultivaluedMap.Mirror} that instantiates lists of
    * type {@link MirrorQualityList}.
    *
    * @param mirror The {@link org.libj.util.MirrorMap.Mirror} specifying the
-   *          {@link org.libj.util.MirrorMap.Mirror#valueToReflection(Object,Object)
-   *          V -> R} and
-   *          {@link org.libj.util.MirrorMap.Mirror#reflectionToValue(Object,Object)
-   *          R -> V} methods.
-   * @param qualifier {@link Qualifier} providing methods for the determination
-   *          of quality from value objects.
-   * @throws IllegalArgumentException If any of the specified parameters is
-   *           null.
+   *          {@link org.libj.util.MirrorMap.Mirror#valueToReflection(Object,Object) V -> R} and
+   *          {@link org.libj.util.MirrorMap.Mirror#reflectionToValue(Object,Object) R -> V} methods.
+   * @param qualifier {@link Qualifier} providing methods for the determination of quality from value objects.
+   * @throws IllegalArgumentException If any of the specified parameters is null.
    */
   HttpHeadersMap(final MirrorMap.Mirror<String,V,R> mirror, final Qualifier<V,R> qualifier) {
     super(new HashMap<>(), new HashMap<>(), new MirrorMultivaluedMap.Mirror<String,V,R>() {
@@ -107,62 +101,44 @@ class HttpHeadersMap<V,R> extends MirrorMultivaluedMap<String,V,R> {
   }
 
   /**
-   * Creates a new {@link HttpHeadersMap} with the specified maps and mirror.
-   * This method is specific for the construction of a reflected
-   * {@link HttpHeadersMap} instance.
+   * Creates a new {@link HttpHeadersMap} with the specified maps and mirror. This method is specific for the construction of a
+   * reflected {@link HttpHeadersMap} instance.
    *
-   * @param mirrorMap The {@link HttpHeadersMap} for which {@code this} map will
-   *          be a reflection. Likewise, {@code this} map will be a reflection
-   *          for {@code mirrorMap}.
-   * @param values The underlying map of type {@code <K,List<V>>}, which is
-   *          implicitly assumed to also be {@link Cloneable}.
-   * @param mirror The {@link org.jetrs.MirrorMultivaluedMap.Mirror} specifying
-   *          the
-   *          {@link org.jetrs.MirrorMultivaluedMap.Mirror#valueToReflection(Object,List)
-   *          V -&gt; R} and
-   *          {@link org.jetrs.MirrorMultivaluedMap.Mirror#reflectionToValue(Object,List)
-   *          R -&gt; V} methods.
+   * @param mirrorMap The {@link HttpHeadersMap} for which {@code this} map will be a reflection. Likewise, {@code this} map will be
+   *          a reflection for {@code mirrorMap}.
+   * @param values The underlying map of type {@code <K,List<V>>}, which is implicitly assumed to also be {@link Cloneable}.
+   * @param mirror The {@link org.jetrs.MirrorMultivaluedMap.Mirror} specifying the
+   *          {@link org.jetrs.MirrorMultivaluedMap.Mirror#valueToReflection(Object,List) V -&gt; R} and
+   *          {@link org.jetrs.MirrorMultivaluedMap.Mirror#reflectionToValue(Object,List) R -&gt; V} methods.
    */
   HttpHeadersMap(final HttpHeadersMap<R,V> mirrorMap, final Map<String,List<V>> values, final HttpHeadersMap.Mirror<String,V,R> mirror) {
     super(mirrorMap, values, mirror);
   }
 
   /**
-   * Creates a new {@link HttpHeadersMap} with the specified target maps and
-   * {@link org.jetrs.MirrorMultivaluedMap.Mirror}. The specified target maps
-   * are meant to be empty, as they become the underlying maps of the new
-   * {@link HttpHeadersMap} instance. The specified
-   * {@link org.jetrs.MirrorMultivaluedMap.Mirror} provides the
-   * {@link org.jetrs.MirrorMultivaluedMap.Mirror#valueToReflection(Object,List)
-   * V -&gt; R} and
-   * {@link org.jetrs.MirrorMultivaluedMap.Mirror#reflectionToValue(Object,List)
-   * R -&gt; V} methods, which are used to reflect object values from one
-   * {@link HttpHeadersMap} to the other.
+   * Creates a new {@link HttpHeadersMap} with the specified target maps and {@link org.jetrs.MirrorMultivaluedMap.Mirror}. The
+   * specified target maps are meant to be empty, as they become the underlying maps of the new {@link HttpHeadersMap} instance. The
+   * specified {@link org.jetrs.MirrorMultivaluedMap.Mirror} provides the
+   * {@link org.jetrs.MirrorMultivaluedMap.Mirror#valueToReflection(Object,List) V -&gt; R} and
+   * {@link org.jetrs.MirrorMultivaluedMap.Mirror#reflectionToValue(Object,List) R -&gt; V} methods, which are used to reflect
+   * object values from one {@link HttpHeadersMap} to the other.
    *
-   * @param values The underlying map of type {@code <K,List<V>>}, which is
-   *          implicitly assumed to also be {@link Cloneable}.
-   * @param reflections The underlying map of type {@code <K,List<R>>}, which is
-   *          implicitly assumed to also be {@link Cloneable}.
-   * @param mirror The {@link org.jetrs.MirrorMultivaluedMap.Mirror} specifying
-   *          the
-   *          {@link org.jetrs.MirrorMultivaluedMap.Mirror#valueToReflection(Object,List)
-   *          V -&gt; R} and
-   *          {@link org.jetrs.MirrorMultivaluedMap.Mirror#reflectionToValue(Object,List)
-   *          R -&gt; V} methods.
-   * @throws IllegalArgumentException If any of the specified parameters is
-   *           null.
+   * @param values The underlying map of type {@code <K,List<V>>}, which is implicitly assumed to also be {@link Cloneable}.
+   * @param reflections The underlying map of type {@code <K,List<R>>}, which is implicitly assumed to also be {@link Cloneable}.
+   * @param mirror The {@link org.jetrs.MirrorMultivaluedMap.Mirror} specifying the
+   *          {@link org.jetrs.MirrorMultivaluedMap.Mirror#valueToReflection(Object,List) V -&gt; R} and
+   *          {@link org.jetrs.MirrorMultivaluedMap.Mirror#reflectionToValue(Object,List) R -&gt; V} methods.
+   * @throws IllegalArgumentException If any of the specified parameters is null.
    */
   private HttpHeadersMap(final Map<String,List<V>> values, final Map<String,List<R>> reflections, final Mirror<String,V,R> mirror) {
     super(toCloneable(values), toCloneable(reflections), mirror);
   }
 
   /**
-   * Returns the provided header name in lower-case characters after validating
-   * that each character conforms to RFC 7230.
+   * Returns the provided header name in lower-case characters after validating that each character conforms to RFC 7230.
    *
    * @param headerName The header name.
-   * @return the provided header name in lower-case characters after validating
-   *         that each character conforms to RFC 7230.
+   * @return the provided header name in lower-case characters after validating that each character conforms to RFC 7230.
    * @see <a href="https://datatracker.ietf.org/doc/html/rfc7230">RFC 7230</a>
    */
   private static String format(final Object headerName) {

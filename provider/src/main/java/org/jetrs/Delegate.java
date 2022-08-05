@@ -282,7 +282,6 @@ abstract class Delegate<T> implements RuntimeDelegate.HeaderDelegate<T> {
 
     @Override
     Date valueOf(final String value) throws Exception {
-      System.err.println(value);
       return SimpleDateFormats.ISO_1123.get().parse(value);
     }
 

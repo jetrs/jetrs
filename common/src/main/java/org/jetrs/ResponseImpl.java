@@ -26,6 +26,7 @@ import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -43,6 +44,7 @@ import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.Providers;
+import javax.ws.rs.ext.ReaderInterceptor;
 
 import org.libj.io.Streams;
 import org.slf4j.Logger;
@@ -51,8 +53,9 @@ import org.slf4j.LoggerFactory;
 class ResponseImpl extends Response {
   private static final Logger logger = LoggerFactory.getLogger(ResponseImpl.class);
 
+  private final RequestContext requestContext;
   private final Providers providers;
-  private final ReaderInterceptorProviders.ContextList readerInterceptorContexts;
+  private final List<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorFactories;
   private final int statusCode;
   private final Response.StatusType statusInfo;
   private final HttpHeadersImpl headers;
@@ -61,9 +64,10 @@ class ResponseImpl extends Response {
   final Annotation[] annotations; // FIXME: annotations are not being used, but they need to be used by the MessageBodyWriter.. there's no API to get them out of this class
   private boolean closed;
 
-  ResponseImpl(final Providers providers, final ReaderInterceptorProviders.ContextList readerInterceptorContexts, final int statusCode, final Response.StatusType statusInfo, final HttpHeadersImpl headers, final Map<String,NewCookie> cookies, final Object entity, final Annotation[] annotations) {
-    this.providers = providers;
-    this.readerInterceptorContexts = readerInterceptorContexts;
+  ResponseImpl(final RequestContext requestContext, final int statusCode, final Response.StatusType statusInfo, final HttpHeadersImpl headers, final Map<String,NewCookie> cookies, final Object entity, final Annotation[] annotations) {
+    this.requestContext = requestContext;
+    this.providers = requestContext.getProviders();
+    this.readerInterceptorFactories = requestContext.getReaderInterceptorFactoryList();
     this.statusCode = statusCode;
     this.statusInfo = assertNotNull(statusInfo);
     this.headers = assertNotNull(headers);
@@ -131,7 +135,7 @@ class ResponseImpl extends Response {
 
     try {
       final InputStream in = closed ? new ByteArrayInputStream(entityBuffer) : (InputStream)entity;
-      if (readerInterceptorContexts == null)
+      if (readerInterceptorFactories == null)
         return (T)(entity = messageBodyReader.readFrom(rawType, genericType, annotations, mediaType, headers, in));
 
       final ReaderInterceptorContextImpl readerInterceptorContext = new ReaderInterceptorContextImpl(rawType, genericType, annotations, headers, in) {
@@ -140,11 +144,11 @@ class ResponseImpl extends Response {
 
         @Override
         public Object proceed() throws IOException {
-          if (++interceptorIndex == readerInterceptorContexts.size())
-            return lastProceeded = ((MessageBodyReader)messageBodyReader).readFrom(getType(), getGenericType(), getAnnotations(), getMediaType(), getHeaders(), getInputStream());
+          if (++interceptorIndex < readerInterceptorFactories.size())
+            return lastProceeded = (readerInterceptorFactories.get(interceptorIndex).getSingletonOrFromRequestContext(requestContext)).aroundReadFrom(this);
 
-          if (interceptorIndex < readerInterceptorContexts.size())
-            return lastProceeded = (readerInterceptorContexts.getInstance(interceptorIndex)).aroundReadFrom(this); // FIXME: null for Injector
+          if (interceptorIndex == readerInterceptorFactories.size())
+            lastProceeded = ((MessageBodyReader)messageBodyReader).readFrom(getType(), getGenericType(), getAnnotations(), getMediaType(), getHeaders(), getInputStream());
 
           return lastProceeded;
         }

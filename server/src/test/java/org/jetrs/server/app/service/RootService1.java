@@ -45,19 +45,30 @@ public class RootService1 {
 
   @HEAD
   @Path("2/")
+  @Produces(MediaType.TEXT_PLAIN)
   public Response head2() {
     return Response.ok("HEAD").build();
   }
 
   @GET
   @Path("/2/")
+  @Produces(MediaType.TEXT_PLAIN)
   public Response get2() {
     return Response.ok("GET").build();
   }
 
   @POST
+  @Path("/0/{id:[a-zA-Z]}")
+  @Consumes(MediaType.TEXT_PLAIN)
+  @Produces(MediaType.TEXT_PLAIN)
+  public Response post0(@PathParam("id") final Character uuid, final Character data) {
+    return Response.ok(data).build();
+  }
+
+  @POST
   @Path("/1/{id:[\\da-z]{32}}")
   @Consumes(MediaType.TEXT_PLAIN)
+  @Produces(MediaType.TEXT_PLAIN)
   public Response post1(@PathParam("id") final String uuid, final String data) {
     return Response.ok("POST").build();
   }
@@ -65,6 +76,7 @@ public class RootService1 {
   @POST
   @Path("1/{id:[\\d]+}/")
   @Consumes(MediaType.TEXT_PLAIN)
+  @Produces(MediaType.TEXT_PLAIN)
   public Response post1(@PathParam("id") final int id, final String data) {
     return Response.ok("POST").build();
   }
@@ -72,6 +84,7 @@ public class RootService1 {
   @POST
   @Path("/1/{id:[\\d]+}/")
   @Consumes(MediaType.TEXT_PLAIN)
+  @Produces(MediaType.TEXT_PLAIN)
   public Response post1(@PathParam("id") final long id, final String data) {
     return Response.ok("POST").build();
   }

@@ -235,6 +235,6 @@ abstract class InterceptorContextImpl implements InterceptorContext {
 
   @Override
   public final void setMediaType(final MediaType mediaType) {
-    getStringHeaders().putSingle(HttpHeaders.CONTENT_TYPE, mediaType.toString());
+    headers.setMediaType(mediaType);
   }
 }

@@ -33,6 +33,7 @@ import org.jetrs.provider.ext.NumberProvider;
 import org.jetrs.provider.ext.StringProvider;
 import org.jetrs.provider.ext.mapper.WebApplicationExceptionMapper;
 import org.jetrs.server.app.filter.Filter1;
+import org.jetrs.server.app.provider.MyCharacterProvider;
 import org.jetrs.server.app.service.BookService;
 import org.jetrs.server.app.service.CoreTypeService;
 import org.jetrs.server.app.service.FileUploadService;
@@ -75,7 +76,7 @@ public class ApplicationServer extends Application implements AutoCloseable {
         .build();
 
       this.container.start();
-      System.err.println("http://localhost:" + getContainerPort() + applicationPath);
+      System.err.println("[START] http://localhost:" + getContainerPort() + applicationPath);
     }
     catch (final RuntimeException t) {
       close();
@@ -92,10 +93,10 @@ public class ApplicationServer extends Application implements AutoCloseable {
     final Set<Object> singletons = new HashSet<>();
 
     // General
-    singletons.add(new StringProvider());
     singletons.add(new InputStreamProvider());
     singletons.add(new BytesProvider());
     singletons.add(new NumberProvider());
+    singletons.add(new StringProvider());
     singletons.add(new WebApplicationExceptionMapper(true));
 
     // Specific
@@ -111,6 +112,7 @@ public class ApplicationServer extends Application implements AutoCloseable {
     final Set<Class<?>> classes = new HashSet<>();
     classes.add(Filter1.class);
     classes.add(CoreTypeService.class);
+    classes.add(MyCharacterProvider.class);
     // Must be a class resource, because it has a member @Context reference
     return classes;
   }

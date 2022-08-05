@@ -72,7 +72,10 @@ import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
+import javax.ws.rs.ext.ParamConverterProvider;
 import javax.ws.rs.ext.Providers;
+import javax.ws.rs.ext.ReaderInterceptor;
+import javax.ws.rs.ext.WriterInterceptor;
 
 import org.libj.lang.Classes;
 import org.libj.lang.Numbers;
@@ -112,10 +115,10 @@ class ServerRequestContext extends RequestContext {
   private static final Class<Annotation>[] injectableAnnotationTypes = new Class[] {CookieParam.class, HeaderParam.class, MatrixParam.class, PathParam.class, QueryParam.class};
   // FIXME: Support `AsyncResponse` (JAX-RS 2.1 8.2)
 
-  private final ContainerRequestFilterProviders.FactoryList preMatchContainerRequestFilterEntityProviderFactories;
-  private final ContainerRequestFilterProviders.FactoryList containerRequestFilterEntityProviderFactories;
-  private final ContainerResponseFilterProviders.ContextList containerResponseFilterContexts;
-  private final ParamConverterProviders.ContextList paramConverterProviderContexts;
+  private final List<ProviderFactory<ParamConverterProvider>> paramConverterProviderFactories;
+  private final List<ProviderFactory<ContainerRequestFilter>> preMatchContainerRequestFilterEntityProviderFactories;
+  private final List<ProviderFactory<ContainerRequestFilter>> containerRequestFilterEntityProviderFactories;
+  private final List<ProviderFactory<ContainerResponseFilter>> containerResponseFilterFactories;
   private final List<ResourceManifest> resourceManifests;
 
   private HttpHeadersImpl requestHeaders;
@@ -132,22 +135,22 @@ class ServerRequestContext extends RequestContext {
 
   ServerRequestContext(
     final Request request,
-    final ReaderInterceptorProviders.FactoryList readerInterceptorEntityProviderFactories,
-    final WriterInterceptorProviders.FactoryList writerInterceptorEntityProviderFactories,
-    final MessageBodyReaderProviders.FactoryList messageBodyReaderEntityProviderFactories,
-    final MessageBodyWriterProviders.FactoryList messageBodyWriterEntityProviderFactories,
-    final ExceptionMapperProviders.FactoryList exceptionMapperEntityProviderFactories,
-    final ParamConverterProviders.FactoryList paramConverterEntityProviderFactories,
-    final ContainerRequestFilterProviders.FactoryList preMatchContainerRequestFilterEntityProviderFactories,
-    final ContainerRequestFilterProviders.FactoryList containerRequestFilterEntityProviderFactories,
-    final ContainerResponseFilterProviders.FactoryList containerResponseFilterEntityProviderFactories,
+    final List<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorEntityProviderFactories,
+    final List<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorEntityProviderFactories,
+    final List<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderEntityProviderFactories,
+    final List<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterEntityProviderFactories,
+    final List<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperEntityProviderFactories,
+    final List<ProviderFactory<ParamConverterProvider>> paramConverterEntityProviderFactories,
+    final List<ProviderFactory<ContainerRequestFilter>> preMatchContainerRequestFilterEntityProviderFactories,
+    final List<ProviderFactory<ContainerRequestFilter>> containerRequestFilterEntityProviderFactories,
+    final List<ProviderFactory<ContainerResponseFilter>> containerResponseFilterEntityProviderFactories,
     final List<ResourceManifest> resourceManifests
   ) {
     super(request, readerInterceptorEntityProviderFactories, writerInterceptorEntityProviderFactories, messageBodyReaderEntityProviderFactories, messageBodyWriterEntityProviderFactories, exceptionMapperEntityProviderFactories);
-    this.paramConverterProviderContexts = paramConverterEntityProviderFactories.newContextList(this);
+    this.paramConverterProviderFactories = paramConverterEntityProviderFactories;
     this.preMatchContainerRequestFilterEntityProviderFactories = preMatchContainerRequestFilterEntityProviderFactories;
     this.containerRequestFilterEntityProviderFactories = containerRequestFilterEntityProviderFactories;
-    this.containerResponseFilterContexts = containerResponseFilterEntityProviderFactories.newContextList(this);
+    this.containerResponseFilterFactories = containerResponseFilterEntityProviderFactories;
     this.resourceManifests = resourceManifests;
   }
 
@@ -180,12 +183,12 @@ class ServerRequestContext extends RequestContext {
 
   private boolean paramConverterProviderCalled = false;
 
-  ParamConverterProviders.ContextList getParamConverterProviderContexts() {
+  List<ProviderFactory<ParamConverterProvider>> getParamConverterProviderFactoryList() {
     if (paramConverterProviderCalled)
       throw new IllegalStateException();
 
     paramConverterProviderCalled = true;
-    return paramConverterProviderContexts;
+    return paramConverterProviderFactories;
   }
 
   private boolean preMatchRequestFilterCalled = false;
@@ -196,7 +199,7 @@ class ServerRequestContext extends RequestContext {
 
     preMatchRequestFilterCalled = true;
     for (final ProviderFactory<ContainerRequestFilter> preMatchContainerRequestFilterProviderFactory : preMatchContainerRequestFilterEntityProviderFactories)
-      preMatchContainerRequestFilterProviderFactory.getSingletonOrNewInstance(this).filter(containerRequestContext);
+      preMatchContainerRequestFilterProviderFactory.getSingletonOrFromRequestContext(this).filter(containerRequestContext);
   }
 
   private boolean requestFilterCalled = false;
@@ -207,14 +210,12 @@ class ServerRequestContext extends RequestContext {
 
     requestFilterCalled = true;
     for (final ProviderFactory<ContainerRequestFilter> containerRequestFilterEntityProviderFactory : containerRequestFilterEntityProviderFactories)
-      containerRequestFilterEntityProviderFactory.getSingletonOrNewInstance(this).filter(containerRequestContext);
+      containerRequestFilterEntityProviderFactory.getSingletonOrFromRequestContext(this).filter(containerRequestContext);
   }
 
   void filterContainerResponse() throws IOException {
-    for (int i = 0, len = containerResponseFilterContexts.size(); i < len; ++i) {
-      final ContainerResponseFilter filter = containerResponseFilterContexts.getInstance(i);
-      filter.filter(containerRequestContext, containerResponseContext);
-    }
+    for (final ProviderFactory<ContainerResponseFilter> factory : containerResponseFilterFactories)
+      factory.getSingletonOrFromRequestContext(this).filter(containerRequestContext, containerResponseContext);
   }
 
   @Override
@@ -313,7 +314,7 @@ class ServerRequestContext extends RequestContext {
     final UriInfo uriInfo = containerRequestContext.getUriInfo();
     if (annotation.annotationType() == QueryParam.class) {
       final boolean decode = ParameterUtil.decode(annotations);
-      return ParameterUtil.convertParameter(clazz, type, annotations, uriInfo.getQueryParameters(decode).get(((QueryParam)annotation).value()), paramConverterProviderContexts);
+      return ParameterUtil.convertParameter(clazz, type, annotations, uriInfo.getQueryParameters(decode).get(((QueryParam)annotation).value()), paramConverterProviderFactories, this);
     }
 
     if (annotation.annotationType() == PathParam.class) {
@@ -399,7 +400,7 @@ class ServerRequestContext extends RequestContext {
         }
       }
 
-      return ParameterUtil.convertParameter(clazz, type, annotations, values, paramConverterProviderContexts);
+      return ParameterUtil.convertParameter(clazz, type, annotations, values, paramConverterProviderFactories, this);
     }
 
     if (annotation.annotationType() == MatrixParam.class) {
@@ -412,7 +413,7 @@ class ServerRequestContext extends RequestContext {
           if (matrixParamName.equals(entry.getKey()))
             matrixParameters.addAll(entry.getValue());
 
-      return ParameterUtil.convertParameter(clazz, type, annotations, matrixParameters, paramConverterProviderContexts);
+      return ParameterUtil.convertParameter(clazz, type, annotations, matrixParameters, paramConverterProviderFactories, this);
     }
 
     if (annotation.annotationType() == CookieParam.class) {
@@ -635,7 +636,7 @@ class ServerRequestContext extends RequestContext {
   private void setContentType(final ResourceMatch resource) {
     final ServerMediaType[] mediaTypes = resource.getManifest().getResourceAnnotationProcessor(Produces.class).getMediaTypes();
     if (mediaTypes != null)
-      containerResponseContext.getStringHeaders().putSingle(HttpHeaders.CONTENT_TYPE, resource.getAccept().toString());
+      containerResponseContext.setMediaType(resource.getAccept());
     else
       containerResponseContext.setStatus(Response.Status.NO_CONTENT.getStatusCode());
   }
@@ -643,11 +644,11 @@ class ServerRequestContext extends RequestContext {
   void service() throws IOException, ServletException {
     setContentType(resourceMatch);
 
-    final Object content = resourceMatch.service(this);
-    if (content instanceof Response)
-      setResponse((Response)content, resourceMatch.getManifest().getMethodAnnotations(), resourceMatch.getAccept());
-    else if (content != null)
-      setEntity(content, resourceMatch.getManifest().getMethodAnnotations(), resourceMatch.getAccept());
+    final Object body = resourceMatch.service(this);
+    if (body instanceof Response)
+      setResponse((Response)body, resourceMatch.getManifest().getMethodAnnotations(), resourceMatch.getAccept());
+    else if (body != null)
+      setEntity(body, resourceMatch.getManifest().getMethodAnnotations(), resourceMatch.getAccept());
   }
 
   void setAbortResponse(final AbortFilterChainException e) {
@@ -678,6 +679,14 @@ class ServerRequestContext extends RequestContext {
   private Response setResponse(final Response response, final Annotation[] annotations, final CompatibleMediaType mediaType) {
     containerResponseContext.setEntityStream(null);
 
+    final MultivaluedMap<String,String> containerResponseHeaders = containerResponseContext.getStringHeaders();
+    containerResponseHeaders.clear();
+
+    final MultivaluedMap<String,String> responseHeaders = response.getStringHeaders();
+    for (final Map.Entry<String,List<String>> entry : responseHeaders.entrySet())
+      for (final String header : entry.getValue())
+        containerResponseHeaders.add(entry.getKey(), header);
+
     // FIXME: Have to hack getting the annotations out of the Response
     final Annotation[] responseAnnotations = ((ResponseImpl)response).annotations;
     final Annotation[] entityAnnotations = annotations == null ? responseAnnotations : responseAnnotations == null ? annotations : ArrayUtil.concat(responseAnnotations, annotations);
@@ -692,14 +701,6 @@ class ServerRequestContext extends RequestContext {
       containerResponseContext.setStatusInfo(null);
       containerResponseContext.setStatus(response.getStatus());
     }
-
-    final MultivaluedMap<String,String> containerResponseHeaders = containerResponseContext.getStringHeaders();
-    containerResponseHeaders.clear();
-
-    final MultivaluedMap<String,String> responseHeaders = response.getStringHeaders();
-    for (final Map.Entry<String,List<String>> entry : responseHeaders.entrySet())
-      for (final String header : entry.getValue())
-        containerResponseHeaders.add(entry.getKey(), header);
 
     return response;
   }

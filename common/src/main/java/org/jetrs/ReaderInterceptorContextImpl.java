@@ -23,7 +23,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.ReaderInterceptorContext;
@@ -105,7 +104,7 @@ abstract class ReaderInterceptorContextImpl implements ReaderInterceptorContext 
 
   @Override
   public void setMediaType(final MediaType mediaType) {
-    headers.getMirrorMap().putSingle(HttpHeaders.CONTENT_TYPE, mediaType);
+    headers.setMediaType(mediaType);
   }
 
   private InputStream is;

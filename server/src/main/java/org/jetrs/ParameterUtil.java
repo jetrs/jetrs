@@ -36,6 +36,7 @@ import java.util.TreeSet;
 
 import javax.ws.rs.Encoded;
 import javax.ws.rs.ext.ParamConverter;
+import javax.ws.rs.ext.ParamConverterProvider;
 
 import org.libj.lang.Classes;
 import org.libj.util.CollectionUtil;
@@ -66,9 +67,11 @@ final class ParameterUtil {
     return null;
   }
 
-  private static <T>ParamConverter<T> lookupParamConverter(final ParamConverterProviders.ContextList paramConverterProviderContexts, final Class<T> rawType, final Type genericType, final Annotation[] annotations) {
-    for (int i = 0, len = paramConverterProviderContexts.size(); i < len; ++ i) {
-      final ParamConverter<T> paramConverter = paramConverterProviderContexts.getInstance(i).getConverter(rawType, genericType, annotations);
+  private static <T>ParamConverter<T> lookupParamConverter(final List<ProviderFactory<ParamConverterProvider>> paramConverterProviderFactories, final RequestContext requestContext, final Class<T> rawType, final Type genericType, final Annotation[] annotations) {
+    for (final ProviderFactory<ParamConverterProvider> factory : paramConverterProviderFactories) {
+      // FIXME: Is there a way to detect whether the ParamConverterProvider can convert the parameter without instantiating the ParamConverterProvider?
+      final ParamConverterProvider provider = factory.getSingletonOrFromRequestContext(requestContext);
+      final ParamConverter<T> paramConverter = provider.getConverter(rawType, genericType, annotations);
       if (paramConverter != null)
         return paramConverter;
     }
@@ -84,7 +87,7 @@ final class ParameterUtil {
 
   // http://download.oracle.com/otn-pub/jcp/jaxrs-2_0_rev_A-mrel-eval-spec/jsr339-jaxrs-2.0-final-spec.pdf Section 3.2
   @SuppressWarnings("unchecked")
-  static Object convertParameter(final Class<?> parameterType, final Type genericType, final Annotation[] annotations, final List<String> values, final ParamConverterProviders.ContextList paramConverterProviderContexts) {
+  static Object convertParameter(final Class<?> parameterType, final Type genericType, final Annotation[] annotations, final List<String> values, final List<ProviderFactory<ParamConverterProvider>> paramConverterProviderFactories, final RequestContext requestContext) {
     if (values == null || values.size() == 0)
       return null;
 
@@ -104,7 +107,7 @@ final class ParameterUtil {
         container = null;
       }
 
-      final ParamConverter<?> paramConverter = lookupParamConverter(paramConverterProviderContexts, memberClass, genericType, annotations);
+      final ParamConverter<?> paramConverter = lookupParamConverter(paramConverterProviderFactories, requestContext, memberClass, genericType, annotations);
       if (paramConverter != null)
         return paramConverter.fromString(CollectionUtil.toString(values, ';')); // FIXME: Is `;` the delimiter?
 

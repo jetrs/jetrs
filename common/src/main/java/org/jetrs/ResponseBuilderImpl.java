@@ -35,39 +35,40 @@ import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Variant;
-import javax.ws.rs.ext.Providers;
 
 class ResponseBuilderImpl extends Response.ResponseBuilder implements Cloneable {
-  private final Providers providers;
-  private final ReaderInterceptorProviders.ContextList readerInterceptorContexts;
+  private final RequestContext requestContext;
   private final HttpHeadersImpl headers;
+
   private int statusCode;
   private String reasonPhrase;
   private Object entity;
   private Annotation[] annotations;
+  private HashMap<String,NewCookie> cookies;
 
-  ResponseBuilderImpl(final Providers providers, final ReaderInterceptorProviders.ContextList readerInterceptorContexts) {
-    this.providers = providers;
-    this.readerInterceptorContexts = readerInterceptorContexts;
+  ResponseBuilderImpl(final RequestContext requestContext) {
+    this.requestContext = requestContext;
     this.headers = new HttpHeadersImpl();
   }
 
+  @SuppressWarnings("unchecked")
   private ResponseBuilderImpl(final ResponseBuilderImpl copy) {
-    this.providers = copy.providers;
-    this.readerInterceptorContexts = copy.readerInterceptorContexts;
+    this.requestContext = copy.requestContext;
     this.headers = copy.headers.clone();
+
     this.statusCode = copy.statusCode;
     this.reasonPhrase = copy.reasonPhrase;
     this.entity = copy.entity;
     this.annotations = copy.annotations;
-    this.cookies = copy.cookies;
+    if (copy.cookies != null)
+      this.cookies = (HashMap<String,NewCookie>)copy.cookies.clone();
   }
 
   @Override
   public Response build() {
     // FIXME: Need to reset the builder to a "blank state", as is documented in the javadocs of this method
     final Response.StatusType statusInfo = Responses.from(statusCode, reasonPhrase);
-    return new ResponseImpl(providers, readerInterceptorContexts, statusCode, statusInfo, headers, cookies, entity, annotations);
+    return new ResponseImpl(requestContext, statusCode, statusInfo, headers, cookies, entity, annotations);
   }
 
   @Override
@@ -159,13 +160,13 @@ class ResponseBuilderImpl extends Response.ResponseBuilder implements Cloneable 
 
   @Override
   public Response.ResponseBuilder type(final MediaType type) {
-    headers.getMirrorMap().putSingle(HttpHeaders.CONTENT_TYPE, type);
+    headers.setMediaType(type);
     return this;
   }
 
   @Override
   public Response.ResponseBuilder type(final String type) {
-    headers.putSingle(HttpHeaders.CONTENT_TYPE, type);
+    headers.setMediaType(type);
     return this;
   }
 
@@ -180,8 +181,6 @@ class ResponseBuilderImpl extends Response.ResponseBuilder implements Cloneable 
     headers.getMirrorMap().putSingle(HttpHeaders.CONTENT_LOCATION, location);
     return this;
   }
-
-  private volatile Map<String,NewCookie> cookies;
 
   @Override
   public Response.ResponseBuilder cookie(final NewCookie ... cookies) {

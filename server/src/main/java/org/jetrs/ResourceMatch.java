@@ -96,7 +96,7 @@ class ResourceMatch implements Comparable<ResourceMatch> {
   }
 
   Object getResourceInstance(final ServerRequestContext requestContext) throws IllegalAccessException, InstantiationException, IOException, InvocationTargetException {
-    return instance == null ? instance = requestContext.newInstance(resourceClass, true) : instance;
+    return instance == null ? instance = requestContext.newResourceInstance(resourceClass) : instance;
   }
 
   CompatibleMediaType getAccept() {

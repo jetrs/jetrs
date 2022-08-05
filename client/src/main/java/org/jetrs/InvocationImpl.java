@@ -121,13 +121,15 @@ class InvocationImpl implements Invocation {
       else
         connection.setUseCaches(false);
 
-      final Providers providers = requestContext.getProviders();
       if (entity != null) {
         connection.setDoOutput(true);
+        final Providers providers = requestContext.getProviders();
         final Class<?> entityClass = entity.getEntity().getClass();
         final MessageBodyWriter messageBodyWriter = providers.getMessageBodyWriter(entityClass, null, entity.getAnnotations(), entity.getMediaType());
-        if (messageBodyWriter == null)
+        if (messageBodyWriter == null) {
+          providers.getMessageBodyWriter(entityClass, null, entity.getAnnotations(), entity.getMediaType());
           throw new ProcessingException("Provider not found for " + entityClass.getName());
+        }
 
         final OutputStream entityStream = connection.getOutputStream();
         MessageBodyProvider.writeTo(messageBodyWriter, entity.getEntity(), entityClass, null, entity.getAnnotations(), entity.getMediaType(), headers == null ? null : headers.getMirrorMap(), entityStream);
@@ -153,7 +155,7 @@ class InvocationImpl implements Invocation {
         }
       }
 
-      return new ResponseImpl(providers, null, statusCode, statusInfo, headers, cookies, 200 <= statusCode && statusCode < 400 ? connection.getInputStream() : connection.getErrorStream(), null) {
+      return new ResponseImpl(requestContext, statusCode, statusInfo, headers, cookies, 200 <= statusCode && statusCode < 400 ? connection.getInputStream() : connection.getErrorStream(), null) {
         @Override
         public void close() {
           try {

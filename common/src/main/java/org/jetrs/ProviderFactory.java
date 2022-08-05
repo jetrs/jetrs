@@ -50,12 +50,12 @@ class ProviderFactory<T> {
     return priority;
   }
 
-  final T getSingletonOrNewInstance(final RequestContext requestContext) {
+  final T getSingletonOrFromRequestContext(final RequestContext requestContext) {
     if (singleton != null)
       return singleton;
 
     try {
-      return requestContext.newInstance(clazz, false);
+      return requestContext.getProviderInstance(clazz);
     }
     catch (final IllegalAccessException | InstantiationException | IOException e) {
       throw new ProviderInstantiationException(e);
@@ -66,7 +66,6 @@ class ProviderFactory<T> {
 
       throw new ProviderInstantiationException(e.getCause());
     }
-
   }
 
   @Override

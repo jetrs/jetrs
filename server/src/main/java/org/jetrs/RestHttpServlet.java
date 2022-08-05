@@ -25,8 +25,16 @@ import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.ws.rs.ApplicationPath;
+import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.ext.ExceptionMapper;
+import javax.ws.rs.ext.MessageBodyReader;
+import javax.ws.rs.ext.MessageBodyWriter;
+import javax.ws.rs.ext.ParamConverterProvider;
+import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.RuntimeDelegate;
+import javax.ws.rs.ext.WriterInterceptor;
 
 abstract class RestHttpServlet extends HttpServlet {
   private ServerRuntimeContext serverContext;
@@ -67,15 +75,15 @@ abstract class RestHttpServlet extends HttpServlet {
     }
 
     final List<ResourceManifest> resourceManifests = new ArrayList<>();
-    final ReaderInterceptorProviders.FactoryList readerInterceptorEntityProviderFactories = new ReaderInterceptorProviders.FactoryList();
-    final WriterInterceptorProviders.FactoryList writerInterceptorEntityProviderFactories = new WriterInterceptorProviders.FactoryList();
-    final MessageBodyReaderProviders.FactoryList messageBodyReaderEntityProviderFactories = new MessageBodyReaderProviders.FactoryList();
-    final MessageBodyWriterProviders.FactoryList messageBodyWriterEntityProviderFactories = new MessageBodyWriterProviders.FactoryList();
-    final ExceptionMapperProviders.FactoryList exceptionMapperEntityProviderFactories = new ExceptionMapperProviders.FactoryList();
-    final ContainerRequestFilterProviders.FactoryList preMatchContainerRequestFilterEntityProviderFactories = new ContainerRequestFilterProviders.FactoryList();
-    final ParamConverterProviders.FactoryList paramConverterEntityProviderFactories = new ParamConverterProviders.FactoryList();
-    final ContainerRequestFilterProviders.FactoryList containerRequestFilterEntityProviderFactories = new ContainerRequestFilterProviders.FactoryList();
-    final ContainerResponseFilterProviders.FactoryList containerResponseFilterEntityProviderFactories = new ContainerResponseFilterProviders.FactoryList();
+    final List<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorEntityProviderFactories = new ArrayList<>();
+    final List<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorEntityProviderFactories = new ArrayList<>();
+    final List<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderEntityProviderFactories = new ArrayList<>();
+    final List<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterEntityProviderFactories = new ArrayList<>();
+    final List<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperEntityProviderFactories = new ArrayList<>();
+    final List<ProviderFactory<ParamConverterProvider>> paramConverterEntityProviderFactories = new ArrayList<>();
+    final List<ProviderFactory<ContainerRequestFilter>> preMatchContainerRequestFilterEntityProviderFactories = new ArrayList<>();
+    final List<ProviderFactory<ContainerRequestFilter>> containerRequestFilterEntityProviderFactories = new ArrayList<>();
+    final List<ProviderFactory<ContainerResponseFilter>> containerResponseFilterEntityProviderFactories = new ArrayList<>();
 
     final ServerBootstrap bootstrap = new ServerBootstrap(servletPath,
       readerInterceptorEntityProviderFactories,
@@ -110,8 +118,8 @@ abstract class RestHttpServlet extends HttpServlet {
         classes = null;
       }
 
-      readerInterceptorEntityProviderFactories.superSort(Bootstrap.providerResourceComparator);
-      writerInterceptorEntityProviderFactories.superSort(Bootstrap.providerResourceComparator);
+      readerInterceptorEntityProviderFactories.sort(Bootstrap.providerResourceComparator);
+      writerInterceptorEntityProviderFactories.sort(Bootstrap.providerResourceComparator);
 
       bootstrap.init(singletons, classes, resourceManifests);
 

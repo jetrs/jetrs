@@ -52,18 +52,18 @@ class Bootstrap<R extends Comparable<? super R>> {
     return true;
   }
 
-  private final ReaderInterceptorProviders.FactoryList readerInterceptorEntityProviderFactories;
-  private final WriterInterceptorProviders.FactoryList writerInterceptorEntityProviderFactories;
-  private final MessageBodyReaderProviders.FactoryList messageBodyReaderEntityProviderFactories;
-  private final MessageBodyWriterProviders.FactoryList messageBodyWriterEntityProviderFactories;
-  private final ExceptionMapperProviders.FactoryList exceptionMapperEntityProviderFactories;
+  private final List<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorEntityProviderFactories;
+  private final List<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorEntityProviderFactories;
+  private final List<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderEntityProviderFactories;
+  private final List<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterEntityProviderFactories;
+  private final List<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperEntityProviderFactories;
 
   Bootstrap(
-    final ReaderInterceptorProviders.FactoryList readerInterceptorEntityProviderFactories,
-    final WriterInterceptorProviders.FactoryList writerInterceptorEntityProviderFactories,
-    final MessageBodyReaderProviders.FactoryList messageBodyReaderEntityProviderFactories,
-    final MessageBodyWriterProviders.FactoryList messageBodyWriterEntityProviderFactories,
-    final ExceptionMapperProviders.FactoryList exceptionMapperEntityProviderFactories
+    final List<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorEntityProviderFactories,
+    final List<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorEntityProviderFactories,
+    final List<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderEntityProviderFactories,
+    final List<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterEntityProviderFactories,
+    final List<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperEntityProviderFactories
   ) {
     this.readerInterceptorEntityProviderFactories = readerInterceptorEntityProviderFactories;
     this.writerInterceptorEntityProviderFactories = writerInterceptorEntityProviderFactories;
@@ -76,19 +76,19 @@ class Bootstrap<R extends Comparable<? super R>> {
   <T>boolean addResourceOrProvider(final List<Consumer<Set<Class<?>>>> afterAdds, final List<R> resources, final Class<? extends T> clazz, final T singleton, final boolean scanned) throws IllegalAccessException, InstantiationException, InvocationTargetException {
     if (clazz.isAnnotationPresent(Provider.class)) {
       if (ReaderInterceptor.class.isAssignableFrom(clazz))
-        readerInterceptorEntityProviderFactories.superAdd(new ReaderInterceptorProviders.Factory((Class<ReaderInterceptor>)clazz, (ReaderInterceptor)singleton));
+        readerInterceptorEntityProviderFactories.add(new ReaderInterceptorProviderFactory((Class<ReaderInterceptor>)clazz, (ReaderInterceptor)singleton));
 
       if (WriterInterceptor.class.isAssignableFrom(clazz))
-        writerInterceptorEntityProviderFactories.superAdd(new WriterInterceptorProviders.Factory((Class<WriterInterceptor>)clazz, (WriterInterceptor)singleton));
+        writerInterceptorEntityProviderFactories.add(new WriterInterceptorProviderFactory((Class<WriterInterceptor>)clazz, (WriterInterceptor)singleton));
 
       if (MessageBodyReader.class.isAssignableFrom(clazz))
-        messageBodyReaderEntityProviderFactories.superAdd(new MessageBodyReaderProviders.Factory((Class<MessageBodyReader<?>>)clazz, (MessageBodyReader<?>)singleton));
+        messageBodyReaderEntityProviderFactories.add(new MessageBodyReaderProviderFactory((Class<MessageBodyReader<?>>)clazz, (MessageBodyReader<?>)singleton));
 
       if (MessageBodyWriter.class.isAssignableFrom(clazz))
-        messageBodyWriterEntityProviderFactories.superAdd(new MessageBodyWriterProviders.Factory((Class<MessageBodyWriter<?>>)clazz, (MessageBodyWriter<?>)singleton));
+        messageBodyWriterEntityProviderFactories.add(new MessageBodyWriterProviderFactory((Class<MessageBodyWriter<?>>)clazz, (MessageBodyWriter<?>)singleton));
 
       if (ExceptionMapper.class.isAssignableFrom(clazz))
-        exceptionMapperEntityProviderFactories.superAdd(new ExceptionMapperProviders.Factory((Class<ExceptionMapper<?>>)clazz, (ExceptionMapper<?>)singleton));
+        exceptionMapperEntityProviderFactories.add(new ExceptionMapperProviderFactory((Class<ExceptionMapper<?>>)clazz, (ExceptionMapper<?>)singleton));
     }
     else if (!scanned) {
       logger.warn("Ignored resource class " + clazz.getName() + " due to absent @Provider annotation");
@@ -165,8 +165,8 @@ class Bootstrap<R extends Comparable<? super R>> {
     if (resources != null)
       resources.sort(null);
 
-    exceptionMapperEntityProviderFactories.superSort(providerResourceComparator);
-    messageBodyReaderEntityProviderFactories.superSort(providerResourceComparator);
-    messageBodyWriterEntityProviderFactories.superSort(providerResourceComparator);
+    exceptionMapperEntityProviderFactories.sort(providerResourceComparator);
+    messageBodyReaderEntityProviderFactories.sort(providerResourceComparator);
+    messageBodyWriterEntityProviderFactories.sort(providerResourceComparator);
   }
 }

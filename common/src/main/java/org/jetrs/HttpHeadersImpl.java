@@ -46,9 +46,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A {@link HttpHeadersMap} that implements the {@link HttpHeaders} interface,
- * providing a mirrored multi-valued map of headers in {@link String} and
- * {@link Object} representations.
+ * A {@link HttpHeadersMap} that implements the {@link HttpHeaders} interface, providing a mirrored multi-valued map of headers in
+ * {@link String} and {@link Object} representations.
  */
 class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeaders {
   private static final Logger logger = LoggerFactory.getLogger(HttpHeadersImpl.class);
@@ -110,8 +109,7 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
   }
 
   /**
-   * Creates a new {@link HttpHeadersImpl} with the specified map of headers as
-   * lists of strings.
+   * Creates a new {@link HttpHeadersImpl} with the specified map of headers as lists of strings.
    *
    * @param headers The map of headers as lists of strings.
    * @throws IllegalArgumentException If the specified map is null.
@@ -123,8 +121,7 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
   }
 
   /**
-   * Creates a new {@link HttpHeadersImpl} with the specified map of headers as
-   * lists of objects.
+   * Creates a new {@link HttpHeadersImpl} with the specified map of headers as lists of objects.
    *
    * @param headers The map of headers as lists of objects.
    * @throws IllegalArgumentException If the specified map is null.
@@ -137,12 +134,10 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
   }
 
   /**
-   * Creates a new {@link HttpHeadersImpl} with the specified
-   * {@link HttpServletRequest} as the source from which to initialize the
+   * Creates a new {@link HttpHeadersImpl} with the specified {@link HttpServletRequest} as the source from which to initialize the
    * header values.
    *
-   * @param request The {@link HttpServletRequest} from which to initialize the
-   *          header values.
+   * @param request The {@link HttpServletRequest} from which to initialize the header values.
    */
   HttpHeadersImpl(final HttpServletRequest request) {
     this();
@@ -169,12 +164,10 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
   }
 
   /**
-   * Creates a new {@link HttpHeadersImpl} with the specified
-   * {@link HttpServletResponse} as the source from which to initialize the
+   * Creates a new {@link HttpHeadersImpl} with the specified {@link HttpServletResponse} as the source from which to initialize the
    * header values.
    *
-   * @param response The {@link HttpServletResponse} from which to initialize
-   *          the header values.
+   * @param response The {@link HttpServletResponse} from which to initialize the header values.
    */
   HttpHeadersImpl(final HttpServletResponse response) {
     this();
@@ -225,16 +218,13 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
       }
 
       /**
-       * Gets the quality attribute from a strongly typed header object (i.e.
-       * {@link MediaType#getParameters() mediaType.getParameters().get("q")}),
-       * and returns a {@link org.libj.lang.Numbers.Composite composite}
-       * {@code long} containing the {@code float} quality value and {@code int}
-       * ending index of the attribute in the string.
+       * Gets the quality attribute from a strongly typed header object (i.e. {@link MediaType#getParameters()
+       * mediaType.getParameters().get("q")}), and returns a {@link org.libj.lang.Numbers.Composite composite} {@code long}
+       * containing the {@code float} quality value and {@code int} ending index of the attribute in the string.
        *
        * @param value The object to parse.
        * @param index The index from which to start parsing (ignored).
-       * @return A {@link org.libj.lang.Numbers.Composite composite}
-       *         {@code long} containing the {@code float} quality value and
+       * @return A {@link org.libj.lang.Numbers.Composite composite} {@code long} containing the {@code float} quality value and
        *         {@code int} ending index of the attribute in the string.
        */
       @Override
@@ -285,6 +275,27 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
     return (MediaType)getMirrorMap().getFirst(HttpHeaders.CONTENT_TYPE);
   }
 
+  /**
+   * FIXME: Is it correct to drop the parameters when setting the CONTENT_TYPE in the response?! If so, then what about
+   * {@link ResponseBuilderImpl#header(String,Object)}.
+   *
+   * @param mediaType The {@link MediaType} object.
+   */
+  void setMediaType(final MediaType mediaType) {
+    getMirrorMap().putSingle(HttpHeaders.CONTENT_TYPE, mediaType.getParameters().size() == 0 ? mediaType : MediaTypes.cloneWithoutParameters(mediaType));
+  }
+
+  /**
+   * FIXME: Is it correct to drop the parameters when setting the CONTENT_TYPE in the response?! If so, then what about
+   * {@link ResponseBuilderImpl#header(String,Object)}.
+   *
+   * @param mediaType The {@link MediaType} string.
+   */
+  void setMediaType(final String mediaType) {
+    final int i = mediaType.indexOf(';');
+    putSingle(mediaType, i > -1 ? mediaType.substring(0, i) : mediaType);
+  }
+
   @Override
   public Locale getLanguage() {
     return (Locale)getMirrorMap().getFirst(HttpHeaders.CONTENT_LANGUAGE);
@@ -316,33 +327,27 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
   }
 
   /**
-   * Returns the allowed HTTP methods from the {@code "Allow"} HTTP header,
-   * otherwise {@code null} if not present.
+   * Returns the allowed HTTP methods from the {@code "Allow"} HTTP header, otherwise {@code null} if not present.
    *
-   * @return The allowed HTTP methods from the {@code "Allow"} HTTP header,
-   *         otherwise {@code null} if not present.
+   * @return The allowed HTTP methods from the {@code "Allow"} HTTP header, otherwise {@code null} if not present.
    */
   Set<String> getAllowedMethods() {
     return new HashSet<>(getRequestHeader(HttpHeaders.ALLOW));
   }
 
   /**
-   * Returns last modified date from the {@code "Last-Modified"} HTTP header,
-   * otherwise {@code null} if not present.
+   * Returns last modified date from the {@code "Last-Modified"} HTTP header, otherwise {@code null} if not present.
    *
-   * @return The last modified date from the {@code "Last-Modified"} HTTP header,
-   *         otherwise {@code null} if not present.
+   * @return The last modified date from the {@code "Last-Modified"} HTTP header, otherwise {@code null} if not present.
    */
   Date getLastModified() {
     return (Date)getMirrorMap().getFirst(HttpHeaders.LAST_MODIFIED);
   }
 
   /**
-   * Returns location from the {@code "Location"} HTTP header, otherwise
-   * {@code null} if not present.
+   * Returns location from the {@code "Location"} HTTP header, otherwise {@code null} if not present.
    *
-   * @return The location from the {@code "Location"} HTTP header, otherwise
-   *         {@code null} if not present.
+   * @return The location from the {@code "Location"} HTTP header, otherwise {@code null} if not present.
    */
   URI getLocation() {
     final String location = getFirst(HttpHeaders.LOCATION);
@@ -350,13 +355,12 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
   }
 
   /**
-   * Returns a string representation of the list of header strings associated
-   * with the specified {@code headerName}, or {@code null} if no value exists.
+   * Returns a string representation of the list of header strings associated with the specified {@code headerName}, or {@code null}
+   * if no value exists.
    *
    * @param headerName The name of the header.
-   * @return A string representation of the list of header strings associated
-   *         with the specified {@code header} name, or {@code null} if no value
-   *         exists
+   * @return A string representation of the list of header strings associated with the specified {@code header} name, or
+   *         {@code null} if no value exists
    */
   String getString(final String headerName) {
     final List<String> values = get(headerName);

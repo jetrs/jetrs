@@ -35,12 +35,13 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.ext.MessageBodyReader;
+import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.ReaderInterceptorContext;
 
 class ContainerRequestContextImpl extends InterceptorContextImpl implements ContainerRequestContext, ReaderInterceptorContext {
   private final UriInfoImpl uriInfo;
   private final ServerRequestContext requestContext;
-  private final ReaderInterceptorProviders.FactoryList readerInterceptorEntityProviderFactories;
+  private final List<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorEntityProviderFactories;
 
   ContainerRequestContextImpl(final HttpServletRequest httpServletRequest, final ServerRequestContext requestContext) {
     super(httpServletRequest, requestContext.getRequestHeaders());
@@ -192,15 +193,15 @@ class ContainerRequestContextImpl extends InterceptorContextImpl implements Cont
   @SuppressWarnings("unchecked")
   public Object proceed() throws IOException, WebApplicationException {
     if (++interceptorIndex < readerInterceptorEntityProviderFactories.size())
-      return readerInterceptorEntityProviderFactories.getInstance(interceptorIndex, requestContext).aroundReadFrom(this);
+      return lastProceeded = readerInterceptorEntityProviderFactories.get(interceptorIndex).getSingletonOrFromRequestContext(requestContext).aroundReadFrom(this);
 
     if (interceptorIndex == readerInterceptorEntityProviderFactories.size())
-      bodyObject = messageBodyReader.readFrom(getType(), getGenericType(), getAnnotations(), getMediaType(), getHeaders(), getInputStream());
+      lastProceeded = messageBodyReader.readFrom(getType(), getGenericType(), getAnnotations(), getMediaType(), getHeaders(), getInputStream());
 
-    return bodyObject;
+    return lastProceeded;
   }
 
-  private Object bodyObject;
+  private Object lastProceeded;
   private int interceptorIndex = -1;
 
   @SuppressWarnings("rawtypes")

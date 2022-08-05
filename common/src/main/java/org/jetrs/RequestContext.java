@@ -33,13 +33,19 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Request;
+import javax.ws.rs.ext.ExceptionMapper;
+import javax.ws.rs.ext.MessageBodyReader;
+import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Providers;
+import javax.ws.rs.ext.ReaderInterceptor;
+import javax.ws.rs.ext.WriterInterceptor;
 
 import org.libj.lang.Classes;
 import org.libj.util.function.Throwing;
@@ -63,8 +69,11 @@ abstract class RequestContext {
     return constructors;
   }
 
-  private final ReaderInterceptorProviders.FactoryList readerInterceptorEntityProviderFactories;
-  private final WriterInterceptorProviders.FactoryList writerInterceptorEntityProviderFactories;
+  private final List<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorEntityProviderFactories;
+  private final List<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorEntityProviderFactories;
+  private final List<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderEntityProviderFactories;
+  private final List<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterEntityProviderFactories;
+  private final List<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperEntityProviderFactories;
   private final ProvidersImpl providers;
 
   private final Request request;
@@ -78,21 +87,24 @@ abstract class RequestContext {
 
   RequestContext(
     final Request request,
-    final ReaderInterceptorProviders.FactoryList readerInterceptorEntityProviderFactories,
-    final WriterInterceptorProviders.FactoryList writerInterceptorEntityProviderFactories,
-    final MessageBodyReaderProviders.FactoryList messageBodyReaderEntityProviderFactories,
-    final MessageBodyWriterProviders.FactoryList messageBodyWriterEntityProviderFactories,
-    final ExceptionMapperProviders.FactoryList exceptionMapperEntityProviderFactories
+    final List<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorEntityProviderFactories,
+    final List<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorEntityProviderFactories,
+    final List<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderEntityProviderFactories,
+    final List<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterEntityProviderFactories,
+    final List<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperEntityProviderFactories
   ) {
     this.request = request;
     this.readerInterceptorEntityProviderFactories = assertNotNull(readerInterceptorEntityProviderFactories);
     this.writerInterceptorEntityProviderFactories = assertNotNull(writerInterceptorEntityProviderFactories);
-    this.providers = new ProvidersImpl(assertNotNull(exceptionMapperEntityProviderFactories).newContextList(this), assertNotNull(messageBodyReaderEntityProviderFactories).newContextList(this), assertNotNull(messageBodyWriterEntityProviderFactories).newContextList(this));
+    this.messageBodyReaderEntityProviderFactories = assertNotNull(messageBodyReaderEntityProviderFactories);
+    this.messageBodyWriterEntityProviderFactories = assertNotNull(messageBodyWriterEntityProviderFactories);
+    this.exceptionMapperEntityProviderFactories = assertNotNull(exceptionMapperEntityProviderFactories);
+    this.providers = new ProvidersImpl(this);
   }
 
   private boolean readerInterceptorCalled = false;
 
-  ReaderInterceptorProviders.FactoryList getReaderInterceptorFactoryList() {
+  List<MessageBodyProviderFactory<ReaderInterceptor>> getReaderInterceptorFactoryList() {
     if (readerInterceptorCalled)
       throw new IllegalStateException();
 
@@ -102,12 +114,42 @@ abstract class RequestContext {
 
   private boolean writerInterceptorCalled = false;
 
-  WriterInterceptorProviders.FactoryList getWriterInterceptorFactoryList() {
+  List<MessageBodyProviderFactory<WriterInterceptor>> getWriterInterceptorFactoryList() {
     if (writerInterceptorCalled)
       throw new IllegalStateException();
 
     writerInterceptorCalled = true;
     return writerInterceptorEntityProviderFactories;
+  }
+
+  private boolean messageBodyReaderCalled = false;
+
+  List<MessageBodyProviderFactory<MessageBodyReader<?>>> getMessageBodyReaderFactoryList() {
+    if (messageBodyReaderCalled)
+      throw new IllegalStateException();
+
+    messageBodyReaderCalled = true;
+    return messageBodyReaderEntityProviderFactories;
+  }
+
+  private boolean messageBodyWriterCalled = false;
+
+  List<MessageBodyProviderFactory<MessageBodyWriter<?>>> getMessageBodyWriterFactoryList() {
+    if (messageBodyWriterCalled)
+      throw new IllegalStateException();
+
+    messageBodyWriterCalled = true;
+    return messageBodyWriterEntityProviderFactories;
+  }
+
+  private boolean exceptionMapperProviderCalled = false;
+
+  List<TypeProviderFactory<ExceptionMapper<?>>> getExceptionMapperEntityProviderFactoryList() {
+    if (exceptionMapperProviderCalled)
+      throw new IllegalStateException();
+
+    exceptionMapperProviderCalled = true;
+    return exceptionMapperEntityProviderFactories;
   }
 
   Providers getProviders() {
@@ -139,8 +181,8 @@ abstract class RequestContext {
   private static List<Object> makeCacheKey(final Annotation[] annotations, final Class<?> clazz, final Type type) {
     final Object[] key = new Object[annotations.length + 2];
     int i = 0;
-    for (; i < annotations.length; ++i)
-      key[i] = annotations[i];
+    while (i < annotations.length)
+      key[i] = annotations[i++];
 
     key[i++] = clazz;
     key[i] = type;
@@ -192,10 +234,49 @@ abstract class RequestContext {
     return findInjectableContextValue(clazz);
   }
 
-  final <T>T newInstance(final Class<T> clazz, final boolean isResource) throws IllegalAccessException, InstantiationException, IOException, InvocationTargetException {
-    final T instance = newInstanceSansFields(clazz, isResource);
+  final <T>T newResourceInstance(final Class<T> clazz) throws IllegalAccessException, InstantiationException, IOException, InvocationTargetException {
+    final T instance = newInstanceSansFields(clazz, true);
     if (instance != null)
       injectFields(instance);
+
+    return instance;
+  }
+
+  private static final Object[] NULL = {};
+  private static final Predicate<Field> injectableFieldPredicate = field -> {
+    final int modifiers = field.getModifiers();
+    return !Modifier.isStatic(modifiers) && !Modifier.isFinal(modifiers);
+  };
+  private Map<Class<?>,Object[]> contextInsances;
+
+  @SuppressWarnings("unchecked")
+  final <T>T getProviderInstance(final Class<T> clazz) throws IllegalAccessException, InstantiationException, IOException, InvocationTargetException {
+    if (contextInsances == null) {
+      contextInsances = new HashMap<>();
+    }
+    else {
+      final Object[] instanceUninjectedFields = contextInsances.get(clazz);
+      if (instanceUninjectedFields != null) {
+        if (instanceUninjectedFields == NULL)
+          return null;
+
+        final Object instance = instanceUninjectedFields[0];
+        final Field[] uninjectedFields = (Field[])instanceUninjectedFields[1];
+        if (uninjectedFields != null)
+          instanceUninjectedFields[1] = injectFields(instance, uninjectedFields);
+
+        return (T)instance;
+      }
+    }
+
+    final T instance = newInstanceSansFields(clazz, false);
+    if (instance != null) {
+      final Field[] uninjectedFields = injectFields(instance, Classes.getDeclaredFieldsDeep(instance.getClass(), injectableFieldPredicate));
+      contextInsances.put(clazz, new Object[] {instance, uninjectedFields});
+    }
+    else {
+      contextInsances.put(clazz, NULL);
+    }
 
     return instance;
   }
@@ -229,7 +310,30 @@ abstract class RequestContext {
     throw new InstantiationException("No suitable constructor found on provider " + clazz.getName());
   }
 
+  private Field[] injectFields(final Object instance, final Field[] fields) throws IllegalAccessException, IOException {
+    return injectFields(instance, fields, 0, 0);
+  }
+
+  private Field[] injectFields(final Object instance, final Field[] fields, final int index, final int depth) throws IllegalAccessException, IOException {
+    if (index == fields.length)
+      return depth == 0 ? null : new Field[depth];
+
+    final Field field = fields[index];
+    final Object value = findInjectableValue(field, field.getAnnotations(), field.getType(), field.getGenericType());
+    if (value == null) {
+      final Field[] uninjectedFields = injectFields(instance, fields, index + 1, depth + 1);
+      uninjectedFields[depth] = field;
+      return uninjectedFields;
+    }
+
+    field.setAccessible(true);
+    field.set(instance, value);
+    return injectFields(instance, fields, index + 1, depth);
+  }
+
   /**
+   * Duplicate version of {@link #injectFields(Object,Field[])} that does not return an array.
+   *
    * @param instance The instance of which its fields should be injected.
    * @throws IllegalAccessException If an illegal access error has occurred.
    * @throws IOException If an I/O error has occurred.

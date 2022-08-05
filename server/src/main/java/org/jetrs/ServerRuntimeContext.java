@@ -16,17 +16,26 @@
 
 package org.jetrs;
 
+import java.util.Collections;
 import java.util.List;
 
+import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Request;
+import javax.ws.rs.ext.ExceptionMapper;
+import javax.ws.rs.ext.MessageBodyReader;
+import javax.ws.rs.ext.MessageBodyWriter;
+import javax.ws.rs.ext.ParamConverterProvider;
+import javax.ws.rs.ext.ReaderInterceptor;
+import javax.ws.rs.ext.WriterInterceptor;
 
 class ServerRuntimeContext extends RuntimeContext {
-  private final ParamConverterProviders.FactoryList paramConverterEntityProviderFactories;
-  private final ContainerRequestFilterProviders.FactoryList preMatchContainerRequestFilterEntityProviderFactories;
-  private final ContainerRequestFilterProviders.FactoryList containerRequestFilterEntityProviderFactories;
-  private final ContainerResponseFilterProviders.FactoryList containerResponseFilterEntityProviderFactories;
+  private final List<ProviderFactory<ParamConverterProvider>> paramConverterEntityProviderFactories;
+  private final List<ProviderFactory<ContainerRequestFilter>> preMatchContainerRequestFilterEntityProviderFactories;
+  private final List<ProviderFactory<ContainerRequestFilter>> containerRequestFilterEntityProviderFactories;
+  private final List<ProviderFactory<ContainerResponseFilter>> containerResponseFilterEntityProviderFactories;
 
   private final List<ResourceManifest> resourceManifests;
   private final Application application;
@@ -34,30 +43,30 @@ class ServerRuntimeContext extends RuntimeContext {
 
   ServerRuntimeContext(final Application application) {
     this(
-      ReaderInterceptorProviders.FactoryList.EMPTY_LIST,
-      WriterInterceptorProviders.FactoryList.EMPTY_LIST,
-      MessageBodyReaderProviders.FactoryList.EMPTY_LIST,
-      MessageBodyWriterProviders.FactoryList.EMPTY_LIST,
-      ExceptionMapperProviders.FactoryList.EMPTY_LIST,
-      ParamConverterProviders.FactoryList.EMPTY_LIST,
-      ContainerRequestFilterProviders.FactoryList.EMPTY_LIST,
-      ContainerRequestFilterProviders.FactoryList.EMPTY_LIST,
-      ContainerResponseFilterProviders.FactoryList.EMPTY_LIST,
+      Collections.EMPTY_LIST,
+      Collections.EMPTY_LIST,
+      Collections.EMPTY_LIST,
+      Collections.EMPTY_LIST,
+      Collections.EMPTY_LIST,
+      Collections.EMPTY_LIST,
+      Collections.EMPTY_LIST,
+      Collections.EMPTY_LIST,
+      Collections.EMPTY_LIST,
       null,
       application
     );
   }
 
   ServerRuntimeContext(
-    final ReaderInterceptorProviders.FactoryList readerInterceptorEntityProviderFactories,
-    final WriterInterceptorProviders.FactoryList writerInterceptorEntityProviderFactories,
-    final MessageBodyReaderProviders.FactoryList messageBodyReaderEntityProviderFactories,
-    final MessageBodyWriterProviders.FactoryList messageBodyWriterEntityProviderFactories,
-    final ExceptionMapperProviders.FactoryList exceptionMapperEntityProviderFactories,
-    final ParamConverterProviders.FactoryList paramConverterEntityProviderFactories,
-    final ContainerRequestFilterProviders.FactoryList preMatchContainerRequestFilterEntityProviderFactories,
-    final ContainerRequestFilterProviders.FactoryList containerRequestFilterEntityProviderFactories,
-    final ContainerResponseFilterProviders.FactoryList containerResponseFilterEntityProviderFactories,
+    final List<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorEntityProviderFactories,
+    final List<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorEntityProviderFactories,
+    final List<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderEntityProviderFactories,
+    final List<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterEntityProviderFactories,
+    final List<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperEntityProviderFactories,
+    final List<ProviderFactory<ParamConverterProvider>> paramConverterEntityProviderFactories,
+    final List<ProviderFactory<ContainerRequestFilter>> preMatchContainerRequestFilterEntityProviderFactories,
+    final List<ProviderFactory<ContainerRequestFilter>> containerRequestFilterEntityProviderFactories,
+    final List<ProviderFactory<ContainerResponseFilter>> containerResponseFilterEntityProviderFactories,
     final List<ResourceManifest> resourceManifests,
     final Application application
   ) {

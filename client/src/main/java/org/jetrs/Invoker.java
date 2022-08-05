@@ -25,7 +25,6 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Cookie;
-import javax.ws.rs.core.HttpHeaders;
 
 abstract class Invoker<R> {
   final ClientImpl client;
@@ -78,7 +77,7 @@ abstract class Invoker<R> {
     client.assertNotClosed();
     final HttpHeadersImpl headers = requestHeaders != null ? requestHeaders.clone() : new HttpHeadersImpl();
     if (entity != null && entity.getMediaType() != null && headers.getMediaType() == null)
-      headers.getMirrorMap().putSingle(HttpHeaders.CONTENT_TYPE, entity.getMediaType());
+      headers.setMediaType(entity.getMediaType());
 
     return new InvocationImpl(client, runtimeContext, url, method, entity, headers, cookies, cacheControl, executorService, connectTimeout, readTimeout);
   }

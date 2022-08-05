@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
@@ -42,7 +43,7 @@ import org.jetrs.MessageBodyProvider;
 public class CharacterProvider extends MessageBodyProvider<Character> {
   @Override
   public boolean isReadable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
-    return type == Character.class && MediaType.TEXT_PLAIN_TYPE.isCompatible(mediaType);
+    return type == Character.class;
   }
 
   @Override
@@ -50,7 +51,14 @@ public class CharacterProvider extends MessageBodyProvider<Character> {
     if (getFirstOrDefault(httpHeaders, HttpHeaders.CONTENT_LENGTH, Long.MAX_VALUE, Long::parseLong) == 0)
       return null;
 
-    final String data = MessageBodyProvider.toString(entityStream, mediaType.getParameters().get(MediaType.CHARSET_PARAMETER));
+    String charset = null;
+    if (mediaType != null)
+      charset = mediaType.getParameters().get(MediaType.CHARSET_PARAMETER);
+
+    if (charset == null)
+      charset = StandardCharsets.ISO_8859_1.toString();
+
+    final String data = MessageBodyProvider.toString(entityStream, charset);
     if (data.length() > 1)
       throw new BadRequestException();
 

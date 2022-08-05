@@ -18,21 +18,28 @@ package org.jetrs;
 
 import static org.libj.lang.Assertions.*;
 
+import java.util.List;
+
 import javax.ws.rs.core.Request;
+import javax.ws.rs.ext.ExceptionMapper;
+import javax.ws.rs.ext.MessageBodyReader;
+import javax.ws.rs.ext.MessageBodyWriter;
+import javax.ws.rs.ext.ReaderInterceptor;
+import javax.ws.rs.ext.WriterInterceptor;
 
 abstract class RuntimeContext {
-  final ReaderInterceptorProviders.FactoryList readerInterceptorEntityProviderFactories;
-  final WriterInterceptorProviders.FactoryList writerInterceptorEntityProviderFactories;
-  final MessageBodyReaderProviders.FactoryList messageBodyReaderEntityProviderFactories;
-  final MessageBodyWriterProviders.FactoryList messageBodyWriterEntityProviderFactories;
-  final ExceptionMapperProviders.FactoryList exceptionMapperEntityProviderFactories;
+  final List<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorEntityProviderFactories;
+  final List<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorEntityProviderFactories;
+  final List<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderEntityProviderFactories;
+  final List<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterEntityProviderFactories;
+  final List<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperEntityProviderFactories;
 
   RuntimeContext(
-    final ReaderInterceptorProviders.FactoryList readerInterceptorEntityProviderFactories,
-    final WriterInterceptorProviders.FactoryList writerInterceptorEntityProviderFactories,
-    final MessageBodyReaderProviders.FactoryList messageBodyReaderEntityProviderFactories,
-    final MessageBodyWriterProviders.FactoryList messageBodyWriterEntityProviderFactories,
-    final ExceptionMapperProviders.FactoryList exceptionMapperEntityProviderFactories
+    final List<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorEntityProviderFactories,
+    final List<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorEntityProviderFactories,
+    final List<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderEntityProviderFactories,
+    final List<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterEntityProviderFactories,
+    final List<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperEntityProviderFactories
   ) {
     this.readerInterceptorEntityProviderFactories = assertNotNull(readerInterceptorEntityProviderFactories);
     this.writerInterceptorEntityProviderFactories = assertNotNull(writerInterceptorEntityProviderFactories);

@@ -22,6 +22,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -30,7 +31,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.core.EntityTag;
 import javax.ws.rs.core.GenericEntity;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.Link.Builder;
 import javax.ws.rs.core.MediaType;
@@ -42,7 +42,7 @@ import javax.ws.rs.ext.WriterInterceptor;
 import javax.ws.rs.ext.WriterInterceptorContext;
 
 class ContainerResponseContextImpl extends InterceptorContextImpl implements ContainerResponseContext, WriterInterceptorContext {
-  private final WriterInterceptorProviders.FactoryList writerInterceptorEntityProviderFactories;
+  private final List<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorEntityProviderFactories;
   private final ServerRequestContext requestContext;
   private Response.StatusType status;
 
@@ -170,7 +170,7 @@ class ContainerResponseContextImpl extends InterceptorContextImpl implements Con
 
     setAnnotations(annotations);
     if (mediaType != null)
-      getHeaders().putSingle(HttpHeaders.CONTENT_TYPE, mediaType);
+      headers.setMediaType(mediaType);
   }
 
   @Override
@@ -209,8 +209,7 @@ class ContainerResponseContextImpl extends InterceptorContextImpl implements Con
   @SuppressWarnings("unchecked")
   public void proceed() throws IOException {
     if (++interceptorIndex < writerInterceptorEntityProviderFactories.size()) {
-      final WriterInterceptor writerInterceptor = writerInterceptorEntityProviderFactories.getInstance(interceptorIndex, requestContext);
-      writerInterceptor.aroundWriteTo(this);
+      writerInterceptorEntityProviderFactories.get(interceptorIndex).getSingletonOrFromRequestContext(requestContext).aroundWriteTo(this);
     }
     else if (interceptorIndex == writerInterceptorEntityProviderFactories.size()) {
       MessageBodyProvider.writeTo(messageBodyWriter, getEntity(), getEntityClass(), getEntityType(), getEntityAnnotations(), getMediaType(), getHeaders(), getEntityStream());

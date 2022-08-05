@@ -37,9 +37,11 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.jetrs.provider.ext.BytesProvider;
+import org.jetrs.provider.ext.CharacterProvider;
 import org.jetrs.provider.ext.NumberProvider;
 import org.jetrs.provider.ext.StringProvider;
 import org.jetrs.server.app.ApplicationServer;
+import org.jetrs.server.app.provider.MyCharacterProvider;
 import org.junit.AfterClass;
 import org.junit.Test;
 import org.libj.io.Streams;
@@ -53,6 +55,7 @@ public class ApplicationServerTest {
 
   static {
     client = ClientBuilder.newClient();
+    client.register(new CharacterProvider());
     client.register(new NumberProvider());
     client.register(new BytesProvider());
     client.register(new StringProvider());
@@ -361,17 +364,28 @@ public class ApplicationServerTest {
 
   @Test
   public void testMatchPost1String() throws Exception {
-    Response response = client.target(serviceUrl + "/root1/1")
-      .request()
-      .post(Entity.text("data"));
+//    Response response = client.target(serviceUrl + "/root1/1")
+//      .request()
+//      .post(Entity.text("data"));
 
-    assertResponse(405, response, null);
-    response = client.target(serviceUrl + "/root1/1/eyj1ijoicgfub2fpiiwiysi6imnrzmu5")
+//    assertResponse(405, response, null);
+    Response response = client.target(serviceUrl + "/root1/1/eyj1ijoicgfub2fpiiwiysi6imnrzmu5")
       .request()
       .post(Entity.text("data"));
 
     final String data = assertResponse(200, response, String.class);
     assertEquals("POST", data);
+  }
+
+  @Test
+  public void testMatchPost0() throws Exception {
+    final Response response = client.target(serviceUrl + "/root1/0/Y")
+      .request()
+      .post(Entity.text('Z'));
+
+    final Character data = assertResponse(200, response, Character.class);
+    assertEquals('Z', (char)data);
+    assertEquals(1, MyCharacterProvider.instanceCount);
   }
 
   @Test

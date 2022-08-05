@@ -18,6 +18,7 @@ package org.jetrs;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.util.List;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.ContextResolver;
@@ -27,46 +28,37 @@ import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Providers;
 
 class ProvidersImpl implements Providers {
-  private final ExceptionMapperProviders.ContextList exceptionMapperContexts;
-  private final MessageBodyReaderProviders.ContextList messageBodyReaderContexts;
-  private final MessageBodyWriterProviders.ContextList messageBodyWriterContexts;
+  private final RequestContext requestContext;
 
-  ProvidersImpl(final ExceptionMapperProviders.ContextList exceptionMapperContexts, final MessageBodyReaderProviders.ContextList messageBodyReaderContexts, final MessageBodyWriterProviders.ContextList messageBodyWriterContexts) {
-    this.exceptionMapperContexts = exceptionMapperContexts;
-    this.messageBodyReaderContexts = messageBodyReaderContexts;
-    this.messageBodyWriterContexts = messageBodyWriterContexts;
+  ProvidersImpl(final RequestContext requestContext) {
+    this.requestContext = requestContext;
   }
 
-  @SuppressWarnings({"rawtypes", "unchecked"})
-  private <T,M>M getProvider(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final ContextList<? extends MessageBodyProviderFactory<?>,?> providers) {
-    for (int i = 0, len = providers.size(); i < len; ++i) {
-      final MessageBodyProviderFactory factory = providers.getFactory(i);
-      final Object provider = providers.getInstance(i);
-      if (factory.getCompatibleMediaType(provider, type, genericType, annotations, mediaType) != null)
-        return (M)provider;
-    }
+  @SuppressWarnings("unchecked")
+  private <T,M>M getProvider(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final List<? extends MessageBodyProviderFactory<?>> factories) {
+    for (final MessageBodyProviderFactory<?> factory : factories)
+      if (factory.getCompatibleMediaType(requestContext, type, genericType, annotations, mediaType) != null)
+        return (M)factory.getSingletonOrFromRequestContext(requestContext);
 
     return null;
   }
 
   @Override
   public <T>MessageBodyReader<T> getMessageBodyReader(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
-    return getProvider(type, genericType, annotations, mediaType, messageBodyReaderContexts);
+    return getProvider(type, genericType, annotations, mediaType, requestContext.getMessageBodyReaderFactoryList());
   }
 
   @Override
   public <T>MessageBodyWriter<T> getMessageBodyWriter(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
-    return getProvider(type, genericType, annotations, mediaType, messageBodyWriterContexts);
+    return getProvider(type, genericType, annotations, mediaType, requestContext.getMessageBodyWriterFactoryList());
   }
 
   @Override
   @SuppressWarnings("unchecked")
   public <T extends Throwable>ExceptionMapper<T> getExceptionMapper(final Class<T> type) {
-    for (int i = 0, len = exceptionMapperContexts.size(); i < len; ++i) {
-      final ExceptionMapperProviders.Factory factory = exceptionMapperContexts.getFactory(i);
+    for (final TypeProviderFactory<ExceptionMapper<?>> factory : requestContext.getExceptionMapperEntityProviderFactoryList())
       if (factory.getType().isAssignableFrom(type))
-        return (ExceptionMapper<T>)exceptionMapperContexts.getInstance(i);
-    }
+        return (ExceptionMapper<T>)factory.getSingletonOrFromRequestContext(requestContext);
 
     return null;
   }

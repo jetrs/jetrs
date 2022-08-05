@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
@@ -32,6 +34,11 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.ext.ExceptionMapper;
+import javax.ws.rs.ext.MessageBodyReader;
+import javax.ws.rs.ext.MessageBodyWriter;
+import javax.ws.rs.ext.ReaderInterceptor;
+import javax.ws.rs.ext.WriterInterceptor;
 
 import org.libj.lang.PackageNotFoundException;
 
@@ -61,11 +68,11 @@ class ClientImpl implements Client, ConfigurableImpl<Client> {
       return runtimeContext;
 
     try {
-      final ReaderInterceptorProviders.FactoryList readerInterceptorEntityProviderFactories = new ReaderInterceptorProviders.FactoryList();
-      final WriterInterceptorProviders.FactoryList writerInterceptorEntityProviderFactories = new WriterInterceptorProviders.FactoryList();
-      final MessageBodyReaderProviders.FactoryList messageBodyReaderEntityProviderFactories = new MessageBodyReaderProviders.FactoryList();
-      final MessageBodyWriterProviders.FactoryList messageBodyWriterEntityProviderFactories = new MessageBodyWriterProviders.FactoryList();
-      final ExceptionMapperProviders.FactoryList exceptionMapperEntityProviderFactories = new ExceptionMapperProviders.FactoryList();
+      final List<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorEntityProviderFactories = new ArrayList<>();
+      final List<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorEntityProviderFactories = new ArrayList<>();
+      final List<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderEntityProviderFactories = new ArrayList<>();
+      final List<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterEntityProviderFactories = new ArrayList<>();
+      final List<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperEntityProviderFactories = new ArrayList<>();
 
       final Bootstrap<?> bootstrap = new Bootstrap<>(
         readerInterceptorEntityProviderFactories,
