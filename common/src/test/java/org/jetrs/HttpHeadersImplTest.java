@@ -177,7 +177,7 @@ public class HttpHeadersImplTest extends RuntimeDelegateTest {
     if (i < 0)
       return 1;
 
-    for (int x = i - 1; x > 0; --x) {
+    for (int x = i - 1; x > 0; --x) { // [N]
       final char ch = s.charAt(x);
       if (ch == ';')
         break;
@@ -187,7 +187,7 @@ public class HttpHeadersImplTest extends RuntimeDelegateTest {
     }
 
     int j = i += 2;
-    for (char ch; j < s.length(); ++j) {
+    for (char ch; j < s.length(); ++j) { // [N]
       ch = s.charAt(j);
       if ((ch < '0' || '9' < ch) && ch != '.')
         break;
@@ -212,7 +212,7 @@ public class HttpHeadersImplTest extends RuntimeDelegateTest {
 
   private static void testRemove(final HttpHeadersImpl strings, final List<String> expectedStrings, final List<Object> expectedObjects, final String headerName, final String headerString, final HeaderDelegate<?> headerDelegate) {
     final HttpHeadersMap<Object,String> objects = strings.getMirrorMap();
-    for (int i = 0; i < 2; ++i) {
+    for (int i = 0; i < 2; ++i) { // [N]
       final Object headerObject = headerDelegate.fromString(headerString);
       expectedStrings.remove(headerString);
       expectedStrings.sort(qualityComparator);
@@ -232,7 +232,7 @@ public class HttpHeadersImplTest extends RuntimeDelegateTest {
 
   private static void testAdd(final HttpHeadersImpl strings, final List<String> expectedStrings, final List<Object> expectedObjects, final String headerName, final String headerString, final HeaderDelegate<?> headerDelegate) {
     final HttpHeadersMap<Object,String> objects = strings.getMirrorMap();
-    for (int i = 0; i < 2; ++i) {
+    for (int i = 0; i < 2; ++i) { // [N]
       final Object headerObject = headerDelegate.fromString(headerString);
       expectedStrings.add(headerString);
       expectedStrings.sort(qualityComparator);
@@ -256,11 +256,11 @@ public class HttpHeadersImplTest extends RuntimeDelegateTest {
     final HttpHeadersImpl strings = new HttpHeadersImpl();
     final List<String> expectedStrings = new ArrayList<>();
     final List<Object> expectedObjects = new ArrayList<>();
-    for (int i = 0; i < args.length; ++i)
+    for (int i = 0; i < args.length; ++i) // [A]
       testAdd(strings, expectedStrings, expectedObjects, headerName, args[i], headerDelegate);
 
     ArrayUtil.shuffle(args);
-    for (int i = 0; i < args.length; ++i)
+    for (int i = 0; i < args.length; ++i) // [A]
       testRemove(strings, expectedStrings, expectedObjects, headerName, args[i], headerDelegate);
   }
 

@@ -58,7 +58,7 @@ public class UriTemplateTest {
     final UriTemplate uriTemplate = new UriTemplate("", classPath == null ? null : new TestPath(classPath), methodPath == null ? null : new TestPath(methodPath));
     final String[] pathParamNames = uriTemplate.getPathParamNames();
     assertEquals(noParams, pathParamNames.length);
-    for (final String pathParamName : pathParamNames)
+    for (final String pathParamName : pathParamNames) // [A]
       assertNotNull(pathParamName);
 
     return uriTemplate;

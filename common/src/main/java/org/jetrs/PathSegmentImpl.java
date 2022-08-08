@@ -16,6 +16,8 @@
 
 package org.jetrs;
 
+import java.util.List;
+
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.PathSegment;
@@ -105,9 +107,11 @@ class PathSegmentImpl implements PathSegment {
       builder.append(path);
 
     if (matrixParameters != null)
-      for (final String name : matrixParameters.keySet())
-        for (final String value : matrixParameters.get(name))
-          builder.append(';').append(name).append('=').append(value);
+      for (final String name : matrixParameters.keySet()) { // [S]
+        final List<String> values = matrixParameters.get(name);
+        for (int i = 0, len = values.size(); i < len; ++i) // [L]
+          builder.append(';').append(name).append('=').append(values.get(i));
+      }
 
     return builder.toString();
   }

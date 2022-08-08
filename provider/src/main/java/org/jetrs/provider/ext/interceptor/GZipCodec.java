@@ -14,7 +14,7 @@
  * program. If not, see <http://opensource.org/licenses/MIT/>.
  */
 
-package org.jetrs;
+package org.jetrs.provider.ext.interceptor;
 
 import java.io.IOException;
 import java.io.InputStream;

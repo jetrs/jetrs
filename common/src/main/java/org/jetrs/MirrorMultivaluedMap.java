@@ -256,7 +256,7 @@ class MirrorMultivaluedMap<K,V,R> extends MirrorMap<K,List<V>,List<R>> implement
     if (!keySet().equals(otherMap.keySet()))
       return false;
 
-    for (final Map.Entry<K,List<V>> entry : entrySet()) {
+    for (final Map.Entry<K,List<V>> entry : entrySet()) { // [S]
       final List<V> otherValue = otherMap.get(entry.getKey());
       if (otherValue.size() != entry.getValue().size() || !otherValue.containsAll(entry.getValue()))
         return false;

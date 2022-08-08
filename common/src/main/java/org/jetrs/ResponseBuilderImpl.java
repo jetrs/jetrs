@@ -105,7 +105,7 @@ class ResponseBuilderImpl extends Response.ResponseBuilder implements Cloneable 
 
   @Override
   public Response.ResponseBuilder allow(final Set<String> methods) {
-    for (final String method : methods)
+    for (final String method : methods) // [S]
       headers.add(HttpHeaders.ALLOW, method);
 
     return this;
@@ -138,10 +138,14 @@ class ResponseBuilderImpl extends Response.ResponseBuilder implements Cloneable 
   @Override
   public Response.ResponseBuilder replaceAll(final MultivaluedMap<String,Object> headers) {
     this.headers.clear();
-    for (final Map.Entry<String,List<Object>> entry : headers.entrySet())
-      for (final Object value : entry.getValue())
+    for (final Map.Entry<String,List<Object>> entry : headers.entrySet()) { // [S]
+      final List<Object> values = entry.getValue();
+      for (int i = 0, len = values.size(); i < len; ++i) { // [L]
+        final Object value = values.get(i);
         if (value != null)
           header(entry.getKey(), value);
+      }
+    }
 
     return this;
   }
@@ -187,7 +191,7 @@ class ResponseBuilderImpl extends Response.ResponseBuilder implements Cloneable 
     if (this.cookies == null)
       this.cookies = new HashMap<>();
 
-    for (final NewCookie cookie : cookies)
+    for (final NewCookie cookie : cookies) // [A]
       this.cookies.put(cookie.getName(), cookie);
 
     return this;

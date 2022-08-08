@@ -16,6 +16,7 @@
 
 package org.jetrs;
 
+import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.core.CacheControl;
@@ -48,8 +49,9 @@ class StrictCacheControl extends CacheControl {
       @Override
       void toString(final CacheControl cacheControl, final StringBuilder builder) {
         if (cacheControl.getPrivateFields().size() > 0) {
-          for (String field : cacheControl.getPrivateFields()) {
-            field = fieldToString(field);
+          final List<String> fields = cacheControl.getPrivateFields();
+          for (int i = 0, len = fields.size(); i < len; ++i) { // [L]
+            final String field = fieldToString(fields.get(i));
             if (field != null)
               builder.append("private=").append(field).append(',');
           }
@@ -77,8 +79,9 @@ class StrictCacheControl extends CacheControl {
       @Override
       void toString(final CacheControl cacheControl, final StringBuilder builder) {
         if (cacheControl.getNoCacheFields().size() > 0) {
-          for (String field : cacheControl.getNoCacheFields()) {
-            field = fieldToString(field);
+          final List<String> fields = cacheControl.getNoCacheFields();
+          for (int i = 0, len = fields.size(); i < len; ++i) { // [L]
+            final String field = fieldToString(fields.get(i));
             if (field != null)
               builder.append("no-cache=").append(field).append(',');
           }
@@ -199,7 +202,7 @@ class StrictCacheControl extends CacheControl {
 
       @Override
       void toString(final CacheControl cacheControl, final StringBuilder builder) {
-        for (final Map.Entry<String,String> entry : cacheControl.getCacheExtension().entrySet()) {
+        for (final Map.Entry<String,String> entry : cacheControl.getCacheExtension().entrySet()) { // [S]
           builder.append(entry.getKey());
           if (entry.getValue() != null)
             builder.append('=').append(entry.getValue());
@@ -225,12 +228,10 @@ class StrictCacheControl extends CacheControl {
     static boolean parseDirective(final StrictCacheControl cacheControl, final String directiveString) {
       final Directive[] directives = values();
       final int len = directives.length - 1;
-      for (int i = 0; i < len; ++i) {
-        final Directive directive = directives[i];
-        for (final String name : directive.names)
+      for (final Directive directive : directives) // [A]
+        for (final String name : directive.names) // [A]
           if (Strings.startsWithIgnoreCase(directiveString, name) && (name.length() == directiveString.length() || directiveString.charAt(name.length()) == '='))
             return directive.parse(cacheControl, directiveString);
-      }
 
       return directives[len].parse(cacheControl, directiveString);
     }
@@ -238,12 +239,12 @@ class StrictCacheControl extends CacheControl {
 
   static StrictCacheControl parse(final String value) {
     final String[] directives = value.split(",");
-    for (int i = 0; i < directives.length; ++i)
+    for (int i = 0; i < directives.length; ++i) // [A]
       directives[i] = directives[i].trim();
 
     boolean valid = false;
     final StrictCacheControl cacheControl = new StrictCacheControl();
-    for (int i = 0; i < directives.length; ++i)
+    for (int i = 0; i < directives.length; ++i) // [A]
       valid |= Directive.parseDirective(cacheControl, directives[i]);
 
     if (!valid)

@@ -16,10 +16,25 @@
 
 package org.jetrs;
 
+import java.util.Collections;
+
 import javax.ws.rs.core.Application;
 
 public class ServerTestRuntimeDelegate extends RuntimeDelegateImpl {
   public ServerTestRuntimeDelegate() {
-    super(new ServerRuntimeContext(new Application()));
+    super(new ServerRuntimeContext(
+      Collections.EMPTY_LIST,
+      Collections.EMPTY_LIST,
+      Collections.EMPTY_LIST,
+      Collections.EMPTY_LIST,
+      Collections.EMPTY_LIST,
+      Collections.EMPTY_LIST,
+      Collections.EMPTY_LIST,
+      Collections.EMPTY_LIST,
+      Collections.EMPTY_LIST,
+      null, null,
+      new Application(),
+      null
+    ));
   }
 }

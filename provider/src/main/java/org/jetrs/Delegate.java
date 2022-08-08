@@ -32,6 +32,7 @@ import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.RuntimeDelegate;
 
+import org.jetrs.StrictCacheControl.Directive;
 import org.libj.lang.Numbers;
 import org.libj.lang.Strings;
 import org.libj.util.Locales;
@@ -124,14 +125,15 @@ abstract class Delegate<T> implements RuntimeDelegate.HeaderDelegate<T> {
       final StringBuilder builder = new StringBuilder();
       if (value instanceof StrictCacheControl) {
         final StrictCacheControl cacheControl = (StrictCacheControl)value;
-        for (final StrictCacheControl.Directive directive : cacheControl.order)
-          directive.toString(cacheControl, builder);
+        final DirectiveList<Directive> directives = cacheControl.order;
+        for (int i = 0, len = directives.size(); i < len; ++i) // [L]
+          directives.get(i).toString(cacheControl, builder);
 
         StrictCacheControl.Directive.EXTENSION.toString(cacheControl, builder);
         builder.setLength(builder.length() - 1);
       }
       else {
-        for (final StrictCacheControl.Directive directive : StrictCacheControl.Directive.values())
+        for (final StrictCacheControl.Directive directive : StrictCacheControl.Directive.values()) // [A]
           directive.toString(value, builder);
       }
 
@@ -183,7 +185,7 @@ abstract class Delegate<T> implements RuntimeDelegate.HeaderDelegate<T> {
       Date expires = null;
       boolean secure = false;
       boolean httpOnly = false;
-      for (int i = 1; i < parts.length; ++i) {
+      for (int i = 1; i < parts.length; ++i) { // [A]
         final String part = parts[i].trim();
         if (part.startsWith("Path")) {
           if ((index = part.indexOf('=')) != -1) {
@@ -244,11 +246,12 @@ abstract class Delegate<T> implements RuntimeDelegate.HeaderDelegate<T> {
       builder.append(value.getName()).append('=').append(value.getValue());
       if (value instanceof StrictNewCookie) {
         final StrictNewCookie cacheControl = (StrictNewCookie)value;
-        for (final StrictNewCookie.Directive directive : cacheControl.order)
-          directive.toString(cacheControl, builder);
+        final DirectiveList<StrictNewCookie.Directive> directives = cacheControl.order;
+        for (int i = 0, len = directives.size(); i < len; ++i) // [L]
+          directives.get(i).toString(cacheControl, builder);
       }
       else {
-        for (final StrictNewCookie.Directive directive : StrictNewCookie.Directive.values())
+        for (final StrictNewCookie.Directive directive : StrictNewCookie.Directive.values()) // [A]
           directive.toString(value, builder);
       }
 
@@ -431,7 +434,7 @@ abstract class Delegate<T> implements RuntimeDelegate.HeaderDelegate<T> {
 
       final StringBuilder builder = new StringBuilder();
       builder.append(value[0]);
-      for (int i = 1; i < value.length; ++i)
+      for (int i = 1; i < value.length; ++i) // [A]
         builder.append(',').append(value[i]);
 
       return builder.toString();
@@ -483,9 +486,11 @@ abstract class Delegate<T> implements RuntimeDelegate.HeaderDelegate<T> {
     if (type == null)
       return (Delegate<T>)DEFAULT;
 
-    for (final Delegate<?> delegate : delegates)
+    for (int i = 0, len = delegates.size(); i < len; ++i) { // [L]
+      final Delegate<?> delegate = delegates.get(i);
       if (delegate.getType().isAssignableFrom(type))
         return (Delegate<T>)delegate;
+    }
 
     return (Delegate<T>)DEFAULT;
   }
@@ -513,7 +518,7 @@ abstract class Delegate<T> implements RuntimeDelegate.HeaderDelegate<T> {
   private Delegate(final boolean add, final String ... headerNames) {
     if (add) {
       delegates.add(this);
-      for (final String headerName : headerNames)
+      for (final String headerName : headerNames) // [A]
         headerNameToDelegate.put(headerName.toLowerCase(), this);
     }
   }

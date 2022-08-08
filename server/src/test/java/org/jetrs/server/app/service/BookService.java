@@ -40,7 +40,7 @@ import org.jetrs.server.ApplicationServerTest;
 public class BookService {
   private static String toString(final Object ... args) {
     final StringBuilder builder = new StringBuilder();
-    for (final Object arg : args) {
+    for (final Object arg : args) { // [A]
       if (arg instanceof Collection) {
         builder.append(toString(((Collection<?>)arg).toArray()));
       }
@@ -87,7 +87,7 @@ public class BookService {
     assertEquals(aSeg1[1], aSeg2.get(1));
     assertEquals("a" + a1[0], aSeg1[0].getPath());
     assertEquals(a1[1] + "a" + b1[0] + "b", aSeg1[1].getPath());
-    for (int i = 0; i < aSeg1.length; ++i)
+    for (int i = 0; i < aSeg1.length; ++i) // [A]
       assertEquals(aSeg1[i], aSeg2.get(i));
 
     assertEquals(2, b1.length);
@@ -100,7 +100,7 @@ public class BookService {
     assertEquals(bSeg1[0], bSeg2.get(0));
     assertEquals(bSeg1[1], bSeg2.get(1));
     assertEquals(a1[1] + "a" + b1[0] + "b", bSeg1[0].getPath());
-    for (int i = 0; i < bSeg1.length; ++i)
+    for (int i = 0; i < bSeg1.length; ++i) // [A]
       assertEquals(bSeg1[i], bSeg2.get(i));
 
 

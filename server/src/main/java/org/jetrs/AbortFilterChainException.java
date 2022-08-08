@@ -26,6 +26,6 @@ public class AbortFilterChainException extends RuntimeException {
   }
 
   public Response getResponse() {
-    return this.response;
+    return response;
   }
 }

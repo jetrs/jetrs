@@ -58,7 +58,7 @@ final class ParameterUtil {
 
   private static Method findParseMethod(final Class<?> type) {
     final String[] methodNames = type.isEnum() ? forEnums : forOther;
-    for (final String methodName : methodNames) {
+    for (final String methodName : methodNames) { // [A]
       final Method method = Classes.getMethod(type, methodName, String.class);
       if (method != null)
         return method;
@@ -68,10 +68,10 @@ final class ParameterUtil {
   }
 
   private static <T>ParamConverter<T> lookupParamConverter(final List<ProviderFactory<ParamConverterProvider>> paramConverterProviderFactories, final RequestContext requestContext, final Class<T> rawType, final Type genericType, final Annotation[] annotations) {
-    for (final ProviderFactory<ParamConverterProvider> factory : paramConverterProviderFactories) {
+    for (int i = 0, len = paramConverterProviderFactories.size(); i < len; ++i) { // [L]
+      final ProviderFactory<ParamConverterProvider> factory = paramConverterProviderFactories.get(i);
       // FIXME: Is there a way to detect whether the ParamConverterProvider can convert the parameter without instantiating the ParamConverterProvider?
-      final ParamConverterProvider provider = factory.getSingletonOrFromRequestContext(requestContext);
-      final ParamConverter<T> paramConverter = provider.getConverter(rawType, genericType, annotations);
+      final ParamConverter<T> paramConverter = factory.getSingletonOrFromRequestContext(requestContext).getConverter(rawType, genericType, annotations);
       if (paramConverter != null)
         return paramConverter;
     }
@@ -128,14 +128,14 @@ final class ParameterUtil {
 
         if (container instanceof Collection) {
           final Collection<Object> c = (Collection<Object>)container;
-          for (final String value : values)
-            c.add(new BigInteger(value));
+          for (int i = 0, len = values.size(); i < len; ++i) // [L]
+            c.add(new BigInteger(values.get(i)));
 
           return c;
         }
 
         final Object[] a = (Object[])container;
-        for (int i = 0; i < a.length; ++i)
+        for (int i = 0; i < a.length; ++i) // [A]
           a[i] = new BigInteger(values.get(i));
 
         return a;
@@ -147,14 +147,14 @@ final class ParameterUtil {
 
         if (container instanceof Collection) {
           final Collection<Object> c = (Collection<Object>)container;
-          for (final String value : values)
-            c.add(new BigDecimal(value));
+          for (int i = 0, len = values.size(); i < len; ++i) // [L]
+            c.add(new BigDecimal(values.get(i)));
 
           return c;
         }
 
         final Object[] a = (Object[])container;
-        for (int i = 0; i < a.length; ++i)
+        for (int i = 0; i < a.length; ++i) // [A]
           a[i] = new BigDecimal(values.get(i));
 
         return a;
@@ -166,22 +166,22 @@ final class ParameterUtil {
 
         if (container instanceof Collection) {
           final Collection<Object> c = (Collection<Object>)container;
-          for (final String value : values)
-            c.add(Long.valueOf(value));
+          for (int i = 0, len = values.size(); i < len; ++i) // [L]
+            c.add(Long.valueOf(values.get(i)));
 
           return c;
         }
 
         if (container instanceof long[]) {
           final long[] a = (long[])container;
-          for (int i = 0; i < a.length; ++i)
+          for (int i = 0; i < a.length; ++i) // [A]
             a[i] = Long.parseLong(values.get(i));
 
           return a;
         }
 
         final Object[] a = (Object[])container;
-        for (int i = 0; i < a.length; ++i)
+        for (int i = 0; i < a.length; ++i) // [A]
           a[i] = Long.valueOf(values.get(i));
 
         return a;
@@ -193,22 +193,22 @@ final class ParameterUtil {
 
         if (container instanceof Collection) {
           final Collection<Object> c = (Collection<Object>)container;
-          for (final String value : values)
-            c.add(Integer.valueOf(value));
+          for (int i = 0, len = values.size(); i < len; ++i) // [L]
+            c.add(Integer.valueOf(values.get(i)));
 
           return c;
         }
 
         if (container instanceof int[]) {
           final int[] a = (int[])container;
-          for (int i = 0; i < a.length; ++i)
+          for (int i = 0; i < a.length; ++i) // [A]
             a[i] = Integer.parseInt(values.get(i));
 
           return a;
         }
 
         final Object[] a = (Object[])container;
-        for (int i = 0; i < a.length; ++i)
+        for (int i = 0; i < a.length; ++i) // [A]
           a[i] = Integer.valueOf(values.get(i));
 
         return a;
@@ -220,22 +220,22 @@ final class ParameterUtil {
 
         if (container instanceof Collection) {
           final Collection<Object> c = (Collection<Object>)container;
-          for (final String value : values)
-            c.add(Double.valueOf(value));
+          for (int i = 0, len = values.size(); i < len; ++i) // [L]
+            c.add(Double.valueOf(values.get(i)));
 
           return c;
         }
 
         if (container instanceof double[]) {
           final double[] a = (double[])container;
-          for (int i = 0; i < a.length; ++i)
+          for (int i = 0; i < a.length; ++i) // [A]
             a[i] = Double.parseDouble(values.get(i));
 
           return a;
         }
 
         final Object[] a = (Object[])container;
-        for (int i = 0; i < a.length; ++i)
+        for (int i = 0; i < a.length; ++i) // [A]
           a[i] = Double.valueOf(values.get(i));
 
         return a;
@@ -247,22 +247,22 @@ final class ParameterUtil {
 
         if (container instanceof Collection) {
           final Collection<Object> c = (Collection<Object>)container;
-          for (final String value : values)
-            c.add(Float.valueOf(value));
+          for (int i = 0, len = values.size(); i < len; ++i) // [L]
+            c.add(Float.valueOf(values.get(i)));
 
           return c;
         }
 
         if (container instanceof float[]) {
           final float[] a = (float[])container;
-          for (int i = 0; i < a.length; ++i)
+          for (int i = 0; i < a.length; ++i) // [A]
             a[i] = Float.parseFloat(values.get(i));
 
           return a;
         }
 
         final Object[] a = (Object[])container;
-        for (int i = 0; i < a.length; ++i)
+        for (int i = 0; i < a.length; ++i) // [A]
           a[i] = Float.valueOf(values.get(i));
 
         return a;
@@ -274,22 +274,22 @@ final class ParameterUtil {
 
         if (container instanceof Collection) {
           final Collection<Object> c = (Collection<Object>)container;
-          for (final String value : values)
-            c.add(Short.valueOf(value));
+          for (int i = 0, len = values.size(); i < len; ++i) // [L]
+            c.add(Short.valueOf(values.get(i)));
 
           return c;
         }
 
         if (container instanceof short[]) {
           final short[] a = (short[])container;
-          for (int i = 0; i < a.length; ++i)
+          for (int i = 0; i < a.length; ++i) // [A]
             a[i] = Short.parseShort(values.get(i));
 
           return a;
         }
 
         final Object[] a = (Object[])container;
-        for (int i = 0; i < a.length; ++i)
+        for (int i = 0; i < a.length; ++i) // [A]
           a[i] = Short.valueOf(values.get(i));
 
         return a;
@@ -301,22 +301,22 @@ final class ParameterUtil {
 
         if (container instanceof Collection) {
           final Collection<Object> c = (Collection<Object>)container;
-          for (final String value : values)
-            c.add(parseChar(value));
+          for (int i = 0, len = values.size(); i < len; ++i) // [L]
+            c.add(parseChar(values.get(i)));
 
           return c;
         }
 
         if (container instanceof char[]) {
           final char[] a = (char[])container;
-          for (int i = 0; i < a.length; ++i)
+          for (int i = 0; i < a.length; ++i) // [A]
             a[i] = parseChar(values.get(i));
 
           return a;
         }
 
         final Object[] a = (Object[])container;
-        for (int i = 0; i < a.length; ++i)
+        for (int i = 0; i < a.length; ++i) // [A]
           a[i] = parseChar(values.get(i));
 
         return a;
@@ -328,22 +328,22 @@ final class ParameterUtil {
 
         if (container instanceof Collection) {
           final Collection<Object> c = (Collection<Object>)container;
-          for (final String value : values)
-            c.add(Byte.valueOf(value));
+          for (int i = 0, len = values.size(); i < len; ++i) // [L]
+            c.add(Byte.valueOf(values.get(i)));
 
           return c;
         }
 
         if (container instanceof byte[]) {
           final byte[] a = (byte[])container;
-          for (int i = 0; i < a.length; ++i)
+          for (int i = 0; i < a.length; ++i) // [A]
             a[i] = Byte.parseByte(values.get(i));
 
           return a;
         }
 
         final Object[] a = (Object[])container;
-        for (int i = 0; i < a.length; ++i)
+        for (int i = 0; i < a.length; ++i) // [A]
           a[i] = Byte.valueOf(values.get(i));
 
         return a;
@@ -355,22 +355,22 @@ final class ParameterUtil {
 
         if (container instanceof Collection) {
           final Collection<Object> c = (Collection<Object>)container;
-          for (final String value : values)
-            c.add(Boolean.valueOf(value));
+          for (int i = 0, len = values.size(); i < len; ++i) // [L]
+            c.add(Boolean.valueOf(values.get(i)));
 
           return c;
         }
 
         if (container instanceof boolean[]) {
           final boolean[] a = (boolean[])container;
-          for (int i = 0; i < a.length; ++i)
+          for (int i = 0; i < a.length; ++i) // [A]
             a[i] = Boolean.parseBoolean(values.get(i));
 
           return a;
         }
 
         final Object[] a = (Object[])container;
-        for (int i = 0; i < a.length; ++i)
+        for (int i = 0; i < a.length; ++i) // [A]
           a[i] = Boolean.valueOf(values.get(i));
 
         return a;

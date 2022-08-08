@@ -37,7 +37,7 @@ public class UriInfoImplTest {
       return;
 
     final String[] params = queryString.split("&");
-    for (final String param : params) {
+    for (final String param : params) { // [A]
       if (param.indexOf('=') >= 0) {
         final String[] nv = param.split("=", 2);
         try {

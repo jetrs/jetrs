@@ -364,7 +364,7 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
     assertNotNull(method, "method is null");
 
     Method theMethod = null;
-    for (final Method m : resource.getMethods()) {
+    for (final Method m : resource.getMethods()) { // [A]
       if (m.getName().equals(method) && m.isAnnotationPresent(Path.class)) {
         if (theMethod != null)
           throw new IllegalArgumentException("Multiple public @Path annotated methods with name \"" + method + "\"");
@@ -467,7 +467,7 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
 
     if (values.length != 0) {
       final StringBuilder builder = new StringBuilder();
-      for (final Object value : values) {
+      for (final Object value : values) { // [A]
         assertNotNull(value, "value is null");
         builder.append(';').append(UriEncoder.MATRIX.encode(name)).append("=").append(UriEncoder.MATRIX.encode(value.toString()));
       }
@@ -509,7 +509,7 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
 
       final MultivaluedHashMap<String,String> map = new MultivaluedHashMap<>();
       final String[] params = matrixParams.split(";");
-      for (final String param : params) {
+      for (final String param : params) { // [A]
         final int index = param.indexOf('=');
         if (index >= 0)
           map.add(param.substring(0, index), index + 1 < param.length() ? param.substring(index + 1) : "");
@@ -518,12 +518,13 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
       }
 
       map.remove(name);
-      for (final String theName : map.keySet()) {
-        final List<String> vals = map.get(theName);
-        for (final Object val : vals) {
-          path += ";" + theName;
-          if (val != null)
-            path += "=" + val;
+      for (final String paramName : map.keySet()) { // [S]
+        final List<String> paramValues = map.get(paramName);
+        for (int i = 0, len = paramValues.size(); i < len; ++i) { // [L]
+          final Object paramValue = paramValues.get(i);
+          path += ";" + paramName;
+          if (paramValue != null)
+            path += "=" + paramValue;
         }
       }
     }
@@ -536,7 +537,7 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
       final Matcher matcher = UriEncoder.PARAM_REPLACEMENT.matcher(path);
       final StringBuilder builder = new StringBuilder();
       int from = 0;
-      for (int i = 0; matcher.find(); ++i, from = matcher.end()) {
+      for (int i = 0; matcher.find(); ++i, from = matcher.end()) { // [X]
         builder.append(this.path, from, matcher.start());
         builder.append(pathParams.get(i));
       }
@@ -557,7 +558,7 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
     if (query != null)
       builder.append(query).append('&');
 
-    for (int i = 0; i < values.length; ++i) {
+    for (int i = 0; i < values.length; ++i) { // [A]
       final Object value = values[i];
       assertNotNull(value, "value is null");
 
@@ -582,7 +583,7 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
     query = null;
 
     final String encodedName = UriEncoder.QUERY_PARAM.encode(name);
-    for (final String param : params) {
+    for (final String param : params) { // [A]
       final int eq = param.indexOf('=');
       if (eq >= 0) {
         final String paramName = param.substring(0, eq);
@@ -610,7 +611,7 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
     if (segments == null)
       throw new IllegalArgumentException(invalidParam("segments", null));
 
-    for (final String segment : segments) {
+    for (final String segment : segments) { // [A]
       assertNotNull(segment, "segment is null");
       path(UriEncoder.PATH_SEGMENT.encode(segment));
     }

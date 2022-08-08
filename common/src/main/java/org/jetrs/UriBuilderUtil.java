@@ -58,7 +58,7 @@ final class UriBuilderUtil {
     }
 
     int start = 0;
-    for (final Matcher matcher = URI_PARAM_PATTERN.matcher(UriEncoder.replaceBraces(string)); matcher.find(); start = matcher.end()) {
+    for (final Matcher matcher = URI_PARAM_PATTERN.matcher(UriEncoder.replaceBraces(string)); matcher.find(); start = matcher.end()) { // [X]
       builder.append(string, start, matcher.start());
       final String param = matcher.group(1);
       if (paramMap == null || !paramMap.containsKey(param)) {
@@ -84,7 +84,7 @@ final class UriBuilderUtil {
 
   static String appendPath(final String path, final boolean encode, final String ... segments) {
     final StringBuilder builder = path != null ? new StringBuilder(path) : new StringBuilder();
-    for (String segment : segments) {
+    for (String segment : segments) { // [A]
       if ("".equals(segment))
         continue;
 

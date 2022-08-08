@@ -42,15 +42,15 @@ import javax.ws.rs.ext.WriterInterceptor;
 import javax.ws.rs.ext.WriterInterceptorContext;
 
 class ContainerResponseContextImpl extends InterceptorContextImpl implements ContainerResponseContext, WriterInterceptorContext {
-  private final List<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorEntityProviderFactories;
+  private final List<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorProviderFactories;
   private final ServerRequestContext requestContext;
   private Response.StatusType status;
 
-  ContainerResponseContextImpl(final HttpServletRequest request, final HttpServletResponse response, final ServerRequestContext requestContext) {
-    super(request, new HttpHeadersImpl(response));
-    this.status = Response.Status.fromStatusCode(response.getStatus());
+  ContainerResponseContextImpl(final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse, final ServerRequestContext requestContext) {
+    super(httpServletRequest, new HttpHeadersImpl(httpServletResponse));
+    this.status = Response.Status.fromStatusCode(httpServletResponse.getStatus());
     this.requestContext = requestContext;
-    this.writerInterceptorEntityProviderFactories = requestContext.getWriterInterceptorFactoryList();
+    this.writerInterceptorProviderFactories = requestContext.getWriterInterceptorFactoryList();
   }
 
   @Override
@@ -208,10 +208,10 @@ class ContainerResponseContextImpl extends InterceptorContextImpl implements Con
   @Override
   @SuppressWarnings("unchecked")
   public void proceed() throws IOException {
-    if (++interceptorIndex < writerInterceptorEntityProviderFactories.size()) {
-      writerInterceptorEntityProviderFactories.get(interceptorIndex).getSingletonOrFromRequestContext(requestContext).aroundWriteTo(this);
+    if (++interceptorIndex < writerInterceptorProviderFactories.size()) {
+      writerInterceptorProviderFactories.get(interceptorIndex).getSingletonOrFromRequestContext(requestContext).aroundWriteTo(this);
     }
-    else if (interceptorIndex == writerInterceptorEntityProviderFactories.size()) {
+    else if (interceptorIndex == writerInterceptorProviderFactories.size()) {
       MessageBodyProvider.writeTo(messageBodyWriter, getEntity(), getEntityClass(), getEntityType(), getEntityAnnotations(), getMediaType(), getHeaders(), getEntityStream());
       getEntityStream().close();
     }

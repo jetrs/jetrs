@@ -68,24 +68,24 @@ class ClientImpl implements Client, ConfigurableImpl<Client> {
       return runtimeContext;
 
     try {
-      final List<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorEntityProviderFactories = new ArrayList<>();
-      final List<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorEntityProviderFactories = new ArrayList<>();
-      final List<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderEntityProviderFactories = new ArrayList<>();
-      final List<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterEntityProviderFactories = new ArrayList<>();
-      final List<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperEntityProviderFactories = new ArrayList<>();
+      final List<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories = new ArrayList<>();
+      final List<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorProviderFactories = new ArrayList<>();
+      final List<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderProviderFactories = new ArrayList<>();
+      final List<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterProviderFactories = new ArrayList<>();
+      final List<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperProviderFactories = new ArrayList<>();
 
       final Bootstrap<?> bootstrap = new Bootstrap<>(
-        readerInterceptorEntityProviderFactories,
-        writerInterceptorEntityProviderFactories,
-        messageBodyReaderEntityProviderFactories,
-        messageBodyWriterEntityProviderFactories,
-        exceptionMapperEntityProviderFactories
+        readerInterceptorProviderFactories,
+        writerInterceptorProviderFactories,
+        messageBodyReaderProviderFactories,
+        messageBodyWriterProviderFactories,
+        exceptionMapperProviderFactories
       );
 
       bootstrap.init(config.getInstances(), config.getClasses(), null);
       this.singletons = config.getInstances();
       this.classes = config.getClasses();
-      return new ClientRuntimeContext(readerInterceptorEntityProviderFactories, writerInterceptorEntityProviderFactories, messageBodyReaderEntityProviderFactories, messageBodyWriterEntityProviderFactories, exceptionMapperEntityProviderFactories);
+      return new ClientRuntimeContext(readerInterceptorProviderFactories, writerInterceptorProviderFactories, messageBodyReaderProviderFactories, messageBodyWriterProviderFactories, exceptionMapperProviderFactories);
     }
     catch (final IllegalAccessException | PackageNotFoundException e) {
       throw new RuntimeException(e);

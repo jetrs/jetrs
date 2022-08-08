@@ -64,7 +64,7 @@ public class FileProvider extends MessageBodyProvider<File> {
     long to = Long.MAX_VALUE;
     final int len = range.length();
     long total = 0;
-    for (char ch; i <= len; ++i) {
+    for (char ch; i <= len; ++i) { // [N]
       if (i == len || (ch = range.charAt(i)) == ',') {
         if (builder.length() > 0) {
           if (from != Long.MIN_VALUE)
@@ -117,7 +117,7 @@ public class FileProvider extends MessageBodyProvider<File> {
           len = to == Long.MAX_VALUE ? raf.length() - from : to;
         }
 
-        for (int i = 0; i < len; ++i)
+        for (int i = 0; i < len; ++i) // [N]
           out.write(raf.read());
       }
       catch (final IOException e) {

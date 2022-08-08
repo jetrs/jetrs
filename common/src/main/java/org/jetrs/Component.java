@@ -58,7 +58,7 @@ class Component {
     this.priority = getPriority(cls != null ? cls : instance.getClass());
     if (contracts != null) {
       final Map<Class<?>,Integer> map = new HashMap<>(contracts.length);
-      for (final Class<?> contract : contracts)
+      for (final Class<?> contract : contracts) // [A]
         map.put(contract, getPriority(contract));
 
       this.contracts = Collections.unmodifiableMap(map);

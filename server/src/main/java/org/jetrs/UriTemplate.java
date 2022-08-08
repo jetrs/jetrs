@@ -47,7 +47,7 @@ class UriTemplate implements Comparable<UriTemplate> {
     if (Character.isDigit(ch) || Character.isAlphabetic(ch) && ch != ESCAPE)
       return NO_ESCAPE;
 
-    for (int i = 0; i < ESCAPE_MAP.length; i += 2)
+    for (int i = 0; i < ESCAPE_MAP.length; i += 2) // [N]
       if (ESCAPE_MAP[i] == ch)
         return ESCAPE_MAP[++i];
 
@@ -60,7 +60,7 @@ class UriTemplate implements Comparable<UriTemplate> {
       throw new IllegalArgumentException("Invalid URI template start ('" + ch + "' at index " + i + "): " + uriTemplate);
 
     final StringBuilder b = new StringBuilder();
-    for (char escape;;) {
+    for (char escape;;) { // [N]
       if ((escape = getEscapeChar(ch)) != NO_ESCAPE)
         b.append(ESCAPE).append(escape);
       else
@@ -113,7 +113,7 @@ class UriTemplate implements Comparable<UriTemplate> {
     // Append the literal path, first with URI encode, then with regex escape
     int repeatedSlashes = 0;
     char ch, prev = '\0';
-    for (int i = start; i < end; ++i, prev = ch) {
+    for (int i = start; i < end; ++i, prev = ch) { // [N]
       ch = uriTemplate.charAt(i);
       if (ch != '/') {
         final String en = URIComponent.encode(ch);
@@ -196,7 +196,7 @@ class UriTemplate implements Comparable<UriTemplate> {
     char ch;
     i = ++start;
     String name = null;
-    for (int mark = -1; i < len; ++i) {
+    for (int mark = -1; i < len; ++i) { // [N]
       ch = uriTemplate.charAt(i);
       if (Character.isWhitespace(ch)) {
         if (name == null) {
@@ -241,7 +241,7 @@ class UriTemplate implements Comparable<UriTemplate> {
         start = i;
         boolean escaped = false;
         boolean wsp = false;
-        for (int j = 0, noWsp = 0, scope = 1; i < len; ch = uriTemplate.charAt(++i)) {
+        for (int j = 0, noWsp = 0, scope = 1; i < len; ch = uriTemplate.charAt(++i)) { // [N]
           if (escaped) {
             escaped = false;
             if (ch == 'k')

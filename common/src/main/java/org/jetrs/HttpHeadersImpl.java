@@ -81,7 +81,7 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
     if (found != '\0')
       return ch == found ? ch : '\0';
 
-    for (int i = 0; i < delimiters.length; ++i)
+    for (int i = 0; i < delimiters.length; ++i) // [A]
       if (ch == delimiters[i])
         return ch;
 
@@ -91,7 +91,7 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
   static void parseMultiHeaderNoSort(final List<String> values, final String headerValue, final char ... delimiters) {
     char ch = '\0';
     char checkDel = '\0', foundDel = '\0';
-    for (int i = 0, start = -1, end = -1, len = headerValue.length(); i <= len; ++i) {
+    for (int i = 0, start = -1, end = -1, len = headerValue.length(); i <= len; ++i) { // [N]
       if (i == len || (checkDel = checkDel(ch = headerValue.charAt(i), delimiters, foundDel)) != '\0') {
         if (foundDel == '\0')
           foundDel = checkDel;
@@ -116,7 +116,7 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
    */
   HttpHeadersImpl(final Map<String,List<String>> headers) {
     this();
-    for (final Map.Entry<String,List<String>> entry : assertNotNull(headers).entrySet())
+    for (final Map.Entry<String,List<String>> entry : assertNotNull(headers).entrySet()) // [S]
       addAll(entry.getKey(), entry.getValue());
   }
 
@@ -129,7 +129,7 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
   HttpHeadersImpl(final MultivaluedMap<String,Object> headers) {
     this();
     final MirrorMultivaluedMap<String,Object,String> mirrorMap = getMirrorMap();
-    for (final Map.Entry<String,List<Object>> entry : assertNotNull(headers).entrySet())
+    for (final Map.Entry<String,List<Object>> entry : assertNotNull(headers).entrySet()) // [S]
       mirrorMap.addAll(entry.getKey(), entry.getValue());
   }
 
@@ -178,14 +178,14 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
     if (headerNames == null)
       return;
 
-    for (final String headerName : headerNames) {
+    for (final String headerName : headerNames) { // [C]
       final Collection<String> headerValues = response.getHeaders(headerName);
       if (headerValues == null || headerValues.size() == 0)
         continue;
 
       final List<String> values = getValues(headerName);
       final char[] delimiters = getHeaderValueDelimiters(headerName);
-      for (final String headerValue : headerValues)
+      for (final String headerValue : headerValues) // [C]
         parseHeaderValuesFromString(values, headerValue, delimiters);
     }
   }
@@ -308,8 +308,8 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
       return Collections.emptyMap();
 
     final Map<String,Cookie> cookies = new LinkedHashMap<>();
-    for (final Object header : headers) {
-      final Cookie cookie = (Cookie)header;
+    for (int i = 0, len = headers.size(); i < len; ++i) { // [L]
+      final Cookie cookie = (Cookie)headers.get(i);
       cookies.put(cookie.getName(), cookie);
     }
 
@@ -372,7 +372,7 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
 
     final char delimiter = getHeaderValueDelimiters(headerName)[0];
     final StringBuilder builder = new StringBuilder();
-    for (int i = 0, len = values.size(); i < len; ++i) {
+    for (int i = 0, len = values.size(); i < len; ++i) { // [L]
       if (i > 0)
         builder.append(delimiter);
 

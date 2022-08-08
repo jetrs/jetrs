@@ -45,8 +45,8 @@ import org.libj.util.ArrayUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class ResourceManifest implements ResourceInfo, Comparable<ResourceManifest> {
-  private static final Logger logger = LoggerFactory.getLogger(ResourceManifest.class);
+class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImpl> {
+  private static final Logger logger = LoggerFactory.getLogger(ResourceInfoImpl.class);
   private static final PermitAll permitAll = new PermitAll() {
     @Override
     public Class<? extends Annotation> annotationType() {
@@ -65,7 +65,7 @@ class ResourceManifest implements ResourceInfo, Comparable<ResourceManifest> {
   }
 
   private static Annotation findSecurityAnnotation(final Annotation ... annotations) {
-    for (final Annotation annotation : annotations)
+    for (final Annotation annotation : annotations) // [A]
       if (annotation.annotationType() == PermitAll.class || annotation.annotationType() == DenyAll.class || annotation.annotationType() == RolesAllowed.class)
         return annotation;
 
@@ -81,7 +81,7 @@ class ResourceManifest implements ResourceInfo, Comparable<ResourceManifest> {
   private final MediaTypeAnnotationProcessor<Consumes> consumesMatcher;
   private final MediaTypeAnnotationProcessor<Produces> producesMatcher;
 
-  ResourceManifest(final HttpMethod httpMethod, final Method method, final String baseUri, final Path classPath, final Path methodPath, final Object singleton) {
+  ResourceInfoImpl(final HttpMethod httpMethod, final Method method, final String baseUri, final Path classPath, final Path methodPath, final Object singleton) {
     this.httpMethod = httpMethod;
     final Annotation securityAnnotation = findSecurityAnnotation(method);
     this.securityAnnotation = securityAnnotation != null ? securityAnnotation : permitAll;
@@ -169,7 +169,7 @@ class ResourceManifest implements ResourceInfo, Comparable<ResourceManifest> {
 
     final RolesAllowed rolesAllowed = (RolesAllowed)securityAnnotation;
     if (containerRequestContext.getSecurityContext().getUserPrincipal() != null)
-      for (final String role : rolesAllowed.value())
+      for (final String role : rolesAllowed.value()) // [A]
         if (containerRequestContext.getSecurityContext().isUserInRole(role))
           return;
 
@@ -187,7 +187,7 @@ class ResourceManifest implements ResourceInfo, Comparable<ResourceManifest> {
 
     final Object[] challenges = new Object[roles.length - 1];
     final int resetLen = authenticationScheme != null ? authenticationScheme.length() + 1 : 0;
-    for (int i = 1; i < roles.length; ++i) {
+    for (int i = 1; i < roles.length; ++i) { // [A]
       builder.setLength(resetLen);
       builder.append("realm=\"").append(roles[i]).append('"');
       challenges[i - 1] = builder.toString();
@@ -240,7 +240,7 @@ class ResourceManifest implements ResourceInfo, Comparable<ResourceManifest> {
   }
 
   @Override
-  public int compareTo(final ResourceManifest o) {
+  public int compareTo(final ResourceInfoImpl o) {
     final int c = uriTemplate.compareTo(o.uriTemplate);
     if (c != 0)
       return c;
@@ -257,10 +257,10 @@ class ResourceManifest implements ResourceInfo, Comparable<ResourceManifest> {
     if (obj == this)
       return true;
 
-    if (!(obj instanceof ResourceManifest))
+    if (!(obj instanceof ResourceInfoImpl))
       return false;
 
-    final ResourceManifest that = (ResourceManifest)obj;
+    final ResourceInfoImpl that = (ResourceInfoImpl)obj;
     return Objects.equals(httpMethod, that.httpMethod) && securityAnnotation.equals(that.securityAnnotation) && resourceMethod.equals(that.resourceMethod) && resourceClass.equals(that.resourceClass) && uriTemplate.equals(that.uriTemplate) && consumesMatcher.equals(that.consumesMatcher) && producesMatcher.equals(that.producesMatcher);
   }
 

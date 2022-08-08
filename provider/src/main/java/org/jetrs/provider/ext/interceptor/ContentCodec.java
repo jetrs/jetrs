@@ -14,7 +14,7 @@
  * program. If not, see <http://opensource.org/licenses/MIT/>.
  */
 
-package org.jetrs;
+package org.jetrs.provider.ext.interceptor;
 
 import static org.libj.lang.Assertions.*;
 
@@ -108,7 +108,8 @@ public abstract class ContentCodec implements ReaderInterceptor, WriterIntercept
     final List<String> acceptEncodings = requestHeaders.getRequestHeader(HttpHeaders.ACCEPT_ENCODING);
     if (acceptEncodings != null && acceptEncodings.size() > 0) {
       final Set<String> supportedEncodings = getSupportedEncodings();
-      for (final String acceptEncoding : acceptEncodings) {
+      for (int i = 0, len = acceptEncodings.size(); i < len; ++i) { // [L]
+        final String acceptEncoding = acceptEncodings.get(i);
         if (acceptEncoding != null && supportedEncodings.contains(acceptEncoding)) {
           context.setOutputStream(encode(acceptEncoding, context.getOutputStream()));
           final MultivaluedMap<String,Object> headers = context.getHeaders();

@@ -16,8 +16,6 @@
 
 package org.jetrs;
 
-import static org.libj.lang.Assertions.*;
-
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
@@ -37,7 +35,6 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.BadRequestException;
-import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.ext.ExceptionMapper;
@@ -69,36 +66,13 @@ abstract class RequestContext {
     return constructors;
   }
 
-  private final List<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorEntityProviderFactories;
-  private final List<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorEntityProviderFactories;
-  private final List<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderEntityProviderFactories;
-  private final List<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterEntityProviderFactories;
-  private final List<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperEntityProviderFactories;
+  private final RuntimeContext runtimeContext;
+  private final Request request;
   private final ProvidersImpl providers;
 
-  private final Request request;
-
-  // NOTE: Have to leave this non-final because there is a circular reference in the createInjector() factory method
-  private ResourceInfo resourceInfo;
-
-  void setResourceInfo(final ResourceInfo resourceInfo) {
-    this.resourceInfo = resourceInfo;
-  }
-
-  RequestContext(
-    final Request request,
-    final List<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorEntityProviderFactories,
-    final List<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorEntityProviderFactories,
-    final List<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderEntityProviderFactories,
-    final List<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterEntityProviderFactories,
-    final List<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperEntityProviderFactories
-  ) {
+  RequestContext(final RuntimeContext runtimeContext, final Request request) {
+    this.runtimeContext = runtimeContext;
     this.request = request;
-    this.readerInterceptorEntityProviderFactories = assertNotNull(readerInterceptorEntityProviderFactories);
-    this.writerInterceptorEntityProviderFactories = assertNotNull(writerInterceptorEntityProviderFactories);
-    this.messageBodyReaderEntityProviderFactories = assertNotNull(messageBodyReaderEntityProviderFactories);
-    this.messageBodyWriterEntityProviderFactories = assertNotNull(messageBodyWriterEntityProviderFactories);
-    this.exceptionMapperEntityProviderFactories = assertNotNull(exceptionMapperEntityProviderFactories);
     this.providers = new ProvidersImpl(this);
   }
 
@@ -109,7 +83,7 @@ abstract class RequestContext {
       throw new IllegalStateException();
 
     readerInterceptorCalled = true;
-    return readerInterceptorEntityProviderFactories;
+    return runtimeContext.getReaderInterceptorProviderFactories();
   }
 
   private boolean writerInterceptorCalled = false;
@@ -119,7 +93,7 @@ abstract class RequestContext {
       throw new IllegalStateException();
 
     writerInterceptorCalled = true;
-    return writerInterceptorEntityProviderFactories;
+    return runtimeContext.getWriterInterceptorProviderFactories();
   }
 
   private boolean messageBodyReaderCalled = false;
@@ -129,7 +103,7 @@ abstract class RequestContext {
       throw new IllegalStateException();
 
     messageBodyReaderCalled = true;
-    return messageBodyReaderEntityProviderFactories;
+    return runtimeContext.getMessageBodyReaderProviderFactories();
   }
 
   private boolean messageBodyWriterCalled = false;
@@ -139,17 +113,17 @@ abstract class RequestContext {
       throw new IllegalStateException();
 
     messageBodyWriterCalled = true;
-    return messageBodyWriterEntityProviderFactories;
+    return runtimeContext.getMessageBodyWriterProviderFactories();
   }
 
   private boolean exceptionMapperProviderCalled = false;
 
-  List<TypeProviderFactory<ExceptionMapper<?>>> getExceptionMapperEntityProviderFactoryList() {
+  List<TypeProviderFactory<ExceptionMapper<?>>> getExceptionMapperProviderFactoryList() {
     if (exceptionMapperProviderCalled)
       throw new IllegalStateException();
 
     exceptionMapperProviderCalled = true;
-    return exceptionMapperEntityProviderFactories;
+    return runtimeContext.getExceptionMapperProviderFactories();
   }
 
   Providers getProviders() {
@@ -157,7 +131,7 @@ abstract class RequestContext {
   }
 
   Annotation findInjectableAnnotation(final Annotation[] annotations, final boolean isResource) {
-    for (final Annotation annotation : annotations)
+    for (final Annotation annotation : annotations) // [A]
       if (annotation.annotationType() == Context.class)
         return annotation;
 
@@ -168,9 +142,6 @@ abstract class RequestContext {
   <T>T findInjectableContextValue(final Class<T> clazz) {
     if (Request.class.isAssignableFrom(clazz))
       return (T)request;
-
-    if (ResourceInfo.class.isAssignableFrom(clazz))
-      return (T)resourceInfo;
 
     if (Providers.class.isAssignableFrom(clazz))
       return (T)providers;
@@ -221,7 +192,7 @@ abstract class RequestContext {
     final Type[] genericParameterTypes = method.getGenericParameterTypes();
     final Annotation[][] parameterAnnotations = method.getParameterAnnotations();
     final Object[] arguments = new Object[parameters.length];
-    for (int i = 0; i < parameters.length; ++i) {
+    for (int i = 0; i < parameters.length; ++i) { // [A]
       final Object arg = arguments[i] = findInjectableValueFromCache(parameters[i], parameterAnnotations[i], parameterTypes[i], genericParameterTypes[i]);
       if (arg instanceof Exception)
         throw new BadRequestException((Exception)arg);
@@ -285,14 +256,14 @@ abstract class RequestContext {
     final Constructor<T>[] constructors = getConstructors(clazz);
 
     OUT:
-    for (final Constructor<T> constructor : constructors) {
+    for (final Constructor<T> constructor : constructors) { // [A]
       if (constructor.getParameterCount() == 0)
         return constructor.newInstance();
 
       final Parameter[] parameters = constructor.getParameters();
       final Annotation[][] parameterAnnotations = constructor.getParameterAnnotations();
       final Object[] arguments = new Object[parameters.length];
-      for (int i = 0; i < parameters.length; ++i) {
+      for (int i = 0; i < parameters.length; ++i) { // [A]
         final Parameter parameter = parameters[i];
         final Annotation[] annotations = parameterAnnotations[i];
         final Annotation injectableAnnotation = findInjectableAnnotation(annotations, isResource);

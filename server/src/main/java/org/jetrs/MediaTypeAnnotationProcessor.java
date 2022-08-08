@@ -52,9 +52,9 @@ class MediaTypeAnnotationProcessor<T extends Annotation> {
    */
   private static boolean hasEntityParameter(final Method method) {
     OUT:
-    for (final Annotation[] annotations : method.getParameterAnnotations()) {
-      for (final Annotation annotation : annotations)
-        for (final Class<?> paramAnnotation : paramAnnotations)
+    for (final Annotation[] annotations : method.getParameterAnnotations()) { // [A]
+      for (final Annotation annotation : annotations) // [A]
+        for (final Class<?> paramAnnotation : paramAnnotations) // [A]
           if (paramAnnotation.equals(annotation.annotationType()))
             continue OUT;
 

@@ -63,7 +63,7 @@ public class ApplicationServerTest {
 
   public static String encodeLexicographically(final Map<String,?> map) {
     final List<String> list = new ArrayList<>(map.size());
-    for (final Map.Entry<String,?> entry : map.entrySet())
+    for (final Map.Entry<String,?> entry : map.entrySet()) // [S]
       list.add(entry.getKey() + ":" + String.valueOf(entry.getValue()));
 
     list.sort(null);
@@ -74,7 +74,7 @@ public class ApplicationServerTest {
 
   @Test
   public void testTypeBoolean() throws Exception {
-    for (int i = 0; i < numTests; ++i) {
+    for (int i = 0; i < numTests; ++i) { // [N]
       final boolean a = random.nextBoolean();
       final boolean b = random.nextBoolean();
       final boolean c = random.nextBoolean();
@@ -89,7 +89,7 @@ public class ApplicationServerTest {
 
   @Test
   public void testTypeChar() throws Exception {
-    for (int i = 0; i < numTests; ++i) {
+    for (int i = 0; i < numTests; ++i) { // [N]
       final char a = Strings.getRandomAlpha(1).charAt(0);
       final char b = Strings.getRandomAlpha(1).charAt(0);
       final char c = Strings.getRandomAlpha(1).charAt(0);
@@ -104,7 +104,7 @@ public class ApplicationServerTest {
 
   @Test
   public void testTypeByte() throws Exception {
-    for (int i = 0; i < numTests; ++i) {
+    for (int i = 0; i < numTests; ++i) { // [N]
       final byte a = (byte)random.nextInt();
       final byte b = (byte)random.nextInt();
       final byte c = (byte)random.nextInt();
@@ -119,7 +119,7 @@ public class ApplicationServerTest {
 
   @Test
   public void testTypeShort() throws Exception {
-    for (int i = 0; i < numTests; ++i) {
+    for (int i = 0; i < numTests; ++i) { // [N]
       final short a = (short)random.nextInt();
       final short b = (short)random.nextInt();
       final short c = (short)random.nextInt();
@@ -134,7 +134,7 @@ public class ApplicationServerTest {
 
   @Test
   public void testTypeInt() throws Exception {
-    for (int i = 0; i < numTests; ++i) {
+    for (int i = 0; i < numTests; ++i) { // [N]
       final int a = random.nextInt();
       final int b = random.nextInt();
       final int c = random.nextInt();
@@ -149,7 +149,7 @@ public class ApplicationServerTest {
 
   @Test
   public void testTypeLong() throws Exception {
-    for (int i = 0; i < numTests; ++i) {
+    for (int i = 0; i < numTests; ++i) { // [N]
       final long a = random.nextLong();
       final long b = random.nextLong();
       final long c = random.nextLong();
@@ -164,7 +164,7 @@ public class ApplicationServerTest {
 
   @Test
   public void testTypeFloat() throws Exception {
-    for (int i = 0; i < numTests; ++i) {
+    for (int i = 0; i < numTests; ++i) { // [N]
       final float a = random.nextFloat();
       final float b = random.nextFloat();
       final float c = random.nextFloat();
@@ -179,7 +179,7 @@ public class ApplicationServerTest {
 
   @Test
   public void testTypeDouble() throws Exception {
-    for (int i = 0; i < numTests; ++i) {
+    for (int i = 0; i < numTests; ++i) { // [N]
       final double a = random.nextDouble();
       final double b = random.nextDouble();
       final double c = random.nextDouble();
@@ -201,7 +201,7 @@ public class ApplicationServerTest {
     connection.setRequestMethod("PUT");
     connection.addRequestProperty("Content-Type", MediaType.MULTIPART_FORM_DATA);
     try (final OutputStream out = connection.getOutputStream()) {
-      for (int i = 0; i < len; ++i)
+      for (int i = 0; i < len; ++i) // [N]
         out.write((byte)random.nextInt());
 
       out.close();

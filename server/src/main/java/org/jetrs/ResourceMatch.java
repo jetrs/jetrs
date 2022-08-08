@@ -51,7 +51,7 @@ class ResourceMatch implements Comparable<ResourceMatch> {
     }
   };
 
-  private final ResourceManifest manifest;
+  private final ResourceInfoImpl resourceInfo;
   private final Class<?> resourceClass;
   private Object instance;
 
@@ -62,10 +62,10 @@ class ResourceMatch implements Comparable<ResourceMatch> {
   private final MultivaluedMap<String,String> pathParameters;
   private final long[] regionStartEnds;
 
-  ResourceMatch(final ResourceManifest manifest, final String uriEncoded, final CompatibleMediaType accept, final String[] pathSegmentParamNames, final long[] regionStartEnds, final MultivaluedMap<String,String> pathParameters) {
-    this.manifest = assertNotNull(manifest);
-    this.resourceClass = manifest.getResourceClass();
-    this.instance = manifest.getSingleton();
+  ResourceMatch(final ResourceInfoImpl resourceInfo, final String uriEncoded, final CompatibleMediaType accept, final String[] pathSegmentParamNames, final long[] regionStartEnds, final MultivaluedMap<String,String> pathParameters) {
+    this.resourceInfo = assertNotNull(resourceInfo);
+    this.resourceClass = resourceInfo.getResourceClass();
+    this.instance = resourceInfo.getSingleton();
 
     this.uriEncoded = assertNotNull(uriEncoded);
     this.accept = assertNotNull(accept);
@@ -75,8 +75,8 @@ class ResourceMatch implements Comparable<ResourceMatch> {
     this.pathParameters = assertNotNull(pathParameters);
   }
 
-  ResourceManifest getManifest() {
-    return manifest;
+  ResourceInfoImpl getResourceInfo() {
+    return resourceInfo;
   }
 
   String[] getPathParamNames() {
@@ -108,12 +108,12 @@ class ResourceMatch implements Comparable<ResourceMatch> {
   }
 
   Object service(final ServerRequestContext requestContext) throws IOException, ServletException {
-    return manifest.service(this, requestContext);
+    return resourceInfo.service(this, requestContext);
   }
 
   @Override
   public int compareTo(final ResourceMatch o) {
-    int c = manifest.compareTo(o.manifest);
+    int c = resourceInfo.compareTo(o.resourceInfo);
     if (c != 0)
       return c;
 
@@ -130,16 +130,16 @@ class ResourceMatch implements Comparable<ResourceMatch> {
       return false;
 
     final ResourceMatch that = (ResourceMatch)obj;
-    return manifest.equals(that.manifest);
+    return resourceInfo.equals(that.resourceInfo);
   }
 
   @Override
   public int hashCode() {
-    return manifest.hashCode();
+    return resourceInfo.hashCode();
   }
 
   @Override
   public String toString() {
-    return String.valueOf(manifest);
+    return String.valueOf(resourceInfo);
   }
 }

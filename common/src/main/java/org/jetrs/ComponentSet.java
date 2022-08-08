@@ -64,7 +64,7 @@ class ComponentSet implements Cloneable, Serializable {
   }
 
   Map<Class<?>,Integer> getContracts(final Class<?> componentClass) {
-    for (final Component component : components)
+    for (final Component component : components) // [S]
       if (componentClass.equals(component.cls))
         return component.contracts;
 

@@ -398,7 +398,7 @@ public class UriBuilderTest extends RuntimeDelegateTest {
   @Test
   public void testFromUri() {
     final String[] uris = {"mailto:java-net@java.sun.com", "ftp://ftp.is.co.za/rfc/rfc1808.txt", "news:comp.lang.java", "urn:isbn:096139210x", "http://www.ietf.org/rfc/rfc2396.txt", "ldap://[2001:db8::7]/c=GB?objectClass?one", "tel:+1-816-555-1212", "telnet://192.0.2.16:80/", "foo://example.com:8042/over/there?name=ferret#nose"};
-    for (int j = 0; j < uris.length; ++j) {
+    for (int j = 0; j < uris.length; ++j) { // [A]
       final URI uri = UriBuilder.fromUri(uris[j]).build();
       assertEquals("Test failed for expected uri: " + uris[j] + " Got " + uri.toString() + " instead", 0, uri.toString().trim().compareToIgnoreCase(uris[j]));
     }

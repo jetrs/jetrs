@@ -47,7 +47,6 @@ import javax.ws.rs.HttpMethod;
 import javax.ws.rs.MatrixParam;
 import javax.ws.rs.NotAcceptableException;
 import javax.ws.rs.NotAllowedException;
-import javax.ws.rs.NotFoundException;
 import javax.ws.rs.NotSupportedException;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -57,6 +56,7 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
+import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Context;
@@ -74,8 +74,6 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.ParamConverterProvider;
 import javax.ws.rs.ext.Providers;
-import javax.ws.rs.ext.ReaderInterceptor;
-import javax.ws.rs.ext.WriterInterceptor;
 
 import org.libj.lang.Classes;
 import org.libj.lang.Numbers;
@@ -98,7 +96,7 @@ class ServerRequestContext extends RequestContext {
 
     final Field field = fields[index];
     boolean hasContext = false;
-    for (int i = 0; i < injectableAnnotationTypes.length; ++i)
+    for (int i = 0; i < injectableAnnotationTypes.length; ++i) // [A]
       if (hasContext |= field.isAnnotationPresent(injectableAnnotationTypes[i]))
         break;
 
@@ -115,70 +113,48 @@ class ServerRequestContext extends RequestContext {
   private static final Class<Annotation>[] injectableAnnotationTypes = new Class[] {CookieParam.class, HeaderParam.class, MatrixParam.class, PathParam.class, QueryParam.class};
   // FIXME: Support `AsyncResponse` (JAX-RS 2.1 8.2)
 
-  private final List<ProviderFactory<ParamConverterProvider>> paramConverterProviderFactories;
-  private final List<ProviderFactory<ContainerRequestFilter>> preMatchContainerRequestFilterEntityProviderFactories;
-  private final List<ProviderFactory<ContainerRequestFilter>> containerRequestFilterEntityProviderFactories;
-  private final List<ProviderFactory<ContainerResponseFilter>> containerResponseFilterFactories;
-  private final List<ResourceManifest> resourceManifests;
+  private final ServerRuntimeContext runtimeContext;
 
-  private HttpHeadersImpl requestHeaders;
-  private Configuration configuration;
-  private Application application;
-  private ServletConfig servletConfig;
-  private ServletContext servletContext;
   private HttpServletRequest httpServletRequest;
   private HttpServletResponse httpServletResponse;
   private ContainerRequestContextImpl containerRequestContext;
   private ContainerResponseContextImpl containerResponseContext;
 
+  private List<ResourceInfoImpl> resourceInfos;
+
+  private ResourceMatches resourceMatches;
   private ResourceMatch resourceMatch;
 
-  ServerRequestContext(
-    final Request request,
-    final List<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorEntityProviderFactories,
-    final List<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorEntityProviderFactories,
-    final List<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderEntityProviderFactories,
-    final List<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterEntityProviderFactories,
-    final List<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperEntityProviderFactories,
-    final List<ProviderFactory<ParamConverterProvider>> paramConverterEntityProviderFactories,
-    final List<ProviderFactory<ContainerRequestFilter>> preMatchContainerRequestFilterEntityProviderFactories,
-    final List<ProviderFactory<ContainerRequestFilter>> containerRequestFilterEntityProviderFactories,
-    final List<ProviderFactory<ContainerResponseFilter>> containerResponseFilterEntityProviderFactories,
-    final List<ResourceManifest> resourceManifests
-  ) {
-    super(request, readerInterceptorEntityProviderFactories, writerInterceptorEntityProviderFactories, messageBodyReaderEntityProviderFactories, messageBodyWriterEntityProviderFactories, exceptionMapperEntityProviderFactories);
-    this.paramConverterProviderFactories = paramConverterEntityProviderFactories;
-    this.preMatchContainerRequestFilterEntityProviderFactories = preMatchContainerRequestFilterEntityProviderFactories;
-    this.containerRequestFilterEntityProviderFactories = containerRequestFilterEntityProviderFactories;
-    this.containerResponseFilterFactories = containerResponseFilterEntityProviderFactories;
-    this.resourceManifests = resourceManifests;
+  ServerRequestContext(final ServerRuntimeContext runtimeContext, final Request request) {
+    super(runtimeContext, request);
+    this.runtimeContext = runtimeContext;
   }
 
-  void init(final HttpHeadersImpl requestHeaders, final Configuration configuration, final Application application, final ServletConfig servletConfig, final ServletContext servletContext, final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse) {
-    this.requestHeaders = requestHeaders;
-    this.configuration = configuration;
-    this.application = application;
-
-    this.servletConfig = servletConfig;
-    this.servletContext = servletContext;
+  void init(final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse) {
+    this.resourceInfos = runtimeContext.getResourceInfos();
     this.httpServletRequest = httpServletRequest;
     this.httpServletResponse = httpServletResponse;
+    this.containerResponseContext = new ContainerResponseContextImpl(httpServletRequest, httpServletResponse, this);
   }
 
-  void setResourceMatch(final ResourceMatch resourceMatch) {
-    this.resourceMatch = resourceMatch;
+  ResourceMatches getResourceMatches() {
+    return resourceMatches;
   }
 
-  void setContainerRequestContext(final ContainerRequestContextImpl containerRequestContext) {
-    this.containerRequestContext = containerRequestContext;
+  ResourceMatch getResourceMatch() {
+    return resourceMatch;
   }
 
-  public ContainerRequestContext getContainerRequestContext() {
+  ContainerRequestContextImpl initContainerRequestContext() {
+    return containerRequestContext == null ? containerRequestContext = new ContainerRequestContextImpl(httpServletRequest, this) : containerRequestContext;
+  }
+
+  ContainerRequestContextImpl getContainerRequestContext() {
     return containerRequestContext;
   }
 
-  void setContainerResponseContext(final ContainerResponseContextImpl containerResponseContext) {
-    this.containerResponseContext = containerResponseContext;
+  ContainerResponseContextImpl getContainerResponseContext() {
+    return containerResponseContext;
   }
 
   private boolean paramConverterProviderCalled = false;
@@ -188,7 +164,7 @@ class ServerRequestContext extends RequestContext {
       throw new IllegalStateException();
 
     paramConverterProviderCalled = true;
-    return paramConverterProviderFactories;
+    return runtimeContext.getParamConverterProviderFactories();
   }
 
   private boolean preMatchRequestFilterCalled = false;
@@ -198,8 +174,14 @@ class ServerRequestContext extends RequestContext {
       throw new IllegalStateException();
 
     preMatchRequestFilterCalled = true;
-    for (final ProviderFactory<ContainerRequestFilter> preMatchContainerRequestFilterProviderFactory : preMatchContainerRequestFilterEntityProviderFactories)
-      preMatchContainerRequestFilterProviderFactory.getSingletonOrFromRequestContext(this).filter(containerRequestContext);
+    final List<ProviderFactory<ContainerRequestFilter>> preMatchContainerRequestFilterProviderFactories = runtimeContext.getPreMatchContainerRequestFilterProviderFactories();
+    final int len = preMatchContainerRequestFilterProviderFactories.size();
+    if (len == 0)
+      return;
+
+    final ContainerRequestContext containerRequestContext = initContainerRequestContext();
+    for (int i = 0; i < len; ++i) // [L]
+      preMatchContainerRequestFilterProviderFactories.get(i).getSingletonOrFromRequestContext(this).filter(containerRequestContext);
   }
 
   private boolean requestFilterCalled = false;
@@ -209,13 +191,15 @@ class ServerRequestContext extends RequestContext {
       throw new IllegalStateException();
 
     requestFilterCalled = true;
-    for (final ProviderFactory<ContainerRequestFilter> containerRequestFilterEntityProviderFactory : containerRequestFilterEntityProviderFactories)
-      containerRequestFilterEntityProviderFactory.getSingletonOrFromRequestContext(this).filter(containerRequestContext);
+    final List<ProviderFactory<ContainerRequestFilter>> containerRequestFilterProviderFactories = runtimeContext.getContainerRequestFilterProviderFactories();
+    for (int i = 0, len = containerRequestFilterProviderFactories.size(); i < len; ++i) // [L]
+      containerRequestFilterProviderFactories.get(i).getSingletonOrFromRequestContext(this).filter(containerRequestContext);
   }
 
   void filterContainerResponse() throws IOException {
-    for (final ProviderFactory<ContainerResponseFilter> factory : containerResponseFilterFactories)
-      factory.getSingletonOrFromRequestContext(this).filter(containerRequestContext, containerResponseContext);
+    final List<ProviderFactory<ContainerResponseFilter>> containerResponseFilterProviderFactories = runtimeContext.getContainerResponseFilterProviderFactories();
+    for (int i = 0, len = containerResponseFilterProviderFactories.size(); i < len; ++i) // [L]
+      containerResponseFilterProviderFactories.get(i).getSingletonOrFromRequestContext(this).filter(containerRequestContext, containerResponseContext);
   }
 
   @Override
@@ -224,8 +208,8 @@ class ServerRequestContext extends RequestContext {
     if (injectableAnnotation != null || !isResource)
       return injectableAnnotation;
 
-    for (final Annotation annotation : annotations)
-      for (final Class<Annotation> injectableAnnotationType : injectableAnnotationTypes)
+    for (final Annotation annotation : annotations) // [A]
+      for (final Class<Annotation> injectableAnnotationType : injectableAnnotationTypes) // [A]
         if (annotation.annotationType() == injectableAnnotationType)
           return annotation;
 
@@ -241,20 +225,20 @@ class ServerRequestContext extends RequestContext {
     // FIXME: Support ResourceContext (JAX-RS 2.1 6.5.1)
     // if (ResourceInfo.class.isAssignableFrom(clazz))
 
-    if (HttpHeaders.class.isAssignableFrom(clazz))
-      return (T)requestHeaders;
-
     if (Configuration.class.isAssignableFrom(clazz))
-      return (T)configuration;
+      return (T)runtimeContext.getConfiguration();
 
     if (Application.class.isAssignableFrom(clazz))
-      return (T)application;
+      return (T)runtimeContext.getApplication();
 
     if (ServletConfig.class.isAssignableFrom(clazz))
-      return (T)servletConfig;
+      return (T)runtimeContext.getServletConfig();
 
     if (ServletContext.class.isAssignableFrom(clazz))
-      return (T)servletContext;
+      return (T)runtimeContext.getServletContext();
+
+    if (HttpHeaders.class.isAssignableFrom(clazz))
+      return (T)containerRequestContext.getHeaders();
 
     if (HttpServletRequest.class.isAssignableFrom(clazz))
       return (T)httpServletRequest;
@@ -262,14 +246,17 @@ class ServerRequestContext extends RequestContext {
     if (HttpServletResponse.class.isAssignableFrom(clazz))
       return (T)httpServletResponse;
 
-    if (ContainerRequestContext.class.isAssignableFrom(clazz))
-      return (T)containerRequestContext;
+    if (ResourceInfo.class.isAssignableFrom(clazz))
+      return resourceMatch == null ? null : (T)resourceMatch.getResourceInfo();
 
     if (UriInfo.class.isAssignableFrom(clazz))
       return (T)containerRequestContext.getUriInfo();
 
     if (SecurityContext.class.isAssignableFrom(clazz))
       return (T)containerRequestContext.getSecurityContext();
+
+    if (ContainerRequestContext.class.isAssignableFrom(clazz))
+      return (T)containerRequestContext;
 
     if (ContainerResponseContext.class.isAssignableFrom(clazz))
       return (T)containerResponseContext;
@@ -314,7 +301,7 @@ class ServerRequestContext extends RequestContext {
     final UriInfo uriInfo = containerRequestContext.getUriInfo();
     if (annotation.annotationType() == QueryParam.class) {
       final boolean decode = ParameterUtil.decode(annotations);
-      return ParameterUtil.convertParameter(clazz, type, annotations, uriInfo.getQueryParameters(decode).get(((QueryParam)annotation).value()), paramConverterProviderFactories, this);
+      return ParameterUtil.convertParameter(clazz, type, annotations, uriInfo.getQueryParameters(decode).get(((QueryParam)annotation).value()), runtimeContext.getParamConverterProviderFactories(), this);
     }
 
     if (annotation.annotationType() == PathParam.class) {
@@ -331,12 +318,13 @@ class ServerRequestContext extends RequestContext {
         final List<PathSegment> pathSegments = uriInfo.getPathSegments(decode);
         final String[] pathParamNames = resourceMatch.getPathParamNames();
         final long[] regionStartEnds = resourceMatch.getRegionStartEnds();
-        for (int i = 0, segStart = 0, segEnd; i < pathParamNames.length; ++i) {
-          if (matches(pathParamNameToMatch, pathParamNames[i])) {
-            final long regionStartEnd = regionStartEnds[i];
+        for (int p = 0, segStart = 0, segEnd; p < pathParamNames.length; ++p) { // [A]
+          if (matches(pathParamNameToMatch, pathParamNames[p])) {
+            final long regionStartEnd = regionStartEnds[p];
             final int regionStart = Numbers.Composite.decodeInt(regionStartEnd, 0);
             final int regionEnd = Numbers.Composite.decodeInt(regionStartEnd, 1);
-            for (final PathSegment pathSegment : pathSegments) {
+            for (int i = 0, len = pathSegments.size(); i < len; ++i) { // [L]
+              final PathSegment pathSegment = pathSegments.get(i);
               final String path = ((PathSegmentImpl)pathSegment).getPathEncoded();
               segEnd = segStart + path.length();
               if (rangeOverlaps(segStart, segEnd, regionStart, regionEnd))
@@ -360,7 +348,7 @@ class ServerRequestContext extends RequestContext {
         try {
           final Collection<PathSegment> matchedSegments = clazz.isArray() ? new ArrayList<>() : (Collection<PathSegment>)ParameterUtil.newCollection(clazz);
           OUT:
-          for (int i = 0, j = 0; i < pathParamNames.length; ++i) {
+          for (int i = 0, j = 0; i < pathParamNames.length; ++i) { // [A]
             if (matches(pathParamNameToMatch, pathParamNames[i])) {
               boolean inRegion = false;
               final long regionStartEnd = regionStartEnds[i];
@@ -400,7 +388,7 @@ class ServerRequestContext extends RequestContext {
         }
       }
 
-      return ParameterUtil.convertParameter(clazz, type, annotations, values, paramConverterProviderFactories, this);
+      return ParameterUtil.convertParameter(clazz, type, annotations, values, runtimeContext.getParamConverterProviderFactories(), this);
     }
 
     if (annotation.annotationType() == MatrixParam.class) {
@@ -408,12 +396,14 @@ class ServerRequestContext extends RequestContext {
       final List<PathSegment> pathSegments = uriInfo.getPathSegments(decode);
       final String matrixParamName = ((MatrixParam)annotation).value();
       final List<String> matrixParameters = new ArrayList<>();
-      for (final PathSegment pathSegment : pathSegments)
-        for (final Map.Entry<String,List<String>> entry : pathSegment.getMatrixParameters().entrySet())
+      for (int i = 0, len = pathSegments.size(); i < len; ++i) { // [L]
+        final PathSegment pathSegment = pathSegments.get(i);
+        for (final Map.Entry<String,List<String>> entry : pathSegment.getMatrixParameters().entrySet()) // [S]
           if (matrixParamName.equals(entry.getKey()))
             matrixParameters.addAll(entry.getValue());
+      }
 
-      return ParameterUtil.convertParameter(clazz, type, annotations, matrixParameters, paramConverterProviderFactories, this);
+      return ParameterUtil.convertParameter(clazz, type, annotations, matrixParameters, runtimeContext.getParamConverterProviderFactories(), this);
     }
 
     if (annotation.annotationType() == CookieParam.class) {
@@ -441,35 +431,30 @@ class ServerRequestContext extends RequestContext {
     return pathParamName.startsWith(pathParamNameToMatch + UriTemplate.DEL) && pathParamName.lastIndexOf(UriTemplate.DEL, pathParamName.length() - 1) == pathParamNameToMatch.length();
   }
 
-  private boolean filterAndMatchWasCalled;
-  private ResourceMatches resourceMatches;
-
-  // FIXME: Note that this code always picks the 1st ResourceMatch.
-  // FIXME: This is done under the assumption that it is not possible to have a situation where
-  // FIXME: any other ResourceMatch would be retrieved. Is this truly the case?!
-  ResourceMatch filterAndMatch() {
-    if (filterAndMatchWasCalled)
-      throw new IllegalStateException(getClass().getSimpleName() + ".filterAndMatch() has already been called");
-
-    filterAndMatchWasCalled = true;
-    resourceMatches = filterAndMatch(containerRequestContext.getMethod(), true);
+  boolean filterAndMatch() {
+    final ResourceMatches resourceMatches = filterAndMatch(httpServletRequest.getMethod(), true);
     if (resourceMatches == null)
-      throw new NotFoundException();
+      return false;
 
     if (resourceMatches.size() > 1 && resourceMatches.get(0).compareTo(resourceMatches.get(1)) == 0) {
-      final StringBuilder builder = new StringBuilder("Multiple resources match ambiguously for request to \"" + containerRequestContext.getUriInfo() + "\": {");
-      for (final ResourceMatch resource : resourceMatches)
-        builder.append('"').append(resource).append("\", ");
+      final StringBuilder builder = new StringBuilder("Multiple resources match ambiguously for request to \"" + httpServletRequest.getRequestURI() + "\": {");
+      for (int i = 0, len = resourceMatches.size(); i < len; ++i) // [L]
+        builder.append('"').append(resourceMatches.get(i)).append("\", ");
 
       builder.setCharAt(builder.length() - 1, '}');
       logger.warn(builder.toString());
     }
 
-    return resourceMatches.get(0);
+    // FIXME: Note that this code always picks the 1st ResourceMatch.
+    // FIXME: This is done under the assumption that it is not possible to have a situation where
+    // FIXME: any other ResourceMatch would be retrieved. Is this truly the case?!
+    this.resourceMatches = resourceMatches;
+    this.resourceMatch = resourceMatches.get(0);
+    return true;
   }
 
   private static int[] normalizeUri(final StringBuilder requestUriBuilder, final String path, final boolean inMatrix, final int start, final int depth) {
-    for (int i = start, len = path.length(); i < len; ++i) {
+    for (int i = start, len = path.length(); i < len; ++i) { // [N]
       final char ch = path.charAt(i);
       if (inMatrix) {
         if (ch != '/')
@@ -493,14 +478,14 @@ class ServerRequestContext extends RequestContext {
   }
 
   private ResourceMatches filterAndMatch(final String methodOverride, final boolean throwException) {
+    final ContainerRequestContext containerRequestContext = initContainerRequestContext();
     final UriInfo uriInfo = containerRequestContext.getUriInfo();
 
     // Match request URI with matrix params stripped out
     final StringBuilder requestUriBuilder = new StringBuilder(uriInfo.getBaseUri().getRawPath());
     final int baseUriLen = requestUriBuilder.length();
 
-    final String path = uriInfo.getPath();
-    normalizeUri(requestUriBuilder, path, false, 0, 0);
+    normalizeUri(requestUriBuilder, uriInfo.getPath(), false, 0, 0);
 
     final String requestUriMatched = requestUriBuilder.toString();
 
@@ -508,21 +493,22 @@ class ServerRequestContext extends RequestContext {
     boolean maybeNotSupported = false;
     boolean maybeNotAcceptable = false;
     ResourceMatches resourceMatches = null;
-    for (final ResourceManifest resourceManifest : resourceManifests) {
-      final UriTemplate uriTemplate = resourceManifest.getUriTemplate();
+    for (int i = 0, len = resourceInfos.size(); i < len; ++i) { // [L]
+      final ResourceInfoImpl resourceInfo = resourceInfos.get(i);
+      final UriTemplate uriTemplate = resourceInfo.getUriTemplate();
       final Matcher matcher = uriTemplate.matcher(requestUriMatched);
       if (!matcher.find())
         continue;
 
-      if (resourceManifest.getHttpMethod() == null)
+      if (resourceInfo.getHttpMethod() == null)
         throw new UnsupportedOperationException("JAX-RS 2.1 3.4.1");
 
-      if (!methodOverride.equals(resourceManifest.getHttpMethod().value())) {
+      if (!methodOverride.equals(resourceInfo.getHttpMethod().value())) {
         if (throwException) {
           if (maybeNotAllowed == null)
             maybeNotAllowed = new ArrayList<>();
 
-          maybeNotAllowed.add(resourceManifest.getHttpMethod().value());
+          maybeNotAllowed.add(resourceInfo.getHttpMethod().value());
         }
 
         continue;
@@ -530,11 +516,11 @@ class ServerRequestContext extends RequestContext {
 
       final List<String> acceptCharsets = containerRequestContext.getHeaders().get(HttpHeaders.ACCEPT_CHARSET);
       maybeNotSupported = true;
-      if (containerRequestContext.hasEntity() && resourceManifest.getCompatibleContentType(containerRequestContext.getMediaType(), acceptCharsets) == null)
+      if (containerRequestContext.hasEntity() && resourceInfo.getCompatibleContentType(containerRequestContext.getMediaType(), acceptCharsets) == null)
         continue;
 
       maybeNotAcceptable = true;
-      final CompatibleMediaType[] accepts = resourceManifest.getCompatibleAccept(containerRequestContext.getAcceptableMediaTypes(), acceptCharsets);
+      final CompatibleMediaType[] accepts = resourceInfo.getCompatibleAccept(containerRequestContext.getAcceptableMediaTypes(), acceptCharsets);
       if (accepts == null)
         continue;
 
@@ -545,17 +531,17 @@ class ServerRequestContext extends RequestContext {
       final MultivaluedMap<String,String> pathParameters = new MultivaluedHashMap<>(pathParamNames.length);
       final long[] regionStartEnds = new long[pathParamNames.length];
 
-      for (int i = 0; i < pathParamNames.length; ++i) {
-        final String pathParamName = pathParamNames[i];
+      for (int j = 0; j < pathParamNames.length; ++j) { // [A]
+        final String pathParamName = pathParamNames[j];
         final String pathParamValue = matcher.group(pathParamName);
         pathParameters.add(pathParamName.substring(0, pathParamName.lastIndexOf(UriTemplate.DEL, pathParamName.length() - 1)), pathParamValue);
 
         final int start = matcher.start(pathParamName) - baseUriLen;
         final int end = matcher.end(pathParamName) - baseUriLen;
-        regionStartEnds[i] = Numbers.Composite.encode(start, end);
+        regionStartEnds[j] = Numbers.Composite.encode(start, end);
       }
 
-      resourceMatches.add(new ResourceMatch(resourceManifest, matcher.group(), accepts[0], pathParamNames, regionStartEnds, pathParameters)); // We only care about the highest quality match of the Accept header
+      resourceMatches.add(new ResourceMatch(resourceInfo, matcher.group(), accepts[0], pathParamNames, regionStartEnds, pathParameters)); // We only care about the highest quality match of the Accept header
     }
 
     if (resourceMatches != null) {
@@ -567,19 +553,20 @@ class ServerRequestContext extends RequestContext {
       final StringBuilder allowMethods = new StringBuilder();
       boolean allowContentType = false;
       boolean allowAccept = false;
-      for (final ResourceManifest resource : resourceManifests) {
+      for (int i = 0, len = resourceInfos.size(); i < len; ++i) { // [L]
+        final ResourceInfoImpl resourceInfo = resourceInfos.get(i);
         if (!allowContentType) {
-          final MediaTypeAnnotationProcessor<Consumes> resourceAnnotationProcessor = resource.getResourceAnnotationProcessor(Consumes.class);
+          final MediaTypeAnnotationProcessor<Consumes> resourceAnnotationProcessor = resourceInfo.getResourceAnnotationProcessor(Consumes.class);
           allowContentType = resourceAnnotationProcessor.getMediaTypes() != null;
         }
 
         if (!allowAccept) {
-          final MediaTypeAnnotationProcessor<Produces> resourceAnnotationProcessor = resource.getResourceAnnotationProcessor(Produces.class);
+          final MediaTypeAnnotationProcessor<Produces> resourceAnnotationProcessor = resourceInfo.getResourceAnnotationProcessor(Produces.class);
           allowAccept = resourceAnnotationProcessor.getMediaTypes() != null;
         }
 
-        if (resource.getUriTemplate().matcher(requestUriMatched).matches())
-          allowMethods.append(resource.getHttpMethod().value()).append(',');
+        if (resourceInfo.getUriTemplate().matcher(requestUriMatched).matches())
+          allowMethods.append(resourceInfo.getHttpMethod().value()).append(',');
       }
 
       if (allowMethods.length() > 0)
@@ -597,7 +584,7 @@ class ServerRequestContext extends RequestContext {
       else if (allowContentType)
         response.header("Access-Control-Allow-Headers", HttpHeaders.CONTENT_TYPE);
 
-      containerRequestContext.abortWith(response.build());
+      throw new AbortFilterChainException(response.build());
     }
     else if (HttpMethod.HEAD.equals(methodOverride)) {
       final ResourceMatches matches = filterAndMatch(HttpMethod.GET, false);
@@ -616,7 +603,7 @@ class ServerRequestContext extends RequestContext {
 
     if (maybeNotAllowed != null) {
       final String[] allowed = new String[maybeNotAllowed.size() - 1];
-      for (int i = 0; i < allowed.length; ++i)
+      for (int i = 0; i < allowed.length; ++i) // [A]
         allowed[i] = maybeNotAllowed.get(i + 1);
 
       throw new NotAllowedException(maybeNotAllowed.get(0), allowed);
@@ -625,30 +612,18 @@ class ServerRequestContext extends RequestContext {
     return null;
   }
 
-  ResourceMatches getResourceMatches() {
-    return resourceMatches;
-  }
-
-  HttpHeadersImpl getRequestHeaders() {
-    return requestHeaders;
-  }
-
-  private void setContentType(final ResourceMatch resource) {
-    final ServerMediaType[] mediaTypes = resource.getManifest().getResourceAnnotationProcessor(Produces.class).getMediaTypes();
+  void service() throws IOException, ServletException {
+    final ServerMediaType[] mediaTypes = resourceMatch.getResourceInfo().getResourceAnnotationProcessor(Produces.class).getMediaTypes();
     if (mediaTypes != null)
-      containerResponseContext.setMediaType(resource.getAccept());
+      containerResponseContext.setMediaType(resourceMatch.getAccept());
     else
       containerResponseContext.setStatus(Response.Status.NO_CONTENT.getStatusCode());
-  }
-
-  void service() throws IOException, ServletException {
-    setContentType(resourceMatch);
 
     final Object body = resourceMatch.service(this);
     if (body instanceof Response)
-      setResponse((Response)body, resourceMatch.getManifest().getMethodAnnotations(), resourceMatch.getAccept());
+      setResponse((Response)body, resourceMatch.getResourceInfo().getMethodAnnotations(), resourceMatch.getAccept());
     else if (body != null)
-      setEntity(body, resourceMatch.getManifest().getMethodAnnotations(), resourceMatch.getAccept());
+      containerResponseContext.setEntity(body, resourceMatch.getResourceInfo().getMethodAnnotations(), resourceMatch.getAccept());
   }
 
   void setAbortResponse(final AbortFilterChainException e) {
@@ -676,6 +651,10 @@ class ServerRequestContext extends RequestContext {
     return null;
   }
 
+  void sendError(final int scInternalServerError) throws IOException {
+    httpServletResponse.sendError(scInternalServerError);
+  }
+
   private Response setResponse(final Response response, final Annotation[] annotations, final CompatibleMediaType mediaType) {
     containerResponseContext.setEntityStream(null);
 
@@ -683,9 +662,11 @@ class ServerRequestContext extends RequestContext {
     containerResponseHeaders.clear();
 
     final MultivaluedMap<String,String> responseHeaders = response.getStringHeaders();
-    for (final Map.Entry<String,List<String>> entry : responseHeaders.entrySet())
-      for (final String header : entry.getValue())
-        containerResponseHeaders.add(entry.getKey(), header);
+    for (final Map.Entry<String,List<String>> entry : responseHeaders.entrySet()) { // [S]
+      final List<String> values = entry.getValue();
+      for (int i = 0, len = values.size(); i < len; ++i) // [L]
+        containerResponseHeaders.add(entry.getKey(), values.get(i));
+    }
 
     // FIXME: Have to hack getting the annotations out of the Response
     final Annotation[] responseAnnotations = ((ResponseImpl)response).annotations;
@@ -705,15 +686,12 @@ class ServerRequestContext extends RequestContext {
     return response;
   }
 
-  private void setEntity(final Object entity, final Annotation[] annotations, final CompatibleMediaType mediaType) {
-    containerResponseContext.setEntity(entity, annotations, mediaType);
-  }
-
   private void writeHeader() {
     final MultivaluedMap<String,String> containerResponseHeaders = containerResponseContext.getStringHeaders();
-    for (final Map.Entry<String,List<String>> entry : containerResponseHeaders.entrySet()) {
+    for (final Map.Entry<String,List<String>> entry : containerResponseHeaders.entrySet()) { // [S]
       final List<String> values = entry.getValue();
-      if (values.size() == 0)
+      final int len = values.size();
+      if (len == 0)
         continue;
 
       int i = -1;
@@ -721,7 +699,7 @@ class ServerRequestContext extends RequestContext {
       if (httpServletResponse.containsHeader(name))
         httpServletResponse.setHeader(name, values.get(++i));
 
-      for (final int len = values.size(); ++i < len;)
+      while (++i < len)
         httpServletResponse.addHeader(entry.getKey(), values.get(i));
     }
 
@@ -739,9 +717,9 @@ class ServerRequestContext extends RequestContext {
     final Type methodReturnType;
     final Annotation[] methodAnnotations;
     if (resourceMatch != null) {
-      final ResourceManifest manifest = resourceMatch.getManifest();
-      methodReturnType = manifest.getMethodReturnType();
-      methodAnnotations = manifest.getMethodAnnotations();
+      final ResourceInfoImpl resourceInfo = resourceMatch.getResourceInfo();
+      methodReturnType = resourceInfo.getMethodReturnType();
+      methodAnnotations = resourceInfo.getMethodAnnotations();
     }
     else {
       methodReturnType = null;

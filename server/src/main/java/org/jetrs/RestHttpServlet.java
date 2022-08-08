@@ -37,16 +37,15 @@ import javax.ws.rs.ext.RuntimeDelegate;
 import javax.ws.rs.ext.WriterInterceptor;
 
 abstract class RestHttpServlet extends HttpServlet {
-  private ServerRuntimeContext serverContext;
-
-  ServerRuntimeContext getServerContext() {
-    return serverContext;
-  }
-
   private final Application application;
+  private ServerRuntimeContext runtimeContext;
 
   RestHttpServlet(final Application application) {
     this.application = application;
+  }
+
+  final ServerRuntimeContext getRuntimeContext() {
+    return runtimeContext;
   }
 
   @Override
@@ -74,27 +73,27 @@ abstract class RestHttpServlet extends HttpServlet {
       }
     }
 
-    final List<ResourceManifest> resourceManifests = new ArrayList<>();
-    final List<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorEntityProviderFactories = new ArrayList<>();
-    final List<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorEntityProviderFactories = new ArrayList<>();
-    final List<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderEntityProviderFactories = new ArrayList<>();
-    final List<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterEntityProviderFactories = new ArrayList<>();
-    final List<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperEntityProviderFactories = new ArrayList<>();
-    final List<ProviderFactory<ParamConverterProvider>> paramConverterEntityProviderFactories = new ArrayList<>();
-    final List<ProviderFactory<ContainerRequestFilter>> preMatchContainerRequestFilterEntityProviderFactories = new ArrayList<>();
-    final List<ProviderFactory<ContainerRequestFilter>> containerRequestFilterEntityProviderFactories = new ArrayList<>();
-    final List<ProviderFactory<ContainerResponseFilter>> containerResponseFilterEntityProviderFactories = new ArrayList<>();
+    final List<ResourceInfoImpl> resourceInfos = new ArrayList<>();
+    final List<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories = new ArrayList<>();
+    final List<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorProviderFactories = new ArrayList<>();
+    final List<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderProviderFactories = new ArrayList<>();
+    final List<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterProviderFactories = new ArrayList<>();
+    final List<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperProviderFactories = new ArrayList<>();
+    final List<ProviderFactory<ParamConverterProvider>> paramConverterProviderFactories = new ArrayList<>();
+    final List<ProviderFactory<ContainerRequestFilter>> preMatchContainerRequestFilterProviderFactories = new ArrayList<>();
+    final List<ProviderFactory<ContainerRequestFilter>> containerRequestFilterProviderFactories = new ArrayList<>();
+    final List<ProviderFactory<ContainerResponseFilter>> containerResponseFilterProviderFactories = new ArrayList<>();
 
     final ServerBootstrap bootstrap = new ServerBootstrap(servletPath,
-      readerInterceptorEntityProviderFactories,
-      writerInterceptorEntityProviderFactories,
-      messageBodyReaderEntityProviderFactories,
-      messageBodyWriterEntityProviderFactories,
-      exceptionMapperEntityProviderFactories,
-      paramConverterEntityProviderFactories,
-      preMatchContainerRequestFilterEntityProviderFactories,
-      containerRequestFilterEntityProviderFactories,
-      containerResponseFilterEntityProviderFactories
+      readerInterceptorProviderFactories,
+      writerInterceptorProviderFactories,
+      messageBodyReaderProviderFactories,
+      messageBodyWriterProviderFactories,
+      exceptionMapperProviderFactories,
+      paramConverterProviderFactories,
+      preMatchContainerRequestFilterProviderFactories,
+      containerRequestFilterProviderFactories,
+      containerResponseFilterProviderFactories
     );
 
     try {
@@ -118,26 +117,27 @@ abstract class RestHttpServlet extends HttpServlet {
         classes = null;
       }
 
-      readerInterceptorEntityProviderFactories.sort(Bootstrap.providerResourceComparator);
-      writerInterceptorEntityProviderFactories.sort(Bootstrap.providerResourceComparator);
+      readerInterceptorProviderFactories.sort(Bootstrap.providerResourceComparator);
+      writerInterceptorProviderFactories.sort(Bootstrap.providerResourceComparator);
 
-      bootstrap.init(singletons, classes, resourceManifests);
+      bootstrap.init(singletons, classes, resourceInfos);
 
-      serverContext = new ServerRuntimeContext(
-        readerInterceptorEntityProviderFactories,
-        writerInterceptorEntityProviderFactories,
-        messageBodyReaderEntityProviderFactories,
-        messageBodyWriterEntityProviderFactories,
-        exceptionMapperEntityProviderFactories,
-        paramConverterEntityProviderFactories,
-        preMatchContainerRequestFilterEntityProviderFactories,
-        containerRequestFilterEntityProviderFactories,
-        containerResponseFilterEntityProviderFactories,
-        resourceManifests,
-        application
+      runtimeContext = new ServerRuntimeContext(
+        readerInterceptorProviderFactories,
+        writerInterceptorProviderFactories,
+        messageBodyReaderProviderFactories,
+        messageBodyWriterProviderFactories,
+        exceptionMapperProviderFactories,
+        paramConverterProviderFactories,
+        preMatchContainerRequestFilterProviderFactories,
+        containerRequestFilterProviderFactories,
+        containerResponseFilterProviderFactories,
+        config, getServletContext(),
+        application,
+        resourceInfos
       );
 
-      RuntimeDelegate.setInstance(new RuntimeDelegateImpl(serverContext));
+      RuntimeDelegate.setInstance(new RuntimeDelegateImpl(runtimeContext));
     }
     catch (final RuntimeException e) {
       throw e;

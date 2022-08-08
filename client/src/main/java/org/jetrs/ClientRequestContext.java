@@ -16,24 +16,10 @@
 
 package org.jetrs;
 
-import java.util.List;
-
 import javax.ws.rs.core.Request;
-import javax.ws.rs.ext.ExceptionMapper;
-import javax.ws.rs.ext.MessageBodyReader;
-import javax.ws.rs.ext.MessageBodyWriter;
-import javax.ws.rs.ext.ReaderInterceptor;
-import javax.ws.rs.ext.WriterInterceptor;
 
 class ClientRequestContext extends RequestContext {
-  ClientRequestContext(
-    final Request request,
-    final List<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorEntityProviderFactories,
-    final List<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorEntityProviderFactories,
-    final List<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderEntityProviderFactories,
-    final List<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterEntityProviderFactories,
-    final List<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperEntityProviderFactories
-  ) {
-    super(request, readerInterceptorEntityProviderFactories, writerInterceptorEntityProviderFactories, messageBodyReaderEntityProviderFactories, messageBodyWriterEntityProviderFactories, exceptionMapperEntityProviderFactories);
+  ClientRequestContext(final RuntimeContext runtimeContext, final Request request) {
+    super(runtimeContext, request);
   }
 }

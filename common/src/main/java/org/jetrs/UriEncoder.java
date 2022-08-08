@@ -47,7 +47,7 @@ final class UriEncoder {
      * "~" sub-delims = "!" / "$" / "&" / "'" / "(" / ")" / "*" / "+" / "," /
      * ";" / "=" pchar = unreserved / pct-encoded / sub-delims / ":" / "@"
      */
-    for (int i = 0; i < 128; ++i) {
+    for (int i = 0; i < 128; ++i) { // [N]
       if ('a' <= i && i <= 'z' || 'A' <= i && i <= 'Z' || '0' <= i && i <= '9')
         continue;
 
@@ -87,7 +87,7 @@ final class UriEncoder {
      * Encode via <a href="http://ietf.org/rfc/rfc3986.txt">RFC 3986</a>.
      * unreserved = ALPHA / DIGIT / "-" / "." / "_" / "~" space encoded as '+'
      */
-    for (int i = 0; i < 128; ++i) {
+    for (int i = 0; i < 128; ++i) { // [N]
       if ('a' <= i && i <= 'z' || 'A' <= i && i <= 'Z' || '0' <= i && i <= '9')
         continue;
 
@@ -107,7 +107,7 @@ final class UriEncoder {
     }
 
     // query = *( pchar / "/" / "?" )
-    for (int i = 0; i < 128; ++i) {
+    for (int i = 0; i < 128; ++i) { // [N]
       if ('a' <= i && i <= 'z' || 'A' <= i && i <= 'Z' || '0' <= i && i <= '9')
         continue;
 
@@ -160,13 +160,11 @@ final class UriEncoder {
     final Matcher matcher = nonCodes.matcher(string);
     final StringBuilder builder = new StringBuilder();
 
-    // FYI: we do not use the no-arg matcher.find()
-    // coupled with matcher.appendReplacement()
-    // because the matched text may contain
-    // a second % and we must make sure we
+    // FYI: we do not use the no-arg matcher.find() coupled with matcher.appendReplacement()
+    // because the matched text may contain a second % and we must make sure we
     // encode it (if necessary).
     int index = 0;
-    for (int start; matcher.find(index); index = start + 1)
+    for (int start; matcher.find(index); index = start + 1) // [X]
       builder.append(string, index, start = matcher.start()).append("%25");
 
     builder.append(string.substring(index));
@@ -175,12 +173,11 @@ final class UriEncoder {
 
   static boolean savePathParams(final String segmentString, final StringBuilder newSegment, final List<? super String> params) {
     boolean foundParam = false;
-    // Regular expressions can have '{' and '}' characters. Replace them to do
-    // match
+    // Regular expressions can have '{' and '}' characters. Replace them to do match.
     final CharSequence segment = replaceBraces(segmentString);
     final Matcher matcher = URI_TEMPLATE_PATTERN.matcher(segment);
     int start = 0;
-    for (; matcher.find(); start = matcher.end()) {
+    for (; matcher.find(); start = matcher.end()) { // [X]
       newSegment.append(segment, start, matcher.start());
       foundParam = true;
       // Regular expressions can have '{' and '}' characters. Recover earlier
@@ -218,7 +215,7 @@ final class UriEncoder {
 
   private static String encodeFromArray(final String segment, final String[] encodingMap, final boolean encodePercent) {
     final StringBuilder builder = new StringBuilder();
-    for (int i = 0; i < segment.length(); ++i) {
+    for (int i = 0; i < segment.length(); ++i) { // [N]
       final char ch = segment.charAt(i);
       if (encodePercent || ch != '%') {
         final String encoding = encode(ch, encodingMap);
@@ -233,8 +230,7 @@ final class UriEncoder {
   }
 
   /**
-   * Returns the URL-encoded representation of the specified character, via the
-   * provided encoding map.
+   * Returns the URL-encoded representation of the specified character, via the provided encoding map.
    *
    * @param zhar Integer representation of character.
    * @param encodingMap Encoding map.
@@ -248,7 +244,7 @@ final class UriEncoder {
     final StringBuilder builder = new StringBuilder();
     final Matcher matcher = PARAM_REPLACEMENT.matcher(segment);
     int start = 0;
-    for (int i = 0; matcher.find(); ++i) {
+    for (int i = 0; matcher.find(); ++i) { // [N]
       builder.append(segment, start, matcher.start());
       final String replacement = params.get(i);
       builder.append(replacement);
@@ -260,8 +256,7 @@ final class UriEncoder {
   }
 
   /**
-   * A regex pattern that searches for a URI template parameter in the form of
-   * {*}
+   * A regex pattern that searches for a URI template parameter in the form of {*}
    */
   private static final Pattern URI_TEMPLATE_PATTERN = Pattern.compile("(\\{([^}]+)\\})");
 
@@ -278,12 +273,12 @@ final class UriEncoder {
   static CharSequence replaceBraces(final String string) {
     CharSequence sequence = string;
     char[] chars = null;
-    for (int i = 0, open = 0, len = string.length(); i < len; ++i) {
+    for (int i = 0, open = 0, len = string.length(); i < len; ++i) { // [N]
       if (sequence.charAt(i) == '{') {
         if (open++ != 0) {
           if (sequence == string) {
             chars = string.toCharArray();
-            sequence = new ArrayCharSequence(chars);
+            sequence = ArrayCharSequence.of(chars);
           }
 
           chars[i] = openCurlyReplacement;
@@ -293,7 +288,7 @@ final class UriEncoder {
         if (--open != 0) {
           if (sequence == string) {
             chars = string.toCharArray();
-            sequence = new ArrayCharSequence(chars);
+            sequence = ArrayCharSequence.of(chars);
           }
 
           chars[i] = closeCurlyReplacement;

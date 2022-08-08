@@ -107,7 +107,7 @@ class InvocationImpl implements Invocation {
       connection.setConnectTimeout((int)connectTimeout);
       connection.setReadTimeout((int)readTimeout);
       if (headers != null) {
-        for (final Map.Entry<String,List<String>> entry : headers.entrySet()) {
+        for (final Map.Entry<String,List<String>> entry : headers.entrySet()) { // [S]
           final String headerName = entry.getKey();
           connection.setRequestProperty(headerName, CollectionUtil.toString(entry.getValue(), HttpHeadersImpl.getHeaderValueDelimiters(headerName)[0]));
         }
@@ -148,7 +148,8 @@ class InvocationImpl implements Invocation {
       }
       else {
         cookies = new HashMap<>(httpCookies.size());
-        for (final HttpCookie httpCookie : httpCookies) {
+        for (int i = 0, len = cookies.size(); i < len; ++i) { // [L]
+          final HttpCookie httpCookie = httpCookies.get(i);
           final Date expiry = Dates.addTime(headers.getDate(), 0, 0, (int)httpCookie.getMaxAge());
           final NewCookie cookie = new NewCookie(httpCookie.getName(), httpCookie.getValue(), httpCookie.getPath(), httpCookie.getDomain(), httpCookie.getVersion(), httpCookie.getComment(), (int)httpCookie.getMaxAge(), expiry, httpCookie.getSecure(), httpCookie.isHttpOnly());
           cookies.put(cookie.getName(), cookie);
@@ -307,9 +308,11 @@ class InvocationImpl implements Invocation {
     @Override
     public Invocation.Builder headers(final MultivaluedMap<String,Object> headers) {
       getHeaders().clear();
-      for (final Map.Entry<String,List<Object>> entry : headers.entrySet())
-        for (final Object value : entry.getValue())
-          header(entry.getKey(), value);
+      for (final Map.Entry<String,List<Object>> entry : headers.entrySet()) { // [S]
+        final List<Object> values = entry.getValue();
+        for (int i = 0, len = values.size(); i < len; ++i) // [L]
+          header(entry.getKey(), values.get(i));
+      }
 
       return this;
     }
@@ -469,9 +472,11 @@ class InvocationImpl implements Invocation {
   }
 
   private static void appendHeaders(final StringBuilder str, final HttpHeadersMap<String,Object> headers) {
-    for (final Map.Entry<String,List<String>> entry : headers.entrySet())
-      for (final String value : entry.getValue())
-        str.append("-H '").append(entry.getKey()).append(": ").append(value.replace("'", "\\'")).append("' ");
+    for (final Map.Entry<String,List<String>> entry : headers.entrySet()) { // [S]
+      final List<String> values = entry.getValue();
+      for (int i = 0, len = values.size(); i < len; ++i) // [L]
+        str.append("-H '").append(entry.getKey()).append(": ").append(values.get(i).replace("'", "\\'")).append("' ");
+    }
   }
 
   @Override

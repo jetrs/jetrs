@@ -45,50 +45,50 @@ class Bootstrap<R extends Comparable<? super R>> {
   private static final String[] excludeStartsWith = {"jdk.", "java.", "javax.", "com.sun.", "sun.", "org.w3c.", "org.xml.", "org.jvnet.", "org.joda.", "org.jcp.", "apple.security."};
 
   static boolean acceptPackage(final Package pkg) {
-    for (int i = 0; i < excludeStartsWith.length; ++i)
+    for (int i = 0; i < excludeStartsWith.length; ++i) // [A]
       if (pkg.getName().startsWith(excludeStartsWith[i]))
         return false;
 
     return true;
   }
 
-  private final List<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorEntityProviderFactories;
-  private final List<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorEntityProviderFactories;
-  private final List<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderEntityProviderFactories;
-  private final List<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterEntityProviderFactories;
-  private final List<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperEntityProviderFactories;
+  private final List<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories;
+  private final List<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorProviderFactories;
+  private final List<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderProviderFactories;
+  private final List<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterProviderFactories;
+  private final List<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperProviderFactories;
 
   Bootstrap(
-    final List<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorEntityProviderFactories,
-    final List<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorEntityProviderFactories,
-    final List<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderEntityProviderFactories,
-    final List<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterEntityProviderFactories,
-    final List<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperEntityProviderFactories
+    final List<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories,
+    final List<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorProviderFactories,
+    final List<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderProviderFactories,
+    final List<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterProviderFactories,
+    final List<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperProviderFactories
   ) {
-    this.readerInterceptorEntityProviderFactories = readerInterceptorEntityProviderFactories;
-    this.writerInterceptorEntityProviderFactories = writerInterceptorEntityProviderFactories;
-    this.messageBodyReaderEntityProviderFactories = messageBodyReaderEntityProviderFactories;
-    this.messageBodyWriterEntityProviderFactories = messageBodyWriterEntityProviderFactories;
-    this.exceptionMapperEntityProviderFactories = exceptionMapperEntityProviderFactories;
+    this.readerInterceptorProviderFactories = readerInterceptorProviderFactories;
+    this.writerInterceptorProviderFactories = writerInterceptorProviderFactories;
+    this.messageBodyReaderProviderFactories = messageBodyReaderProviderFactories;
+    this.messageBodyWriterProviderFactories = messageBodyWriterProviderFactories;
+    this.exceptionMapperProviderFactories = exceptionMapperProviderFactories;
   }
 
   @SuppressWarnings("unchecked")
   <T>boolean addResourceOrProvider(final List<Consumer<Set<Class<?>>>> afterAdds, final List<R> resources, final Class<? extends T> clazz, final T singleton, final boolean scanned) throws IllegalAccessException, InstantiationException, InvocationTargetException {
     if (clazz.isAnnotationPresent(Provider.class)) {
       if (ReaderInterceptor.class.isAssignableFrom(clazz))
-        readerInterceptorEntityProviderFactories.add(new ReaderInterceptorProviderFactory((Class<ReaderInterceptor>)clazz, (ReaderInterceptor)singleton));
+        readerInterceptorProviderFactories.add(new ReaderInterceptorProviderFactory((Class<ReaderInterceptor>)clazz, (ReaderInterceptor)singleton));
 
       if (WriterInterceptor.class.isAssignableFrom(clazz))
-        writerInterceptorEntityProviderFactories.add(new WriterInterceptorProviderFactory((Class<WriterInterceptor>)clazz, (WriterInterceptor)singleton));
+        writerInterceptorProviderFactories.add(new WriterInterceptorProviderFactory((Class<WriterInterceptor>)clazz, (WriterInterceptor)singleton));
 
       if (MessageBodyReader.class.isAssignableFrom(clazz))
-        messageBodyReaderEntityProviderFactories.add(new MessageBodyReaderProviderFactory((Class<MessageBodyReader<?>>)clazz, (MessageBodyReader<?>)singleton));
+        messageBodyReaderProviderFactories.add(new MessageBodyReaderProviderFactory((Class<MessageBodyReader<?>>)clazz, (MessageBodyReader<?>)singleton));
 
       if (MessageBodyWriter.class.isAssignableFrom(clazz))
-        messageBodyWriterEntityProviderFactories.add(new MessageBodyWriterProviderFactory((Class<MessageBodyWriter<?>>)clazz, (MessageBodyWriter<?>)singleton));
+        messageBodyWriterProviderFactories.add(new MessageBodyWriterProviderFactory((Class<MessageBodyWriter<?>>)clazz, (MessageBodyWriter<?>)singleton));
 
       if (ExceptionMapper.class.isAssignableFrom(clazz))
-        exceptionMapperEntityProviderFactories.add(new ExceptionMapperProviderFactory((Class<ExceptionMapper<?>>)clazz, (ExceptionMapper<?>)singleton));
+        exceptionMapperProviderFactories.add(new ExceptionMapperProviderFactory((Class<ExceptionMapper<?>>)clazz, (ExceptionMapper<?>)singleton));
     }
     else if (!scanned) {
       logger.warn("Ignored resource class " + clazz.getName() + " due to absent @Provider annotation");
@@ -102,12 +102,12 @@ class Bootstrap<R extends Comparable<? super R>> {
     final List<Consumer<Set<Class<?>>>> afterAdds = new ArrayList<>();
     if (singletons != null || classes != null) {
       if (singletons != null)
-        for (final Object singleton : singletons)
+        for (final Object singleton : singletons) // [S]
           if (singleton != null)
             addResourceOrProvider(afterAdds, resources, singleton.getClass(), singleton, false);
 
       if (classes != null)
-        for (final Class<?> cls : classes)
+        for (final Class<?> cls : classes) // [S]
           if (cls != null)
             addResourceOrProvider(afterAdds, resources, cls, null, false);
 
@@ -119,15 +119,15 @@ class Bootstrap<R extends Comparable<? super R>> {
         else if (classes != null) {
           resourceClasses = new HashSet<>(classes.size() + singletons.size());
           resourceClasses.addAll(classes);
-          for (final Object singleton : singletons)
+          for (final Object singleton : singletons) // [S]
             resourceClasses.add(singleton.getClass());
         }
         else {
           resourceClasses = null;
         }
 
-        for (final Consumer<Set<Class<?>>> afterAdd : afterAdds)
-          afterAdd.accept(resourceClasses);
+        for (int i = 0, len = afterAdds.size(); i < len; ++i) // [L]
+          afterAdds.get(i).accept(resourceClasses);
       }
     }
     else {
@@ -151,22 +151,21 @@ class Bootstrap<R extends Comparable<? super R>> {
         return false;
       };
 
-      for (final Package pkg : Package.getPackages())
+      for (final Package pkg : Package.getPackages()) // [A]
         if (acceptPackage(pkg))
           PackageLoader.getContextPackageLoader().loadPackage(pkg, initialize);
 
-      if (resourceClasses[0] != null) {
-        final Set<Class<?>> resourceClasses0 = resourceClasses[0];
-        for (final Consumer<Set<Class<?>>> afterAdd : afterAdds)
-          afterAdd.accept(resourceClasses0);
-      }
+      final Set<Class<?>> resourceClasses0 = resourceClasses[0];
+      if (resourceClasses0 != null)
+        for (int i = 0, len = afterAdds.size(); i < len; ++i) // [L]
+          afterAdds.get(i).accept(resourceClasses0);
     }
 
     if (resources != null)
       resources.sort(null);
 
-    exceptionMapperEntityProviderFactories.sort(providerResourceComparator);
-    messageBodyReaderEntityProviderFactories.sort(providerResourceComparator);
-    messageBodyWriterEntityProviderFactories.sort(providerResourceComparator);
+    exceptionMapperProviderFactories.sort(providerResourceComparator);
+    messageBodyReaderProviderFactories.sort(providerResourceComparator);
+    messageBodyWriterProviderFactories.sort(providerResourceComparator);
   }
 }

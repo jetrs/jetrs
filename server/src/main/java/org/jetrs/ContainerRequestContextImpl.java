@@ -40,15 +40,15 @@ import javax.ws.rs.ext.ReaderInterceptorContext;
 
 class ContainerRequestContextImpl extends InterceptorContextImpl implements ContainerRequestContext, ReaderInterceptorContext {
   private final UriInfoImpl uriInfo;
+  private final List<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories;
   private final ServerRequestContext requestContext;
-  private final List<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorEntityProviderFactories;
 
   ContainerRequestContextImpl(final HttpServletRequest httpServletRequest, final ServerRequestContext requestContext) {
-    super(httpServletRequest, requestContext.getRequestHeaders());
+    super(httpServletRequest, new HttpHeadersImpl(httpServletRequest));
+    this.requestContext = requestContext;
     this.method = httpServletRequest.getMethod();
     this.uriInfo = new UriInfoImpl(httpServletRequest, requestContext);
-    this.requestContext = requestContext;
-    this.readerInterceptorEntityProviderFactories = requestContext.getReaderInterceptorFactoryList();
+    this.readerInterceptorProviderFactories = requestContext.getReaderInterceptorFactoryList();
   }
 
   @Override
@@ -192,10 +192,10 @@ class ContainerRequestContextImpl extends InterceptorContextImpl implements Cont
   @Override
   @SuppressWarnings("unchecked")
   public Object proceed() throws IOException, WebApplicationException {
-    if (++interceptorIndex < readerInterceptorEntityProviderFactories.size())
-      return lastProceeded = readerInterceptorEntityProviderFactories.get(interceptorIndex).getSingletonOrFromRequestContext(requestContext).aroundReadFrom(this);
+    if (++interceptorIndex < readerInterceptorProviderFactories.size())
+      return lastProceeded = readerInterceptorProviderFactories.get(interceptorIndex).getSingletonOrFromRequestContext(requestContext).aroundReadFrom(this);
 
-    if (interceptorIndex == readerInterceptorEntityProviderFactories.size())
+    if (interceptorIndex == readerInterceptorProviderFactories.size())
       lastProceeded = messageBodyReader.readFrom(getType(), getGenericType(), getAnnotations(), getMediaType(), getHeaders(), getInputStream());
 
     return lastProceeded;

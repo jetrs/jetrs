@@ -46,12 +46,13 @@ class UriInfoImpl implements UriInfo {
   }
 
   private final HttpServletRequest httpServletRequest;
-  private final ServerRequestContext requestContext;
 
   private final String absoluteUri;
   private final String contextPath;
   private final int pathIndex;
   private final int queryIndex;
+
+  private ServerRequestContext requestContext;
 
   UriInfoImpl(final HttpServletRequest httpServletRequest, final ServerRequestContext requestContext) {
     this.httpServletRequest = assertNotNull(httpServletRequest, "httpServletRequest is null");
@@ -76,9 +77,8 @@ class UriInfoImpl implements UriInfo {
     this.pathIndex = pathIndex += contextPath.length() + 1;
     this.queryIndex = absoluteUri.indexOf('?', pathIndex);
 
-    if (absoluteUri.length() < pathIndex) {
+    if (absoluteUri.length() < pathIndex)
       pathEncoded = pathDecoded = "";
-    }
   }
 
   // Must not have leading '/'
@@ -208,9 +208,11 @@ class UriInfoImpl implements UriInfo {
 
     if (pathParametersDecoded == null) {
       pathParametersDecoded = new MultivaluedHashMap<>(pathParametersEncoded.size());
-      for (final Map.Entry<String,List<String>> entry : pathParametersEncoded.entrySet())
-        for (final String value : entry.getValue())
-          pathParametersDecoded.add(entry.getKey(), URIComponent.decode(value));
+      for (final Map.Entry<String,List<String>> entry : pathParametersEncoded.entrySet()) { // [S]
+        final List<String> values = entry.getValue();
+        for (int i = 0, len = values.size(); i < len; ++i) // [L]
+          pathParametersDecoded.add(entry.getKey(), URIComponent.decode(values.get(i)));
+      }
     }
 
     return pathParametersDecoded;
@@ -236,12 +238,12 @@ class UriInfoImpl implements UriInfo {
 
     final MultivaluedMap<String,String> parameters = new MultivaluedHashMap<>();
     if (decode) {
-      for (final Map.Entry<String,String[]> entry : httpServletRequest.getParameterMap().entrySet())
-        for (final String value : entry.getValue())
+      for (final Map.Entry<String,String[]> entry : httpServletRequest.getParameterMap().entrySet()) // [S]
+        for (final String value : entry.getValue()) // [A]
           parameters.add(entry.getKey(), URLs.decodePath(value));
     }
     else {
-      for (final Map.Entry<String,String[]> entry : httpServletRequest.getParameterMap().entrySet())
+      for (final Map.Entry<String,String[]> entry : httpServletRequest.getParameterMap().entrySet()) // [S]
         parameters.addAll(entry.getKey(), entry.getValue());
     }
 

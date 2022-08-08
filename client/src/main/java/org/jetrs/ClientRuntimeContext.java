@@ -38,24 +38,17 @@ public class ClientRuntimeContext extends RuntimeContext {
   }
 
   ClientRuntimeContext(
-    final List<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorEntityProviderFactories,
-    final List<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorEntityProviderFactories,
-    final List<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderEntityProviderFactories,
-    final List<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterEntityProviderFactories,
-    final List<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperEntityProviderFactories
+    final List<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories,
+    final List<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorProviderFactories,
+    final List<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderProviderFactories,
+    final List<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterProviderFactories,
+    final List<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperProviderFactories
   ) {
-    super(readerInterceptorEntityProviderFactories, writerInterceptorEntityProviderFactories, messageBodyReaderEntityProviderFactories, messageBodyWriterEntityProviderFactories, exceptionMapperEntityProviderFactories);
+    super(readerInterceptorProviderFactories, writerInterceptorProviderFactories, messageBodyReaderProviderFactories, messageBodyWriterProviderFactories, exceptionMapperProviderFactories);
   }
 
   @Override
   ClientRequestContext newRequestContext(final Request request) {
-    return new ClientRequestContext(
-      request,
-      readerInterceptorEntityProviderFactories,
-      writerInterceptorEntityProviderFactories,
-      messageBodyReaderEntityProviderFactories,
-      messageBodyWriterEntityProviderFactories,
-      exceptionMapperEntityProviderFactories
-    );
+    return new ClientRequestContext(this, request);
   }
 }

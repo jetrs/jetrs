@@ -56,7 +56,7 @@ public class InputStreamProvider extends MessageBodyProvider<InputStream> {
 
   @Override
   public void writeTo(final InputStream t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,Object> httpHeaders, final OutputStream entityStream) throws IOException, WebApplicationException {
-    for (int ch; (ch = t.read()) != -1; entityStream.write(ch));
+    for (int ch; (ch = t.read()) != -1; entityStream.write(ch)); // [X]
     t.close();
   }
 }

@@ -49,7 +49,7 @@ import javax.ws.rs.ext.WriterInterceptor;
 
 import org.libj.lang.PackageNotFoundException;
 
-class ServerBootstrap extends Bootstrap<ResourceManifest> {
+class ServerBootstrap extends Bootstrap<ResourceInfoImpl> {
   private static final int defaultPriority = Priorities.USER;
 
   private static final Comparator<ProviderFactory<?>> priorityComparator = Comparator.nullsFirst((o1, o2) -> {
@@ -77,7 +77,7 @@ class ServerBootstrap extends Bootstrap<ResourceManifest> {
 
     try {
       final Method[] methods = cls.getMethods();
-      for (final Method method : methods)
+      for (final Method method : methods) // [A]
         if (!Modifier.isAbstract(method.getModifiers()) && !Modifier.isStatic(method.getModifiers()) && !Modifier.isNative(method.getModifiers()) && (method.isAnnotationPresent(Path.class) || method.isAnnotationPresent(GET.class) || method.isAnnotationPresent(POST.class) || method.isAnnotationPresent(PUT.class) || method.isAnnotationPresent(DELETE.class) || method.isAnnotationPresent(HEAD.class)))
           return true;
 
@@ -88,50 +88,50 @@ class ServerBootstrap extends Bootstrap<ResourceManifest> {
     }
   }
 
-  private static <T>void add(final HttpMethod httpMethodAnnotation, final Method method, final String baseUri, final Path classPath, final Path methodPath, final List<? super ResourceManifest> resources, final Class<? extends T> clazz, final T singleton) {
-    final ResourceManifest manifest = new ResourceManifest(httpMethodAnnotation, method, baseUri, classPath, methodPath, singleton);
+  private static <T>void add(final HttpMethod httpMethodAnnotation, final Method method, final String baseUri, final Path classPath, final Path methodPath, final List<? super ResourceInfoImpl> resources, final Class<? extends T> clazz, final T singleton) {
+    final ResourceInfoImpl resourceInfo = new ResourceInfoImpl(httpMethodAnnotation, method, baseUri, classPath, methodPath, singleton);
     if (logger.isDebugEnabled())
-      logger.debug((httpMethodAnnotation != null ? httpMethodAnnotation.value() : "*") + " " + manifest.getUriTemplate().toString() + " -> " + clazz.getSimpleName() + "." + method.getName() + "()");
+      logger.debug((httpMethodAnnotation != null ? httpMethodAnnotation.value() : "*") + " " + resourceInfo.getUriTemplate().toString() + " -> " + clazz.getSimpleName() + "." + method.getName() + "()");
 
-    resources.add(manifest);
+    resources.add(resourceInfo);
   }
 
   private final String baseUri;
-  private final List<ProviderFactory<ParamConverterProvider>> paramConverterEntityProviderFactories;
-  private final List<ProviderFactory<ContainerRequestFilter>> preMatchContainerRequestFilterEntityProviderFactories;
-  private final List<ProviderFactory<ContainerRequestFilter>> containerRequestFilterEntityProviderFactories;
-  private final List<ProviderFactory<ContainerResponseFilter>> containerResponseFilterEntityProviderFactories;
+  private final List<ProviderFactory<ParamConverterProvider>> paramConverterProviderFactories;
+  private final List<ProviderFactory<ContainerRequestFilter>> preMatchContainerRequestFilterProviderFactories;
+  private final List<ProviderFactory<ContainerRequestFilter>> containerRequestFilterProviderFactories;
+  private final List<ProviderFactory<ContainerResponseFilter>> containerResponseFilterProviderFactories;
 
   ServerBootstrap(final String baseUri,
-    final List<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorEntityProviderFactories,
-    final List<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorEntityProviderFactories,
-    final List<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderEntityProviderFactories,
-    final List<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterEntityProviderFactories,
-    final List<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperEntityProviderFactories,
-    final List<ProviderFactory<ParamConverterProvider>> paramConverterEntityProviderFactories,
-    final List<ProviderFactory<ContainerRequestFilter>> preMatchContainerRequestFilterEntityProviderFactories,
-    final List<ProviderFactory<ContainerRequestFilter>> containerRequestFilterEntityProviderFactories,
-    final List<ProviderFactory<ContainerResponseFilter>> containerResponseFilterEntityProviderFactories
+    final List<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories,
+    final List<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorProviderFactories,
+    final List<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderProviderFactories,
+    final List<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterProviderFactories,
+    final List<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperProviderFactories,
+    final List<ProviderFactory<ParamConverterProvider>> paramConverterProviderFactories,
+    final List<ProviderFactory<ContainerRequestFilter>> preMatchContainerRequestFilterProviderFactories,
+    final List<ProviderFactory<ContainerRequestFilter>> containerRequestFilterProviderFactories,
+    final List<ProviderFactory<ContainerResponseFilter>> containerResponseFilterProviderFactories
   ) {
-    super(readerInterceptorEntityProviderFactories, writerInterceptorEntityProviderFactories, messageBodyReaderEntityProviderFactories, messageBodyWriterEntityProviderFactories, exceptionMapperEntityProviderFactories);
+    super(readerInterceptorProviderFactories, writerInterceptorProviderFactories, messageBodyReaderProviderFactories, messageBodyWriterProviderFactories, exceptionMapperProviderFactories);
     this.baseUri = baseUri;
-    this.paramConverterEntityProviderFactories = paramConverterEntityProviderFactories;
-    this.preMatchContainerRequestFilterEntityProviderFactories = preMatchContainerRequestFilterEntityProviderFactories;
-    this.containerRequestFilterEntityProviderFactories = containerRequestFilterEntityProviderFactories;
-    this.containerResponseFilterEntityProviderFactories = containerResponseFilterEntityProviderFactories;
+    this.paramConverterProviderFactories = paramConverterProviderFactories;
+    this.preMatchContainerRequestFilterProviderFactories = preMatchContainerRequestFilterProviderFactories;
+    this.containerRequestFilterProviderFactories = containerRequestFilterProviderFactories;
+    this.containerResponseFilterProviderFactories = containerResponseFilterProviderFactories;
   }
 
   @Override
-  <T>boolean addResourceOrProvider(final List<Consumer<Set<Class<?>>>> afterAdd, final List<ResourceManifest> resources, final Class<? extends T> clazz, final T singleton, final boolean scanned) throws IllegalAccessException, InstantiationException, InvocationTargetException {
+  <T>boolean addResourceOrProvider(final List<Consumer<Set<Class<?>>>> afterAdd, final List<ResourceInfoImpl> resources, final Class<? extends T> clazz, final T singleton, final boolean scanned) throws IllegalAccessException, InstantiationException, InvocationTargetException {
     if (clazz.isAnnotationPresent(Provider.class)) {
       if (ParamConverterProvider.class.isAssignableFrom(clazz))
-        paramConverterEntityProviderFactories.add(new ParamConverterProviderFactory((Class<ParamConverterProvider>)clazz, (ParamConverterProvider)singleton));
+        paramConverterProviderFactories.add(new ParamConverterProviderFactory((Class<ParamConverterProvider>)clazz, (ParamConverterProvider)singleton));
 
       if (ContainerRequestFilter.class.isAssignableFrom(clazz))
-        (clazz.isAnnotationPresent(PreMatching.class) ? preMatchContainerRequestFilterEntityProviderFactories : containerRequestFilterEntityProviderFactories).add(new ContainerRequestFilterProviderFactory((Class<ContainerRequestFilter>)clazz, (ContainerRequestFilter)singleton));
+        (clazz.isAnnotationPresent(PreMatching.class) ? preMatchContainerRequestFilterProviderFactories : containerRequestFilterProviderFactories).add(new ContainerRequestFilterProviderFactory((Class<ContainerRequestFilter>)clazz, (ContainerRequestFilter)singleton));
 
       if (ContainerResponseFilter.class.isAssignableFrom(clazz)) {
-        containerResponseFilterEntityProviderFactories.add(new ContainerResponseFilterProviderFactory((Class<ContainerResponseFilter>)clazz, (ContainerResponseFilter)singleton));
+        containerResponseFilterProviderFactories.add(new ContainerResponseFilterProviderFactory((Class<ContainerResponseFilter>)clazz, (ContainerResponseFilter)singleton));
         if (logger.isDebugEnabled() && clazz.isAnnotationPresent(PreMatching.class))
           logger.debug("@PreMatching annotation is not applicable to ContainerResponseFilter");
       }
@@ -144,9 +144,9 @@ class ServerBootstrap extends Bootstrap<ResourceManifest> {
     final Method[] methods = clazz.getMethods();
     if (methods.length > 0) {
       final HashSet<HttpMethod> httpMethodAnnotations = new HashSet<>();
-      for (final Method method : clazz.getMethods()) {
+      for (final Method method : clazz.getMethods()) { // [A]
         final Annotation[] annotations = method.getAnnotations();
-        for (final Annotation annotation : annotations) {
+        for (final Annotation annotation : annotations) { // [A]
           final HttpMethod httpMethodAnnotation = annotation.annotationType().getAnnotation(HttpMethod.class);
           if (httpMethodAnnotation != null)
             httpMethodAnnotations.add(httpMethodAnnotation);
@@ -155,7 +155,7 @@ class ServerBootstrap extends Bootstrap<ResourceManifest> {
         final Path classPath = clazz.getAnnotation(Path.class);
         final Path methodPath = method.getAnnotation(Path.class);
         if (httpMethodAnnotations.size() > 0) {
-          for (final HttpMethod httpMethodAnnotation : httpMethodAnnotations)
+          for (final HttpMethod httpMethodAnnotation : httpMethodAnnotations) // [S]
             add(httpMethodAnnotation, method, baseUri, classPath, methodPath, resources, clazz, singleton);
 
           httpMethodAnnotations.clear();
@@ -179,10 +179,10 @@ class ServerBootstrap extends Bootstrap<ResourceManifest> {
   }
 
   @Override
-  void init(final Set<?> singletons, final Set<Class<?>> classes, final List<ResourceManifest> resources) throws IllegalAccessException, InstantiationException, InvocationTargetException, PackageNotFoundException, IOException {
+  void init(final Set<?> singletons, final Set<Class<?>> classes, final List<ResourceInfoImpl> resources) throws IllegalAccessException, InstantiationException, InvocationTargetException, PackageNotFoundException, IOException {
     super.init(singletons, classes, resources);
-    preMatchContainerRequestFilterEntityProviderFactories.sort(priorityComparator);
-    containerRequestFilterEntityProviderFactories.sort(priorityComparator);
-    containerResponseFilterEntityProviderFactories.sort(priorityComparator);
+    preMatchContainerRequestFilterProviderFactories.sort(priorityComparator);
+    containerRequestFilterProviderFactories.sort(priorityComparator);
+    containerResponseFilterProviderFactories.sort(priorityComparator);
   }
 }

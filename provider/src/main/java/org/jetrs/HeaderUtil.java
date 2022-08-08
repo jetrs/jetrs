@@ -42,7 +42,7 @@ final class HeaderUtil {
     StringBuilder builder = null;
     final int len = str.length();
     int start = -1;
-    for (int stage = 1; i <= len; ++i) {
+    for (int stage = 1; i <= len; ++i) { // [N]
       final char ch;
       if (i == len || (ch = str.charAt(i)) == ',' || qFinished && ch == ';')
         break;

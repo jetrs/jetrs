@@ -16,9 +16,10 @@
 
 package org.jetrs;
 
-import java.util.Collections;
 import java.util.List;
 
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.Application;
@@ -32,52 +33,49 @@ import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
 
 class ServerRuntimeContext extends RuntimeContext {
-  private final List<ProviderFactory<ParamConverterProvider>> paramConverterEntityProviderFactories;
-  private final List<ProviderFactory<ContainerRequestFilter>> preMatchContainerRequestFilterEntityProviderFactories;
-  private final List<ProviderFactory<ContainerRequestFilter>> containerRequestFilterEntityProviderFactories;
-  private final List<ProviderFactory<ContainerResponseFilter>> containerResponseFilterEntityProviderFactories;
+  private final List<ProviderFactory<ParamConverterProvider>> paramConverterProviderFactories;
+  private final List<ProviderFactory<ContainerRequestFilter>> preMatchContainerRequestFilterProviderFactories;
+  private final List<ProviderFactory<ContainerRequestFilter>> containerRequestFilterProviderFactories;
+  private final List<ProviderFactory<ContainerResponseFilter>> containerResponseFilterProviderFactories;
 
-  private final List<ResourceManifest> resourceManifests;
+  private final ServletConfig servletConfig;
+  private final ServletContext servletContext;
   private final Application application;
+  private final List<ResourceInfoImpl> resourceInfos;
   private final Configuration configuration;
 
-  ServerRuntimeContext(final Application application) {
-    this(
-      Collections.EMPTY_LIST,
-      Collections.EMPTY_LIST,
-      Collections.EMPTY_LIST,
-      Collections.EMPTY_LIST,
-      Collections.EMPTY_LIST,
-      Collections.EMPTY_LIST,
-      Collections.EMPTY_LIST,
-      Collections.EMPTY_LIST,
-      Collections.EMPTY_LIST,
-      null,
-      application
-    );
-  }
-
   ServerRuntimeContext(
-    final List<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorEntityProviderFactories,
-    final List<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorEntityProviderFactories,
-    final List<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderEntityProviderFactories,
-    final List<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterEntityProviderFactories,
-    final List<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperEntityProviderFactories,
-    final List<ProviderFactory<ParamConverterProvider>> paramConverterEntityProviderFactories,
-    final List<ProviderFactory<ContainerRequestFilter>> preMatchContainerRequestFilterEntityProviderFactories,
-    final List<ProviderFactory<ContainerRequestFilter>> containerRequestFilterEntityProviderFactories,
-    final List<ProviderFactory<ContainerResponseFilter>> containerResponseFilterEntityProviderFactories,
-    final List<ResourceManifest> resourceManifests,
-    final Application application
+    final List<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories,
+    final List<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorProviderFactories,
+    final List<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderProviderFactories,
+    final List<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterProviderFactories,
+    final List<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperProviderFactories,
+    final List<ProviderFactory<ParamConverterProvider>> paramConverterProviderFactories,
+    final List<ProviderFactory<ContainerRequestFilter>> preMatchContainerRequestFilterProviderFactories,
+    final List<ProviderFactory<ContainerRequestFilter>> containerRequestFilterProviderFactories,
+    final List<ProviderFactory<ContainerResponseFilter>> containerResponseFilterProviderFactories,
+    final ServletConfig servletConfig, final ServletContext servletContext,
+    final Application application,
+    final List<ResourceInfoImpl> resourceInfos
   ) {
-    super(readerInterceptorEntityProviderFactories, writerInterceptorEntityProviderFactories, messageBodyReaderEntityProviderFactories, messageBodyWriterEntityProviderFactories, exceptionMapperEntityProviderFactories);
-    this.paramConverterEntityProviderFactories = paramConverterEntityProviderFactories;
-    this.preMatchContainerRequestFilterEntityProviderFactories = preMatchContainerRequestFilterEntityProviderFactories;
-    this.containerRequestFilterEntityProviderFactories = containerRequestFilterEntityProviderFactories;
-    this.containerResponseFilterEntityProviderFactories = containerResponseFilterEntityProviderFactories;
-    this.resourceManifests = resourceManifests;
+    super(readerInterceptorProviderFactories, writerInterceptorProviderFactories, messageBodyReaderProviderFactories, messageBodyWriterProviderFactories, exceptionMapperProviderFactories);
+    this.paramConverterProviderFactories = paramConverterProviderFactories;
+    this.preMatchContainerRequestFilterProviderFactories = preMatchContainerRequestFilterProviderFactories;
+    this.containerRequestFilterProviderFactories = containerRequestFilterProviderFactories;
+    this.containerResponseFilterProviderFactories = containerResponseFilterProviderFactories;
+    this.resourceInfos = resourceInfos;
+    this.servletConfig = servletConfig;
+    this.servletContext = servletContext;
     this.application = application;
     this.configuration = new ConfigurationImpl(application);
+  }
+
+  ServletConfig getServletConfig() {
+    return servletConfig;
+  }
+
+  ServletContext getServletContext() {
+    return servletContext;
   }
 
   Application getApplication() {
@@ -88,20 +86,28 @@ class ServerRuntimeContext extends RuntimeContext {
     return configuration;
   }
 
+  List<ResourceInfoImpl> getResourceInfos() {
+    return resourceInfos;
+  }
+
+  List<ProviderFactory<ParamConverterProvider>> getParamConverterProviderFactories() {
+    return paramConverterProviderFactories;
+  }
+
+  List<ProviderFactory<ContainerRequestFilter>> getPreMatchContainerRequestFilterProviderFactories() {
+    return preMatchContainerRequestFilterProviderFactories;
+  }
+
+  List<ProviderFactory<ContainerRequestFilter>> getContainerRequestFilterProviderFactories() {
+    return containerRequestFilterProviderFactories;
+  }
+
+  List<ProviderFactory<ContainerResponseFilter>> getContainerResponseFilterProviderFactories() {
+    return containerResponseFilterProviderFactories;
+  }
+
   @Override
   ServerRequestContext newRequestContext(final Request request) {
-    return new ServerRequestContext(
-      request,
-      readerInterceptorEntityProviderFactories,
-      writerInterceptorEntityProviderFactories,
-      messageBodyReaderEntityProviderFactories,
-      messageBodyWriterEntityProviderFactories,
-      exceptionMapperEntityProviderFactories,
-      paramConverterEntityProviderFactories,
-      preMatchContainerRequestFilterEntityProviderFactories,
-      containerRequestFilterEntityProviderFactories,
-      containerResponseFilterEntityProviderFactories,
-      resourceManifests
-    );
+    return new ServerRequestContext(this, request);
   }
 }

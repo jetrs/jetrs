@@ -46,7 +46,7 @@ public final class Tk implements Comparable<Tk> {
   private static final char[] keys = new char[values.length];
 
   static {
-    for (int i = 0; i < keys.length; ++i)
+    for (int i = 0; i < keys.length; ++i) // [A]
       keys[i] = values[i].symbol;
   }
 

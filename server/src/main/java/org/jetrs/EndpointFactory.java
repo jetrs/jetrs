@@ -87,14 +87,14 @@ final class EndpointFactory implements BiFunction<Application,Class<?>,HttpServl
   }
 
   private static void addAnnotation(final AnnotationVisitor annotationVisitor, final Annotation annotation, final Class<? extends Annotation> annotationType) throws IllegalAccessException, InvocationTargetException {
-    for (final Method method : annotationType.getDeclaredMethods()) {
+    for (final Method method : annotationType.getDeclaredMethods()) { // [A]
       final Class<?> returnType = method.getReturnType();
       if (returnType.isArray()) {
         final Class<?> componentType = returnType.getComponentType();
         final String componentDesc = Type.getDescriptor(componentType);
         final AnnotationVisitor visitor = annotationVisitor.visitArray(method.getName());
         final Object[] array = (Object[])method.invoke(annotation);
-        for (final Object member : array)
+        for (final Object member : array) // [A]
           addAnnotationValue(visitor, null, componentType, componentDesc, member);
 
         visitor.visitEnd();

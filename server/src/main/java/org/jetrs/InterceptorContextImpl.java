@@ -34,14 +34,14 @@ import org.libj.lang.Enumerations;
 
 abstract class InterceptorContextImpl implements InterceptorContext {
   final HttpHeadersImpl headers;
-  private final HttpServletRequest request;
+  private final HttpServletRequest httpServletRequest;
   private Collection<String> propertyNames;
   private Annotation[] annotations;
   private Class<?> type;
   private Type genericType;
 
-  InterceptorContextImpl(final HttpServletRequest request, final HttpHeadersImpl headers) {
-    this.request = request;
+  InterceptorContextImpl(final HttpServletRequest httpServletRequest, final HttpHeadersImpl headers) {
+    this.httpServletRequest = httpServletRequest;
     this.headers = headers;
   }
 
@@ -58,7 +58,7 @@ abstract class InterceptorContextImpl implements InterceptorContext {
   }
 
   final HttpServletRequest getHttpServletRequest() {
-    return this.request;
+    return httpServletRequest;
   }
 
   public final Locale getLanguage() {
@@ -67,7 +67,7 @@ abstract class InterceptorContextImpl implements InterceptorContext {
 
   @Override
   public final Object getProperty(final String name) {
-    return request.getAttribute(name);
+    return httpServletRequest.getAttribute(name);
   }
 
   @Override
@@ -77,7 +77,7 @@ abstract class InterceptorContextImpl implements InterceptorContext {
 
       @Override
       public int size() {
-        return Enumerations.getSize(request.getAttributeNames());
+        return Enumerations.getSize(httpServletRequest.getAttributeNames());
       }
 
       @Override
@@ -87,12 +87,12 @@ abstract class InterceptorContextImpl implements InterceptorContext {
 
       @Override
       public boolean contains(final Object o) {
-        return o instanceof String && request.getAttribute((String)o) != null;
+        return o instanceof String && httpServletRequest.getAttribute((String)o) != null;
       }
 
       @Override
       public Iterator<String> iterator() {
-        return iterator == null ? iterator = new EnumerationIterator<String>(request.getAttributeNames()) {
+        return iterator == null ? iterator = new EnumerationIterator<String>(httpServletRequest.getAttributeNames()) {
           private String last;
 
           @Override
@@ -102,24 +102,20 @@ abstract class InterceptorContextImpl implements InterceptorContext {
 
           @Override
           public void remove() {
-            request.removeAttribute(last);
+            httpServletRequest.removeAttribute(last);
           }
         } : iterator;
       }
 
       @Override
       public Object[] toArray() {
-        return Enumerations.toArray(String.class, request.getAttributeNames());
+        return Enumerations.toArray(httpServletRequest.getAttributeNames(), String.class);
       }
 
       @Override
       @SuppressWarnings("unchecked")
       public <T>T[] toArray(final T[] a) {
-        final Class<?> componentType = a.getClass().getComponentType();
-        if (componentType != String.class)
-          throw new ClassCastException();
-
-        return Enumerations.<T>toArray((Class<T>)a.getClass().getComponentType(), (Enumeration<T>)request.getAttributeNames(), a);
+        return Enumerations.<T>toArray((Enumeration<T>)httpServletRequest.getAttributeNames(), a);
       }
 
       @Override
@@ -132,7 +128,7 @@ abstract class InterceptorContextImpl implements InterceptorContext {
         if (!contains(o))
           return false;
 
-        request.removeAttribute((String)o);
+        httpServletRequest.removeAttribute((String)o);
         return true;
       }
 
@@ -141,7 +137,7 @@ abstract class InterceptorContextImpl implements InterceptorContext {
         if (c.size() == 0)
           return true;
 
-        for (final Object o : c)
+        for (final Object o : c) // [C]
           if (!contains(o))
             return false;
 
@@ -151,7 +147,7 @@ abstract class InterceptorContextImpl implements InterceptorContext {
       @Override
       public boolean addAll(final Collection<? extends String> c) {
         boolean changed = false;
-        for (final String e : c)
+        for (final String e : c) // [C]
           changed |= add(e);
 
         return changed;
@@ -160,7 +156,7 @@ abstract class InterceptorContextImpl implements InterceptorContext {
       @Override
       public boolean removeAll(final Collection<?> c) {
         boolean changed = false;
-        for (final Object e : c)
+        for (final Object e : c) // [C]
           changed |= remove(e);
 
         return changed;
@@ -169,7 +165,7 @@ abstract class InterceptorContextImpl implements InterceptorContext {
       @Override
       public boolean retainAll(final Collection<?> c) {
         boolean changed = false;
-        for (final Iterator<String> i = iterator(); i.hasNext();) {
+        for (final Iterator<String> i = iterator(); i.hasNext();) { // [X]
           if (!c.contains(i.next())) {
             i.remove();
             changed = true;
@@ -181,20 +177,20 @@ abstract class InterceptorContextImpl implements InterceptorContext {
 
       @Override
       public void clear() {
-        final Enumeration<String> names = request.getAttributeNames();
-        for (String name; names.hasMoreElements(); name = names.nextElement(), request.removeAttribute(name));
+        final Enumeration<String> names = httpServletRequest.getAttributeNames();
+        for (String name; names.hasMoreElements(); name = names.nextElement(), httpServletRequest.removeAttribute(name)); // [X]
       }
     } : propertyNames;
   }
 
   @Override
   public final void setProperty(final String name, final Object object) {
-    request.setAttribute(name, object);
+    httpServletRequest.setAttribute(name, object);
   }
 
   @Override
   public final void removeProperty(final String name) {
-    request.removeAttribute(name);
+    httpServletRequest.removeAttribute(name);
   }
 
   @Override
@@ -229,8 +225,8 @@ abstract class InterceptorContextImpl implements InterceptorContext {
 
   @Override
   public final MediaType getMediaType() {
-    final String mediaType = getStringHeaders().getFirst(HttpHeaders.CONTENT_TYPE);
-    return mediaType == null ? MediaType.WILDCARD_TYPE : MediaTypes.parse(mediaType);
+    final MediaType mediaType = (MediaType)getStringHeaders().getMirrorMap().getFirst(HttpHeaders.CONTENT_TYPE);
+    return mediaType != null ? mediaType : MediaType.WILDCARD_TYPE;
   }
 
   @Override

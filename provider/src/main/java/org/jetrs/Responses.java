@@ -35,7 +35,7 @@ final class Responses {
   private static final int[] statusCodes = new int[statuses.length];
 
   static {
-    for (int i = 0; i < statuses.length; ++i)
+    for (int i = 0; i < statuses.length; ++i) // [A]
       statusCodes[i] = statuses[i].getStatusCode();
   }
 

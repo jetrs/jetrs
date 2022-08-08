@@ -36,9 +36,11 @@ class ProvidersImpl implements Providers {
 
   @SuppressWarnings("unchecked")
   private <T,M>M getProvider(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final List<? extends MessageBodyProviderFactory<?>> factories) {
-    for (final MessageBodyProviderFactory<?> factory : factories)
+    for (int i = 0, len = factories.size(); i < len; ++i) { // [L]
+      final MessageBodyProviderFactory<?> factory = factories.get(i);
       if (factory.getCompatibleMediaType(requestContext, type, genericType, annotations, mediaType) != null)
         return (M)factory.getSingletonOrFromRequestContext(requestContext);
+    }
 
     return null;
   }
@@ -56,9 +58,12 @@ class ProvidersImpl implements Providers {
   @Override
   @SuppressWarnings("unchecked")
   public <T extends Throwable>ExceptionMapper<T> getExceptionMapper(final Class<T> type) {
-    for (final TypeProviderFactory<ExceptionMapper<?>> factory : requestContext.getExceptionMapperEntityProviderFactoryList())
+    final List<TypeProviderFactory<ExceptionMapper<?>>> factories = requestContext.getExceptionMapperProviderFactoryList();
+    for (int i = 0, len = factories.size(); i < len; ++i) { // [L]
+      final TypeProviderFactory<ExceptionMapper<?>> factory = factories.get(i);
       if (factory.getType().isAssignableFrom(type))
         return (ExceptionMapper<T>)factory.getSingletonOrFromRequestContext(requestContext);
+    }
 
     return null;
   }

@@ -107,8 +107,8 @@ final class MediaTypes {
     if (acceptCharsets == null)
       return true;
 
-    for (final String acceptCharset : acceptCharsets)
-      if (acceptCharset.equalsIgnoreCase(serverCharset))
+    for (int i = 0, len = acceptCharsets.size(); i < len; ++i) // [L]
+      if (acceptCharsets.get(i).equalsIgnoreCase(serverCharset))
         return true;
 
     return false;
@@ -438,7 +438,7 @@ final class MediaTypes {
         }
       }
 
-      for (int i = start, len = header.length(); i <= len; ++i) {
+      for (int i = start, len = header.length(); i <= len; ++i) { // [N]
         final char ch;
         if (i == len || (ch = header.charAt(i)) == ',') {
           if ((start = i + 1) >= len)
@@ -636,7 +636,7 @@ final class MediaTypes {
     if (string.length() == 0)
       throw new IllegalArgumentException(string);
 
-    for (int i = 0; i < string.length(); ++i) {
+    for (int i = 0; i < string.length(); ++i) { // [N]
       final char ch = string.charAt(i);
       if (!isValidChar(ch))
         throw new IllegalArgumentException("Illegal character '" + ch + "' at pos=" + i + " in: " + string);
@@ -704,10 +704,10 @@ final class MediaTypes {
     final StringBuilder builder = new StringBuilder();
     builder.append(mediaType.getType()).append('/').append(mediaType.getSubtype());
     if (mediaType.getParameters() != null) {
-      for (final Map.Entry<String,String> entry : mediaType.getParameters().entrySet()) {
+      for (final Map.Entry<String,String> entry : mediaType.getParameters().entrySet()) { // [S]
         final String value = entry.getValue();
         boolean quoted = false;
-        for (int i = 0, len = value.length(); i < len; ++i) {
+        for (int i = 0, len = value.length(); i < len; ++i) { // [N]
           final char ch = value.charAt(i);
           if (ch == ' ' || ch == ';' || ch == '"') {
             quoted = true;
