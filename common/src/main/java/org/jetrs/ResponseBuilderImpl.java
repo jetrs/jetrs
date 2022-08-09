@@ -37,7 +37,7 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Variant;
 
 class ResponseBuilderImpl extends Response.ResponseBuilder implements Cloneable {
-  private final RequestContext requestContext;
+  private final RequestContext<?> requestContext;
   private final HttpHeadersImpl headers;
 
   private int statusCode;
@@ -46,7 +46,7 @@ class ResponseBuilderImpl extends Response.ResponseBuilder implements Cloneable 
   private Annotation[] annotations;
   private HashMap<String,NewCookie> cookies;
 
-  ResponseBuilderImpl(final RequestContext requestContext) {
+  ResponseBuilderImpl(final RequestContext<?> requestContext) {
     this.requestContext = requestContext;
     this.headers = new HttpHeadersImpl();
   }
@@ -140,7 +140,7 @@ class ResponseBuilderImpl extends Response.ResponseBuilder implements Cloneable 
     this.headers.clear();
     for (final Map.Entry<String,List<Object>> entry : headers.entrySet()) { // [S]
       final List<Object> values = entry.getValue();
-      for (int i = 0, len = values.size(); i < len; ++i) { // [L]
+      for (int i = 0, i$ = values.size(); i < i$; ++i) { // [L]
         final Object value = values.get(i);
         if (value != null)
           header(entry.getKey(), value);

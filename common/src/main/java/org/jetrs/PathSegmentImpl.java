@@ -109,7 +109,7 @@ class PathSegmentImpl implements PathSegment {
     if (matrixParameters != null)
       for (final String name : matrixParameters.keySet()) { // [S]
         final List<String> values = matrixParameters.get(name);
-        for (int i = 0, len = values.size(); i < len; ++i) // [L]
+        for (int i = 0, i$ = values.size(); i < i$; ++i) // [L]
           builder.append(';').append(name).append('=').append(values.get(i));
       }
 

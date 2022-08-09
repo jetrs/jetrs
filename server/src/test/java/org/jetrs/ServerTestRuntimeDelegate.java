@@ -22,7 +22,7 @@ import javax.ws.rs.core.Application;
 
 public class ServerTestRuntimeDelegate extends RuntimeDelegateImpl {
   public ServerTestRuntimeDelegate() {
-    super(new ServerRuntimeContext(
+    setRuntimeContext(new ServerRuntimeContext(
       Collections.EMPTY_LIST,
       Collections.EMPTY_LIST,
       Collections.EMPTY_LIST,

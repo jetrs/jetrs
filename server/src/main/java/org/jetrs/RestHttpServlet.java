@@ -137,7 +137,11 @@ abstract class RestHttpServlet extends HttpServlet {
         resourceInfos
       );
 
-      RuntimeDelegate.setInstance(new RuntimeDelegateImpl(runtimeContext));
+      final RuntimeDelegate runtimeDelegate = RuntimeDelegate.getInstance();
+      if (!(runtimeDelegate instanceof RuntimeDelegateImpl))
+        throw new IllegalStateException("Unsupported RuntimeDelegate implementation: " + runtimeDelegate.getClass().getName());
+
+      ((RuntimeDelegateImpl)runtimeDelegate).setRuntimeContext(runtimeContext);
     }
     catch (final RuntimeException e) {
       throw e;

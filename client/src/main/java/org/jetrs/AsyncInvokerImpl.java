@@ -175,7 +175,6 @@ class AsyncInvokerImpl extends Invoker<Future<Response>> implements AsyncInvoker
   public <T>Future<T> method(final String name, final Entity<?> entity, final Class<T> responseType) {
     client.assertNotClosed();
     final Invocation invocation = build(name, entity, requestHeaders, cookies, cacheControl);
-    runtimeContext.newRequestContext(new RequestImpl(name));
     return getExecutorService().submit(() -> {
       try (final Response response = invocation.invoke()) {
         return response.readEntity(responseType);

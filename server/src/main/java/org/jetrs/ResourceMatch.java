@@ -95,7 +95,7 @@ class ResourceMatch implements Comparable<ResourceMatch> {
     return uriDecoded == null ? uriDecoded = URLs.decodePath(uriEncoded) : uriDecoded;
   }
 
-  Object getResourceInstance(final ServerRequestContext requestContext) throws IllegalAccessException, InstantiationException, IOException, InvocationTargetException {
+  Object getResourceInstance(final ContainerRequestContextImpl requestContext) throws IllegalAccessException, InstantiationException, IOException, InvocationTargetException {
     return instance == null ? instance = requestContext.newResourceInstance(resourceClass) : instance;
   }
 
@@ -107,7 +107,7 @@ class ResourceMatch implements Comparable<ResourceMatch> {
     return pathParameters;
   }
 
-  Object service(final ServerRequestContext requestContext) throws IOException, ServletException {
+  Object service(final ContainerRequestContextImpl requestContext) throws IOException, ServletException {
     return resourceInfo.service(this, requestContext);
   }
 

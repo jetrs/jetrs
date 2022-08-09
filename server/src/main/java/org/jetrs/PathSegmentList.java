@@ -21,7 +21,7 @@ import javax.ws.rs.core.PathSegment;
 import org.libj.lang.WrappedArrayList;
 
 class PathSegmentList extends WrappedArrayList<PathSegment> {
-  private static PathSegment[] parseSegments(final String pathEncoded, final int len, final int i, final int depth, final boolean decode) {
+  private static PathSegment[] parseSegments(final String pathEncoded, final int i, final int depth, final boolean decode) {
     final String segment;
     final int j = pathEncoded.indexOf('/', i);
     final PathSegment[] pathSegments;
@@ -31,7 +31,7 @@ class PathSegmentList extends WrappedArrayList<PathSegment> {
     }
     else {
       segment = pathEncoded.substring(i, j);
-      pathSegments = parseSegments(pathEncoded, len, j + 1, depth + 1, decode);
+      pathSegments = parseSegments(pathEncoded, j + 1, depth + 1, decode);
     }
 
     pathSegments[depth] = new PathSegmentImpl(segment, decode);
@@ -39,7 +39,7 @@ class PathSegmentList extends WrappedArrayList<PathSegment> {
   }
 
   PathSegmentList(final String pathEncoded, final boolean decode) {
-    super(parseSegments(pathEncoded, pathEncoded.length(), 0, 0, decode));
+    super(parseSegments(pathEncoded, 0, 0, decode));
   }
 
   PathSegmentList(final PathSegmentList pathSegmentList, final boolean decode) {

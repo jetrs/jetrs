@@ -53,9 +53,8 @@ import org.slf4j.LoggerFactory;
 class ResponseImpl extends Response {
   private static final Logger logger = LoggerFactory.getLogger(ResponseImpl.class);
 
-  private final RequestContext requestContext;
+  private final RequestContext<?> requestContext;
   private final Providers providers;
-  private final List<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorFactories;
   private final int statusCode;
   private final Response.StatusType statusInfo;
   private final HttpHeadersImpl headers;
@@ -64,10 +63,9 @@ class ResponseImpl extends Response {
   final Annotation[] annotations; // FIXME: annotations are not being used, but they need to be used by the MessageBodyWriter.. there's no API to get them out of this class
   private boolean closed;
 
-  ResponseImpl(final RequestContext requestContext, final int statusCode, final Response.StatusType statusInfo, final HttpHeadersImpl headers, final Map<String,NewCookie> cookies, final Object entity, final Annotation[] annotations) {
+  ResponseImpl(final RequestContext<?> requestContext, final int statusCode, final Response.StatusType statusInfo, final HttpHeadersImpl headers, final Map<String,NewCookie> cookies, final Object entity, final Annotation[] annotations) {
     this.requestContext = requestContext;
     this.providers = requestContext.getProviders();
-    this.readerInterceptorFactories = requestContext.getReaderInterceptorFactoryList();
     this.statusCode = statusCode;
     this.statusInfo = assertNotNull(statusInfo);
     this.headers = assertNotNull(headers);
@@ -135,7 +133,9 @@ class ResponseImpl extends Response {
 
     try {
       final InputStream in = closed ? new ByteArrayInputStream(entityBuffer) : (InputStream)entity;
-      if (readerInterceptorFactories == null)
+
+      final List<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories = requestContext.getReaderInterceptorFactoryList();
+      if (readerInterceptorProviderFactories == null)
         return (T)(entity = messageBodyReader.readFrom(rawType, genericType, annotations, mediaType, headers, in));
 
       final ReaderInterceptorContextImpl readerInterceptorContext = new ReaderInterceptorContextImpl(rawType, genericType, annotations, headers, in) {
@@ -144,10 +144,10 @@ class ResponseImpl extends Response {
 
         @Override
         public Object proceed() throws IOException {
-          if (++interceptorIndex < readerInterceptorFactories.size())
-            return lastProceeded = (readerInterceptorFactories.get(interceptorIndex).getSingletonOrFromRequestContext(requestContext)).aroundReadFrom(this);
+          if (++interceptorIndex < readerInterceptorProviderFactories.size())
+            return lastProceeded = (readerInterceptorProviderFactories.get(interceptorIndex).getSingletonOrFromRequestContext(requestContext)).aroundReadFrom(this);
 
-          if (interceptorIndex == readerInterceptorFactories.size())
+          if (interceptorIndex == readerInterceptorProviderFactories.size())
             lastProceeded = ((MessageBodyReader)messageBodyReader).readFrom(getType(), getGenericType(), getAnnotations(), getMediaType(), getHeaders(), getInputStream());
 
           return lastProceeded;

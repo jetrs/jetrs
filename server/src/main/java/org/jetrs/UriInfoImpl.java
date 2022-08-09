@@ -52,9 +52,9 @@ class UriInfoImpl implements UriInfo {
   private final int pathIndex;
   private final int queryIndex;
 
-  private ServerRequestContext requestContext;
+  private ContainerRequestContextImpl requestContext;
 
-  UriInfoImpl(final HttpServletRequest httpServletRequest, final ServerRequestContext requestContext) {
+  UriInfoImpl(final HttpServletRequest httpServletRequest, final ContainerRequestContextImpl requestContext) {
     this.httpServletRequest = assertNotNull(httpServletRequest, "httpServletRequest is null");
     this.requestContext = requestContext;
     this.absoluteUri = getAbsoluteUri(httpServletRequest);
@@ -210,7 +210,7 @@ class UriInfoImpl implements UriInfo {
       pathParametersDecoded = new MultivaluedHashMap<>(pathParametersEncoded.size());
       for (final Map.Entry<String,List<String>> entry : pathParametersEncoded.entrySet()) { // [S]
         final List<String> values = entry.getValue();
-        for (int i = 0, len = values.size(); i < len; ++i) // [L]
+        for (int i = 0, i$ = values.size(); i < i$; ++i) // [L]
           pathParametersDecoded.add(entry.getKey(), URIComponent.decode(values.get(i)));
       }
     }

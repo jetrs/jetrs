@@ -41,16 +41,35 @@ import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.WriterInterceptor;
 import javax.ws.rs.ext.WriterInterceptorContext;
 
-class ContainerResponseContextImpl extends InterceptorContextImpl implements ContainerResponseContext, WriterInterceptorContext {
+class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletRequest> implements ContainerResponseContext, WriterInterceptorContext {
   private final List<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorProviderFactories;
-  private final ServerRequestContext requestContext;
+  private final HttpServletRequest httpServletRequest;
+  private final ContainerRequestContextImpl requestContext;
+  private final HttpHeadersImpl headers;
   private Response.StatusType status;
 
-  ContainerResponseContextImpl(final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse, final ServerRequestContext requestContext) {
-    super(httpServletRequest, new HttpHeadersImpl(httpServletResponse));
+  ContainerResponseContextImpl(final PropertiesAdapter<HttpServletRequest> propertiesAdapter, final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse, final ContainerRequestContextImpl requestContext) {
+    super(propertiesAdapter);
+    this.httpServletRequest = httpServletRequest;
+    this.headers = new HttpHeadersImpl(httpServletResponse);
     this.status = Response.Status.fromStatusCode(httpServletResponse.getStatus());
     this.requestContext = requestContext;
     this.writerInterceptorProviderFactories = requestContext.getWriterInterceptorFactoryList();
+  }
+
+  @Override
+  HttpServletRequest getProperties() {
+    return httpServletRequest;
+  }
+
+  @Override
+  HttpHeadersImpl getHttpHeaders() {
+    return headers;
+  }
+
+  @Override
+  public HttpHeadersImpl getStringHeaders() {
+    return headers;
   }
 
   @Override
@@ -75,12 +94,12 @@ class ContainerResponseContextImpl extends InterceptorContextImpl implements Con
 
   @Override
   public MultivaluedMap<String,Object> getHeaders() {
-    return headers.getMirrorMap();
+    return getStringHeaders().getMirrorMap();
   }
 
   @Override
   public Set<String> getAllowedMethods() {
-    return headers.getAllowedMethods();
+    return getStringHeaders().getAllowedMethods();
   }
 
   @Override
@@ -95,12 +114,12 @@ class ContainerResponseContextImpl extends InterceptorContextImpl implements Con
 
   @Override
   public Date getLastModified() {
-    return headers.getLastModified();
+    return getStringHeaders().getLastModified();
   }
 
   @Override
   public URI getLocation() {
-    return headers.getLocation();
+    return getStringHeaders().getLocation();
   }
 
   @Override
@@ -170,7 +189,7 @@ class ContainerResponseContextImpl extends InterceptorContextImpl implements Con
 
     setAnnotations(annotations);
     if (mediaType != null)
-      headers.setMediaType(mediaType);
+      getStringHeaders().setMediaType(mediaType);
   }
 
   @Override
@@ -192,7 +211,7 @@ class ContainerResponseContextImpl extends InterceptorContextImpl implements Con
 
   @Override
   public int getLength() {
-    return headers.getLength();
+    return getStringHeaders().getLength();
   }
 
   @Override

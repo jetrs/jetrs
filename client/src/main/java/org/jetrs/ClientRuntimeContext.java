@@ -16,9 +16,9 @@
 
 package org.jetrs;
 
-import java.util.Collections;
 import java.util.List;
 
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.MessageBodyReader;
@@ -27,28 +27,24 @@ import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
 
 public class ClientRuntimeContext extends RuntimeContext {
-  ClientRuntimeContext() {
-    this(
-      Collections.EMPTY_LIST,
-      Collections.EMPTY_LIST,
-      Collections.EMPTY_LIST,
-      Collections.EMPTY_LIST,
-      Collections.EMPTY_LIST
-    );
-  }
-
   ClientRuntimeContext(
+    final Configuration configuration,
     final List<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories,
     final List<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorProviderFactories,
     final List<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderProviderFactories,
     final List<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterProviderFactories,
     final List<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperProviderFactories
   ) {
-    super(readerInterceptorProviderFactories, writerInterceptorProviderFactories, messageBodyReaderProviderFactories, messageBodyWriterProviderFactories, exceptionMapperProviderFactories);
+    super(configuration, readerInterceptorProviderFactories, writerInterceptorProviderFactories, messageBodyReaderProviderFactories, messageBodyWriterProviderFactories, exceptionMapperProviderFactories);
   }
 
   @Override
-  ClientRequestContext newRequestContext(final Request request) {
-    return new ClientRequestContext(this, request);
+  ClientRequestContextImpl localRequestContext() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  ClientRequestContextImpl newRequestContext(final Request request) {
+    return new ClientRequestContextImpl(PropertiesAdapter.MAP_ADAPTER, this, request);
   }
 }

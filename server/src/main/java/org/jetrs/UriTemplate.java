@@ -79,18 +79,18 @@ class UriTemplate implements Comparable<UriTemplate> {
 
   static boolean addLeadingRemoveTrailing(final StringBuilder builder, final Path path) {
     final String value;
-    final int len;
-    if (path == null || (len = (value = path.value()).length()) == 0)
+    final int i$;
+    if (path == null || (i$ = (value = path.value()).length()) == 0)
       return false;
 
     final boolean leadingSlash = value.charAt(0) == '/';
-    if (leadingSlash && len == 1)
+    if (leadingSlash && i$ == 1)
       return false;
 
-    final int trailingSlash = value.charAt(len - 1) == '/' ? len - 1 : len;
-    if (trailingSlash != len) {
+    final int trailingSlash = value.charAt(i$ - 1) == '/' ? i$ - 1 : i$;
+    if (trailingSlash != i$) {
       if (leadingSlash) {
-        if (len == 2)
+        if (i$ == 2)
           return false;
 
         builder.append(value, 0, trailingSlash);
@@ -109,7 +109,7 @@ class UriTemplate implements Comparable<UriTemplate> {
 
   // FIXME: This does URI-Encode...
   // FIXME: URL-Encode baseUri, but don't double-encode %-encoded values
-  private static int appendLiteral(final StringBuilder builder, final String uriTemplate, final int len, final int start, final int end) {
+  private static int appendLiteral(final StringBuilder builder, final String uriTemplate, final int i$, final int start, final int end) {
     // Append the literal path, first with URI encode, then with regex escape
     int repeatedSlashes = 0;
     char ch, prev = '\0';
@@ -136,7 +136,7 @@ class UriTemplate implements Comparable<UriTemplate> {
     }
 
     final int builderLen = builder.length() - 1;
-    if (end == len && builder.charAt(builderLen) == '/') {
+    if (end == i$ && builder.charAt(builderLen) == '/') {
       builder.setLength(builderLen);
       ++repeatedSlashes;
     }
@@ -178,25 +178,25 @@ class UriTemplate implements Comparable<UriTemplate> {
    * @param regex The {@link StringBuilder} to be used for construction of the matching regex for this {@link UriTemplate}.
    * @param value The {@link StringBuilder} to be used for construction of the regex values of path parameters.
    * @param uriTemplate The URI template to parse.
-   * @param len The length of the {@code uriTemplate} string.
+   * @param i$ The length of the {@code uriTemplate} string.
    * @param i The character index of iteration into the {@code uriTemplate} string.
    * @param depth The depth of regex name groups.
    * @return An array of regex name groups corresponding to path parameter names.
    * @see Path#value()
    */
-  String[] parsePathParams(final StringBuilder regex, StringBuilder value, final String uriTemplate, final int len, int i, final int depth) {
+  String[] parsePathParams(final StringBuilder regex, StringBuilder value, final String uriTemplate, final int i$, int i, final int depth) {
     int start = uriTemplate.indexOf('{', ++i);
     if (start < 0) {
-      literalChars += appendLiteral(regex, uriTemplate, len, i, len);
+      literalChars += appendLiteral(regex, uriTemplate, i$, i, i$);
       return new String[depth];
     }
 
-    literalChars += appendLiteral(regex, uriTemplate, len, i, start);
+    literalChars += appendLiteral(regex, uriTemplate, i$, i, start);
 
     char ch;
     i = ++start;
     String name = null;
-    for (int mark = -1; i < len; ++i) { // [N]
+    for (int mark = -1; i < i$; ++i) { // [N]
       ch = uriTemplate.charAt(i);
       if (Character.isWhitespace(ch)) {
         if (name == null) {
@@ -241,7 +241,7 @@ class UriTemplate implements Comparable<UriTemplate> {
         start = i;
         boolean escaped = false;
         boolean wsp = false;
-        for (int j = 0, noWsp = 0, scope = 1; i < len; ch = uriTemplate.charAt(++i)) { // [N]
+        for (int j = 0, noWsp = 0, scope = 1; i < i$; ch = uriTemplate.charAt(++i)) { // [N]
           if (escaped) {
             escaped = false;
             if (ch == 'k')
@@ -317,7 +317,7 @@ class UriTemplate implements Comparable<UriTemplate> {
       ++allGroups;
     }
 
-    final String[] pathParamNames = parsePathParams(regex, value, uriTemplate, len, i, depth + 1);
+    final String[] pathParamNames = parsePathParams(regex, value, uriTemplate, i$, i, depth + 1);
     pathParamNames[depth] = name;
     return pathParamNames;
   }

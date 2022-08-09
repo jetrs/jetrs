@@ -520,7 +520,7 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
       map.remove(name);
       for (final String paramName : map.keySet()) { // [S]
         final List<String> paramValues = map.get(paramName);
-        for (int i = 0, len = paramValues.size(); i < len; ++i) { // [L]
+        for (int i = 0, i$ = paramValues.size(); i < i$; ++i) { // [L]
           final Object paramValue = paramValues.get(i);
           path += ";" + paramName;
           if (paramValue != null)

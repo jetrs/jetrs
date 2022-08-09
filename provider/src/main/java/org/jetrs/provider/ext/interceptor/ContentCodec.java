@@ -108,7 +108,7 @@ public abstract class ContentCodec implements ReaderInterceptor, WriterIntercept
     final List<String> acceptEncodings = requestHeaders.getRequestHeader(HttpHeaders.ACCEPT_ENCODING);
     if (acceptEncodings != null && acceptEncodings.size() > 0) {
       final Set<String> supportedEncodings = getSupportedEncodings();
-      for (int i = 0, len = acceptEncodings.size(); i < len; ++i) { // [L]
+      for (int i = 0, i$ = acceptEncodings.size(); i < i$; ++i) { // [L]
         final String acceptEncoding = acceptEncodings.get(i);
         if (acceptEncoding != null && supportedEncodings.contains(acceptEncoding)) {
           context.setOutputStream(encode(acceptEncoding, context.getOutputStream()));

@@ -107,7 +107,7 @@ final class MediaTypes {
     if (acceptCharsets == null)
       return true;
 
-    for (int i = 0, len = acceptCharsets.size(); i < len; ++i) // [L]
+    for (int i = 0, i$ = acceptCharsets.size(); i < i$; ++i) // [L]
       if (acceptCharsets.get(i).equalsIgnoreCase(serverCharset))
         return true;
 
@@ -438,10 +438,10 @@ final class MediaTypes {
         }
       }
 
-      for (int i = start, len = header.length(); i <= len; ++i) { // [N]
+      for (int i = start, i$ = header.length(); i <= i$; ++i) { // [N]
         final char ch;
-        if (i == len || (ch = header.charAt(i)) == ',') {
-          if ((start = i + 1) >= len)
+        if (i == i$ || (ch = header.charAt(i)) == ',') {
+          if ((start = i + 1) >= i$)
             header = null;
 
           if (builder != null && builder.length() != 0) {
@@ -707,7 +707,7 @@ final class MediaTypes {
       for (final Map.Entry<String,String> entry : mediaType.getParameters().entrySet()) { // [S]
         final String value = entry.getValue();
         boolean quoted = false;
-        for (int i = 0, len = value.length(); i < len; ++i) { // [N]
+        for (int i = 0, i$ = value.length(); i < i$; ++i) { // [N]
           final char ch = value.charAt(i);
           if (ch == ' ' || ch == ';' || ch == '"') {
             quoted = true;

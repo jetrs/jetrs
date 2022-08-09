@@ -50,7 +50,7 @@ class StrictCacheControl extends CacheControl {
       void toString(final CacheControl cacheControl, final StringBuilder builder) {
         if (cacheControl.getPrivateFields().size() > 0) {
           final List<String> fields = cacheControl.getPrivateFields();
-          for (int i = 0, len = fields.size(); i < len; ++i) { // [L]
+          for (int i = 0, i$ = fields.size(); i < i$; ++i) { // [L]
             final String field = fieldToString(fields.get(i));
             if (field != null)
               builder.append("private=").append(field).append(',');
@@ -80,7 +80,7 @@ class StrictCacheControl extends CacheControl {
       void toString(final CacheControl cacheControl, final StringBuilder builder) {
         if (cacheControl.getNoCacheFields().size() > 0) {
           final List<String> fields = cacheControl.getNoCacheFields();
-          for (int i = 0, len = fields.size(); i < len; ++i) { // [L]
+          for (int i = 0, i$ = fields.size(); i < i$; ++i) { // [L]
             final String field = fieldToString(fields.get(i));
             if (field != null)
               builder.append("no-cache=").append(field).append(',');

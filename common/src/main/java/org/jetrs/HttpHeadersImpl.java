@@ -91,8 +91,8 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
   static void parseMultiHeaderNoSort(final List<String> values, final String headerValue, final char ... delimiters) {
     char ch = '\0';
     char checkDel = '\0', foundDel = '\0';
-    for (int i = 0, start = -1, end = -1, len = headerValue.length(); i <= len; ++i) { // [N]
-      if (i == len || (checkDel = checkDel(ch = headerValue.charAt(i), delimiters, foundDel)) != '\0') {
+    for (int i = 0, start = -1, end = -1, i$ = headerValue.length(); i <= i$; ++i) { // [N]
+      if (i == i$ || (checkDel = checkDel(ch = headerValue.charAt(i), delimiters, foundDel)) != '\0') {
         if (foundDel == '\0')
           foundDel = checkDel;
 
@@ -308,7 +308,7 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
       return Collections.emptyMap();
 
     final Map<String,Cookie> cookies = new LinkedHashMap<>();
-    for (int i = 0, len = headers.size(); i < len; ++i) { // [L]
+    for (int i = 0, i$ = headers.size(); i < i$; ++i) { // [L]
       final Cookie cookie = (Cookie)headers.get(i);
       cookies.put(cookie.getName(), cookie);
     }
@@ -372,7 +372,7 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
 
     final char delimiter = getHeaderValueDelimiters(headerName)[0];
     final StringBuilder builder = new StringBuilder();
-    for (int i = 0, len = values.size(); i < len; ++i) { // [L]
+    for (int i = 0, i$ = values.size(); i < i$; ++i) { // [L]
       if (i > 0)
         builder.append(delimiter);
 

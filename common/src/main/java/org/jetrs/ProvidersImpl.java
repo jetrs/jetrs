@@ -28,15 +28,15 @@ import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Providers;
 
 class ProvidersImpl implements Providers {
-  private final RequestContext requestContext;
+  private final RequestContext<?> requestContext;
 
-  ProvidersImpl(final RequestContext requestContext) {
+  ProvidersImpl(final RequestContext<?> requestContext) {
     this.requestContext = requestContext;
   }
 
   @SuppressWarnings("unchecked")
   private <T,M>M getProvider(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final List<? extends MessageBodyProviderFactory<?>> factories) {
-    for (int i = 0, len = factories.size(); i < len; ++i) { // [L]
+    for (int i = 0, i$ = factories.size(); i < i$; ++i) { // [L]
       final MessageBodyProviderFactory<?> factory = factories.get(i);
       if (factory.getCompatibleMediaType(requestContext, type, genericType, annotations, mediaType) != null)
         return (M)factory.getSingletonOrFromRequestContext(requestContext);
@@ -59,7 +59,7 @@ class ProvidersImpl implements Providers {
   @SuppressWarnings("unchecked")
   public <T extends Throwable>ExceptionMapper<T> getExceptionMapper(final Class<T> type) {
     final List<TypeProviderFactory<ExceptionMapper<?>>> factories = requestContext.getExceptionMapperProviderFactoryList();
-    for (int i = 0, len = factories.size(); i < len; ++i) { // [L]
+    for (int i = 0, i$ = factories.size(); i < i$; ++i) { // [L]
       final TypeProviderFactory<ExceptionMapper<?>> factory = factories.get(i);
       if (factory.getType().isAssignableFrom(type))
         return (ExceptionMapper<T>)factory.getSingletonOrFromRequestContext(requestContext);

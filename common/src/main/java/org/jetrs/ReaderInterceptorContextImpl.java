@@ -19,23 +19,16 @@ package org.jetrs;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.Map;
 
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.ReaderInterceptorContext;
 
-abstract class ReaderInterceptorContextImpl implements ReaderInterceptorContext {
+abstract class ReaderInterceptorContextImpl extends InterceptorContextImpl<HashMap<String,Object>> implements ReaderInterceptorContext {
   private final HttpHeadersImpl headers;
-  private Class<?> type;
-  private Type genericType;
-  private Annotation[] annotations;
-
-  private Map<String,Object> properties;
 
   ReaderInterceptorContextImpl(final Class<?> type, final Type genericType, final Annotation[] annotations, final HttpHeadersImpl headers, final InputStream inputStream) {
+    super(PropertiesAdapter.MAP_ADAPTER);
     this.headers = headers;
     setType(type);
     setGenericType(genericType);
@@ -44,67 +37,18 @@ abstract class ReaderInterceptorContextImpl implements ReaderInterceptorContext 
   }
 
   @Override
-  public Object getProperty(final String name) {
-    return properties == null ? null : properties.get(name);
+  HashMap<String,Object> getProperties() {
+    return null;
   }
 
   @Override
-  public Collection<String> getPropertyNames() {
-    return properties == null ? null : properties.keySet();
+  HttpHeadersImpl getHttpHeaders() {
+    return headers;
   }
 
   @Override
-  public void setProperty(final String name, final Object object) {
-    if (properties == null)
-      properties = new HashMap<>();
-
-    properties.put(name, object);
-  }
-
-  @Override
-  public void removeProperty(final String name) {
-    if (properties != null)
-      properties.remove(name);
-  }
-
-  @Override
-  public Annotation[] getAnnotations() {
-    return annotations;
-  }
-
-  @Override
-  public void setAnnotations(final Annotation[] annotations) {
-    this.annotations = annotations;
-  }
-
-  @Override
-  public Class<?> getType() {
-    return type;
-  }
-
-  @Override
-  public void setType(final Class<?> type) {
-    this.type = type;
-  }
-
-  @Override
-  public Type getGenericType() {
-    return genericType;
-  }
-
-  @Override
-  public void setGenericType(final Type genericType) {
-    this.genericType = genericType;
-  }
-
-  @Override
-  public MediaType getMediaType() {
-    return headers.getMediaType();
-  }
-
-  @Override
-  public void setMediaType(final MediaType mediaType) {
-    headers.setMediaType(mediaType);
+  public MultivaluedMap<String,String> getHeaders() {
+    return headers;
   }
 
   private InputStream is;
@@ -117,10 +61,5 @@ abstract class ReaderInterceptorContextImpl implements ReaderInterceptorContext 
   @Override
   public void setInputStream(final InputStream is) {
     this.is = is;
-  }
-
-  @Override
-  public MultivaluedMap<String,String> getHeaders() {
-    return headers;
   }
 }

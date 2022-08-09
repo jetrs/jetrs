@@ -43,15 +43,15 @@ import javax.ws.rs.ext.WriterInterceptor;
 import org.libj.lang.PackageNotFoundException;
 
 class ClientImpl implements Client, ConfigurableImpl<Client> {
-  private final Configuration config;
+  private final Configuration configuration;
   private final SSLContext sslContext;
   private final HostnameVerifier verifier;
   private final ExecutorService executorService;
   private final long connectTimeout;
   private final long readTimeout;
 
-  ClientImpl(final Configuration config, final SSLContext sslContext, final HostnameVerifier verifier, final ExecutorService executorService, final long connectTimeout, final long readTimeout) {
-    this.config = config;
+  ClientImpl(final Configuration configuration, final SSLContext sslContext, final HostnameVerifier verifier, final ExecutorService executorService, final long connectTimeout, final long readTimeout) {
+    this.configuration = configuration;
     this.sslContext = sslContext;
     this.verifier = verifier;
     this.executorService = executorService;
@@ -64,7 +64,7 @@ class ClientImpl implements Client, ConfigurableImpl<Client> {
   private Set<Class<?>> classes;
 
   private ClientRuntimeContext buildProviders() {
-    if (runtimeContext != null && (singletons != null ? singletons.equals(config.getInstances()) : config.getInstances() == null) && (classes != null ? classes.equals(config.getClasses()) : config.getClasses() == null))
+    if (runtimeContext != null && (singletons != null ? singletons.equals(configuration.getInstances()) : configuration.getInstances() == null) && (classes != null ? classes.equals(configuration.getClasses()) : configuration.getClasses() == null))
       return runtimeContext;
 
     try {
@@ -82,10 +82,10 @@ class ClientImpl implements Client, ConfigurableImpl<Client> {
         exceptionMapperProviderFactories
       );
 
-      bootstrap.init(config.getInstances(), config.getClasses(), null);
-      this.singletons = config.getInstances();
-      this.classes = config.getClasses();
-      return new ClientRuntimeContext(readerInterceptorProviderFactories, writerInterceptorProviderFactories, messageBodyReaderProviderFactories, messageBodyWriterProviderFactories, exceptionMapperProviderFactories);
+      bootstrap.init(configuration.getInstances(), configuration.getClasses(), null);
+      this.singletons = configuration.getInstances();
+      this.classes = configuration.getClasses();
+      return new ClientRuntimeContext(configuration, readerInterceptorProviderFactories, writerInterceptorProviderFactories, messageBodyReaderProviderFactories, messageBodyWriterProviderFactories, exceptionMapperProviderFactories);
     }
     catch (final IllegalAccessException | PackageNotFoundException e) {
       throw new RuntimeException(e);
@@ -116,7 +116,7 @@ class ClientImpl implements Client, ConfigurableImpl<Client> {
 
   @Override
   public Configuration getConfiguration() {
-    return config;
+    return configuration;
   }
 
   @Override
@@ -132,25 +132,25 @@ class ClientImpl implements Client, ConfigurableImpl<Client> {
   @Override
   public WebTarget target(final String uri) {
     assertNotClosed();
-    return new WebTargetImpl(this, buildProviders(), config, UriBuilder.fromUri(uri), executorService, connectTimeout, readTimeout);
+    return new WebTargetImpl(this, buildProviders(), configuration, UriBuilder.fromUri(uri), executorService, connectTimeout, readTimeout);
   }
 
   @Override
   public WebTarget target(final URI uri) {
     assertNotClosed();
-    return new WebTargetImpl(this, buildProviders(), config, UriBuilder.fromUri(uri), executorService, connectTimeout, readTimeout);
+    return new WebTargetImpl(this, buildProviders(), configuration, UriBuilder.fromUri(uri), executorService, connectTimeout, readTimeout);
   }
 
   @Override
   public WebTarget target(final UriBuilder uriBuilder) {
     assertNotClosed();
-    return new WebTargetImpl(this, buildProviders(), config, uriBuilder, executorService, connectTimeout, readTimeout);
+    return new WebTargetImpl(this, buildProviders(), configuration, uriBuilder, executorService, connectTimeout, readTimeout);
   }
 
   @Override
   public WebTarget target(final Link link) {
     assertNotClosed();
-    return new WebTargetImpl(this, buildProviders(), config, UriBuilder.fromLink(link), executorService, connectTimeout, readTimeout);
+    return new WebTargetImpl(this, buildProviders(), configuration, UriBuilder.fromLink(link), executorService, connectTimeout, readTimeout);
   }
 
   @Override

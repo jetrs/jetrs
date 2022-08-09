@@ -122,6 +122,7 @@ class ServerBootstrap extends Bootstrap<ResourceInfoImpl> {
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   <T>boolean addResourceOrProvider(final List<Consumer<Set<Class<?>>>> afterAdd, final List<ResourceInfoImpl> resources, final Class<? extends T> clazz, final T singleton, final boolean scanned) throws IllegalAccessException, InstantiationException, InvocationTargetException {
     if (clazz.isAnnotationPresent(Provider.class)) {
       if (ParamConverterProvider.class.isAssignableFrom(clazz))

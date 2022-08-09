@@ -17,6 +17,7 @@
 package org.jetrs;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import javax.servlet.ServletException;
@@ -55,33 +56,35 @@ abstract class RestApplicationServlet extends RestHttpServlet {
   }
 
   @Override
+  @SuppressWarnings("resource")
   protected final void service(final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse) throws IOException, ServletException {
-    try {
-      final ServerRequestContext requestContext = getRuntimeContext().newRequestContext(new RequestImpl(httpServletRequest.getMethod()));
+    try (final ContainerRequestContextImpl requestContext = getRuntimeContext().newRequestContext(new RequestImpl(httpServletRequest.getMethod()))) {
       requestContext.init(new HttpServletRequestWrapper(httpServletRequest) {
         // NOTE: Check for the existence of the @Consumes header, and subsequently the Content-Type header in the request,
         // NOTE: only if data is expected (i.e. GET, HEAD, DELETE, OPTIONS methods will not have a body and should thus not
         // NOTE: expect a Content-Type header from the request)
         private void checkContentType() {
           final ResourceInfoImpl resourceInfo = requestContext.getResourceMatch().getResourceInfo();
-          if (resourceInfo != null && !resourceInfo.checkContentHeader(HttpHeaders.CONTENT_TYPE, Consumes.class, requestContext.getContainerRequestContext()))
+          if (resourceInfo != null && !resourceInfo.checkContentHeader(HttpHeaders.CONTENT_TYPE, Consumes.class, requestContext))
             throw new BadRequestException("Request has data yet missing Content-Type header");
         }
 
         @Override
         public ServletInputStream getInputStream() throws IOException {
-          checkContentType();
+          if (getContentLengthLong() != -1)
+            checkContentType();
+
           return httpServletRequest.getInputStream();
         }
 
         @Override
         public BufferedReader getReader() throws IOException {
-          checkContentType();
-          return httpServletRequest.getReader();
+          throw new UnsupportedOperationException();
         }
       }, httpServletResponse);
 
       Stage stage = null;
+      ByteArrayOutputStream entityStream = null;
 
       try {
         // (1) Filter Request (Pre-Match)
@@ -107,7 +110,7 @@ abstract class RestApplicationServlet extends RestHttpServlet {
 
         // (6a) Write Response
         stage = Stage.WRITE_RESPONSE;
-        requestContext.writeResponse();
+        entityStream = requestContext.writeResponse();
       }
       catch (final IOException | RuntimeException | ServletException e) {
         if (!(e instanceof AbortFilterChainException)) {
@@ -151,7 +154,7 @@ abstract class RestApplicationServlet extends RestHttpServlet {
         try {
           // (6b) Write Response
           stage = Stage.WRITE_RESPONSE;
-          requestContext.writeResponse();
+          entityStream = requestContext.writeResponse();
         }
         catch (final IOException | RuntimeException e1) {
           if (!(e1 instanceof WebApplicationException))
@@ -163,7 +166,7 @@ abstract class RestApplicationServlet extends RestHttpServlet {
       }
       finally {
         // (7) Commit Response
-        requestContext.commitResponse();
+        requestContext.commitResponse(entityStream);
       }
     }
     catch (final ServletException | RuntimeException t) {

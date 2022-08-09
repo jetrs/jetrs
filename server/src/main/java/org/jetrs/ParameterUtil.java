@@ -67,8 +67,8 @@ final class ParameterUtil {
     return null;
   }
 
-  private static <T>ParamConverter<T> lookupParamConverter(final List<ProviderFactory<ParamConverterProvider>> paramConverterProviderFactories, final RequestContext requestContext, final Class<T> rawType, final Type genericType, final Annotation[] annotations) {
-    for (int i = 0, len = paramConverterProviderFactories.size(); i < len; ++i) { // [L]
+  private static <T>ParamConverter<T> lookupParamConverter(final List<ProviderFactory<ParamConverterProvider>> paramConverterProviderFactories, final RequestContext<?> requestContext, final Class<T> rawType, final Type genericType, final Annotation[] annotations) {
+    for (int i = 0, i$ = paramConverterProviderFactories.size(); i < i$; ++i) { // [L]
       final ProviderFactory<ParamConverterProvider> factory = paramConverterProviderFactories.get(i);
       // FIXME: Is there a way to detect whether the ParamConverterProvider can convert the parameter without instantiating the ParamConverterProvider?
       final ParamConverter<T> paramConverter = factory.getSingletonOrFromRequestContext(requestContext).getConverter(rawType, genericType, annotations);
@@ -87,7 +87,7 @@ final class ParameterUtil {
 
   // http://download.oracle.com/otn-pub/jcp/jaxrs-2_0_rev_A-mrel-eval-spec/jsr339-jaxrs-2.0-final-spec.pdf Section 3.2
   @SuppressWarnings("unchecked")
-  static Object convertParameter(final Class<?> parameterType, final Type genericType, final Annotation[] annotations, final List<String> values, final List<ProviderFactory<ParamConverterProvider>> paramConverterProviderFactories, final RequestContext requestContext) {
+  static Object convertParameter(final Class<?> parameterType, final Type genericType, final Annotation[] annotations, final List<String> values, final List<ProviderFactory<ParamConverterProvider>> paramConverterProviderFactories, final RequestContext<?> requestContext) {
     if (values == null || values.size() == 0)
       return null;
 
@@ -128,7 +128,7 @@ final class ParameterUtil {
 
         if (container instanceof Collection) {
           final Collection<Object> c = (Collection<Object>)container;
-          for (int i = 0, len = values.size(); i < len; ++i) // [L]
+          for (int i = 0, i$ = values.size(); i < i$; ++i) // [L]
             c.add(new BigInteger(values.get(i)));
 
           return c;
@@ -147,7 +147,7 @@ final class ParameterUtil {
 
         if (container instanceof Collection) {
           final Collection<Object> c = (Collection<Object>)container;
-          for (int i = 0, len = values.size(); i < len; ++i) // [L]
+          for (int i = 0, i$ = values.size(); i < i$; ++i) // [L]
             c.add(new BigDecimal(values.get(i)));
 
           return c;
@@ -166,7 +166,7 @@ final class ParameterUtil {
 
         if (container instanceof Collection) {
           final Collection<Object> c = (Collection<Object>)container;
-          for (int i = 0, len = values.size(); i < len; ++i) // [L]
+          for (int i = 0, i$ = values.size(); i < i$; ++i) // [L]
             c.add(Long.valueOf(values.get(i)));
 
           return c;
@@ -193,7 +193,7 @@ final class ParameterUtil {
 
         if (container instanceof Collection) {
           final Collection<Object> c = (Collection<Object>)container;
-          for (int i = 0, len = values.size(); i < len; ++i) // [L]
+          for (int i = 0, i$ = values.size(); i < i$; ++i) // [L]
             c.add(Integer.valueOf(values.get(i)));
 
           return c;
@@ -220,7 +220,7 @@ final class ParameterUtil {
 
         if (container instanceof Collection) {
           final Collection<Object> c = (Collection<Object>)container;
-          for (int i = 0, len = values.size(); i < len; ++i) // [L]
+          for (int i = 0, i$ = values.size(); i < i$; ++i) // [L]
             c.add(Double.valueOf(values.get(i)));
 
           return c;
@@ -247,7 +247,7 @@ final class ParameterUtil {
 
         if (container instanceof Collection) {
           final Collection<Object> c = (Collection<Object>)container;
-          for (int i = 0, len = values.size(); i < len; ++i) // [L]
+          for (int i = 0, i$ = values.size(); i < i$; ++i) // [L]
             c.add(Float.valueOf(values.get(i)));
 
           return c;
@@ -274,7 +274,7 @@ final class ParameterUtil {
 
         if (container instanceof Collection) {
           final Collection<Object> c = (Collection<Object>)container;
-          for (int i = 0, len = values.size(); i < len; ++i) // [L]
+          for (int i = 0, i$ = values.size(); i < i$; ++i) // [L]
             c.add(Short.valueOf(values.get(i)));
 
           return c;
@@ -301,7 +301,7 @@ final class ParameterUtil {
 
         if (container instanceof Collection) {
           final Collection<Object> c = (Collection<Object>)container;
-          for (int i = 0, len = values.size(); i < len; ++i) // [L]
+          for (int i = 0, i$ = values.size(); i < i$; ++i) // [L]
             c.add(parseChar(values.get(i)));
 
           return c;
@@ -328,7 +328,7 @@ final class ParameterUtil {
 
         if (container instanceof Collection) {
           final Collection<Object> c = (Collection<Object>)container;
-          for (int i = 0, len = values.size(); i < len; ++i) // [L]
+          for (int i = 0, i$ = values.size(); i < i$; ++i) // [L]
             c.add(Byte.valueOf(values.get(i)));
 
           return c;
@@ -355,7 +355,7 @@ final class ParameterUtil {
 
         if (container instanceof Collection) {
           final Collection<Object> c = (Collection<Object>)container;
-          for (int i = 0, len = values.size(); i < len; ++i) // [L]
+          for (int i = 0, i$ = values.size(); i < i$; ++i) // [L]
             c.add(Boolean.valueOf(values.get(i)));
 
           return c;

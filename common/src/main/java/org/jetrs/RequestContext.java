@@ -17,6 +17,7 @@
 package org.jetrs;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Constructor;
@@ -30,13 +31,17 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Cookie;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
@@ -51,17 +56,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * @param <P> The type parameter of the associated properties.
  * @see <a href="http://download.oracle.com/otn-pub/jcp/jaxrs-2_0_rev_A-mrel-spec/jsr339-jaxrs-2.0-final-spec.pdf">JSR339 JAX-RS 2.0 [9.2]</a>
  */
-abstract class RequestContext {
+abstract class RequestContext<P> extends InterceptorContextImpl<P> {
   private static final Logger logger = LoggerFactory.getLogger(RequestContext.class);
-
   private static final Comparator<Constructor<?>> parameterCountComparator = Comparator.comparingInt(c -> -c.getParameterCount());
+  @SuppressWarnings("rawtypes")
+  private static final Map<Class<?>,Constructor[]> classToConstructors = new HashMap<>();
 
   // Gets the constructor with most args [JAX-RS 2.1 3.1.2]
   @SuppressWarnings("unchecked")
   private static <T>Constructor<T>[] getConstructors(final Class<T> clazz) {
-    final Constructor<T>[] constructors = (Constructor<T>[])clazz.getConstructors();
+    Constructor<T>[] constructors = classToConstructors.get(clazz);
+    if (constructors == null)
+      classToConstructors.put(clazz, constructors = (Constructor<T>[])clazz.getConstructors());
+
     Arrays.sort(constructors, parameterCountComparator);
     return constructors;
   }
@@ -70,10 +80,42 @@ abstract class RequestContext {
   private final Request request;
   private final ProvidersImpl providers;
 
-  RequestContext(final RuntimeContext runtimeContext, final Request request) {
+  RequestContext(final PropertiesAdapter<P> propertiesAdapter, final RuntimeContext runtimeContext, final Request request) {
+    super(propertiesAdapter);
+    this.method = request.getMethod();
     this.runtimeContext = runtimeContext;
     this.request = request;
     this.providers = new ProvidersImpl(this);
+  }
+
+  public final Request getRequest() {
+    return request;
+  }
+
+  public final void abortWith(final Response response) {
+    throw new AbortFilterChainException(response);
+  }
+
+  public final List<MediaType> getAcceptableMediaTypes() {
+    return getHttpHeaders().getAcceptableMediaTypes();
+  }
+
+  public final List<Locale> getAcceptableLanguages() {
+    return getHttpHeaders().getAcceptableLanguages();
+  }
+
+  private String method;
+
+  public final String getMethod() {
+    return method;
+  }
+
+  public final void setMethod(final String method) {
+    this.method = method;
+  }
+
+  public final Map<String,Cookie> getCookies() {
+    return getHttpHeaders().getCookies();
   }
 
   private boolean readerInterceptorCalled = false;
@@ -126,7 +168,7 @@ abstract class RequestContext {
     return runtimeContext.getExceptionMapperProviderFactories();
   }
 
-  Providers getProviders() {
+  final Providers getProviders() {
     return providers;
   }
 

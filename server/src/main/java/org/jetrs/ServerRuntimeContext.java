@@ -16,10 +16,13 @@
 
 package org.jetrs;
 
+import java.io.IOException;
+import java.util.Enumeration;
 import java.util.List;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.Application;
@@ -32,6 +35,8 @@ import javax.ws.rs.ext.ParamConverterProvider;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
 
+import org.libj.lang.Enumerations;
+
 class ServerRuntimeContext extends RuntimeContext {
   private final List<ProviderFactory<ParamConverterProvider>> paramConverterProviderFactories;
   private final List<ProviderFactory<ContainerRequestFilter>> preMatchContainerRequestFilterProviderFactories;
@@ -42,7 +47,6 @@ class ServerRuntimeContext extends RuntimeContext {
   private final ServletContext servletContext;
   private final Application application;
   private final List<ResourceInfoImpl> resourceInfos;
-  private final Configuration configuration;
 
   ServerRuntimeContext(
     final List<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories,
@@ -58,7 +62,7 @@ class ServerRuntimeContext extends RuntimeContext {
     final Application application,
     final List<ResourceInfoImpl> resourceInfos
   ) {
-    super(readerInterceptorProviderFactories, writerInterceptorProviderFactories, messageBodyReaderProviderFactories, messageBodyWriterProviderFactories, exceptionMapperProviderFactories);
+    super(new ConfigurationImpl(application), readerInterceptorProviderFactories, writerInterceptorProviderFactories, messageBodyReaderProviderFactories, messageBodyWriterProviderFactories, exceptionMapperProviderFactories);
     this.paramConverterProviderFactories = paramConverterProviderFactories;
     this.preMatchContainerRequestFilterProviderFactories = preMatchContainerRequestFilterProviderFactories;
     this.containerRequestFilterProviderFactories = containerRequestFilterProviderFactories;
@@ -67,7 +71,6 @@ class ServerRuntimeContext extends RuntimeContext {
     this.servletConfig = servletConfig;
     this.servletContext = servletContext;
     this.application = application;
-    this.configuration = new ConfigurationImpl(application);
   }
 
   ServletConfig getServletConfig() {
@@ -80,10 +83,6 @@ class ServerRuntimeContext extends RuntimeContext {
 
   Application getApplication() {
     return application;
-  }
-
-  Configuration getConfiguration() {
-    return configuration;
   }
 
   List<ResourceInfoImpl> getResourceInfos() {
@@ -106,8 +105,50 @@ class ServerRuntimeContext extends RuntimeContext {
     return containerResponseFilterProviderFactories;
   }
 
+  private static final PropertiesAdapter<HttpServletRequest> propertiesAdapter = new PropertiesAdapter<HttpServletRequest>() {
+    @Override
+    Object getProperty(final HttpServletRequest properties, final String name) {
+      return properties.getAttribute(name);
+    }
+
+    @Override
+    Enumeration<String> getPropertyNames(final HttpServletRequest properties) {
+      return properties.getAttributeNames();
+    }
+
+    @Override
+    void setProperty(final HttpServletRequest properties, final String name, final Object value) {
+      properties.setAttribute(name, value);
+    }
+
+    @Override
+    void removeProperty(final HttpServletRequest properties, final String name) {
+      properties.removeAttribute(name);
+    }
+
+    @Override
+    int size(final HttpServletRequest properties) {
+      return Enumerations.getSize(properties.getAttributeNames());
+    }
+  };
+
+  private final ThreadLocal<ContainerRequestContextImpl> threadLocalRequestContext = new ThreadLocal<>();
+
   @Override
-  ServerRequestContext newRequestContext(final Request request) {
-    return new ServerRequestContext(this, request);
+  ContainerRequestContextImpl localRequestContext() {
+    return threadLocalRequestContext.get();
+  }
+
+  @Override
+  ContainerRequestContextImpl newRequestContext(final Request request) {
+    final ContainerRequestContextImpl requestContext = new ContainerRequestContextImpl(propertiesAdapter, this, request) {
+      @Override
+      public void close() throws IOException {
+        threadLocalRequestContext.remove();
+      }
+    };
+
+    threadLocalRequestContext.set(requestContext);
+    return requestContext;
   }
 }

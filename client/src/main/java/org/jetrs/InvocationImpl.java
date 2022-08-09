@@ -67,7 +67,7 @@ class InvocationImpl implements Invocation {
   }
 
   private final ClientImpl client;
-  private final ClientRequestContext requestContext;
+  private final ClientRequestContextImpl requestContext;
   private final URL url;
   private final String method;
   private final Entity<?> entity;
@@ -148,7 +148,7 @@ class InvocationImpl implements Invocation {
       }
       else {
         cookies = new HashMap<>(httpCookies.size());
-        for (int i = 0, len = cookies.size(); i < len; ++i) { // [L]
+        for (int i = 0, i$ = cookies.size(); i < i$; ++i) { // [L]
           final HttpCookie httpCookie = httpCookies.get(i);
           final Date expiry = Dates.addTime(headers.getDate(), 0, 0, (int)httpCookie.getMaxAge());
           final NewCookie cookie = new NewCookie(httpCookie.getName(), httpCookie.getValue(), httpCookie.getPath(), httpCookie.getDomain(), httpCookie.getVersion(), httpCookie.getComment(), (int)httpCookie.getMaxAge(), expiry, httpCookie.getSecure(), httpCookie.isHttpOnly());
@@ -310,7 +310,7 @@ class InvocationImpl implements Invocation {
       getHeaders().clear();
       for (final Map.Entry<String,List<Object>> entry : headers.entrySet()) { // [S]
         final List<Object> values = entry.getValue();
-        for (int i = 0, len = values.size(); i < len; ++i) // [L]
+        for (int i = 0, i$ = values.size(); i < i$; ++i) // [L]
           header(entry.getKey(), values.get(i));
       }
 
@@ -474,7 +474,7 @@ class InvocationImpl implements Invocation {
   private static void appendHeaders(final StringBuilder str, final HttpHeadersMap<String,Object> headers) {
     for (final Map.Entry<String,List<String>> entry : headers.entrySet()) { // [S]
       final List<String> values = entry.getValue();
-      for (int i = 0, len = values.size(); i < len; ++i) // [L]
+      for (int i = 0, i$ = values.size(); i < i$; ++i) // [L]
         str.append("-H '").append(entry.getKey()).append(": ").append(values.get(i).replace("'", "\\'")).append("' ");
     }
   }

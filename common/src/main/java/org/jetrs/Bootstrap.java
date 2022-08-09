@@ -126,7 +126,7 @@ class Bootstrap<R extends Comparable<? super R>> {
           resourceClasses = null;
         }
 
-        for (int i = 0, len = afterAdds.size(); i < len; ++i) // [L]
+        for (int i = 0, i$ = afterAdds.size(); i < i$; ++i) // [L]
           afterAdds.get(i).accept(resourceClasses);
       }
     }
@@ -157,7 +157,7 @@ class Bootstrap<R extends Comparable<? super R>> {
 
       final Set<Class<?>> resourceClasses0 = resourceClasses[0];
       if (resourceClasses0 != null)
-        for (int i = 0, len = afterAdds.size(); i < len; ++i) // [L]
+        for (int i = 0, i$ = afterAdds.size(); i < i$; ++i) // [L]
           afterAdds.get(i).accept(resourceClasses0);
     }
 

@@ -89,7 +89,7 @@ class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImpl> {
     this.resourceClass = method.getDeclaringClass();
     this.singleton = singleton;
     if (singleton != null) {
-      final Field[] fields = ServerRequestContext.getContextFields(singleton);
+      final Field[] fields = ContainerRequestContextImpl.getContextFields(singleton);
       if (fields.length > 0)
         logger.warn("Fields with injectable annotations " + Arrays.toString(fields) + " will not be injected on singleton of class " + resourceClass.getName());
     }
@@ -196,8 +196,8 @@ class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImpl> {
     throw new NotAuthorizedException(challenge, challenges);
   }
 
-  Object service(final ResourceMatch resourceMatch, final ServerRequestContext requestContext) throws IOException, ServletException {
-    checkAllowed(requestContext.getContainerRequestContext());
+  Object service(final ResourceMatch resourceMatch, final ContainerRequestContextImpl requestContext) throws IOException, ServletException {
+    checkAllowed(requestContext);
     try {
       final Object instance = resourceMatch.getResourceInstance(requestContext);
       return requestContext.invokeMethod(instance, resourceMethod);

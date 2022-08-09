@@ -35,7 +35,7 @@ class ResourceMatches extends ArrayList<ResourceMatch> {
     return !super.contains(e) && super.add(e);
   }
 
-  List<Object> getMatchedResources(final ServerRequestContext requestContext) {
+  List<Object> getMatchedResources(final ContainerRequestContextImpl requestContext) {
     return matchedResources == null ? matchedResources = new TransList<>(this, (i, s) -> {
       try {
         return s.getResourceInstance(requestContext);

@@ -20,6 +20,7 @@ import static org.libj.lang.Assertions.*;
 
 import java.util.List;
 
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.MessageBodyReader;
@@ -28,6 +29,7 @@ import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
 
 abstract class RuntimeContext {
+  private final Configuration configuration;
   final List<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories;
   final List<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorProviderFactories;
   final List<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderProviderFactories;
@@ -35,12 +37,14 @@ abstract class RuntimeContext {
   final List<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperProviderFactories;
 
   RuntimeContext(
+    final Configuration configuration,
     final List<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories,
     final List<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorProviderFactories,
     final List<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderProviderFactories,
     final List<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterProviderFactories,
     final List<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperProviderFactories
   ) {
+    this.configuration = configuration;
     this.readerInterceptorProviderFactories = assertNotNull(readerInterceptorProviderFactories);
     this.writerInterceptorProviderFactories = assertNotNull(writerInterceptorProviderFactories);
     this.messageBodyReaderProviderFactories = assertNotNull(messageBodyReaderProviderFactories);
@@ -48,7 +52,12 @@ abstract class RuntimeContext {
     this.exceptionMapperProviderFactories = assertNotNull(exceptionMapperProviderFactories);
   }
 
-  abstract RequestContext newRequestContext(Request request);
+  abstract RequestContext<?> localRequestContext();
+  abstract RequestContext<?> newRequestContext(Request request);
+
+  Configuration getConfiguration() {
+    return configuration;
+  }
 
   List<MessageBodyProviderFactory<ReaderInterceptor>> getReaderInterceptorProviderFactories() {
     return this.readerInterceptorProviderFactories;
