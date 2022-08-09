@@ -29,6 +29,17 @@
   <description>
     A fast and lightweight implementation of Java's JAX-RS 2.1 server specification built to run in a servlet container.
   </description>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.safris.maven</groupId>
+        <artifactId>javadocio-maven-plugin</artifactId>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
   <dependencies>
     <dependency>
       <groupId>org.jetrs</groupId>
