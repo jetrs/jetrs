@@ -64,6 +64,9 @@ abstract class RestApplicationServlet extends RestHttpServlet {
         // NOTE: only if data is expected (i.e. GET, HEAD, DELETE, OPTIONS methods will not have a body and should thus not
         // NOTE: expect a Content-Type header from the request)
         private void checkContentType() {
+          if (requestContext.getResourceMatch() == null) // Can be null if @PreMatch
+            return;
+
           final ResourceInfoImpl resourceInfo = requestContext.getResourceMatch().getResourceInfo();
           if (resourceInfo != null && !resourceInfo.checkContentHeader(HttpHeaders.CONTENT_TYPE, Consumes.class, requestContext))
             throw new BadRequestException("Request has data yet missing Content-Type header");

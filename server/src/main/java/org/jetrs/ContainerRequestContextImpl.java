@@ -16,6 +16,7 @@
 
 package org.jetrs;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
@@ -822,37 +823,58 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
     return getHttpHeaders().getLength();
   }
 
+  private Boolean hasEntity;
+
+  private void checkInitEntityStream() {
+    if (hasEntity == null) {
+      try {
+        setEntityStream(httpServletRequest.getInputStream());
+      }
+      catch (final IOException e) {
+        throw new InternalServerErrorException(e);
+      }
+    }
+  }
+
+  @Override
+  public boolean hasEntity() {
+    checkInitEntityStream();
+    return hasEntity;
+  }
+
   private InputStream entityStream;
 
   @Override
   public InputStream getEntityStream() {
-    if (entityStream != null)
-      return entityStream;
-
-    try {
-      entityStream = getProperties().getInputStream();
-      setEntityStream(entityStream);
-      return entityStream;
-    }
-    catch (final IOException e) {
-      throw new InternalServerErrorException(e);
-    }
+    checkInitEntityStream();
+    return entityStream;
   }
 
   @Override
-  public void setEntityStream(final InputStream input) {
-    this.entityStream = input;
-    this.hasEntity = input != null;
-  }
+  public void setEntityStream(InputStream input) {
+    if (input != null) {
+      try {
+        if (!input.markSupported())
+          input = new BufferedInputStream(input, 1);
 
-  private Boolean hasEntity;
-
-  @Override
-  public boolean hasEntity() {
-    if (hasEntity == null)
-      hasEntity = getEntityStream() != null;
-
-    return hasEntity;
+        input.mark(1);
+        if (hasEntity = input.read() != -1) {
+          input.reset();
+          entityStream = input;
+        }
+        else {
+          input.close();
+          entityStream = null;
+        }
+      }
+      catch (final IOException e) {
+        throw new InternalServerErrorException(e);
+      }
+    }
+    else {
+      hasEntity = false;
+      entityStream = null;
+    }
   }
 
   private SecurityContext defaultSecurityContext;
