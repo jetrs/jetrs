@@ -26,6 +26,7 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -303,17 +304,25 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
 
   @Override
   public Map<String,Cookie> getCookies() {
-    final MirrorQualityList<?,String> headers = getMirrorMap().get(HttpHeaders.COOKIE);
-    if (headers == null || headers.size() == 0)
+    final MirrorQualityList<?,String> cookies = getMirrorMap().get(HttpHeaders.COOKIE);
+    if (cookies == null || cookies.size() == 0)
       return Collections.emptyMap();
 
-    final Map<String,Cookie> cookies = new LinkedHashMap<>();
-    for (int i = 0, i$ = headers.size(); i < i$; ++i) { // [L]
-      final Cookie cookie = (Cookie)headers.get(i);
-      cookies.put(cookie.getName(), cookie);
+    final Map<String,Cookie> map = new LinkedHashMap<>();
+    if (cookies.isRandomAccess()) {
+      for (int i = 0, i$ = cookies.size(); i < i$; ++i) { // [RA]
+        final Cookie cookie = (Cookie)cookies.get(i);
+        map.put(cookie.getName(), cookie);
+      }
+    }
+    else {
+      for (final Object obj : cookies) { // [L]
+        final Cookie cookie = (Cookie)obj;
+        map.put(cookie.getName(), cookie);
+      }
     }
 
-    return cookies;
+    return map;
   }
 
   @Override
@@ -367,16 +376,28 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
     if (values == null)
       return null;
 
-    if (values.size() == 0)
+    final int i$ = values.size();
+    if (i$ == 0)
       return "";
 
     final char delimiter = getHeaderValueDelimiters(headerName)[0];
     final StringBuilder builder = new StringBuilder();
-    for (int i = 0, i$ = values.size(); i < i$; ++i) { // [L]
-      if (i > 0)
-        builder.append(delimiter);
+    if (CollectionUtil.isRandomAccess(values)) {
+      for (int i = 0; i < i$; ++i) { // [RA]
+        if (i > 0)
+          builder.append(delimiter);
 
-      builder.append(values.get(i));
+        builder.append(values.get(i));
+      }
+    }
+    else {
+      final Iterator<String> iterator = values.iterator();
+      for (int i = 0; i < i$; ++i) { // [RA]
+        if (i > 0)
+          builder.append(delimiter);
+
+        builder.append(iterator.next());
+      }
     }
 
     return builder.toString();

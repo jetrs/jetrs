@@ -22,6 +22,7 @@ import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.RandomAccess;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.MultivaluedHashMap;
@@ -210,8 +211,14 @@ class UriInfoImpl implements UriInfo {
       pathParametersDecoded = new MultivaluedHashMap<>(pathParametersEncoded.size());
       for (final Map.Entry<String,List<String>> entry : pathParametersEncoded.entrySet()) { // [S]
         final List<String> values = entry.getValue();
-        for (int i = 0, i$ = values.size(); i < i$; ++i) // [L]
-          pathParametersDecoded.add(entry.getKey(), URIComponent.decode(values.get(i)));
+        if (values instanceof RandomAccess) {
+          for (int i = 0, i$ = values.size(); i < i$; ++i) // [RA]
+            pathParametersDecoded.add(entry.getKey(), URIComponent.decode(values.get(i)));
+        }
+        else {
+          for (final String value : values) // [L]
+            pathParametersDecoded.add(entry.getKey(), URIComponent.decode(value));
+        }
       }
     }
 

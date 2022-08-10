@@ -192,7 +192,7 @@ class HttpHeadersMap<V,R> extends MirrorMultivaluedMap<String,V,R> {
   }
 
   @Override
-  protected MirrorList<V,R> put(final String key, final List<V> oldValue, final List<V> newValue) {
+  protected MirrorList<V,List<V>,R,List<R>> put(final String key, final List<V> oldValue, final List<V> newValue) {
     return super.put(format(key), oldValue, newValue);
   }
 

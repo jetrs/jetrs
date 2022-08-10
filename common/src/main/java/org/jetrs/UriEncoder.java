@@ -17,7 +17,6 @@
 package org.jetrs;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -171,23 +170,24 @@ final class UriEncoder {
     return builder.toString();
   }
 
-  static boolean savePathParams(final String segmentString, final StringBuilder newSegment, final List<? super String> params) {
-    boolean foundParam = false;
+  static ArrayList<String> savePathParams(final String segmentString, final StringBuilder newSegment) {
+    ArrayList<String> params = null;
     // Regular expressions can have '{' and '}' characters. Replace them to do match.
     final CharSequence segment = replaceBraces(segmentString);
     final Matcher matcher = URI_TEMPLATE_PATTERN.matcher(segment);
     int start = 0;
     for (; matcher.find(); start = matcher.end()) { // [X]
       newSegment.append(segment, start, matcher.start());
-      foundParam = true;
-      // Regular expressions can have '{' and '}' characters. Recover earlier
-      // replacement
+      if (params == null)
+        params = new ArrayList<>();
+
+      // Regular expressions can have '{' and '}' characters. Recover earlier replacement
       params.add(recoverBraces(matcher.group()));
       newSegment.append(REPLACEMENT_PARAM);
     }
 
     newSegment.append(segment, start, segment.length());
-    return foundParam;
+    return params;
   }
 
   /**
@@ -198,16 +198,13 @@ final class UriEncoder {
    * @return encoded value
    */
   private static String encodeValue(String segment, final String[] encoding) {
-    final ArrayList<String> params = new ArrayList<>();
-    boolean foundParam = false;
     final StringBuilder newSegment = new StringBuilder();
-    if (savePathParams(segment, newSegment, params)) {
-      foundParam = true;
+    final ArrayList<String> params = savePathParams(segment, newSegment);
+    if (params != null)
       segment = newSegment.toString();
-    }
 
     segment = encodeNonCodes(encodeFromArray(segment, encoding, false));
-    if (foundParam)
+    if (params != null)
       segment = pathParamReplacement(segment, params);
 
     return segment;
@@ -240,7 +237,7 @@ final class UriEncoder {
     return zhar < encodingMap.length ? encodingMap[zhar] : URLs.encode(String.valueOf((char)zhar));
   }
 
-  private static String pathParamReplacement(final String segment, final List<String> params) {
+  private static String pathParamReplacement(final String segment, final ArrayList<String> params) {
     final StringBuilder builder = new StringBuilder();
     final Matcher matcher = PARAM_REPLACEMENT.matcher(segment);
     int start = 0;

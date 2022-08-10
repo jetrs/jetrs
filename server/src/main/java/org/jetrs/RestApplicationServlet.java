@@ -34,20 +34,12 @@ import javax.ws.rs.core.Application;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 
+import org.jetrs.ContainerRequestContextImpl.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 abstract class RestApplicationServlet extends RestHttpServlet {
   private static final Logger logger = LoggerFactory.getLogger(RestApplicationServlet.class);
-
-  private enum Stage {
-    FILTER_REQUEST_PRE_MATCH,
-    MATCH,
-    FILTER_REQUEST,
-    SERVICE,
-    FILTER_RESPONSE,
-    WRITE_RESPONSE
-  }
 
   RestApplicationServlet(final Application application) {
     super(application);
@@ -64,11 +56,7 @@ abstract class RestApplicationServlet extends RestHttpServlet {
         // NOTE: only if data is expected (i.e. GET, HEAD, DELETE, OPTIONS methods will not have a body and should thus not
         // NOTE: expect a Content-Type header from the request)
         private void checkContentType() {
-          if (requestContext.getResourceMatch() == null) // Can be null if @PreMatch
-            return;
-
-          final ResourceInfoImpl resourceInfo = requestContext.getResourceMatch().getResourceInfo();
-          if (resourceInfo != null && !resourceInfo.checkContentHeader(HttpHeaders.CONTENT_TYPE, Consumes.class, requestContext))
+          if (requestContext.getStage() != Stage.FILTER_REQUEST_PRE_MATCH && !requestContext.getResourceMatch().getResourceInfo().checkContentHeader(HttpHeaders.CONTENT_TYPE, Consumes.class, requestContext))
             throw new BadRequestException("Request has data yet missing Content-Type header");
         }
 
@@ -86,33 +74,32 @@ abstract class RestApplicationServlet extends RestHttpServlet {
         }
       }, httpServletResponse);
 
-      Stage stage = null;
       ByteArrayOutputStream entityStream = null;
 
       try {
         // (1) Filter Request (Pre-Match)
-        stage = Stage.FILTER_REQUEST_PRE_MATCH;
+        requestContext.setStage(Stage.FILTER_REQUEST_PRE_MATCH);
         requestContext.filterPreMatchContainerRequest();
 
         // (2) Match
-        stage = Stage.MATCH;
+        requestContext.setStage(Stage.MATCH);
         if (!requestContext.filterAndMatch())
           throw new NotFoundException();
 
         // (3) Filter Request
-        stage = Stage.FILTER_REQUEST;
+        requestContext.setStage(Stage.FILTER_REQUEST);
         requestContext.filterContainerRequest();
 
         // (4a) Service
-        stage = Stage.SERVICE;
+        requestContext.setStage(Stage.SERVICE);
         requestContext.service();
 
         // (5a) Filter Response
-        stage = Stage.FILTER_RESPONSE;
+        requestContext.setStage(Stage.FILTER_RESPONSE);
         requestContext.filterContainerResponse();
 
         // (6a) Write Response
-        stage = Stage.WRITE_RESPONSE;
+        requestContext.setStage(Stage.WRITE_RESPONSE);
         entityStream = requestContext.writeResponse();
       }
       catch (final IOException | RuntimeException | ServletException e) {
@@ -138,7 +125,7 @@ abstract class RestApplicationServlet extends RestHttpServlet {
 
           logger.info(e.getMessage(), e);
         }
-        else if (stage == Stage.FILTER_RESPONSE) {
+        else if (requestContext.getStage() == Stage.FILTER_RESPONSE) {
           throw new IllegalStateException("ContainerRequestContext.abortWith(Response) cannot be called from response filter chain");
         }
         else {
@@ -147,7 +134,7 @@ abstract class RestApplicationServlet extends RestHttpServlet {
 
         try {
           // (5b) Filter Response
-          stage = Stage.FILTER_RESPONSE;
+          requestContext.setStage(Stage.FILTER_RESPONSE);
           requestContext.filterContainerResponse();
         }
         catch (final IOException | RuntimeException e1) {
@@ -156,7 +143,7 @@ abstract class RestApplicationServlet extends RestHttpServlet {
 
         try {
           // (6b) Write Response
-          stage = Stage.WRITE_RESPONSE;
+          requestContext.setStage(Stage.WRITE_RESPONSE);
           entityStream = requestContext.writeResponse();
         }
         catch (final IOException | RuntimeException e1) {

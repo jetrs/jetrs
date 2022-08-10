@@ -33,8 +33,10 @@ import java.net.URI;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.RandomAccess;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.regex.Matcher;
@@ -92,6 +94,15 @@ import org.slf4j.LoggerFactory;
 abstract class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> implements Closeable, ContainerRequestContext, ReaderInterceptorContext {
   private static final Logger logger = LoggerFactory.getLogger(ContainerRequestContextImpl.class);
 
+  enum Stage {
+    FILTER_REQUEST_PRE_MATCH,
+    MATCH,
+    FILTER_REQUEST,
+    SERVICE,
+    FILTER_RESPONSE,
+    WRITE_RESPONSE
+  }
+
   @SuppressWarnings("unchecked")
   private static final Class<Annotation>[] injectableAnnotationTypes = new Class[] {CookieParam.class, HeaderParam.class, MatrixParam.class, PathParam.class, QueryParam.class};
   // FIXME: Support `AsyncResponse` (JAX-RS 2.1 8.2)
@@ -121,14 +132,14 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
     return result;
   }
 
-  private final List<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories;
+  private final ArrayList<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories;
   private final ServerRuntimeContext runtimeContext;
 
   private HttpServletRequest httpServletRequest;
   private HttpServletResponse httpServletResponse;
   private ContainerResponseContextImpl containerResponseContext;
 
-  private List<ResourceInfoImpl> resourceInfos;
+  private ArrayList<ResourceInfoImpl> resourceInfos;
 
   private ResourceMatches resourceMatches;
   private ResourceMatch resourceMatch;
@@ -149,6 +160,16 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
     this.containerResponseContext = new ContainerResponseContextImpl(propertiesAdapter, httpServletRequest, httpServletResponse, this);
     this.uriInfo = new UriInfoImpl(httpServletRequest, this);
     this.headers = new HttpHeadersImpl(httpServletRequest);
+  }
+
+  private Stage stage;
+
+  Stage getStage() {
+    return this.stage;
+  }
+
+  void setStage(final Stage stage) {
+    this.stage = stage;
   }
 
   @Override
@@ -180,7 +201,7 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
 
   private boolean paramConverterProviderCalled = false;
 
-  List<ProviderFactory<ParamConverterProvider>> getParamConverterProviderFactoryList() {
+  ArrayList<ProviderFactory<ParamConverterProvider>> getParamConverterProviderFactoryList() {
     if (paramConverterProviderCalled)
       throw new IllegalStateException();
 
@@ -195,12 +216,12 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
       throw new IllegalStateException();
 
     preMatchRequestFilterCalled = true;
-    final List<ProviderFactory<ContainerRequestFilter>> preMatchContainerRequestFilterProviderFactories = runtimeContext.getPreMatchContainerRequestFilterProviderFactories();
+    final ArrayList<ProviderFactory<ContainerRequestFilter>> preMatchContainerRequestFilterProviderFactories = runtimeContext.getPreMatchContainerRequestFilterProviderFactories();
     final int i$ = preMatchContainerRequestFilterProviderFactories.size();
     if (i$ == 0)
       return;
 
-    for (int i = 0; i < i$; ++i) // [L]
+    for (int i = 0; i < i$; ++i) // [RA]
       preMatchContainerRequestFilterProviderFactories.get(i).getSingletonOrFromRequestContext(this).filter(this);
   }
 
@@ -211,14 +232,14 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
       throw new IllegalStateException();
 
     requestFilterCalled = true;
-    final List<ProviderFactory<ContainerRequestFilter>> containerRequestFilterProviderFactories = runtimeContext.getContainerRequestFilterProviderFactories();
-    for (int i = 0, i$ = containerRequestFilterProviderFactories.size(); i < i$; ++i) // [L]
+    final ArrayList<ProviderFactory<ContainerRequestFilter>> containerRequestFilterProviderFactories = runtimeContext.getContainerRequestFilterProviderFactories();
+    for (int i = 0, i$ = containerRequestFilterProviderFactories.size(); i < i$; ++i) // [RA]
       containerRequestFilterProviderFactories.get(i).getSingletonOrFromRequestContext(this).filter(this);
   }
 
   void filterContainerResponse() throws IOException {
-    final List<ProviderFactory<ContainerResponseFilter>> containerResponseFilterProviderFactories = runtimeContext.getContainerResponseFilterProviderFactories();
-    for (int i = 0, i$ = containerResponseFilterProviderFactories.size(); i < i$; ++i) // [L]
+    final ArrayList<ProviderFactory<ContainerResponseFilter>> containerResponseFilterProviderFactories = runtimeContext.getContainerResponseFilterProviderFactories();
+    for (int i = 0, i$ = containerResponseFilterProviderFactories.size(); i < i$; ++i) // [RA]
       containerResponseFilterProviderFactories.get(i).getSingletonOrFromRequestContext(this).filter(this, containerResponseContext);
   }
 
@@ -336,6 +357,9 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
 
       if (clazz == PathSegment.class) {
         final List<PathSegment> pathSegments = uriInfo.getPathSegments(decode);
+        if (!(pathSegments instanceof RandomAccess))
+          throw new IllegalStateException();
+
         final String[] pathParamNames = resourceMatch.getPathParamNames();
         final long[] regionStartEnds = resourceMatch.getRegionStartEnds();
         for (int p = 0, segStart = 0, segEnd; p < pathParamNames.length; ++p) { // [A]
@@ -343,7 +367,8 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
             final long regionStartEnd = regionStartEnds[p];
             final int regionStart = Numbers.Composite.decodeInt(regionStartEnd, 0);
             final int regionEnd = Numbers.Composite.decodeInt(regionStartEnd, 1);
-            for (int i = 0, i$ = pathSegments.size(); i < i$; ++i) { // [L]
+
+            for (int i = 0, i$ = pathSegments.size(); i < i$; ++i) { // [RA]
               final PathSegment pathSegment = pathSegments.get(i);
               final String path = ((PathSegmentImpl)pathSegment).getPathEncoded();
               segEnd = segStart + path.length();
@@ -361,6 +386,8 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
 
       if ((Set.class.isAssignableFrom(clazz) || List.class.isAssignableFrom(clazz) || SortedSet.class.isAssignableFrom(clazz)) && (Class<?>)((ParameterizedType)type).getActualTypeArguments()[0] == PathSegment.class || clazz.isArray() && clazz.getComponentType() == PathSegment.class) {
         final List<PathSegment> pathSegments = uriInfo.getPathSegments(decode);
+        if (!(pathSegments instanceof RandomAccess))
+          throw new IllegalStateException();
 
         int segStart = 0, segEnd;
         final String[] pathParamNames = resourceMatch.getPathParamNames();
@@ -414,9 +441,12 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
     if (annotation.annotationType() == MatrixParam.class) {
       final boolean decode = ParameterUtil.decode(annotations);
       final List<PathSegment> pathSegments = uriInfo.getPathSegments(decode);
+      if (!(pathSegments instanceof RandomAccess))
+        throw new IllegalStateException();
+
       final String matrixParamName = ((MatrixParam)annotation).value();
-      final List<String> matrixParameters = new ArrayList<>();
-      for (int i = 0, i$ = pathSegments.size(); i < i$; ++i) { // [L]
+      final ArrayList<String> matrixParameters = new ArrayList<>();
+      for (int i = 0, i$ = pathSegments.size(); i < i$; ++i) { // [RA]
         final PathSegment pathSegment = pathSegments.get(i);
         for (final Map.Entry<String,List<String>> entry : pathSegment.getMatrixParameters().entrySet()) // [S]
           if (matrixParamName.equals(entry.getKey()))
@@ -458,7 +488,7 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
 
     if (resourceMatches.size() > 1 && resourceMatches.get(0).compareTo(resourceMatches.get(1)) == 0) {
       final StringBuilder builder = new StringBuilder("Multiple resources match ambiguously for request to \"" + httpServletRequest.getRequestURI() + "\": {");
-      for (int i = 0, i$ = resourceMatches.size(); i < i$; ++i) // [L]
+      for (int i = 0, i$ = resourceMatches.size(); i < i$; ++i) // [RA]
         builder.append('"').append(resourceMatches.get(i)).append("\", ");
 
       builder.setCharAt(builder.length() - 1, '}');
@@ -508,11 +538,11 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
 
     final String requestUriMatched = requestUriBuilder.toString();
 
-    List<String> maybeNotAllowed = null;
+    ArrayList<String> maybeNotAllowed = null;
     boolean maybeNotSupported = false;
     boolean maybeNotAcceptable = false;
     ResourceMatches resourceMatches = null;
-    for (int i = 0, i$ = resourceInfos.size(); i < i$; ++i) { // [L]
+    for (int i = 0, i$ = resourceInfos.size(); i < i$; ++i) { // [RA]
       final ResourceInfoImpl resourceInfo = resourceInfos.get(i);
       final UriTemplate uriTemplate = resourceInfo.getUriTemplate();
       final Matcher matcher = uriTemplate.matcher(requestUriMatched);
@@ -572,7 +602,7 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
       final StringBuilder allowMethods = new StringBuilder();
       boolean allowContentType = false;
       boolean allowAccept = false;
-      for (int i = 0, i$ = resourceInfos.size(); i < i$; ++i) { // [L]
+      for (int i = 0, i$ = resourceInfos.size(); i < i$; ++i) { // [RA]
         final ResourceInfoImpl resourceInfo = resourceInfos.get(i);
         if (!allowContentType) {
           final MediaTypeAnnotationProcessor<Consumes> resourceAnnotationProcessor = resourceInfo.getResourceAnnotationProcessor(Consumes.class);
@@ -683,8 +713,14 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
     final MultivaluedMap<String,String> responseHeaders = response.getStringHeaders();
     for (final Map.Entry<String,List<String>> entry : responseHeaders.entrySet()) { // [S]
       final List<String> values = entry.getValue();
-      for (int i = 0, i$ = values.size(); i < i$; ++i) // [L]
-        containerResponseHeaders.add(entry.getKey(), values.get(i));
+      if (values instanceof RandomAccess) {
+        for (int i = 0, i$ = values.size(); i < i$; ++i) // [RA]
+          containerResponseHeaders.add(entry.getKey(), values.get(i));
+      }
+      else {
+        for (final String value : values) // [L]
+          containerResponseHeaders.add(entry.getKey(), value);
+      }
     }
 
     // FIXME: Have to hack getting the annotations out of the Response
@@ -713,13 +749,24 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
       if (i$ == 0)
         continue;
 
-      int i = -1;
-      final String name = entry.getKey();
-      if (httpServletResponse.containsHeader(name))
-        httpServletResponse.setHeader(name, values.get(++i));
+      if (values instanceof RandomAccess) {
+        int i = -1;
+        final String name = entry.getKey();
+        if (httpServletResponse.containsHeader(name))
+          httpServletResponse.setHeader(name, values.get(++i));
 
-      while (++i < i$)
-        httpServletResponse.addHeader(entry.getKey(), values.get(i));
+        while (++i < i$)
+          httpServletResponse.addHeader(entry.getKey(), values.get(i));
+      }
+      else {
+        final Iterator<String> i = values.iterator();
+        final String name = entry.getKey();
+        if (httpServletResponse.containsHeader(name))
+          httpServletResponse.setHeader(name, i.next());
+
+        while (i.hasNext())
+          httpServletResponse.addHeader(entry.getKey(), i.next());
+      }
     }
 
     httpServletResponse.setStatus(containerResponseContext.getStatus());

@@ -19,7 +19,6 @@ package org.jetrs;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.List;
 import java.util.ListIterator;
 import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
@@ -127,7 +126,7 @@ public class UnmodifiableArrayList<E> extends ArrayList<E> {
   }
 
   @Override
-  public List<E> subList(final int fromIndex, final int toIndex) {
+  public ArrayList<E> subList(final int fromIndex, final int toIndex) {
     throw new UnsupportedOperationException();
   }
 }

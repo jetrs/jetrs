@@ -22,6 +22,7 @@ import java.util.Map;
 import javax.ws.rs.core.CacheControl;
 
 import org.libj.lang.Strings;
+import org.libj.util.CollectionUtil;
 
 /**
  * An extension of {@link CacheControl} that preserves the order of
@@ -50,10 +51,18 @@ class StrictCacheControl extends CacheControl {
       void toString(final CacheControl cacheControl, final StringBuilder builder) {
         if (cacheControl.getPrivateFields().size() > 0) {
           final List<String> fields = cacheControl.getPrivateFields();
-          for (int i = 0, i$ = fields.size(); i < i$; ++i) { // [L]
-            final String field = fieldToString(fields.get(i));
-            if (field != null)
-              builder.append("private=").append(field).append(',');
+          if (CollectionUtil.isRandomAccess(fields)) {
+            for (int i = 0, i$ = fields.size(); i < i$; ++i) { // [RA]
+              final String field = fields.get(i);
+              if (field != null)
+                builder.append("private=").append(fieldToString(field)).append(',');
+            }
+          }
+          else {
+            for (final String field : fields) { // [L]
+              if (field != null)
+                builder.append("private=").append(fieldToString(field)).append(',');
+            }
           }
         }
         else if (cacheControl.isPrivate()) {
@@ -80,10 +89,18 @@ class StrictCacheControl extends CacheControl {
       void toString(final CacheControl cacheControl, final StringBuilder builder) {
         if (cacheControl.getNoCacheFields().size() > 0) {
           final List<String> fields = cacheControl.getNoCacheFields();
-          for (int i = 0, i$ = fields.size(); i < i$; ++i) { // [L]
-            final String field = fieldToString(fields.get(i));
-            if (field != null)
-              builder.append("no-cache=").append(field).append(',');
+          if (CollectionUtil.isRandomAccess(fields)) {
+            for (int i = 0, i$ = fields.size(); i < i$; ++i) { // [RA]
+              final String field = fields.get(i);
+              if (field != null)
+                builder.append("no-cache=").append(fieldToString(field)).append(',');
+            }
+          }
+          else {
+            for (final String field : fields) { // [L]
+              if (field != null)
+                builder.append("no-cache=").append(fieldToString(field)).append(',');
+            }
           }
         }
         else if (cacheControl.isNoCache()) {
@@ -222,7 +239,7 @@ class StrictCacheControl extends CacheControl {
     abstract void toString(CacheControl cacheControl, StringBuilder builder);
 
     private static String fieldToString(String field) {
-      return field == null || (field = field.trim()).length() == 0 ? null : "\"" + field + "\"";
+      return (field = field.trim()).length() == 0 ? null : "\"" + field + "\"";
     }
 
     static boolean parseDirective(final StrictCacheControl cacheControl, final String directiveString) {

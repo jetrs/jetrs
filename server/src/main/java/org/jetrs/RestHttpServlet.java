@@ -17,7 +17,6 @@
 package org.jetrs;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 
 import javax.servlet.ServletConfig;
@@ -73,16 +72,16 @@ abstract class RestHttpServlet extends HttpServlet {
       }
     }
 
-    final List<ResourceInfoImpl> resourceInfos = new ArrayList<>();
-    final List<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories = new ArrayList<>();
-    final List<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorProviderFactories = new ArrayList<>();
-    final List<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderProviderFactories = new ArrayList<>();
-    final List<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterProviderFactories = new ArrayList<>();
-    final List<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperProviderFactories = new ArrayList<>();
-    final List<ProviderFactory<ParamConverterProvider>> paramConverterProviderFactories = new ArrayList<>();
-    final List<ProviderFactory<ContainerRequestFilter>> preMatchContainerRequestFilterProviderFactories = new ArrayList<>();
-    final List<ProviderFactory<ContainerRequestFilter>> containerRequestFilterProviderFactories = new ArrayList<>();
-    final List<ProviderFactory<ContainerResponseFilter>> containerResponseFilterProviderFactories = new ArrayList<>();
+    final ArrayList<ResourceInfoImpl> resourceInfos = new ArrayList<>();
+    final ArrayList<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories = new ArrayList<>();
+    final ArrayList<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorProviderFactories = new ArrayList<>();
+    final ArrayList<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderProviderFactories = new ArrayList<>();
+    final ArrayList<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterProviderFactories = new ArrayList<>();
+    final ArrayList<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperProviderFactories = new ArrayList<>();
+    final ArrayList<ProviderFactory<ParamConverterProvider>> paramConverterProviderFactories = new ArrayList<>();
+    final ArrayList<ProviderFactory<ContainerRequestFilter>> preMatchContainerRequestFilterProviderFactories = new ArrayList<>();
+    final ArrayList<ProviderFactory<ContainerRequestFilter>> containerRequestFilterProviderFactories = new ArrayList<>();
+    final ArrayList<ProviderFactory<ContainerResponseFilter>> containerResponseFilterProviderFactories = new ArrayList<>();
 
     final ServerBootstrap bootstrap = new ServerBootstrap(servletPath,
       readerInterceptorProviderFactories,

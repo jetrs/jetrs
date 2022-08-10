@@ -17,8 +17,8 @@
 package org.jetrs;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.List;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -26,7 +26,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.Application;
-import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.MessageBodyReader;
@@ -38,29 +37,29 @@ import javax.ws.rs.ext.WriterInterceptor;
 import org.libj.lang.Enumerations;
 
 class ServerRuntimeContext extends RuntimeContext {
-  private final List<ProviderFactory<ParamConverterProvider>> paramConverterProviderFactories;
-  private final List<ProviderFactory<ContainerRequestFilter>> preMatchContainerRequestFilterProviderFactories;
-  private final List<ProviderFactory<ContainerRequestFilter>> containerRequestFilterProviderFactories;
-  private final List<ProviderFactory<ContainerResponseFilter>> containerResponseFilterProviderFactories;
+  private final ArrayList<ProviderFactory<ParamConverterProvider>> paramConverterProviderFactories;
+  private final ArrayList<ProviderFactory<ContainerRequestFilter>> preMatchContainerRequestFilterProviderFactories;
+  private final ArrayList<ProviderFactory<ContainerRequestFilter>> containerRequestFilterProviderFactories;
+  private final ArrayList<ProviderFactory<ContainerResponseFilter>> containerResponseFilterProviderFactories;
 
   private final ServletConfig servletConfig;
   private final ServletContext servletContext;
   private final Application application;
-  private final List<ResourceInfoImpl> resourceInfos;
+  private final ArrayList<ResourceInfoImpl> resourceInfos;
 
   ServerRuntimeContext(
-    final List<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories,
-    final List<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorProviderFactories,
-    final List<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderProviderFactories,
-    final List<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterProviderFactories,
-    final List<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperProviderFactories,
-    final List<ProviderFactory<ParamConverterProvider>> paramConverterProviderFactories,
-    final List<ProviderFactory<ContainerRequestFilter>> preMatchContainerRequestFilterProviderFactories,
-    final List<ProviderFactory<ContainerRequestFilter>> containerRequestFilterProviderFactories,
-    final List<ProviderFactory<ContainerResponseFilter>> containerResponseFilterProviderFactories,
+    final ArrayList<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories,
+    final ArrayList<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorProviderFactories,
+    final ArrayList<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderProviderFactories,
+    final ArrayList<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterProviderFactories,
+    final ArrayList<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperProviderFactories,
+    final ArrayList<ProviderFactory<ParamConverterProvider>> paramConverterProviderFactories,
+    final ArrayList<ProviderFactory<ContainerRequestFilter>> preMatchContainerRequestFilterProviderFactories,
+    final ArrayList<ProviderFactory<ContainerRequestFilter>> containerRequestFilterProviderFactories,
+    final ArrayList<ProviderFactory<ContainerResponseFilter>> containerResponseFilterProviderFactories,
     final ServletConfig servletConfig, final ServletContext servletContext,
     final Application application,
-    final List<ResourceInfoImpl> resourceInfos
+    final ArrayList<ResourceInfoImpl> resourceInfos
   ) {
     super(new ConfigurationImpl(application), readerInterceptorProviderFactories, writerInterceptorProviderFactories, messageBodyReaderProviderFactories, messageBodyWriterProviderFactories, exceptionMapperProviderFactories);
     this.paramConverterProviderFactories = paramConverterProviderFactories;
@@ -85,23 +84,23 @@ class ServerRuntimeContext extends RuntimeContext {
     return application;
   }
 
-  List<ResourceInfoImpl> getResourceInfos() {
+  ArrayList<ResourceInfoImpl> getResourceInfos() {
     return resourceInfos;
   }
 
-  List<ProviderFactory<ParamConverterProvider>> getParamConverterProviderFactories() {
+  ArrayList<ProviderFactory<ParamConverterProvider>> getParamConverterProviderFactories() {
     return paramConverterProviderFactories;
   }
 
-  List<ProviderFactory<ContainerRequestFilter>> getPreMatchContainerRequestFilterProviderFactories() {
+  ArrayList<ProviderFactory<ContainerRequestFilter>> getPreMatchContainerRequestFilterProviderFactories() {
     return preMatchContainerRequestFilterProviderFactories;
   }
 
-  List<ProviderFactory<ContainerRequestFilter>> getContainerRequestFilterProviderFactories() {
+  ArrayList<ProviderFactory<ContainerRequestFilter>> getContainerRequestFilterProviderFactories() {
     return containerRequestFilterProviderFactories;
   }
 
-  List<ProviderFactory<ContainerResponseFilter>> getContainerResponseFilterProviderFactories() {
+  ArrayList<ProviderFactory<ContainerResponseFilter>> getContainerResponseFilterProviderFactories() {
     return containerResponseFilterProviderFactories;
   }
 

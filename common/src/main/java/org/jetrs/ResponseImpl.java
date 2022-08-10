@@ -24,9 +24,9 @@ import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -134,7 +134,7 @@ class ResponseImpl extends Response {
     try {
       final InputStream in = closed ? new ByteArrayInputStream(entityBuffer) : (InputStream)entity;
 
-      final List<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories = requestContext.getReaderInterceptorFactoryList();
+      final ArrayList<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories = requestContext.getReaderInterceptorFactoryList();
       if (readerInterceptorProviderFactories == null)
         return (T)(entity = messageBodyReader.readFrom(rawType, genericType, annotations, mediaType, headers, in));
 

@@ -44,21 +44,21 @@ class MirrorMultivaluedMap<K,V,R> extends MirrorMap<K,List<V>,List<R>> implement
    */
   interface Mirror<K,V,R> extends MirrorMap.Mirror<K,List<V>,List<R>> {
     @Override
-    MirrorList<R,V> valueToReflection(K key, List<V> value);
+    MirrorList<R,List<R>,V,List<V>> valueToReflection(K key, List<V> value);
 
     @Override
-    MirrorList<V,R> reflectionToValue(K key, List<R> reflection);
+    MirrorList<V,List<V>,R,List<R>> reflectionToValue(K key, List<R> reflection);
 
     @Override
     default Mirror<K,R,V> reverse() {
       return new Mirror<K,R,V>() {
         @Override
-        public MirrorList<V,R> valueToReflection(final K key, final List<R> value) {
+        public MirrorList<V,List<V>,R,List<R>> valueToReflection(final K key, final List<R> value) {
           return Mirror.this.reflectionToValue(key, value);
         }
 
         @Override
-        public MirrorList<R,V> reflectionToValue(final K key, final List<V> reflection) {
+        public MirrorList<R,List<R>,V,List<V>> reflectionToValue(final K key, final List<V> reflection) {
           return Mirror.this.valueToReflection(key, reflection);
         }
       };
@@ -168,32 +168,32 @@ class MirrorMultivaluedMap<K,V,R> extends MirrorMap<K,List<V>,List<R>> implement
 
   @Override
   @SuppressWarnings("unchecked")
-  public MirrorList<V,R> get(final Object key) {
-    return (MirrorList<V,R>)super.get(key);
+  public MirrorList<V,List<V>,R,List<R>> get(final Object key) {
+    return (MirrorList<V,List<V>,R,List<R>>)super.get(key);
   }
 
   @Override
   @SuppressWarnings("unchecked")
-  public MirrorList<V,R> put(final K key, final List<V> value) {
-    return (MirrorList<V,R>)super.put(key, value);
+  public MirrorList<V,List<V>,R,List<R>> put(final K key, final List<V> value) {
+    return (MirrorList<V,List<V>,R,List<R>>)super.put(key, value);
   }
 
   @Override
   @SuppressWarnings("unchecked")
-  public MirrorList<V,R> putIfAbsent(final K key, final List<V> value) {
-    return (MirrorList<V,R>)super.putIfAbsent(key, value);
+  public MirrorList<V,List<V>,R,List<R>> putIfAbsent(final K key, final List<V> value) {
+    return (MirrorList<V,List<V>,R,List<R>>)super.putIfAbsent(key, value);
   }
 
   @Override
   @SuppressWarnings("unchecked")
-  public MirrorList<V,R> remove(final Object key) {
-    return (MirrorList<V,R>)super.remove(key);
+  public MirrorList<V,List<V>,R,List<R>> remove(final Object key) {
+    return (MirrorList<V,List<V>,R,List<R>>)super.remove(key);
   }
 
   @Override
   @SuppressWarnings("unchecked")
-  public MirrorList<V,R> replace(final K key, final List<V> value) {
-    return (MirrorList<V,R>)super.replace(key, value);
+  public MirrorList<V,List<V>,R,List<R>> replace(final K key, final List<V> value) {
+    return (MirrorList<V,List<V>,R,List<R>>)super.replace(key, value);
   }
 
   /**
@@ -205,8 +205,8 @@ class MirrorMultivaluedMap<K,V,R> extends MirrorMap<K,List<V>,List<R>> implement
    *         {@link Mirror#reflectionToValue(Object,List)} if a list does not
    *         exist.
    */
-  protected final MirrorList<V,R> getValues(final K key) {
-    MirrorList<V,R> values = get(key);
+  protected final MirrorList<V,List<V>,R,List<R>> getValues(final K key) {
+    MirrorList<V,List<V>,R,List<R>> values = get(key);
     if (values == null)
       put(key, values, values = getMirror().reflectionToValue(key, null));
 
@@ -221,7 +221,7 @@ class MirrorMultivaluedMap<K,V,R> extends MirrorMap<K,List<V>,List<R>> implement
 
   @Override
   public void putSingle(final K key, final V value) {
-    MirrorList<V,R> values = get(key);
+    MirrorList<V,List<V>,R,List<R>> values = get(key);
     put(key, values, values = getMirror().reflectionToValue(key, null));
     values.add(value);
   }
@@ -266,14 +266,14 @@ class MirrorMultivaluedMap<K,V,R> extends MirrorMap<K,List<V>,List<R>> implement
   }
 
   @SuppressWarnings("unchecked")
-  private MirrorList<V,R> ensureMirrorList(final K key, final List<V> value) {
-    return value instanceof MirrorList ? (MirrorList<V,R>)value : getMirror().valueToReflection(key, value).reverse();
+  private MirrorList<V,List<V>,R,List<R>> ensureMirrorList(final K key, final List<V> value) {
+    return value instanceof MirrorList ? (MirrorList<V,List<V>,R,List<R>>)value : getMirror().valueToReflection(key, value).reverse();
   }
 
   @Override
   @SuppressWarnings("unchecked")
-  protected MirrorList<V,R> put(final K key, final List<V> oldValue, final List<V> newValue) {
-    return (MirrorList<V,R>)super.put(key, oldValue, ensureMirrorList(key, newValue));
+  protected MirrorList<V,List<V>,R,List<R>> put(final K key, final List<V> oldValue, final List<V> newValue) {
+    return (MirrorList<V,List<V>,R,List<R>>)super.put(key, oldValue, ensureMirrorList(key, newValue));
   }
 
   @SuppressWarnings("unchecked")

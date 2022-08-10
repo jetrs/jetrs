@@ -17,7 +17,7 @@
 package org.jetrs;
 
 import java.net.URL;
-import java.util.List;
+import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 
 import javax.ws.rs.HttpMethod;
@@ -73,7 +73,7 @@ abstract class Invoker<R> {
 
   public abstract R method(String name, Entity<?> entity);
 
-  Invocation build(final String method, final Entity<?> entity, final HttpHeadersImpl requestHeaders, final List<Cookie> cookies, final CacheControl cacheControl) {
+  Invocation build(final String method, final Entity<?> entity, final HttpHeadersImpl requestHeaders, final ArrayList<Cookie> cookies, final CacheControl cacheControl) {
     client.assertNotClosed();
     final HttpHeadersImpl headers = requestHeaders != null ? requestHeaders.clone() : new HttpHeadersImpl();
     if (entity != null && entity.getMediaType() != null && headers.getMediaType() == null)

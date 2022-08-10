@@ -16,7 +16,7 @@
 
 package org.jetrs;
 
-import java.util.List;
+import java.util.ArrayList;
 
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Request;
@@ -29,11 +29,11 @@ import javax.ws.rs.ext.WriterInterceptor;
 public class ClientRuntimeContext extends RuntimeContext {
   ClientRuntimeContext(
     final Configuration configuration,
-    final List<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories,
-    final List<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorProviderFactories,
-    final List<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderProviderFactories,
-    final List<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterProviderFactories,
-    final List<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperProviderFactories
+    final ArrayList<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories,
+    final ArrayList<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorProviderFactories,
+    final ArrayList<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderProviderFactories,
+    final ArrayList<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterProviderFactories,
+    final ArrayList<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperProviderFactories
   ) {
     super(configuration, readerInterceptorProviderFactories, writerInterceptorProviderFactories, messageBodyReaderProviderFactories, messageBodyWriterProviderFactories, exceptionMapperProviderFactories);
   }

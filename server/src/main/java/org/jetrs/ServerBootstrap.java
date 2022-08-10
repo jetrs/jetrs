@@ -21,9 +21,9 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -88,7 +88,7 @@ class ServerBootstrap extends Bootstrap<ResourceInfoImpl> {
     }
   }
 
-  private static <T>void add(final HttpMethod httpMethodAnnotation, final Method method, final String baseUri, final Path classPath, final Path methodPath, final List<? super ResourceInfoImpl> resources, final Class<? extends T> clazz, final T singleton) {
+  private static <T>void add(final HttpMethod httpMethodAnnotation, final Method method, final String baseUri, final Path classPath, final Path methodPath, final ArrayList<? super ResourceInfoImpl> resources, final Class<? extends T> clazz, final T singleton) {
     final ResourceInfoImpl resourceInfo = new ResourceInfoImpl(httpMethodAnnotation, method, baseUri, classPath, methodPath, singleton);
     if (logger.isDebugEnabled())
       logger.debug((httpMethodAnnotation != null ? httpMethodAnnotation.value() : "*") + " " + resourceInfo.getUriTemplate().toString() + " -> " + clazz.getSimpleName() + "." + method.getName() + "()");
@@ -97,21 +97,21 @@ class ServerBootstrap extends Bootstrap<ResourceInfoImpl> {
   }
 
   private final String baseUri;
-  private final List<ProviderFactory<ParamConverterProvider>> paramConverterProviderFactories;
-  private final List<ProviderFactory<ContainerRequestFilter>> preMatchContainerRequestFilterProviderFactories;
-  private final List<ProviderFactory<ContainerRequestFilter>> containerRequestFilterProviderFactories;
-  private final List<ProviderFactory<ContainerResponseFilter>> containerResponseFilterProviderFactories;
+  private final ArrayList<ProviderFactory<ParamConverterProvider>> paramConverterProviderFactories;
+  private final ArrayList<ProviderFactory<ContainerRequestFilter>> preMatchContainerRequestFilterProviderFactories;
+  private final ArrayList<ProviderFactory<ContainerRequestFilter>> containerRequestFilterProviderFactories;
+  private final ArrayList<ProviderFactory<ContainerResponseFilter>> containerResponseFilterProviderFactories;
 
   ServerBootstrap(final String baseUri,
-    final List<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories,
-    final List<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorProviderFactories,
-    final List<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderProviderFactories,
-    final List<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterProviderFactories,
-    final List<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperProviderFactories,
-    final List<ProviderFactory<ParamConverterProvider>> paramConverterProviderFactories,
-    final List<ProviderFactory<ContainerRequestFilter>> preMatchContainerRequestFilterProviderFactories,
-    final List<ProviderFactory<ContainerRequestFilter>> containerRequestFilterProviderFactories,
-    final List<ProviderFactory<ContainerResponseFilter>> containerResponseFilterProviderFactories
+    final ArrayList<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories,
+    final ArrayList<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorProviderFactories,
+    final ArrayList<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderProviderFactories,
+    final ArrayList<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterProviderFactories,
+    final ArrayList<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperProviderFactories,
+    final ArrayList<ProviderFactory<ParamConverterProvider>> paramConverterProviderFactories,
+    final ArrayList<ProviderFactory<ContainerRequestFilter>> preMatchContainerRequestFilterProviderFactories,
+    final ArrayList<ProviderFactory<ContainerRequestFilter>> containerRequestFilterProviderFactories,
+    final ArrayList<ProviderFactory<ContainerResponseFilter>> containerResponseFilterProviderFactories
   ) {
     super(readerInterceptorProviderFactories, writerInterceptorProviderFactories, messageBodyReaderProviderFactories, messageBodyWriterProviderFactories, exceptionMapperProviderFactories);
     this.baseUri = baseUri;
@@ -123,7 +123,7 @@ class ServerBootstrap extends Bootstrap<ResourceInfoImpl> {
 
   @Override
   @SuppressWarnings("unchecked")
-  <T>boolean addResourceOrProvider(final List<Consumer<Set<Class<?>>>> afterAdd, final List<ResourceInfoImpl> resources, final Class<? extends T> clazz, final T singleton, final boolean scanned) throws IllegalAccessException, InstantiationException, InvocationTargetException {
+  <T>boolean addResourceOrProvider(final ArrayList<Consumer<Set<Class<?>>>> afterAdd, final ArrayList<ResourceInfoImpl> resources, final Class<? extends T> clazz, final T singleton, final boolean scanned) throws IllegalAccessException, InstantiationException, InvocationTargetException {
     if (clazz.isAnnotationPresent(Provider.class)) {
       if (ParamConverterProvider.class.isAssignableFrom(clazz))
         paramConverterProviderFactories.add(new ParamConverterProviderFactory((Class<ParamConverterProvider>)clazz, (ParamConverterProvider)singleton));
@@ -180,7 +180,7 @@ class ServerBootstrap extends Bootstrap<ResourceInfoImpl> {
   }
 
   @Override
-  void init(final Set<?> singletons, final Set<Class<?>> classes, final List<ResourceInfoImpl> resources) throws IllegalAccessException, InstantiationException, InvocationTargetException, PackageNotFoundException, IOException {
+  void init(final Set<?> singletons, final Set<Class<?>> classes, final ArrayList<ResourceInfoImpl> resources) throws IllegalAccessException, InstantiationException, InvocationTargetException, PackageNotFoundException, IOException {
     super.init(singletons, classes, resources);
     preMatchContainerRequestFilterProviderFactories.sort(priorityComparator);
     containerRequestFilterProviderFactories.sort(priorityComparator);

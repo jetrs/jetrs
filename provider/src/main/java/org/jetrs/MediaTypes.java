@@ -31,6 +31,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.libj.lang.Numbers;
 import org.libj.lang.Strings;
+import org.libj.util.CollectionUtil;
 
 /**
  * Utility class with convenience functions for the {@link MediaType} class.
@@ -107,9 +108,17 @@ final class MediaTypes {
     if (acceptCharsets == null)
       return true;
 
-    for (int i = 0, i$ = acceptCharsets.size(); i < i$; ++i) // [L]
-      if (acceptCharsets.get(i).equalsIgnoreCase(serverCharset))
-        return true;
+    if (CollectionUtil.isRandomAccess(acceptCharsets)) {
+      for (int i = 0, i$ = acceptCharsets.size(); i < i$; ++i) // [RA]
+        if (acceptCharsets.get(i).equalsIgnoreCase(serverCharset))
+          return true;
+    }
+    else {
+      for (final String acceptCharset : acceptCharsets) { // [L]
+        if (acceptCharset.equalsIgnoreCase(serverCharset))
+          return true;
+      }
+    }
 
     return false;
   }

@@ -53,8 +53,8 @@ public class HttpHeadersImplTest extends RuntimeDelegateTest {
     final String string = value.toString();
     if (headers instanceof HttpHeadersImpl) {
       ((HttpHeadersMap)headers).addFirst(name, string);
-      final MirrorList<?,?> a = ((HttpHeadersMap)headers).get(name);
-      final MirrorList<?,?> b = ((HttpHeadersMap)headers.getMirrorMap()).get(name);
+      final MirrorList<?,?,?,?> a = ((HttpHeadersMap)headers).get(name);
+      final MirrorList<?,?,?,?> b = ((HttpHeadersMap)headers.getMirrorMap()).get(name);
       assertEquals(a.getMirrorList(), b);
       assertEquals(b.getMirrorList(), a);
       assertEquals(string, headers.getFirst(name));
@@ -132,7 +132,7 @@ public class HttpHeadersImplTest extends RuntimeDelegateTest {
     assertEquals(expected, headers.getMirrorMap().size());
   }
 
-  private static void assertSize(final int expected, final MirrorList<?,?> list) {
+  private static void assertSize(final int expected, final MirrorList<?,?,?,?> list) {
     assertEquals(expected, list.size());
     assertEquals(expected, list.getMirrorList().size());
   }
@@ -210,7 +210,7 @@ public class HttpHeadersImplTest extends RuntimeDelegateTest {
     }
   };
 
-  private static void testRemove(final HttpHeadersImpl strings, final List<String> expectedStrings, final List<Object> expectedObjects, final String headerName, final String headerString, final HeaderDelegate<?> headerDelegate) {
+  private static void testRemove(final HttpHeadersImpl strings, final ArrayList<String> expectedStrings, final ArrayList<Object> expectedObjects, final String headerName, final String headerString, final HeaderDelegate<?> headerDelegate) {
     final HttpHeadersMap<Object,String> objects = strings.getMirrorMap();
     for (int i = 0; i < 2; ++i) { // [N]
       final Object headerObject = headerDelegate.fromString(headerString);
@@ -230,7 +230,7 @@ public class HttpHeadersImplTest extends RuntimeDelegateTest {
     }
   };
 
-  private static void testAdd(final HttpHeadersImpl strings, final List<String> expectedStrings, final List<Object> expectedObjects, final String headerName, final String headerString, final HeaderDelegate<?> headerDelegate) {
+  private static void testAdd(final HttpHeadersImpl strings, final ArrayList<String> expectedStrings, final ArrayList<Object> expectedObjects, final String headerName, final String headerString, final HeaderDelegate<?> headerDelegate) {
     final HttpHeadersMap<Object,String> objects = strings.getMirrorMap();
     for (int i = 0; i < 2; ++i) { // [N]
       final Object headerObject = headerDelegate.fromString(headerString);
@@ -254,8 +254,8 @@ public class HttpHeadersImplTest extends RuntimeDelegateTest {
     final HeaderDelegate<?> headerDelegate = Delegate.lookup(headerName, type);
 
     final HttpHeadersImpl strings = new HttpHeadersImpl();
-    final List<String> expectedStrings = new ArrayList<>();
-    final List<Object> expectedObjects = new ArrayList<>();
+    final ArrayList<String> expectedStrings = new ArrayList<>();
+    final ArrayList<Object> expectedObjects = new ArrayList<>();
     for (int i = 0; i < args.length; ++i) // [A]
       testAdd(strings, expectedStrings, expectedObjects, headerName, args[i], headerDelegate);
 
@@ -768,7 +768,7 @@ public class HttpHeadersImplTest extends RuntimeDelegateTest {
     assertEquals(acceptValue2.toString(), headers.getFirst(acceptName));
 
     final String contentTypeName = HttpHeaders.CONTENT_TYPE;
-    final List<Object> contentTypes = new ArrayList<>();
+    final ArrayList<Object> contentTypes = new ArrayList<>();
     final MediaType contentType1 = MediaTypes.parse("text/html; charset=UTF-8; q=.1");
     contentTypes.add(contentType1);
     headers.getMirrorMap().put(contentTypeName, contentTypes);

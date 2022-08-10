@@ -108,18 +108,29 @@ public abstract class ContentCodec implements ReaderInterceptor, WriterIntercept
     final List<String> acceptEncodings = requestHeaders.getRequestHeader(HttpHeaders.ACCEPT_ENCODING);
     if (acceptEncodings != null && acceptEncodings.size() > 0) {
       final Set<String> supportedEncodings = getSupportedEncodings();
-      for (int i = 0, i$ = acceptEncodings.size(); i < i$; ++i) { // [L]
-        final String acceptEncoding = acceptEncodings.get(i);
-        if (acceptEncoding != null && supportedEncodings.contains(acceptEncoding)) {
-          context.setOutputStream(encode(acceptEncoding, context.getOutputStream()));
-          final MultivaluedMap<String,Object> headers = context.getHeaders();
-          headers.addFirst(HttpHeaders.CONTENT_ENCODING, acceptEncoding);
-          headers.remove(HttpHeaders.CONTENT_LENGTH);
-          break;
-        }
+      if (CollectionUtil.isRandomAccess(acceptEncodings)) {
+        for (int i = 0, i$ = acceptEncodings.size(); i < i$; ++i) // [RA]
+          if (setEncoding(acceptEncodings.get(i), supportedEncodings, context))
+            break;
+      }
+      else {
+        for (final String acceptEncoding : acceptEncodings) // [L]
+          if (setEncoding(acceptEncoding, supportedEncodings, context))
+            break;
       }
     }
 
     context.proceed();
+  }
+
+  private boolean setEncoding(final String acceptEncoding, final Set<String> supportedEncodings, final WriterInterceptorContext context) throws IOException {
+    if (acceptEncoding == null || !supportedEncodings.contains(acceptEncoding))
+      return false;
+
+    context.setOutputStream(encode(acceptEncoding, context.getOutputStream()));
+    final MultivaluedMap<String,Object> headers = context.getHeaders();
+    headers.addFirst(HttpHeaders.CONTENT_ENCODING, acceptEncoding);
+    headers.remove(HttpHeaders.CONTENT_LENGTH);
+    return true;
   }
 }

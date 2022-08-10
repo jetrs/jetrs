@@ -16,22 +16,24 @@
 
 package org.jetrs;
 
-import java.util.Collections;
+import java.util.ArrayList;
 
 import javax.ws.rs.core.Application;
 
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class ServerTestRuntimeDelegate extends RuntimeDelegateImpl {
+  final ArrayList EMPTY_LIST = new ArrayList<>(0);
   public ServerTestRuntimeDelegate() {
     setRuntimeContext(new ServerRuntimeContext(
-      Collections.EMPTY_LIST,
-      Collections.EMPTY_LIST,
-      Collections.EMPTY_LIST,
-      Collections.EMPTY_LIST,
-      Collections.EMPTY_LIST,
-      Collections.EMPTY_LIST,
-      Collections.EMPTY_LIST,
-      Collections.EMPTY_LIST,
-      Collections.EMPTY_LIST,
+      EMPTY_LIST,
+      EMPTY_LIST,
+      EMPTY_LIST,
+      EMPTY_LIST,
+      EMPTY_LIST,
+      EMPTY_LIST,
+      EMPTY_LIST,
+      EMPTY_LIST,
+      EMPTY_LIST,
       null, null,
       new Application(),
       null

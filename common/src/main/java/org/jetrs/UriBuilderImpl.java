@@ -26,6 +26,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.RandomAccess;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -482,19 +483,12 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
   public UriBuilder replaceMatrixParam(final String name, final Object ... values) throws IllegalArgumentException {
     assertNotNull(name, "name is null");
 
-    if (path == null) {
-      if (values != null && values.length > 0)
-        return matrixParam(name, values);
+    if (path == null)
+      return values != null && values.length > 0 ? matrixParam(name, values) : this;
 
-      return this;
-    }
-
-    // remove all path param expressions so we don't accidentally start
-    // replacing within a regular expression
-    final ArrayList<String> pathParams = new ArrayList<>();
-
+    // remove all path param expressions so we don't accidentally start replacing within a regular expression
     final StringBuilder segment = new StringBuilder();
-    final boolean foundParam = UriEncoder.savePathParams(this.path, segment, pathParams);
+    final ArrayList<String> pathParams = UriEncoder.savePathParams(path, segment);
     path = segment.toString();
 
     // Find last path segment
@@ -504,36 +498,32 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
 
     final int matrixIndex = path.indexOf(';', start);
     if (matrixIndex > -1) {
-      final String matrixParams = path.substring(matrixIndex + 1);
-      path = path.substring(0, matrixIndex);
-
       final MultivaluedHashMap<String,String> map = new MultivaluedHashMap<>();
-      final String[] params = matrixParams.split(";");
-      for (final String param : params) { // [A]
-        final int index = param.indexOf('=');
-        if (index >= 0)
-          map.add(param.substring(0, index), index + 1 < param.length() ? param.substring(index + 1) : "");
-        else
-          map.add(param, null);
-      }
-
+      PathSegmentImpl.parseMatrixParams(map, path, matrixIndex, false);
       map.remove(name);
+
+      final StringBuilder path = new StringBuilder(this.path);
+      path.delete(matrixIndex, path.length());
       for (final String paramName : map.keySet()) { // [S]
         final List<String> paramValues = map.get(paramName);
-        for (int i = 0, i$ = paramValues.size(); i < i$; ++i) { // [L]
-          final Object paramValue = paramValues.get(i);
-          path += ";" + paramName;
-          if (paramValue != null)
-            path += "=" + paramValue;
+        if (paramValues instanceof RandomAccess) {
+          for (int i = 0, i$ = paramValues.size(); i < i$; ++i) // [RA]
+            appendParam(path, paramName, paramValues.get(i));
+        }
+        else {
+          for (final String paramValue : paramValues) // [L]
+            appendParam(path, paramName, paramValue);
         }
       }
+
+      this.path = path.toString();
     }
 
     if (values != null && values.length > 0)
       matrixParam(name, values);
 
     // put back all path param expressions
-    if (foundParam) {
+    if (pathParams != null) {
       final Matcher matcher = UriEncoder.PARAM_REPLACEMENT.matcher(path);
       final StringBuilder builder = new StringBuilder();
       int from = 0;
@@ -547,6 +537,12 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
     }
 
     return this;
+  }
+
+  private static void appendParam(final StringBuilder path, final String paramName, final String paramValue) {
+    path.append(';').append(paramName);
+    if (paramValue != null)
+      path.append('=').append(paramValue);
   }
 
   @Override

@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.RandomAccess;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -67,8 +68,8 @@ final class ParameterUtil {
     return null;
   }
 
-  private static <T>ParamConverter<T> lookupParamConverter(final List<ProviderFactory<ParamConverterProvider>> paramConverterProviderFactories, final RequestContext<?> requestContext, final Class<T> rawType, final Type genericType, final Annotation[] annotations) {
-    for (int i = 0, i$ = paramConverterProviderFactories.size(); i < i$; ++i) { // [L]
+  private static <T>ParamConverter<T> lookupParamConverter(final ArrayList<ProviderFactory<ParamConverterProvider>> paramConverterProviderFactories, final RequestContext<?> requestContext, final Class<T> rawType, final Type genericType, final Annotation[] annotations) {
+    for (int i = 0, i$ = paramConverterProviderFactories.size(); i < i$; ++i) { // [RA]
       final ProviderFactory<ParamConverterProvider> factory = paramConverterProviderFactories.get(i);
       // FIXME: Is there a way to detect whether the ParamConverterProvider can convert the parameter without instantiating the ParamConverterProvider?
       final ParamConverter<T> paramConverter = factory.getSingletonOrFromRequestContext(requestContext).getConverter(rawType, genericType, annotations);
@@ -87,7 +88,7 @@ final class ParameterUtil {
 
   // http://download.oracle.com/otn-pub/jcp/jaxrs-2_0_rev_A-mrel-eval-spec/jsr339-jaxrs-2.0-final-spec.pdf Section 3.2
   @SuppressWarnings("unchecked")
-  static Object convertParameter(final Class<?> parameterType, final Type genericType, final Annotation[] annotations, final List<String> values, final List<ProviderFactory<ParamConverterProvider>> paramConverterProviderFactories, final RequestContext<?> requestContext) {
+  static Object convertParameter(final Class<?> parameterType, final Type genericType, final Annotation[] annotations, final List<String> values, final ArrayList<ProviderFactory<ParamConverterProvider>> paramConverterProviderFactories, final RequestContext<?> requestContext) {
     if (values == null || values.size() == 0)
       return null;
 
@@ -128,15 +129,28 @@ final class ParameterUtil {
 
         if (container instanceof Collection) {
           final Collection<Object> c = (Collection<Object>)container;
-          for (int i = 0, i$ = values.size(); i < i$; ++i) // [L]
-            c.add(new BigInteger(values.get(i)));
+          if (values instanceof RandomAccess) {
+            for (int i = 0, i$ = values.size(); i < i$; ++i) // [RA]
+              c.add(new BigInteger(values.get(i)));
+          }
+          else {
+            for (final String value : values) // [L]
+              c.add(new BigInteger(value));
+          }
 
           return c;
         }
 
         final Object[] a = (Object[])container;
-        for (int i = 0; i < a.length; ++i) // [A]
-          a[i] = new BigInteger(values.get(i));
+        if (values instanceof RandomAccess) {
+          for (int i = 0; i < a.length; ++i) // [A]
+            a[i] = new BigInteger(values.get(i));
+        }
+        else {
+          int i = -1;
+          for (final String value : values) // [L]
+            a[++i] = new BigInteger(value);
+        }
 
         return a;
       }
@@ -147,15 +161,28 @@ final class ParameterUtil {
 
         if (container instanceof Collection) {
           final Collection<Object> c = (Collection<Object>)container;
-          for (int i = 0, i$ = values.size(); i < i$; ++i) // [L]
-            c.add(new BigDecimal(values.get(i)));
+          if (values instanceof RandomAccess) {
+            for (int i = 0, i$ = values.size(); i < i$; ++i) // [RA]
+              c.add(new BigDecimal(values.get(i)));
+          }
+          else {
+            for (final String value : values) // [L]
+              c.add(new BigDecimal(value));
+          }
 
           return c;
         }
 
         final Object[] a = (Object[])container;
-        for (int i = 0; i < a.length; ++i) // [A]
-          a[i] = new BigDecimal(values.get(i));
+        if (values instanceof RandomAccess) {
+          for (int i = 0; i < a.length; ++i) // [A]
+            a[i] = new BigDecimal(values.get(i));
+        }
+        else {
+          int i = -1;
+          for (final String value : values) // [L]
+            a[++i] = new BigDecimal(value);
+        }
 
         return a;
       }
@@ -166,23 +193,43 @@ final class ParameterUtil {
 
         if (container instanceof Collection) {
           final Collection<Object> c = (Collection<Object>)container;
-          for (int i = 0, i$ = values.size(); i < i$; ++i) // [L]
-            c.add(Long.valueOf(values.get(i)));
+          if (values instanceof RandomAccess) {
+            for (int i = 0, i$ = values.size(); i < i$; ++i) // [RA][RA]
+              c.add(Long.valueOf(values.get(i)));
+          }
+          else {
+            for (final String value : values) // [L]
+              c.add(Long.valueOf(value));
+          }
 
           return c;
         }
 
         if (container instanceof long[]) {
           final long[] a = (long[])container;
-          for (int i = 0; i < a.length; ++i) // [A]
-            a[i] = Long.parseLong(values.get(i));
+          if (values instanceof RandomAccess) {
+            for (int i = 0; i < a.length; ++i) // [A]
+              a[i] = Long.parseLong(values.get(i));
+          }
+          else {
+            int i = -1;
+            for (final String value : values) // [L]
+              a[++i] = Long.parseLong(value);
+          }
 
           return a;
         }
 
         final Object[] a = (Object[])container;
-        for (int i = 0; i < a.length; ++i) // [A]
-          a[i] = Long.valueOf(values.get(i));
+        if (values instanceof RandomAccess) {
+          for (int i = 0; i < a.length; ++i) // [A]
+            a[i] = Long.valueOf(values.get(i));
+        }
+        else {
+          int i = -1;
+          for (final String value : values) // [L]
+            a[++i] = Long.valueOf(value);
+        }
 
         return a;
       }
@@ -193,23 +240,43 @@ final class ParameterUtil {
 
         if (container instanceof Collection) {
           final Collection<Object> c = (Collection<Object>)container;
-          for (int i = 0, i$ = values.size(); i < i$; ++i) // [L]
-            c.add(Integer.valueOf(values.get(i)));
+          if (values instanceof RandomAccess) {
+            for (int i = 0, i$ = values.size(); i < i$; ++i) // [RA]
+              c.add(Integer.valueOf(values.get(i)));
+          }
+          else {
+            for (final String value : values) // [L]
+              c.add(Integer.valueOf(value));
+          }
 
           return c;
         }
 
         if (container instanceof int[]) {
           final int[] a = (int[])container;
-          for (int i = 0; i < a.length; ++i) // [A]
-            a[i] = Integer.parseInt(values.get(i));
+          if (values instanceof RandomAccess) {
+            for (int i = 0; i < a.length; ++i) // [A]
+              a[i] = Integer.parseInt(values.get(i));
+          }
+          else {
+            int i = -1;
+            for (final String value : values) // [L]
+              a[++i] = Integer.parseInt(value);
+          }
 
           return a;
         }
 
         final Object[] a = (Object[])container;
-        for (int i = 0; i < a.length; ++i) // [A]
-          a[i] = Integer.valueOf(values.get(i));
+        if (values instanceof RandomAccess) {
+          for (int i = 0; i < a.length; ++i) // [A]
+            a[i] = Integer.valueOf(values.get(i));
+        }
+        else {
+          int i = -1;
+          for (final String value : values) // [L]
+            a[++i] = Integer.valueOf(value);
+        }
 
         return a;
       }
@@ -220,23 +287,43 @@ final class ParameterUtil {
 
         if (container instanceof Collection) {
           final Collection<Object> c = (Collection<Object>)container;
-          for (int i = 0, i$ = values.size(); i < i$; ++i) // [L]
-            c.add(Double.valueOf(values.get(i)));
+          if (values instanceof RandomAccess) {
+            for (int i = 0, i$ = values.size(); i < i$; ++i) // [RA]
+              c.add(Double.valueOf(values.get(i)));
+          }
+          else {
+            for (final String value : values) // [L]
+              c.add(Double.valueOf(value));
+          }
 
           return c;
         }
 
         if (container instanceof double[]) {
           final double[] a = (double[])container;
-          for (int i = 0; i < a.length; ++i) // [A]
-            a[i] = Double.parseDouble(values.get(i));
+          if (values instanceof RandomAccess) {
+            for (int i = 0; i < a.length; ++i) // [A]
+              a[i] = Double.parseDouble(values.get(i));
+          }
+          else {
+            int i = -1;
+            for (final String value : values) // [L]
+              a[++i] = Double.parseDouble(value);
+          }
 
           return a;
         }
 
         final Object[] a = (Object[])container;
-        for (int i = 0; i < a.length; ++i) // [A]
-          a[i] = Double.valueOf(values.get(i));
+        if (values instanceof RandomAccess) {
+          for (int i = 0; i < a.length; ++i) // [A]
+            a[i] = Double.valueOf(values.get(i));
+        }
+        else {
+          int i = -1;
+          for (final String value : values) // [L]
+            a[++i] = Double.valueOf(value);
+        }
 
         return a;
       }
@@ -247,23 +334,43 @@ final class ParameterUtil {
 
         if (container instanceof Collection) {
           final Collection<Object> c = (Collection<Object>)container;
-          for (int i = 0, i$ = values.size(); i < i$; ++i) // [L]
-            c.add(Float.valueOf(values.get(i)));
+          if (values instanceof RandomAccess) {
+            for (int i = 0, i$ = values.size(); i < i$; ++i) // [RA]
+              c.add(Float.valueOf(values.get(i)));
+          }
+          else {
+            for (final String value : values) // [L]
+              c.add(Float.valueOf(value));
+          }
 
           return c;
         }
 
         if (container instanceof float[]) {
           final float[] a = (float[])container;
-          for (int i = 0; i < a.length; ++i) // [A]
-            a[i] = Float.parseFloat(values.get(i));
+          if (values instanceof RandomAccess) {
+            for (int i = 0; i < a.length; ++i) // [A]
+              a[i] = Float.parseFloat(values.get(i));
+          }
+          else {
+            int i = -1;
+            for (final String value : values) // [L]
+              a[++i] = Float.parseFloat(value);
+          }
 
           return a;
         }
 
         final Object[] a = (Object[])container;
-        for (int i = 0; i < a.length; ++i) // [A]
-          a[i] = Float.valueOf(values.get(i));
+        if (values instanceof RandomAccess) {
+          for (int i = 0; i < a.length; ++i) // [A]
+            a[i] = Float.valueOf(values.get(i));
+        }
+        else {
+          int i = -1;
+          for (final String value : values) // [L]
+            a[++i] = Float.valueOf(value);
+        }
 
         return a;
       }
@@ -274,23 +381,43 @@ final class ParameterUtil {
 
         if (container instanceof Collection) {
           final Collection<Object> c = (Collection<Object>)container;
-          for (int i = 0, i$ = values.size(); i < i$; ++i) // [L]
-            c.add(Short.valueOf(values.get(i)));
+          if (values instanceof RandomAccess) {
+            for (int i = 0, i$ = values.size(); i < i$; ++i) // [RA]
+              c.add(Short.valueOf(values.get(i)));
+          }
+          else {
+            for (final String value : values) // [L]
+              c.add(Short.valueOf(value));
+          }
 
           return c;
         }
 
         if (container instanceof short[]) {
           final short[] a = (short[])container;
-          for (int i = 0; i < a.length; ++i) // [A]
-            a[i] = Short.parseShort(values.get(i));
+          if (values instanceof RandomAccess) {
+            for (int i = 0; i < a.length; ++i) // [A]
+              a[i] = Short.parseShort(values.get(i));
+          }
+          else {
+            int i = -1;
+            for (final String value : values) // [L]
+              a[++i] = Short.parseShort(value);
+          }
 
           return a;
         }
 
         final Object[] a = (Object[])container;
-        for (int i = 0; i < a.length; ++i) // [A]
-          a[i] = Short.valueOf(values.get(i));
+        if (values instanceof RandomAccess) {
+          for (int i = 0; i < a.length; ++i) // [A]
+            a[i] = Short.valueOf(values.get(i));
+        }
+        else {
+          int i = -1;
+          for (final String value : values) // [L]
+            a[++i] = Short.valueOf(value);
+        }
 
         return a;
       }
@@ -301,23 +428,43 @@ final class ParameterUtil {
 
         if (container instanceof Collection) {
           final Collection<Object> c = (Collection<Object>)container;
-          for (int i = 0, i$ = values.size(); i < i$; ++i) // [L]
-            c.add(parseChar(values.get(i)));
+          if (values instanceof RandomAccess) {
+            for (int i = 0, i$ = values.size(); i < i$; ++i) // [RA]
+              c.add(parseChar(values.get(i)));
+          }
+          else {
+            for (final String value : values) // [L]
+              c.add(parseChar(value));
+          }
 
           return c;
         }
 
         if (container instanceof char[]) {
           final char[] a = (char[])container;
-          for (int i = 0; i < a.length; ++i) // [A]
-            a[i] = parseChar(values.get(i));
+          if (values instanceof RandomAccess) {
+            for (int i = 0; i < a.length; ++i) // [A]
+              a[i] = parseChar(values.get(i));
+          }
+          else {
+            int i = -1;
+            for (final String value : values) // [L]
+              a[++i] = parseChar(value);
+          }
 
           return a;
         }
 
         final Object[] a = (Object[])container;
-        for (int i = 0; i < a.length; ++i) // [A]
-          a[i] = parseChar(values.get(i));
+        if (values instanceof RandomAccess) {
+          for (int i = 0; i < a.length; ++i) // [A]
+            a[i] = parseChar(values.get(i));
+        }
+        else {
+          int i = -1;
+          for (final String value : values) // [L]
+            a[++i] = parseChar(value);
+        }
 
         return a;
       }
@@ -328,23 +475,43 @@ final class ParameterUtil {
 
         if (container instanceof Collection) {
           final Collection<Object> c = (Collection<Object>)container;
-          for (int i = 0, i$ = values.size(); i < i$; ++i) // [L]
-            c.add(Byte.valueOf(values.get(i)));
+          if (values instanceof RandomAccess) {
+            for (int i = 0, i$ = values.size(); i < i$; ++i) // [RA]
+              c.add(Byte.valueOf(values.get(i)));
+          }
+          else {
+            for (final String value : values) // [L]
+              c.add(Byte.valueOf(value));
+          }
 
           return c;
         }
 
         if (container instanceof byte[]) {
           final byte[] a = (byte[])container;
-          for (int i = 0; i < a.length; ++i) // [A]
-            a[i] = Byte.parseByte(values.get(i));
+          if (values instanceof RandomAccess) {
+            for (int i = 0; i < a.length; ++i) // [A]
+              a[i] = Byte.parseByte(values.get(i));
+          }
+          else {
+            int i = -1;
+            for (final String value : values) // [L]
+              a[++i] = Byte.parseByte(value);
+          }
 
           return a;
         }
 
         final Object[] a = (Object[])container;
-        for (int i = 0; i < a.length; ++i) // [A]
-          a[i] = Byte.valueOf(values.get(i));
+        if (values instanceof RandomAccess) {
+          for (int i = 0; i < a.length; ++i) // [A]
+            a[i] = Byte.valueOf(values.get(i));
+        }
+        else {
+          int i = -1;
+          for (final String value : values) // [L]
+            a[++i] = Byte.parseByte(value);
+        }
 
         return a;
       }
@@ -355,23 +522,43 @@ final class ParameterUtil {
 
         if (container instanceof Collection) {
           final Collection<Object> c = (Collection<Object>)container;
-          for (int i = 0, i$ = values.size(); i < i$; ++i) // [L]
-            c.add(Boolean.valueOf(values.get(i)));
+          if (values instanceof RandomAccess) {
+            for (int i = 0, i$ = values.size(); i < i$; ++i) // [RA]
+              c.add(Boolean.valueOf(values.get(i)));
+          }
+          else {
+            for (final String value : values) // [L]
+              c.add(Boolean.valueOf(value));
+          }
 
           return c;
         }
 
         if (container instanceof boolean[]) {
           final boolean[] a = (boolean[])container;
-          for (int i = 0; i < a.length; ++i) // [A]
-            a[i] = Boolean.parseBoolean(values.get(i));
+          if (values instanceof RandomAccess) {
+            for (int i = 0; i < a.length; ++i) // [A]
+              a[i] = Boolean.parseBoolean(values.get(i));
+          }
+          else {
+            int i = -1;
+            for (final String value : values) // [L]
+              a[++i] = Boolean.parseBoolean(value);
+          }
 
           return a;
         }
 
         final Object[] a = (Object[])container;
-        for (int i = 0; i < a.length; ++i) // [A]
-          a[i] = Boolean.valueOf(values.get(i));
+        if (values instanceof RandomAccess) {
+          for (int i = 0; i < a.length; ++i) // [A]
+            a[i] = Boolean.valueOf(values.get(i));
+        }
+        else {
+          int i = -1;
+          for (final String value : values) // [L]
+            a[++i] = Boolean.parseBoolean(value);
+        }
 
         return a;
       }
@@ -398,7 +585,7 @@ final class ParameterUtil {
   }
 
   static boolean decode(final Annotation[] annotations) {
-    for (final Annotation annotation : annotations)
+    for (final Annotation annotation : annotations) // [A]
       if (annotation instanceof Encoded)
         return false;
 

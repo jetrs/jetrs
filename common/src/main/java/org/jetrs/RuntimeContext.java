@@ -18,7 +18,7 @@ package org.jetrs;
 
 import static org.libj.lang.Assertions.*;
 
-import java.util.List;
+import java.util.ArrayList;
 
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Request;
@@ -30,19 +30,19 @@ import javax.ws.rs.ext.WriterInterceptor;
 
 abstract class RuntimeContext {
   private final Configuration configuration;
-  final List<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories;
-  final List<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorProviderFactories;
-  final List<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderProviderFactories;
-  final List<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterProviderFactories;
-  final List<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperProviderFactories;
+  final ArrayList<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories;
+  final ArrayList<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorProviderFactories;
+  final ArrayList<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderProviderFactories;
+  final ArrayList<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterProviderFactories;
+  final ArrayList<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperProviderFactories;
 
   RuntimeContext(
     final Configuration configuration,
-    final List<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories,
-    final List<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorProviderFactories,
-    final List<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderProviderFactories,
-    final List<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterProviderFactories,
-    final List<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperProviderFactories
+    final ArrayList<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories,
+    final ArrayList<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorProviderFactories,
+    final ArrayList<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderProviderFactories,
+    final ArrayList<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterProviderFactories,
+    final ArrayList<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperProviderFactories
   ) {
     this.configuration = configuration;
     this.readerInterceptorProviderFactories = assertNotNull(readerInterceptorProviderFactories);
@@ -59,23 +59,23 @@ abstract class RuntimeContext {
     return configuration;
   }
 
-  List<MessageBodyProviderFactory<ReaderInterceptor>> getReaderInterceptorProviderFactories() {
+  ArrayList<MessageBodyProviderFactory<ReaderInterceptor>> getReaderInterceptorProviderFactories() {
     return this.readerInterceptorProviderFactories;
   }
 
-  List<MessageBodyProviderFactory<WriterInterceptor>> getWriterInterceptorProviderFactories() {
+  ArrayList<MessageBodyProviderFactory<WriterInterceptor>> getWriterInterceptorProviderFactories() {
     return this.writerInterceptorProviderFactories;
   }
 
-  List<MessageBodyProviderFactory<MessageBodyReader<?>>> getMessageBodyReaderProviderFactories() {
+  ArrayList<MessageBodyProviderFactory<MessageBodyReader<?>>> getMessageBodyReaderProviderFactories() {
     return this.messageBodyReaderProviderFactories;
   }
 
-  List<MessageBodyProviderFactory<MessageBodyWriter<?>>> getMessageBodyWriterProviderFactories() {
+  ArrayList<MessageBodyProviderFactory<MessageBodyWriter<?>>> getMessageBodyWriterProviderFactories() {
     return this.messageBodyWriterProviderFactories;
   }
 
-  List<TypeProviderFactory<ExceptionMapper<?>>> getExceptionMapperProviderFactories() {
+  ArrayList<TypeProviderFactory<ExceptionMapper<?>>> getExceptionMapperProviderFactories() {
     return this.exceptionMapperProviderFactories;
   }
 }

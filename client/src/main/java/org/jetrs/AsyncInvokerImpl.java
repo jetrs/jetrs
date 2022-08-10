@@ -17,7 +17,7 @@
 package org.jetrs;
 
 import java.net.URL;
-import java.util.List;
+import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
@@ -34,10 +34,10 @@ import javax.ws.rs.core.Response;
 
 class AsyncInvokerImpl extends Invoker<Future<Response>> implements AsyncInvoker {
   private final HttpHeadersImpl requestHeaders;
-  private final List<Cookie> cookies;
+  private final ArrayList<Cookie> cookies;
   private final CacheControl cacheControl;
 
-  AsyncInvokerImpl(final ClientImpl client, final ClientRuntimeContext runtimeContext, final URL url, final HttpHeadersImpl requestHeaders, final List<Cookie> cookies, final CacheControl cacheControl, final ExecutorService executorService, final long connectTimeout, final long readTimeout) {
+  AsyncInvokerImpl(final ClientImpl client, final ClientRuntimeContext runtimeContext, final URL url, final HttpHeadersImpl requestHeaders, final ArrayList<Cookie> cookies, final CacheControl cacheControl, final ExecutorService executorService, final long connectTimeout, final long readTimeout) {
     super(client, runtimeContext, url, executorService, connectTimeout, readTimeout);
     this.requestHeaders = requestHeaders;
     this.cookies = cookies;

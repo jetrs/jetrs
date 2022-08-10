@@ -17,7 +17,6 @@
 package org.jetrs;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Constructor;
@@ -27,6 +26,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -120,7 +120,7 @@ abstract class RequestContext<P> extends InterceptorContextImpl<P> {
 
   private boolean readerInterceptorCalled = false;
 
-  List<MessageBodyProviderFactory<ReaderInterceptor>> getReaderInterceptorFactoryList() {
+  ArrayList<MessageBodyProviderFactory<ReaderInterceptor>> getReaderInterceptorFactoryList() {
     if (readerInterceptorCalled)
       throw new IllegalStateException();
 
@@ -130,7 +130,7 @@ abstract class RequestContext<P> extends InterceptorContextImpl<P> {
 
   private boolean writerInterceptorCalled = false;
 
-  List<MessageBodyProviderFactory<WriterInterceptor>> getWriterInterceptorFactoryList() {
+  ArrayList<MessageBodyProviderFactory<WriterInterceptor>> getWriterInterceptorFactoryList() {
     if (writerInterceptorCalled)
       throw new IllegalStateException();
 
@@ -140,7 +140,7 @@ abstract class RequestContext<P> extends InterceptorContextImpl<P> {
 
   private boolean messageBodyReaderCalled = false;
 
-  List<MessageBodyProviderFactory<MessageBodyReader<?>>> getMessageBodyReaderFactoryList() {
+  ArrayList<MessageBodyProviderFactory<MessageBodyReader<?>>> getMessageBodyReaderFactoryList() {
     if (messageBodyReaderCalled)
       throw new IllegalStateException();
 
@@ -150,7 +150,7 @@ abstract class RequestContext<P> extends InterceptorContextImpl<P> {
 
   private boolean messageBodyWriterCalled = false;
 
-  List<MessageBodyProviderFactory<MessageBodyWriter<?>>> getMessageBodyWriterFactoryList() {
+  ArrayList<MessageBodyProviderFactory<MessageBodyWriter<?>>> getMessageBodyWriterFactoryList() {
     if (messageBodyWriterCalled)
       throw new IllegalStateException();
 
@@ -160,7 +160,7 @@ abstract class RequestContext<P> extends InterceptorContextImpl<P> {
 
   private boolean exceptionMapperProviderCalled = false;
 
-  List<TypeProviderFactory<ExceptionMapper<?>>> getExceptionMapperProviderFactoryList() {
+  ArrayList<TypeProviderFactory<ExceptionMapper<?>>> getExceptionMapperProviderFactoryList() {
     if (exceptionMapperProviderCalled)
       throw new IllegalStateException();
 

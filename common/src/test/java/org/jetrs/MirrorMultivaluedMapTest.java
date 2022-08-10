@@ -46,12 +46,12 @@ public class MirrorMultivaluedMapTest {
       private MirrorList.Mirror<Integer,String> reverse;
 
       @Override
-      public MirrorList<Integer,String> valueToReflection(final String key, final List<String> value) {
+      public MirrorList<Integer,List<Integer>,String,List<String>> valueToReflection(final String key, final List<String> value) {
         return new MirrorList<>(new ArrayList<>(), value != null ? value : new ArrayList<>(), reverse == null ? reverse = mirror.reverse() : reverse);
       }
 
       @Override
-      public MirrorList<String,Integer> reflectionToValue(final String key, final List<Integer> reflection) {
+      public MirrorList<String,List<String>,Integer,List<Integer>> reflectionToValue(final String key, final List<Integer> reflection) {
         return new MirrorList<>(new ArrayList<>(), reflection != null ? reflection : new ArrayList<>(), mirror);
       }
     });

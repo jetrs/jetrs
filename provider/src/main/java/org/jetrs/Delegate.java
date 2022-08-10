@@ -126,8 +126,8 @@ abstract class Delegate<T> implements RuntimeDelegate.HeaderDelegate<T> {
       if (value instanceof StrictCacheControl) {
         final StrictCacheControl cacheControl = (StrictCacheControl)value;
         final DirectiveList<Directive> directives = cacheControl.order;
-        for (int i = 0, i$ = directives.size(); i < i$; ++i) // [L]
-          directives.get(i).toString(cacheControl, builder);
+        for (final Directive directive : directives) // [L]
+          directive.toString(cacheControl, builder);
 
         StrictCacheControl.Directive.EXTENSION.toString(cacheControl, builder);
         builder.setLength(builder.length() - 1);
@@ -247,8 +247,8 @@ abstract class Delegate<T> implements RuntimeDelegate.HeaderDelegate<T> {
       if (value instanceof StrictNewCookie) {
         final StrictNewCookie cacheControl = (StrictNewCookie)value;
         final DirectiveList<StrictNewCookie.Directive> directives = cacheControl.order;
-        for (int i = 0, i$ = directives.size(); i < i$; ++i) // [L]
-          directives.get(i).toString(cacheControl, builder);
+        for (final StrictNewCookie.Directive directive : directives) // [L]
+          directive.toString(cacheControl, builder);
       }
       else {
         for (final StrictNewCookie.Directive directive : StrictNewCookie.Directive.values()) // [A]
@@ -486,7 +486,7 @@ abstract class Delegate<T> implements RuntimeDelegate.HeaderDelegate<T> {
     if (type == null)
       return (Delegate<T>)DEFAULT;
 
-    for (int i = 0, i$ = delegates.size(); i < i$; ++i) { // [L]
+    for (int i = 0, i$ = delegates.size(); i < i$; ++i) { // [RA]
       final Delegate<?> delegate = delegates.get(i);
       if (delegate.getType().isAssignableFrom(type))
         return (Delegate<T>)delegate;

@@ -22,7 +22,6 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -52,18 +51,18 @@ class Bootstrap<R extends Comparable<? super R>> {
     return true;
   }
 
-  private final List<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories;
-  private final List<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorProviderFactories;
-  private final List<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderProviderFactories;
-  private final List<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterProviderFactories;
-  private final List<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperProviderFactories;
+  private final ArrayList<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories;
+  private final ArrayList<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorProviderFactories;
+  private final ArrayList<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderProviderFactories;
+  private final ArrayList<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterProviderFactories;
+  private final ArrayList<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperProviderFactories;
 
   Bootstrap(
-    final List<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories,
-    final List<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorProviderFactories,
-    final List<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderProviderFactories,
-    final List<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterProviderFactories,
-    final List<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperProviderFactories
+    final ArrayList<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories,
+    final ArrayList<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorProviderFactories,
+    final ArrayList<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderProviderFactories,
+    final ArrayList<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterProviderFactories,
+    final ArrayList<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperProviderFactories
   ) {
     this.readerInterceptorProviderFactories = readerInterceptorProviderFactories;
     this.writerInterceptorProviderFactories = writerInterceptorProviderFactories;
@@ -73,7 +72,7 @@ class Bootstrap<R extends Comparable<? super R>> {
   }
 
   @SuppressWarnings("unchecked")
-  <T>boolean addResourceOrProvider(final List<Consumer<Set<Class<?>>>> afterAdds, final List<R> resources, final Class<? extends T> clazz, final T singleton, final boolean scanned) throws IllegalAccessException, InstantiationException, InvocationTargetException {
+  <T>boolean addResourceOrProvider(final ArrayList<Consumer<Set<Class<?>>>> afterAdds, final ArrayList<R> resources, final Class<? extends T> clazz, final T singleton, final boolean scanned) throws IllegalAccessException, InstantiationException, InvocationTargetException {
     if (clazz.isAnnotationPresent(Provider.class)) {
       if (ReaderInterceptor.class.isAssignableFrom(clazz))
         readerInterceptorProviderFactories.add(new ReaderInterceptorProviderFactory((Class<ReaderInterceptor>)clazz, (ReaderInterceptor)singleton));
@@ -98,8 +97,8 @@ class Bootstrap<R extends Comparable<? super R>> {
   }
 
   @SuppressWarnings("unchecked")
-  void init(final Set<?> singletons, final Set<Class<?>> classes, final List<R> resources) throws IllegalAccessException, InstantiationException, InvocationTargetException, PackageNotFoundException, IOException {
-    final List<Consumer<Set<Class<?>>>> afterAdds = new ArrayList<>();
+  void init(final Set<?> singletons, final Set<Class<?>> classes, final ArrayList<R> resources) throws IllegalAccessException, InstantiationException, InvocationTargetException, PackageNotFoundException, IOException {
+    final ArrayList<Consumer<Set<Class<?>>>> afterAdds = new ArrayList<>();
     if (singletons != null || classes != null) {
       if (singletons != null)
         for (final Object singleton : singletons) // [S]
@@ -126,7 +125,7 @@ class Bootstrap<R extends Comparable<? super R>> {
           resourceClasses = null;
         }
 
-        for (int i = 0, i$ = afterAdds.size(); i < i$; ++i) // [L]
+        for (int i = 0, i$ = afterAdds.size(); i < i$; ++i) // [RA]
           afterAdds.get(i).accept(resourceClasses);
       }
     }
@@ -157,7 +156,7 @@ class Bootstrap<R extends Comparable<? super R>> {
 
       final Set<Class<?>> resourceClasses0 = resourceClasses[0];
       if (resourceClasses0 != null)
-        for (int i = 0, i$ = afterAdds.size(); i < i$; ++i) // [L]
+        for (int i = 0, i$ = afterAdds.size(); i < i$; ++i) // [RA]
           afterAdds.get(i).accept(resourceClasses0);
     }
 

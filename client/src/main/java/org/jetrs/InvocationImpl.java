@@ -25,12 +25,14 @@ import java.net.CookieStore;
 import java.net.HttpCookie;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.RandomAccess;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
@@ -72,13 +74,13 @@ class InvocationImpl implements Invocation {
   private final String method;
   private final Entity<?> entity;
   private final HttpHeadersMap<String,Object> headers;
-  private final List<Cookie> cookies;
+  private final ArrayList<Cookie> cookies;
   private final CacheControl cacheControl;
   private final ExecutorService executorService;
   private final long connectTimeout;
   private final long readTimeout;
 
-  InvocationImpl(final ClientImpl client, final ClientRuntimeContext runtimeContext, final URL url, final String method, final Entity<?> entity, final HttpHeadersMap<String,Object> headers, final List<Cookie> cookies, final CacheControl cacheControl, final ExecutorService executorService, final long connectTimeout, final long readTimeout) {
+  InvocationImpl(final ClientImpl client, final ClientRuntimeContext runtimeContext, final URL url, final String method, final Entity<?> entity, final HttpHeadersMap<String,Object> headers, final ArrayList<Cookie> cookies, final CacheControl cacheControl, final ExecutorService executorService, final long connectTimeout, final long readTimeout) {
     this.client = client;
     this.requestContext = runtimeContext.newRequestContext(new RequestImpl(method));
     this.url = url;
@@ -143,16 +145,20 @@ class InvocationImpl implements Invocation {
 
       final List<HttpCookie> httpCookies = cookieStore.getCookies();
       final Map<String,NewCookie> cookies;
-      if (httpCookies.size() == 0) {
+      final int i$ = httpCookies.size();
+      if (i$ == 0) {
         cookies = null;
       }
       else {
-        cookies = new HashMap<>(httpCookies.size());
-        for (int i = 0, i$ = cookies.size(); i < i$; ++i) { // [L]
-          final HttpCookie httpCookie = httpCookies.get(i);
-          final Date expiry = Dates.addTime(headers.getDate(), 0, 0, (int)httpCookie.getMaxAge());
-          final NewCookie cookie = new NewCookie(httpCookie.getName(), httpCookie.getValue(), httpCookie.getPath(), httpCookie.getDomain(), httpCookie.getVersion(), httpCookie.getComment(), (int)httpCookie.getMaxAge(), expiry, httpCookie.getSecure(), httpCookie.isHttpOnly());
-          cookies.put(cookie.getName(), cookie);
+        final Date date = headers.getDate();
+        cookies = new HashMap<>(i$);
+        if (httpCookies instanceof RandomAccess) {
+          for (int i = 0; i < i$; ++i) // [RA]
+            addCookie(cookies, httpCookies.get(i), date);
+        }
+        else {
+          for (final HttpCookie httpCookie : httpCookies) // [L]
+            addCookie(cookies, httpCookie, date);
         }
       }
 
@@ -171,6 +177,12 @@ class InvocationImpl implements Invocation {
     catch (final IOException e) {
       throw new ProcessingException(e);
     }
+  }
+
+  private static void addCookie(final Map<String,NewCookie> cookies, final HttpCookie httpCookie, final Date date) {
+    final Date expiry = Dates.addTime(date, 0, 0, (int)httpCookie.getMaxAge());
+    final NewCookie cookie = new NewCookie(httpCookie.getName(), httpCookie.getValue(), httpCookie.getPath(), httpCookie.getDomain(), httpCookie.getVersion(), httpCookie.getComment(), (int)httpCookie.getMaxAge(), expiry, httpCookie.getSecure(), httpCookie.isHttpOnly());
+    cookies.put(cookie.getName(), cookie);
   }
 
   @Override
@@ -224,7 +236,7 @@ class InvocationImpl implements Invocation {
 
   static class BuilderImpl extends Invoker<Response> implements Invocation.Builder {
     private HttpHeadersImpl requestHeaders;
-    private List<Cookie> cookies;
+    private ArrayList<Cookie> cookies;
     private CacheControl cacheControl;
 
     BuilderImpl(final ClientImpl client, final ClientRuntimeContext runtimeContext, final URL url, final ExecutorService executorService, final long connectTimeout, final long readTimeout) {
@@ -310,8 +322,14 @@ class InvocationImpl implements Invocation {
       getHeaders().clear();
       for (final Map.Entry<String,List<Object>> entry : headers.entrySet()) { // [S]
         final List<Object> values = entry.getValue();
-        for (int i = 0, i$ = values.size(); i < i$; ++i) // [L]
-          header(entry.getKey(), values.get(i));
+        if (values instanceof RandomAccess) {
+          for (int i = 0, i$ = values.size(); i < i$; ++i) // [RA]
+            header(entry.getKey(), values.get(i));
+        }
+        else {
+          for (final Object value : values) // [L]
+            header(entry.getKey(), value);
+        }
       }
 
       return this;
@@ -474,8 +492,14 @@ class InvocationImpl implements Invocation {
   private static void appendHeaders(final StringBuilder str, final HttpHeadersMap<String,Object> headers) {
     for (final Map.Entry<String,List<String>> entry : headers.entrySet()) { // [S]
       final List<String> values = entry.getValue();
-      for (int i = 0, i$ = values.size(); i < i$; ++i) // [L]
-        str.append("-H '").append(entry.getKey()).append(": ").append(values.get(i).replace("'", "\\'")).append("' ");
+      if (values instanceof RandomAccess) {
+        for (int i = 0, i$ = values.size(); i < i$; ++i) // [RA]
+          str.append("-H '").append(entry.getKey()).append(": ").append(values.get(i).replace("'", "\\'")).append("' ");
+      }
+      else {
+        for (final String value : values) // [L]
+          str.append("-H '").append(entry.getKey()).append(": ").append(value.replace("'", "\\'")).append("' ");
+      }
     }
   }
 

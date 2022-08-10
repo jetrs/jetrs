@@ -62,7 +62,7 @@ public class ApplicationServerTest {
   }
 
   public static String encodeLexicographically(final Map<String,?> map) {
-    final List<String> list = new ArrayList<>(map.size());
+    final ArrayList<String> list = new ArrayList<>(map.size());
     for (final Map.Entry<String,?> entry : map.entrySet()) // [S]
       list.add(entry.getKey() + ":" + String.valueOf(entry.getValue()));
 

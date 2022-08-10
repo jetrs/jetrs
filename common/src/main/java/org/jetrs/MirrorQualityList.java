@@ -29,61 +29,49 @@ import org.libj.util.primitive.ArrayFloatList;
 import org.libj.util.primitive.FloatComparator;
 
 /**
- * A {@link MirrorList} that performs live sorting of values based on a quality
- * factor. The quality of a value is dereferenced by an instance of the
- * {@link Qualifier} interface.
+ * A {@link MirrorList} that performs live sorting of values based on a quality factor. The quality of a value is dereferenced by an
+ * instance of the {@link Qualifier} interface.
  *
  * @param <V> The type of value elements in this list.
  * @param <R> The type of reflected value elements in the mirror list.
  */
-class MirrorQualityList<V,R> extends MirrorList<V,R> implements Cloneable {
+class MirrorQualityList<V,R> extends MirrorList<V,List<V>,R,List<R>> implements Cloneable {
   /**
-   * Interface providing methods for the determination of quality from value
-   * objects.
+   * Interface providing methods for the determination of quality from value objects.
    *
    * @param <V> The type of value object of this {@link Qualifier}.
    * @param <R> The type of reflected value object of this {@link Qualifier}.
    */
   interface Qualifier<V,R> {
     /**
-     * Returns a {@link org.libj.lang.Numbers.Composite#encode(float,int)
-     * composite} quality-and-index {@code long} comprised of the quality
-     * dereferenced from the value object of type {@code <V>}, and some index of
-     * type {@code int} that could be used to further direct downstream parsing.
+     * Returns a {@link org.libj.lang.Numbers.Composite#encode(float,int) composite} quality-and-index {@code long} comprised of the
+     * quality dereferenced from the value object of type {@code <V>}, and some index of type {@code int} that could be used to
+     * further direct downstream parsing.
      *
-     * @param value The value of type {@code <V>} from which to dereference the
-     *          quality.
+     * @param value The value of type {@code <V>} from which to dereference the quality.
      * @param index An index of type {@code int}.
-     * @return A {@link org.libj.lang.Numbers.Composite#encode(float,int)
-     *         composite} quality-and-index {@code long} comprised of the
-     *         quality dereferenced from the value object of type {@code <V>},
-     *         and some index of type {@code int} that could be used to further
-     *         direct downstream parsing.
+     * @return A {@link org.libj.lang.Numbers.Composite#encode(float,int) composite} quality-and-index {@code long} comprised of the
+     *         quality dereferenced from the value object of type {@code <V>}, and some index of type {@code int} that could be used
+     *         to further direct downstream parsing.
      */
     long valueToQuality(V value, int index);
 
     /**
-     * Returns a {@link org.libj.lang.Numbers.Composite#encode(float,int)
-     * composite} quality-and-index {@code long} comprised of the quality
-     * dereferenced from the reflection value object of type {@code <R>}, and
-     * some index of type {@code int} that could be used to further direct
-     * downstream parsing.
+     * Returns a {@link org.libj.lang.Numbers.Composite#encode(float,int) composite} quality-and-index {@code long} comprised of the
+     * quality dereferenced from the reflection value object of type {@code <R>}, and some index of type {@code int} that could be
+     * used to further direct downstream parsing.
      *
-     * @param reflection The reflection value of type {@code <R>} from which to
-     *          dereference the quality.
+     * @param reflection The reflection value of type {@code <R>} from which to dereference the quality.
      * @param index An index of type {@code int}.
-     * @return A {@link org.libj.lang.Numbers.Composite#encode(float,int)
-     *         composite} quality-and-index {@code long} comprised of the
-     *         quality dereferenced from the value object of type {@code <R>},
-     *         and some index of type {@code int} that could be used to further
-     *         direct downstream parsing.
+     * @return A {@link org.libj.lang.Numbers.Composite#encode(float,int) composite} quality-and-index {@code long} comprised of the
+     *         quality dereferenced from the value object of type {@code <R>}, and some index of type {@code int} that could be used
+     *         to further direct downstream parsing.
      */
     long reflectionToQuality(R reflection, int index);
 
     /**
-     * Returns the reverse representation of this {@link Qualifier}, whereby the
-     * value object type {@code <V>} and reflected value object of type
-     * {@code <R>} are swapped.
+     * Returns the reverse representation of this {@link Qualifier}, whereby the value object type {@code <V>} and reflected value
+     * object of type {@code <R>} are swapped.
      *
      * @return The reverse representation of this {@link Qualifier}.
      */
@@ -103,18 +91,14 @@ class MirrorQualityList<V,R> extends MirrorList<V,R> implements Cloneable {
   }
 
   /**
-   * Casts the specified {@code list} of type <b>{@link List List&lt;T&gt;}</b>
-   * to type <b>{@link List List&lt;T&gt;} &amp; {@link Cloneable}</b>.
+   * Casts the specified {@code list} of type <b>{@link List List&lt;T&gt;}</b> to type <b>{@link List List&lt;T&gt;} &amp;
+   * {@link Cloneable}</b>.
    *
-   * @param <C> The type parameter for {@link List List&lt;T&gt;} &
-   *          {@link Cloneable}.
-   * @param <T> The type of elements in the specified {@link List
-   *          List&lt;T&gt;}.
-   * @param list The {@code list} of type <b>{@link List List&lt;T&gt;}</b> to
-   *          cast to type <b>{@link List List&lt;T&gt;} &
+   * @param <C> The type parameter for {@link List List&lt;T&gt;} & {@link Cloneable}.
+   * @param <T> The type of elements in the specified {@link List List&lt;T&gt;}.
+   * @param list The {@code list} of type <b>{@link List List&lt;T&gt;}</b> to cast to type <b>{@link List List&lt;T&gt;} &
    *          {@link Cloneable}</b>.
-   * @return The specified {@code list} of type <b>{@link List
-   *         List&lt;T&gt;}</b> cast to type <b>{@link List List&lt;T&gt;} &
+   * @return The specified {@code list} of type <b>{@link List List&lt;T&gt;}</b> cast to type <b>{@link List List&lt;T&gt;} &
    *         {@link Cloneable}</b>.
    */
   @SuppressWarnings("unchecked")
@@ -127,40 +111,30 @@ class MirrorQualityList<V,R> extends MirrorList<V,R> implements Cloneable {
   private ArrayFloatList qualities;
 
   /**
-   * Creates a new {@link MirrorQualityList} with the specified target lists,
-   * {@link org.libj.util.MirrorList.Mirror}, and {@link Qualifier}. The
-   * specified target lists are meant to be empty, as they become the underlying
-   * lists of the new {@link MirrorQualityList} instance.
+   * Creates a new {@link MirrorQualityList} with the specified target lists, {@link org.libj.util.MirrorList.Mirror}, and
+   * {@link Qualifier}. The specified target lists are meant to be empty, as they become the underlying lists of the new
+   * {@link MirrorQualityList} instance.
    * <p>
    * The specified {@link org.libj.util.MirrorList.Mirror} provides the
-   * {@link org.libj.util.MirrorList.Mirror#valueToReflection(Object) V -> R}
-   * and {@link org.libj.util.MirrorList.Mirror#reflectionToValue(Object) R ->
-   * V} methods, which are used to reflect object values from one
-   * {@link MirrorQualityList} to the other.
+   * {@link org.libj.util.MirrorList.Mirror#valueToReflection(Object) V -> R} and
+   * {@link org.libj.util.MirrorList.Mirror#reflectionToValue(Object) R -> V} methods, which are used to reflect object values from
+   * one {@link MirrorQualityList} to the other.
    * <p>
-   * The specified {@link Qualifier} provides the
-   * {@link Qualifier#valueToQuality(Object,int) V -> quality} and
-   * {@link Qualifier#reflectionToQuality(Object,int) R -> quality} methods,
-   * which are used to dereference the quality from object values and reflected
-   * values.
+   * The specified {@link Qualifier} provides the {@link Qualifier#valueToQuality(Object,int) V -> quality} and
+   * {@link Qualifier#reflectionToQuality(Object,int) R -> quality} methods, which are used to dereference the quality from object
+   * values and reflected values.
    *
-   * @param <CloneableValues> The type parameter constraining the {@code values}
-   *          argument to {@link List List&lt;V&gt;} &amp; {@link Cloneable}.
-   * @param <CloneableReflections> The type parameter constraining the
-   *          {@code values} argument to {@link List List&lt;R&gt;} &amp;
+   * @param <CloneableValues> The type parameter constraining the {@code values} argument to {@link List List&lt;V&gt;} &amp;
+   *          {@link Cloneable}.
+   * @param <CloneableReflections> The type parameter constraining the {@code values} argument to {@link List List&lt;R&gt;} &amp;
    *          {@link Cloneable}.
    * @param values The underlying {@link Cloneable} list of type {@code <V>}.
-   * @param reflections The underlying {@link Cloneable} list of type
-   *          {@code <R>}.
+   * @param reflections The underlying {@link Cloneable} list of type {@code <R>}.
    * @param mirror The {@link org.libj.util.MirrorList.Mirror} specifying the
-   *          {@link org.libj.util.MirrorList.Mirror#valueToReflection(Object) V
-   *          -> R} and
-   *          {@link org.libj.util.MirrorList.Mirror#reflectionToValue(Object) R
-   *          -> V} methods.
-   * @param qualifier The {@link Qualifier} specifying the
-   *          {@link Qualifier#valueToQuality(Object,int) V -> quality} and
-   *          {@link Qualifier#reflectionToQuality(Object,int) R -> quality}
-   *          methods.
+   *          {@link org.libj.util.MirrorList.Mirror#valueToReflection(Object) V -> R} and
+   *          {@link org.libj.util.MirrorList.Mirror#reflectionToValue(Object) R -> V} methods.
+   * @param qualifier The {@link Qualifier} specifying the {@link Qualifier#valueToQuality(Object,int) V -> quality} and
+   *          {@link Qualifier#reflectionToQuality(Object,int) R -> quality} methods.
    * @throws IllegalArgumentException If any of the specified parameters is null.
    */
   <CloneableValues extends List<V> & Cloneable,CloneableReflections extends List<R> & Cloneable>MirrorQualityList(final CloneableValues values, final CloneableReflections reflections, final Mirror<V,R> mirror, final Qualifier<V,R> qualifier) {
@@ -169,20 +143,15 @@ class MirrorQualityList<V,R> extends MirrorList<V,R> implements Cloneable {
   }
 
   /**
-   * Creates a new {@link MirrorQualityList} with the specified lists and
-   * mirror. This method is specific for the construction of a reflected
-   * {@link MirrorQualityList} instance.
+   * Creates a new {@link MirrorQualityList} with the specified lists and mirror. This method is specific for the construction of a
+   * reflected {@link MirrorQualityList} instance.
    *
-   * @param mirrorList The {@link MirrorQualityList} for which {@code this} list
-   *          will be a reflection. Likewise, {@code this} list will be a
-   *          reflection for {@code mirrorList}.
-   * @param values The underlying list of type {@code <V>}, which is implicitly
-   *          assumed to also be {@link Cloneable}.
+   * @param mirrorList The {@link MirrorQualityList} for which {@code this} list will be a reflection. Likewise, {@code this} list
+   *          will be a reflection for {@code mirrorList}.
+   * @param values The underlying list of type {@code <V>}, which is implicitly assumed to also be {@link Cloneable}.
    * @param mirror The {@link org.libj.util.MirrorList.Mirror} specifying the
-   *          {@link org.libj.util.MirrorList.Mirror#valueToReflection(Object) V
-   *          -> R} and
-   *          {@link org.libj.util.MirrorList.Mirror#reflectionToValue(Object) R
-   *          -> V} methods.
+   *          {@link org.libj.util.MirrorList.Mirror#valueToReflection(Object) V -> R} and
+   *          {@link org.libj.util.MirrorList.Mirror#reflectionToValue(Object) R -> V} methods.
    */
   protected MirrorQualityList(final MirrorQualityList<R,V> mirrorList, final List<V> values, final Mirror<V,R> mirror) {
     super(mirrorList, values, mirror);
@@ -190,12 +159,12 @@ class MirrorQualityList<V,R> extends MirrorList<V,R> implements Cloneable {
   }
 
   @Override
-  protected MirrorList<V,R> newInstance(final List<V> values, final List<R> reflections) {
+  protected MirrorQualityList<V,R> newInstance(final List<V> values, final List<R> reflections) {
     return new MirrorQualityList<>(toCloneable(values), toCloneable(reflections), getMirror(), qualifier);
   }
 
   @Override
-  protected MirrorList<R,V> newMirrorInstance(final List<R> values) {
+  protected MirrorQualityList<R,V> newMirrorInstance(final List<R> values) {
     return new MirrorQualityList<>(this, values, getReverseMirror());
   }
 
@@ -240,12 +209,11 @@ class MirrorQualityList<V,R> extends MirrorList<V,R> implements Cloneable {
    * @return The {@link Qualifier}.
    */
   Qualifier<V,R> getQualifier() {
-    return this.qualifier;
+    return qualifier;
   }
 
   /**
-   * Returns the reverse {@link Qualifier}, and caches it for subsequent
-   * retrieval, avoiding reinstantiation.
+   * Returns the reverse {@link Qualifier}, and caches it for subsequent retrieval, avoiding reinstantiation.
    *
    * @return The reverse {@link Qualifier}.
    */
@@ -264,21 +232,19 @@ class MirrorQualityList<V,R> extends MirrorList<V,R> implements Cloneable {
   }
 
   /**
-   * Operation that sorts this list by recursively examining each element in
-   * reverse sequential order (end to front of the list).
+   * Operation that sorts this list by recursively examining each element in reverse sequential order (end to front of the list).
    * <p>
    * The initiating call into this operation is:
    *
    * <pre>
-   * {@code sort(size() - 1, false)}
+   * {@code
+   * sort(size() - 1, false)
+   * }
    * </pre>
    *
-   * @param index The index at which the element is to be examined whether it
-   *          needs to be sorted.
-   * @param needsSort Whether sorting is to be performed, as dictated by the
-   *          previous stack frame.
-   * @return Whether sorting is to be performed, as dictated by this stack
-   *         frame.
+   * @param index The index at which the element is to be examined whether it needs to be sorted.
+   * @param needsSort Whether sorting is to be performed, as dictated by the previous stack frame.
+   * @return Whether sorting is to be performed, as dictated by this stack frame.
    * @see #sort()
    */
   private boolean sort(final int index, boolean needsSort) {
@@ -295,12 +261,10 @@ class MirrorQualityList<V,R> extends MirrorList<V,R> implements Cloneable {
   }
 
   /**
-   * Sorts this list in descending order of the quality property for each
-   * element. The quality property of each element is dereferenced via the
-   * {@link #qualifier Qualifier}.
+   * Sorts this list in descending order of the quality property for each element. The quality property of each element is
+   * dereferenced via the {@link #qualifier Qualifier}.
    *
-   * @return {@code true} if sorting was performed on this list, otherwise
-   *         {@code false} if this list is already sorted.
+   * @return {@code true} if sorting was performed on this list, otherwise {@code false} if this list is already sorted.
    * @see #sort(int,boolean)
    */
   private boolean sort() {
@@ -322,17 +286,13 @@ class MirrorQualityList<V,R> extends MirrorList<V,R> implements Cloneable {
   }
 
   /**
-   * Associates the specified {@code quality} to the provided {@code index}, and
-   * returns the index at which the associated value object should be added to
-   * {@code this} list.
+   * Associates the specified {@code quality} to the provided {@code index}, and returns the index at which the associated value
+   * object should be added to {@code this} list.
    *
-   * @param index The index at which the specified {@code quality} is desired to
-   *          be associated. This method will overwrite this index in order to
-   *          place the quality in proper sorted order.
-   * @param quality The specified quality to be associated at the provided
-   *          index.
-   * @return The index at which the associated value object should be added to
-   *         {@code this} list.
+   * @param index The index at which the specified {@code quality} is desired to be associated. This method will overwrite this
+   *          index in order to place the quality in proper sorted order.
+   * @param quality The specified quality to be associated at the provided index.
+   * @return The index at which the associated value object should be added to {@code this} list.
    */
   private int addQuality(int index, final float quality) {
     if (qualities() == null) {
@@ -362,26 +322,20 @@ class MirrorQualityList<V,R> extends MirrorList<V,R> implements Cloneable {
   }
 
   /**
-   * Returns the translated index in the {@link #qualities} list that is
-   * equivalent to the specified index of {@code this} list.
+   * Returns the translated index in the {@link #qualities} list that is equivalent to the specified index of {@code this} list.
    *
-   * @param index The index of {@code this} list which is to be translated to an
-   *          index in the {@link #qualities} list.
-   * @return The translated index in the {@link #qualities} list that is
-   *         equivalent to the specified index of {@code this} list.
+   * @param index The index of {@code this} list which is to be translated to an index in the {@link #qualities} list.
+   * @return The translated index in the {@link #qualities} list that is equivalent to the specified index of {@code this} list.
    */
   private int indexToQualitiesIndex(final int index) {
     return index - size() + qualities.size();
   }
 
   /**
-   * Returns the translated index of {@code this} list that is equivalent to the
-   * specified index in the {@link #qualities} list.
+   * Returns the translated index of {@code this} list that is equivalent to the specified index in the {@link #qualities} list.
    *
-   * @param index The index in the {@link #qualities} list which is to be
-   *          translated to an index of {@code this} list.
-   * @return The translated index of {@code this} list that is equivalent to the
-   *         specified index in the {@link #qualities} list.
+   * @param index The index in the {@link #qualities} list which is to be translated to an index of {@code this} list.
+   * @return The translated index of {@code this} list that is equivalent to the specified index in the {@link #qualities} list.
    */
   private int qualitiesIndexToIndex(final int index) {
     return index + size() - qualities.size();

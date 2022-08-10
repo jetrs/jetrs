@@ -18,11 +18,13 @@ package org.jetrs;
 
 import java.lang.annotation.Annotation;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.RandomAccess;
 import java.util.Set;
 
 import javax.ws.rs.core.CacheControl;
@@ -140,14 +142,22 @@ class ResponseBuilderImpl extends Response.ResponseBuilder implements Cloneable 
     this.headers.clear();
     for (final Map.Entry<String,List<Object>> entry : headers.entrySet()) { // [S]
       final List<Object> values = entry.getValue();
-      for (int i = 0, i$ = values.size(); i < i$; ++i) { // [L]
-        final Object value = values.get(i);
-        if (value != null)
-          header(entry.getKey(), value);
+      if (values instanceof RandomAccess) {
+        for (int i = 0, i$ = values.size(); i < i$; ++i) // [RA]
+          addHeader(entry.getKey(), values.get(i));
+      }
+      else {
+        for (final Object value : values) // [L]
+          addHeader(entry.getKey(), value);
       }
     }
 
     return this;
+  }
+
+  private void addHeader(final String key, final Object value) {
+    if (value != null)
+      header(key, value);
   }
 
   @Override
