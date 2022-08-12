@@ -645,7 +645,7 @@ final class MediaTypes {
     if (string.length() == 0)
       throw new IllegalArgumentException(string);
 
-    for (int i = 0; i < string.length(); ++i) { // [N]
+    for (int i = 0, i$ = string.length(); i < i$; ++i) { // [N]
       final char ch = string.charAt(i);
       if (!isValidChar(ch))
         throw new IllegalArgumentException("Illegal character '" + ch + "' at pos=" + i + " in: " + string);

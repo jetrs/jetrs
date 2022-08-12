@@ -43,9 +43,9 @@ class PathSegmentList extends WrappedArrayList<PathSegment> {
   }
 
   PathSegmentList(final PathSegmentList pathSegmentList, final boolean decode) {
-    super(new PathSegment[pathSegmentList.array.length]);
-    final PathSegmentImpl[] pathSegments = (PathSegmentImpl[])pathSegmentList.array;
-    for (int i = 0; i < array.length; ++i) // [A]
-      array[i] = new PathSegmentImpl(pathSegments[i].getPathEncoded(), decode);
+    super(new PathSegment[pathSegmentList.elementData.length]);
+    final PathSegmentImpl[] pathSegments = (PathSegmentImpl[])pathSegmentList.elementData;
+    for (int i = 0, i$ = elementData.length; i < i$; ++i) // [A]
+      elementData[i] = new PathSegmentImpl(pathSegments[i].getPathEncoded(), decode);
   }
 }

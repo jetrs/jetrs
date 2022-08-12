@@ -87,7 +87,7 @@ public class BookService {
     assertEquals(aSeg1[1], aSeg2.get(1));
     assertEquals("a" + a1[0], aSeg1[0].getPath());
     assertEquals(a1[1] + "a" + b1[0] + "b", aSeg1[1].getPath());
-    for (int i = 0; i < aSeg1.length; ++i) // [A]
+    for (int i = 0, i$ = aSeg1.length; i < i$; ++i) // [A]
       assertEquals(aSeg1[i], aSeg2.get(i));
 
     assertEquals(2, b1.length);
@@ -100,7 +100,7 @@ public class BookService {
     assertEquals(bSeg1[0], bSeg2.get(0));
     assertEquals(bSeg1[1], bSeg2.get(1));
     assertEquals(a1[1] + "a" + b1[0] + "b", bSeg1[0].getPath());
-    for (int i = 0; i < bSeg1.length; ++i) // [A]
+    for (int i = 0, i$ = bSeg1.length; i < i$; ++i) // [A]
       assertEquals(bSeg1[i], bSeg2.get(i));
 
 

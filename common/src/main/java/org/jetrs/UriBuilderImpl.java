@@ -554,7 +554,7 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
     if (query != null)
       builder.append(query).append('&');
 
-    for (int i = 0; i < values.length; ++i) { // [A]
+    for (int i = 0, i$ = values.length; i < i$; ++i) { // [A]
       final Object value = values[i];
       assertNotNull(value, "value is null");
 

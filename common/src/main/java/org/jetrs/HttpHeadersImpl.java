@@ -82,7 +82,7 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
     if (found != '\0')
       return ch == found ? ch : '\0';
 
-    for (int i = 0; i < delimiters.length; ++i) // [A]
+    for (int i = 0, i$ = delimiters.length; i < i$; ++i) // [A]
       if (ch == delimiters[i])
         return ch;
 

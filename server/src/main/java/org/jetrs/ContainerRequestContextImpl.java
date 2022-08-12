@@ -119,7 +119,7 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
 
     final Field field = fields[index];
     boolean hasContext = false;
-    for (int i = 0; i < injectableAnnotationTypes.length; ++i) // [A]
+    for (int i = 0, i$ = injectableAnnotationTypes.length; i < i$; ++i) // [A]
       if (hasContext |= field.isAnnotationPresent(injectableAnnotationTypes[i]))
         break;
 
@@ -580,7 +580,7 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
       final MultivaluedMap<String,String> pathParameters = new MultivaluedHashMap<>(pathParamNames.length);
       final long[] regionStartEnds = new long[pathParamNames.length];
 
-      for (int j = 0; j < pathParamNames.length; ++j) { // [A]
+      for (int j = 0, j$ = pathParamNames.length; j < j$; ++j) { // [A]
         final String pathParamName = pathParamNames[j];
         final String pathParamValue = matcher.group(pathParamName);
         pathParameters.add(pathParamName.substring(0, pathParamName.lastIndexOf(UriTemplate.DEL, pathParamName.length() - 1)), pathParamValue);
@@ -652,7 +652,7 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
 
     if (maybeNotAllowed != null) {
       final String[] allowed = new String[maybeNotAllowed.size() - 1];
-      for (int i = 0; i < allowed.length; ++i) // [A]
+      for (int i = 0, i$ = allowed.length; i < i$; ++i) // [A]
         allowed[i] = maybeNotAllowed.get(i + 1);
 
       throw new NotAllowedException(maybeNotAllowed.get(0), allowed);

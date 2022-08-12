@@ -212,7 +212,7 @@ final class UriEncoder {
 
   private static String encodeFromArray(final String segment, final String[] encodingMap, final boolean encodePercent) {
     final StringBuilder builder = new StringBuilder();
-    for (int i = 0; i < segment.length(); ++i) { // [N]
+    for (int i = 0, i$ = segment.length(); i < i$; ++i) { // [N]
       final char ch = segment.charAt(i);
       if (encodePercent || ch != '%') {
         final String encoding = encode(ch, encodingMap);

@@ -143,7 +143,7 @@ final class ParameterUtil {
 
         final Object[] a = (Object[])container;
         if (values instanceof RandomAccess) {
-          for (int i = 0; i < a.length; ++i) // [A]
+          for (int i = 0, i$ = a.length; i < i$; ++i) // [A]
             a[i] = new BigInteger(values.get(i));
         }
         else {
@@ -175,7 +175,7 @@ final class ParameterUtil {
 
         final Object[] a = (Object[])container;
         if (values instanceof RandomAccess) {
-          for (int i = 0; i < a.length; ++i) // [A]
+          for (int i = 0, i$ = a.length; i < i$; ++i) // [A]
             a[i] = new BigDecimal(values.get(i));
         }
         else {
@@ -208,7 +208,7 @@ final class ParameterUtil {
         if (container instanceof long[]) {
           final long[] a = (long[])container;
           if (values instanceof RandomAccess) {
-            for (int i = 0; i < a.length; ++i) // [A]
+            for (int i = 0, i$ = a.length; i < i$; ++i) // [A]
               a[i] = Long.parseLong(values.get(i));
           }
           else {
@@ -222,7 +222,7 @@ final class ParameterUtil {
 
         final Object[] a = (Object[])container;
         if (values instanceof RandomAccess) {
-          for (int i = 0; i < a.length; ++i) // [A]
+          for (int i = 0, i$ = a.length; i < i$; ++i) // [A]
             a[i] = Long.valueOf(values.get(i));
         }
         else {
@@ -255,7 +255,7 @@ final class ParameterUtil {
         if (container instanceof int[]) {
           final int[] a = (int[])container;
           if (values instanceof RandomAccess) {
-            for (int i = 0; i < a.length; ++i) // [A]
+            for (int i = 0, i$ = a.length; i < i$; ++i) // [A]
               a[i] = Integer.parseInt(values.get(i));
           }
           else {
@@ -269,7 +269,7 @@ final class ParameterUtil {
 
         final Object[] a = (Object[])container;
         if (values instanceof RandomAccess) {
-          for (int i = 0; i < a.length; ++i) // [A]
+          for (int i = 0, i$ = a.length; i < i$; ++i) // [A]
             a[i] = Integer.valueOf(values.get(i));
         }
         else {
@@ -302,7 +302,7 @@ final class ParameterUtil {
         if (container instanceof double[]) {
           final double[] a = (double[])container;
           if (values instanceof RandomAccess) {
-            for (int i = 0; i < a.length; ++i) // [A]
+            for (int i = 0, i$ = a.length; i < i$; ++i) // [A]
               a[i] = Double.parseDouble(values.get(i));
           }
           else {
@@ -316,7 +316,7 @@ final class ParameterUtil {
 
         final Object[] a = (Object[])container;
         if (values instanceof RandomAccess) {
-          for (int i = 0; i < a.length; ++i) // [A]
+          for (int i = 0, i$ = a.length; i < i$; ++i) // [A]
             a[i] = Double.valueOf(values.get(i));
         }
         else {
@@ -349,7 +349,7 @@ final class ParameterUtil {
         if (container instanceof float[]) {
           final float[] a = (float[])container;
           if (values instanceof RandomAccess) {
-            for (int i = 0; i < a.length; ++i) // [A]
+            for (int i = 0, i$ = a.length; i < i$; ++i) // [A]
               a[i] = Float.parseFloat(values.get(i));
           }
           else {
@@ -363,7 +363,7 @@ final class ParameterUtil {
 
         final Object[] a = (Object[])container;
         if (values instanceof RandomAccess) {
-          for (int i = 0; i < a.length; ++i) // [A]
+          for (int i = 0, i$ = a.length; i < i$; ++i) // [A]
             a[i] = Float.valueOf(values.get(i));
         }
         else {
@@ -396,7 +396,7 @@ final class ParameterUtil {
         if (container instanceof short[]) {
           final short[] a = (short[])container;
           if (values instanceof RandomAccess) {
-            for (int i = 0; i < a.length; ++i) // [A]
+            for (int i = 0, i$ = a.length; i < i$; ++i) // [A]
               a[i] = Short.parseShort(values.get(i));
           }
           else {
@@ -410,7 +410,7 @@ final class ParameterUtil {
 
         final Object[] a = (Object[])container;
         if (values instanceof RandomAccess) {
-          for (int i = 0; i < a.length; ++i) // [A]
+          for (int i = 0, i$ = a.length; i < i$; ++i) // [A]
             a[i] = Short.valueOf(values.get(i));
         }
         else {
@@ -443,7 +443,7 @@ final class ParameterUtil {
         if (container instanceof char[]) {
           final char[] a = (char[])container;
           if (values instanceof RandomAccess) {
-            for (int i = 0; i < a.length; ++i) // [A]
+            for (int i = 0, i$ = a.length; i < i$; ++i) // [A]
               a[i] = parseChar(values.get(i));
           }
           else {
@@ -457,7 +457,7 @@ final class ParameterUtil {
 
         final Object[] a = (Object[])container;
         if (values instanceof RandomAccess) {
-          for (int i = 0; i < a.length; ++i) // [A]
+          for (int i = 0, i$ = a.length; i < i$; ++i) // [A]
             a[i] = parseChar(values.get(i));
         }
         else {
@@ -490,7 +490,7 @@ final class ParameterUtil {
         if (container instanceof byte[]) {
           final byte[] a = (byte[])container;
           if (values instanceof RandomAccess) {
-            for (int i = 0; i < a.length; ++i) // [A]
+            for (int i = 0, i$ = a.length; i < i$; ++i) // [A]
               a[i] = Byte.parseByte(values.get(i));
           }
           else {
@@ -504,7 +504,7 @@ final class ParameterUtil {
 
         final Object[] a = (Object[])container;
         if (values instanceof RandomAccess) {
-          for (int i = 0; i < a.length; ++i) // [A]
+          for (int i = 0, i$ = a.length; i < i$; ++i) // [A]
             a[i] = Byte.valueOf(values.get(i));
         }
         else {
@@ -537,7 +537,7 @@ final class ParameterUtil {
         if (container instanceof boolean[]) {
           final boolean[] a = (boolean[])container;
           if (values instanceof RandomAccess) {
-            for (int i = 0; i < a.length; ++i) // [A]
+            for (int i = 0, i$ = a.length; i < i$; ++i) // [A]
               a[i] = Boolean.parseBoolean(values.get(i));
           }
           else {
@@ -551,7 +551,7 @@ final class ParameterUtil {
 
         final Object[] a = (Object[])container;
         if (values instanceof RandomAccess) {
-          for (int i = 0; i < a.length; ++i) // [A]
+          for (int i = 0, i$ = a.length; i < i$; ++i) // [A]
             a[i] = Boolean.valueOf(values.get(i));
         }
         else {

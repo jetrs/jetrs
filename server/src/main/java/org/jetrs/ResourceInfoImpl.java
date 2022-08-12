@@ -187,7 +187,7 @@ class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImpl> {
 
     final Object[] challenges = new Object[roles.length - 1];
     final int resetLen = authenticationScheme != null ? authenticationScheme.length() + 1 : 0;
-    for (int i = 1; i < roles.length; ++i) { // [A]
+    for (int i = 1, i$ = roles.length; i < i$; ++i) { // [A]
       builder.setLength(resetLen);
       builder.append("realm=\"").append(roles[i]).append('"');
       challenges[i - 1] = builder.toString();

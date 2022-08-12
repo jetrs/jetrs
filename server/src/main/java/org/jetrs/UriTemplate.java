@@ -47,7 +47,7 @@ class UriTemplate implements Comparable<UriTemplate> {
     if (Character.isDigit(ch) || Character.isAlphabetic(ch) && ch != ESCAPE)
       return NO_ESCAPE;
 
-    for (int i = 0; i < ESCAPE_MAP.length; i += 2) // [N]
+    for (int i = 0, i$ = ESCAPE_MAP.length; i < i$; i += 2) // [N]
       if (ESCAPE_MAP[i] == ch)
         return ESCAPE_MAP[++i];
 

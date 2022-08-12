@@ -256,11 +256,11 @@ public class HttpHeadersImplTest extends RuntimeDelegateTest {
     final HttpHeadersImpl strings = new HttpHeadersImpl();
     final ArrayList<String> expectedStrings = new ArrayList<>();
     final ArrayList<Object> expectedObjects = new ArrayList<>();
-    for (int i = 0; i < args.length; ++i) // [A]
+    for (int i = 0, i$ = args.length; i < i$; ++i) // [A]
       testAdd(strings, expectedStrings, expectedObjects, headerName, args[i], headerDelegate);
 
     ArrayUtil.shuffle(args);
-    for (int i = 0; i < args.length; ++i) // [A]
+    for (int i = 0, i$ = args.length; i < i$; ++i) // [A]
       testRemove(strings, expectedStrings, expectedObjects, headerName, args[i], headerDelegate);
   }
 

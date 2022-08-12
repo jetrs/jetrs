@@ -185,7 +185,7 @@ abstract class Delegate<T> implements RuntimeDelegate.HeaderDelegate<T> {
       Date expires = null;
       boolean secure = false;
       boolean httpOnly = false;
-      for (int i = 1; i < parts.length; ++i) { // [A]
+      for (int i = 1, i$ = parts.length; i < i$; ++i) { // [A]
         final String part = parts[i].trim();
         if (part.startsWith("Path")) {
           if ((index = part.indexOf('=')) != -1) {
@@ -434,7 +434,7 @@ abstract class Delegate<T> implements RuntimeDelegate.HeaderDelegate<T> {
 
       final StringBuilder builder = new StringBuilder();
       builder.append(value[0]);
-      for (int i = 1; i < value.length; ++i) // [A]
+      for (int i = 1, i$ = value.length; i < i$; ++i) // [A]
         builder.append(',').append(value[i]);
 
       return builder.toString();

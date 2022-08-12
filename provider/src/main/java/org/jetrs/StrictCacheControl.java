@@ -256,12 +256,12 @@ class StrictCacheControl extends CacheControl {
 
   static StrictCacheControl parse(final String value) {
     final String[] directives = value.split(",");
-    for (int i = 0; i < directives.length; ++i) // [A]
+    for (int i = 0, i$ = directives.length; i < i$; ++i) // [A]
       directives[i] = directives[i].trim();
 
     boolean valid = false;
     final StrictCacheControl cacheControl = new StrictCacheControl();
-    for (int i = 0; i < directives.length; ++i) // [A]
+    for (int i = 0, i$ = directives.length; i < i$; ++i) // [A]
       valid |= Directive.parseDirective(cacheControl, directives[i]);
 
     if (!valid)

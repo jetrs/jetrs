@@ -44,7 +44,7 @@ class Bootstrap<R extends Comparable<? super R>> {
   private static final String[] excludeStartsWith = {"jdk.", "java.", "javax.", "com.sun.", "sun.", "org.w3c.", "org.xml.", "org.jvnet.", "org.joda.", "org.jcp.", "apple.security."};
 
   static boolean acceptPackage(final Package pkg) {
-    for (int i = 0; i < excludeStartsWith.length; ++i) // [A]
+    for (int i = 0, i$ = excludeStartsWith.length; i < i$; ++i) // [A]
       if (pkg.getName().startsWith(excludeStartsWith[i]))
         return false;
 

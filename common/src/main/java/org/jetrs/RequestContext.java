@@ -234,7 +234,7 @@ abstract class RequestContext<P> extends InterceptorContextImpl<P> {
     final Type[] genericParameterTypes = method.getGenericParameterTypes();
     final Annotation[][] parameterAnnotations = method.getParameterAnnotations();
     final Object[] arguments = new Object[parameters.length];
-    for (int i = 0; i < parameters.length; ++i) { // [A]
+    for (int i = 0, i$ = parameters.length; i < i$; ++i) { // [A]
       final Object arg = arguments[i] = findInjectableValueFromCache(parameters[i], parameterAnnotations[i], parameterTypes[i], genericParameterTypes[i]);
       if (arg instanceof Exception)
         throw new BadRequestException((Exception)arg);
@@ -305,7 +305,7 @@ abstract class RequestContext<P> extends InterceptorContextImpl<P> {
       final Parameter[] parameters = constructor.getParameters();
       final Annotation[][] parameterAnnotations = constructor.getParameterAnnotations();
       final Object[] arguments = new Object[parameters.length];
-      for (int i = 0; i < parameters.length; ++i) { // [A]
+      for (int i = 0, i$ = parameters.length; i < i$; ++i) { // [A]
         final Parameter parameter = parameters[i];
         final Annotation[] annotations = parameterAnnotations[i];
         final Annotation injectableAnnotation = findInjectableAnnotation(annotations, isResource);

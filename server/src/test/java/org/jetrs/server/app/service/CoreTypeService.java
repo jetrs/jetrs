@@ -40,7 +40,7 @@ public class CoreTypeService {
     assertEquals(3, pathParameters.size());
     assertEquals(3, a.length);
     assertEquals(3, l.size());
-    for (int i = 0; i < v.length; ++i) { // [A]
+    for (int i = 0, i$ = v.length; i < i$; ++i) { // [A]
       assertEquals(pathParameters.get(i), String.valueOf(v[i]));
       assertEquals(a[i], l.get(i));
     }
@@ -62,7 +62,7 @@ public class CoreTypeService {
     assertEquals(3, list.size());
     assertEquals(Arrays.asList(arrayObject), list);
     String total = "";
-    for (int i = 0; i < arrayPrivimite.length; ++i) { // [A]
+    for (int i = 0, i$ = arrayPrivimite.length; i < i$; ++i) { // [A]
       assertEquals(arrayPrivimite[i], arrayObject[i].booleanValue());
       total += arrayPrivimite[i];
     }
@@ -89,7 +89,7 @@ public class CoreTypeService {
     assertEquals(3, list.size());
     assertEquals(Arrays.asList(arrayObject), list);
     String total = "";
-    for (int i = 0; i < arrayPrivimite.length; ++i) { // [A]
+    for (int i = 0, i$ = arrayPrivimite.length; i < i$; ++i) { // [A]
       assertEquals(arrayPrivimite[i], arrayObject[i].charValue(), 0);
       total += arrayPrivimite[i];
     }
@@ -116,7 +116,7 @@ public class CoreTypeService {
     assertEquals(3, list.size());
     assertEquals(Arrays.asList(arrayObject), list);
     int total = 0;
-    for (int i = 0; i < arrayPrivimite.length; ++i) { // [A]
+    for (int i = 0, i$ = arrayPrivimite.length; i < i$; ++i) { // [A]
       assertEquals(arrayPrivimite[i], arrayObject[i].byteValue());
       total += arrayPrivimite[i];
     }
@@ -143,7 +143,7 @@ public class CoreTypeService {
     assertEquals(3, list.size());
     assertEquals(Arrays.asList(arrayObject), list);
     int total = 0;
-    for (int i = 0; i < arrayPrivimite.length; ++i) { // [A]
+    for (int i = 0, i$ = arrayPrivimite.length; i < i$; ++i) { // [A]
       assertEquals(arrayPrivimite[i], arrayObject[i].shortValue());
       total += arrayPrivimite[i];
     }
@@ -170,7 +170,7 @@ public class CoreTypeService {
     assertEquals(3, list.size());
     assertEquals(Arrays.asList(arrayObject), list);
     int total = 0;
-    for (int i = 0; i < arrayPrivimite.length; ++i) { // [A]
+    for (int i = 0, i$ = arrayPrivimite.length; i < i$; ++i) { // [A]
       assertEquals(arrayPrivimite[i], arrayObject[i].intValue());
       total += arrayPrivimite[i];
     }
@@ -197,7 +197,7 @@ public class CoreTypeService {
     assertEquals(3, list.size());
     assertEquals(Arrays.asList(arrayObject), list);
     long total = 0;
-    for (int i = 0; i < arrayPrivimite.length; ++i) { // [A]
+    for (int i = 0, i$ = arrayPrivimite.length; i < i$; ++i) { // [A]
       assertEquals(arrayPrivimite[i], arrayObject[i].longValue());
       total += arrayPrivimite[i];
     }
@@ -224,7 +224,7 @@ public class CoreTypeService {
     assertEquals(3, list.size());
     assertEquals(Arrays.asList(arrayObject), list);
     float total = 0;
-    for (int i = 0; i < arrayPrivimite.length; ++i) { // [A]
+    for (int i = 0, i$ = arrayPrivimite.length; i < i$; ++i) { // [A]
       assertEquals(arrayPrivimite[i], arrayObject[i].floatValue(), 0);
       total += arrayPrivimite[i];
     }
@@ -251,7 +251,7 @@ public class CoreTypeService {
     assertEquals(3, list.size());
     assertEquals(Arrays.asList(arrayObject), list);
     double total = 0;
-    for (int i = 0; i < arrayPrivimite.length; ++i) { // [A]
+    for (int i = 0, i$ = arrayPrivimite.length; i < i$; ++i) { // [A]
       assertEquals(arrayPrivimite[i], arrayObject[i].doubleValue(), 0);
       total += arrayPrivimite[i];
     }
