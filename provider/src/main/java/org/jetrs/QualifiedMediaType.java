@@ -26,52 +26,40 @@ import org.libj.lang.Numbers;
 
 class QualifiedMediaType extends MediaType implements Qualified {
   /**
-   * Creates a new instance of {@link QualifiedMediaType} with the supplied
-   * type, subtype and parameters.
+   * Creates a new instance of {@link QualifiedMediaType} with the supplied type, subtype and parameters.
    *
-   * @param type The primary type, {@code null} is equivalent to
-   *          {@link #MEDIA_TYPE_WILDCARD}.
-   * @param subtype The subtype, {@code null} is equivalent to
-   *          {@link #MEDIA_TYPE_WILDCARD}.
-   * @param parameters A map of media type parameters, {@code null} is the same
-   *          as an empty map.
+   * @param type The primary type, {@code null} is equivalent to {@link #MEDIA_TYPE_WILDCARD}.
+   * @param subtype The subtype, {@code null} is equivalent to {@link #MEDIA_TYPE_WILDCARD}.
+   * @param parameters A map of media type parameters, {@code null} is the same as an empty map.
    */
   QualifiedMediaType(final String type, final String subtype, final Map<String,String> parameters) {
     super(type, subtype, parameters);
   }
 
   /**
-   * Creates a new instance of {@link QualifiedMediaType} with the supplied type
-   * and subtype.
+   * Creates a new instance of {@link QualifiedMediaType} with the supplied type and subtype.
    *
-   * @param type The primary type, {@code null} is equivalent to
-   *          {@link #MEDIA_TYPE_WILDCARD}
-   * @param subtype The subtype, {@code null} is equivalent to
-   *          {@link #MEDIA_TYPE_WILDCARD}
+   * @param type The primary type, {@code null} is equivalent to {@link #MEDIA_TYPE_WILDCARD}
+   * @param subtype The subtype, {@code null} is equivalent to {@link #MEDIA_TYPE_WILDCARD}
    */
   QualifiedMediaType(final String type, final String subtype) {
     super(type, subtype);
   }
 
   /**
-   * Creates a new instance of {@link QualifiedMediaType} with the supplied
-   * type, subtype and {@value #CHARSET_PARAMETER} parameter.
+   * Creates a new instance of {@link QualifiedMediaType} with the supplied type, subtype and {@value #CHARSET_PARAMETER} parameter.
    *
-   * @param type The primary type, {@code null} is equivalent to
-   *          {@link #MEDIA_TYPE_WILDCARD}
-   * @param subtype The subtype, {@code null} is equivalent to
-   *          {@link #MEDIA_TYPE_WILDCARD}
-   * @param charset The {@value #CHARSET_PARAMETER} parameter value. If
-   *          {@code null} or empty the {@value #CHARSET_PARAMETER} parameter
-   *          will not be set.
+   * @param type The primary type, {@code null} is equivalent to {@link #MEDIA_TYPE_WILDCARD}
+   * @param subtype The subtype, {@code null} is equivalent to {@link #MEDIA_TYPE_WILDCARD}
+   * @param charset The {@value #CHARSET_PARAMETER} parameter value. If {@code null} or empty the {@value #CHARSET_PARAMETER}
+   *          parameter will not be set.
    */
   QualifiedMediaType(final String type, final String subtype, final String charset) {
     super(type, subtype, charset);
   }
 
   /**
-   * Creates a new instance of {@link QualifiedMediaType} with the supplied
-   * {@link MediaType} parameter.
+   * Creates a new instance of {@link QualifiedMediaType} with the supplied {@link MediaType} parameter.
    *
    * @param mediaType The {@link MediaType}.
    * @throws IllegalArgumentException If {@code mediaType} is null.

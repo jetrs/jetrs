@@ -35,8 +35,7 @@ import org.libj.util.MirrorMap;
  */
 class MirrorMultivaluedMap<K,V,R> extends MirrorMap<K,List<V>,List<R>> implements MultivaluedMap<K,V>, Cloneable {
   /**
-   * Interface providing methods for the reflection of one type of object to
-   * another, and vice-versa.
+   * Interface providing methods for the reflection of one type of object to another, and vice-versa.
    *
    * @param <K> The type of key object of this {@link Mirror}.
    * @param <V> The type of value object of this {@link Mirror}.
@@ -66,20 +65,15 @@ class MirrorMultivaluedMap<K,V,R> extends MirrorMap<K,List<V>,List<R>> implement
   }
 
   /**
-   * Casts the specified {@code map} of type <b>{@link Map Map&lt;K,E&gt;}</b>
-   * to type <b>{@link Map Map&lt;K,E&gt;} &amp; {@link Cloneable}</b>.
+   * Casts the specified {@code map} of type <b>{@link Map Map&lt;K,E&gt;}</b> to type <b>{@link Map Map&lt;K,E&gt;} &amp;
+   * {@link Cloneable}</b>.
    *
-   * @param <C> The type parameter for {@link Map Map&lt;K,E&gt;} &
-   *          {@link Cloneable}.
-   * @param <K> The type of keys maintained by the specified {@link Map
-   *          Map&lt;K,E&gt;}.
-   * @param <V> The type of mapped values in the specified {@link Map
-   *          Map&lt;K,E&gt;}.
-   * @param map The {@code map} of type <b>{@link Map Map&lt;K,E&gt;}</b> to
-   *          cast to type <b>{@link Map Map&lt;K,E&gt;} &
+   * @param <C> The type parameter for {@link Map Map&lt;K,E&gt;} & {@link Cloneable}.
+   * @param <K> The type of keys maintained by the specified {@link Map Map&lt;K,E&gt;}.
+   * @param <V> The type of mapped values in the specified {@link Map Map&lt;K,E&gt;}.
+   * @param map The {@code map} of type <b>{@link Map Map&lt;K,E&gt;}</b> to cast to type <b>{@link Map Map&lt;K,E&gt;} &
    *          {@link Cloneable}</b>.
-   * @return The specified {@code map} of type <b>{@link Map Map&lt;K,E&gt;}</b>
-   *         cast to type <b>{@link Map Map&lt;K,E&gt;} &amp;
+   * @return The specified {@code map} of type <b>{@link Map Map&lt;K,E&gt;}</b> cast to type <b>{@link Map Map&lt;K,E&gt;} &amp;
    *         {@link Cloneable}</b>.
    */
   @SuppressWarnings("unchecked")
@@ -90,45 +84,34 @@ class MirrorMultivaluedMap<K,V,R> extends MirrorMap<K,List<V>,List<R>> implement
   protected Mirror<K,R,V> reverse;
 
   /**
-   * Creates a new {@link MirrorMultivaluedMap} with the specified target maps
-   * and {@link Mirror}. The specified target maps are meant to be empty, as
-   * they become the underlying maps of the new {@link MirrorMultivaluedMap}
-   * instance. The specified {@link Mirror} provides the
-   * {@link Mirror#valueToReflection(Object,List) V -&gt; R} and
-   * {@link Mirror#reflectionToValue(Object,List) R -&gt; V} methods, which are
-   * used to reflect object values from one {@link MirrorMultivaluedMap} to the
-   * other.
+   * Creates a new {@link MirrorMultivaluedMap} with the specified target maps and {@link Mirror}. The specified target maps are
+   * meant to be empty, as they become the underlying maps of the new {@link MirrorMultivaluedMap} instance. The specified
+   * {@link Mirror} provides the {@link Mirror#valueToReflection(Object,List) V -&gt; R} and
+   * {@link Mirror#reflectionToValue(Object,List) R -&gt; V} methods, which are used to reflect object values from one
+   * {@link MirrorMultivaluedMap} to the other.
    *
-   * @param <CloneableValues> The type parameter constraining the {@code values}
-   *          argument to {@link Map Map&lt;K,V&gt;} &amp; {@link Cloneable}.
-   * @param <CloneableReflections> The type parameter constraining the
-   *          {@code values} argument to {@link Map Map&lt;K,R&gt;} &amp;
+   * @param <CloneableValues> The type parameter constraining the {@code values} argument to {@link Map Map&lt;K,V&gt;} &amp;
+   *          {@link Cloneable}.
+   * @param <CloneableReflections> The type parameter constraining the {@code values} argument to {@link Map Map&lt;K,R&gt;} &amp;
    *          {@link Cloneable}.
    * @param values The underlying map of type {@code <K,List<V>> & Cloneable}.
-   * @param reflections The underlying map of type
-   *          {@code <K,List<R>> & Cloneable}.
-   * @param mirror The {@link Mirror} specifying the
-   *          {@link Mirror#valueToReflection(Object,List) V -&gt; R} and
+   * @param reflections The underlying map of type {@code <K,List<R>> & Cloneable}.
+   * @param mirror The {@link Mirror} specifying the {@link Mirror#valueToReflection(Object,List) V -&gt; R} and
    *          {@link Mirror#reflectionToValue(Object,List) R -&gt; V} methods.
-   * @throws IllegalArgumentException If any of the specified parameters is
-   *           null.
+   * @throws IllegalArgumentException If any of the specified parameters is null.
    */
   <CloneableValues extends Map<K,List<V>> & Cloneable,CloneableReflections extends Map<K,List<R>> & Cloneable>MirrorMultivaluedMap(final CloneableValues values, final CloneableReflections reflections, final Mirror<K,V,R> mirror) {
     super(values, reflections, mirror);
   }
 
   /**
-   * Creates a new {@link MirrorMultivaluedMap} with the specified maps and
-   * mirror. This method is specific for the construction of a reflected
-   * {@link MirrorMultivaluedMap} instance.
+   * Creates a new {@link MirrorMultivaluedMap} with the specified maps and mirror. This method is specific for the construction of
+   * a reflected {@link MirrorMultivaluedMap} instance.
    *
-   * @param mirrorMap The {@link MirrorMultivaluedMap} for which {@code this}
-   *          map will be a reflection. Likewise, {@code this} map will be a
-   *          reflection for {@code mirrorMap}.
-   * @param values The underlying map of type {@code <K,List<V>>}, which is
-   *          implicitly assumed to also be {@link Cloneable}.
-   * @param mirror The {@link Mirror} specifying the
-   *          {@link Mirror#valueToReflection(Object,List) V -&gt; R} and
+   * @param mirrorMap The {@link MirrorMultivaluedMap} for which {@code this} map will be a reflection. Likewise, {@code this} map
+   *          will be a reflection for {@code mirrorMap}.
+   * @param values The underlying map of type {@code <K,List<V>>}, which is implicitly assumed to also be {@link Cloneable}.
+   * @param mirror The {@link Mirror} specifying the {@link Mirror#valueToReflection(Object,List) V -&gt; R} and
    *          {@link Mirror#reflectionToValue(Object,List) R -&gt; V} methods.
    */
   protected MirrorMultivaluedMap(final MirrorMultivaluedMap<K,R,V> mirrorMap, final Map<K,List<V>> values, final Mirror<K,V,R> mirror) {
@@ -156,8 +139,7 @@ class MirrorMultivaluedMap<K,V,R> extends MirrorMap<K,List<V>,List<R>> implement
   }
 
   /**
-   * Returns the reverse {@link Mirror}, and caches it for subsequent retrieval,
-   * avoiding reinstantiation.
+   * Returns the reverse {@link Mirror}, and caches it for subsequent retrieval, avoiding reinstantiation.
    *
    * @return The reverse {@link Mirror}.
    */
@@ -197,13 +179,12 @@ class MirrorMultivaluedMap<K,V,R> extends MirrorMap<K,List<V>,List<R>> implement
   }
 
   /**
-   * Returns the list associated to the specified key, creating one via
-   * {@link Mirror#reflectionToValue(Object,List)} if a list does not exist.
+   * Returns the list associated to the specified key, creating one via {@link Mirror#reflectionToValue(Object,List)} if a list does
+   * not exist.
    *
    * @param key The key.
-   * @return The list associated to the specified key, creating one via
-   *         {@link Mirror#reflectionToValue(Object,List)} if a list does not
-   *         exist.
+   * @return The list associated to the specified key, creating one via {@link Mirror#reflectionToValue(Object,List)} if a list does
+   *         not exist.
    */
   protected final MirrorList<V,List<V>,R,List<R>> getValues(final K key) {
     MirrorList<V,List<V>,R,List<R>> values = get(key);

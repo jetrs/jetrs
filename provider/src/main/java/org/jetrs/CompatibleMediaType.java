@@ -29,15 +29,11 @@ class CompatibleMediaType extends MediaType {
   private final int distance;
 
   /**
-   * Creates a new instance of {@link CompatibleMediaType} with the supplied
-   * type, subtype and parameters.
+   * Creates a new instance of {@link CompatibleMediaType} with the supplied type, subtype and parameters.
    *
-   * @param type The primary type, {@code null} is equivalent to
-   *          {@link #MEDIA_TYPE_WILDCARD}.
-   * @param subtype The subtype, {@code null} is equivalent to
-   *          {@link #MEDIA_TYPE_WILDCARD}.
-   * @param parameters A map of media type parameters, {@code null} is the same
-   *          as an empty map.
+   * @param type The primary type, {@code null} is equivalent to {@link #MEDIA_TYPE_WILDCARD}.
+   * @param subtype The subtype, {@code null} is equivalent to {@link #MEDIA_TYPE_WILDCARD}.
+   * @param parameters A map of media type parameters, {@code null} is the same as an empty map.
    * @param distance The distance.
    */
   CompatibleMediaType(final String type, final String subtype, final Map<String,String> parameters, final int distance) {
@@ -46,13 +42,10 @@ class CompatibleMediaType extends MediaType {
   }
 
   /**
-   * Creates a new instance of {@link CompatibleMediaType} with the supplied type
-   * and subtype.
+   * Creates a new instance of {@link CompatibleMediaType} with the supplied type and subtype.
    *
-   * @param type The primary type, {@code null} is equivalent to
-   *          {@link #MEDIA_TYPE_WILDCARD}
-   * @param subtype The subtype, {@code null} is equivalent to
-   *          {@link #MEDIA_TYPE_WILDCARD}
+   * @param type The primary type, {@code null} is equivalent to {@link #MEDIA_TYPE_WILDCARD}
+   * @param subtype The subtype, {@code null} is equivalent to {@link #MEDIA_TYPE_WILDCARD}
    * @param distance The distance.
    */
   CompatibleMediaType(final String type, final String subtype, final int distance) {
@@ -61,16 +54,13 @@ class CompatibleMediaType extends MediaType {
   }
 
   /**
-   * Creates a new instance of {@link CompatibleMediaType} with the supplied
-   * type, subtype and {@value #CHARSET_PARAMETER} parameter.
+   * Creates a new instance of {@link CompatibleMediaType} with the supplied type, subtype and {@value #CHARSET_PARAMETER}
+   * parameter.
    *
-   * @param type The primary type, {@code null} is equivalent to
-   *          {@link #MEDIA_TYPE_WILDCARD}
-   * @param subtype The subtype, {@code null} is equivalent to
-   *          {@link #MEDIA_TYPE_WILDCARD}
-   * @param charset The {@value #CHARSET_PARAMETER} parameter value. If
-   *          {@code null} or empty the {@value #CHARSET_PARAMETER} parameter
-   *          will not be set.
+   * @param type The primary type, {@code null} is equivalent to {@link #MEDIA_TYPE_WILDCARD}
+   * @param subtype The subtype, {@code null} is equivalent to {@link #MEDIA_TYPE_WILDCARD}
+   * @param charset The {@value #CHARSET_PARAMETER} parameter value. If {@code null} or empty the {@value #CHARSET_PARAMETER}
+   *          parameter will not be set.
    * @param distance The distance.
    */
   CompatibleMediaType(final String type, final String subtype, final String charset, final int distance) {
@@ -79,12 +69,10 @@ class CompatibleMediaType extends MediaType {
   }
 
   /**
-   * Creates a new instance of {@link CompatibleMediaType} with the supplied
-   * {@link MediaType} and {@code distance} parameters.
+   * Creates a new instance of {@link CompatibleMediaType} with the supplied {@link MediaType} and {@code distance} parameters.
    *
    * @param mediaType The {@link MediaType}.
-   * @param parameters A map of media type parameters, null is the same as an
-   *          empty map.
+   * @param parameters A map of media type parameters, null is the same as an empty map.
    * @param distance The distance.
    * @throws IllegalArgumentException If {@code mediaType} is null.
    */

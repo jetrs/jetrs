@@ -61,12 +61,10 @@ class ServerBootstrap extends Bootstrap<ResourceInfoImpl> {
   });
 
   /**
-   * http://docs.oracle.com/javaee/6/tutorial/doc/gilik.html
-   * Root resource classes are POJOs that are either annotated with {@code @Path} or have
-   * at least one method annotated with @Path or a request method designator, such as
-   * {@code @GET}, {@code @PUT}, {@code @POST}, or {@code @DELETE}. Resource methods are
-   * methods of a resource class annotated with a request method designator. This section
-   * explains how to use JAX-RS to annotate Java classes to create RESTful web services.
+   * http://docs.oracle.com/javaee/6/tutorial/doc/gilik.html Root resource classes are POJOs that are either annotated with
+   * {@code @Path} or have at least one method annotated with @Path or a request method designator, such as {@code @GET},
+   * {@code @PUT}, {@code @POST}, or {@code @DELETE}. Resource methods are methods of a resource class annotated with a request
+   * method designator. This section explains how to use JAX-RS to annotate Java classes to create RESTful web services.
    */
   private static boolean isRootResource(final Class<?> cls) {
     if (Modifier.isAbstract(cls.getModifiers()) || Modifier.isInterface(cls.getModifiers()))

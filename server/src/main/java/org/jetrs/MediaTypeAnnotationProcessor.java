@@ -47,8 +47,7 @@ class MediaTypeAnnotationProcessor<T extends Annotation> {
    * Tests whether the specified method contains an entity parameter.
    *
    * @param method The {@link Method}.
-   * @return {@code true} if the specified method contains an entity parameter;
-   *         otherwise {@code false}.
+   * @return {@code true} if the specified method contains an entity parameter; otherwise {@code false}.
    */
   private static boolean hasEntityParameter(final Method method) {
     OUT:

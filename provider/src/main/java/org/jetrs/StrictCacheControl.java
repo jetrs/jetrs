@@ -25,8 +25,7 @@ import org.libj.lang.Strings;
 import org.libj.util.CollectionUtil;
 
 /**
- * An extension of {@link CacheControl} that preserves the order of
- * input-to-output of directives, and vice-versa.
+ * An extension of {@link CacheControl} that preserves the order of input-to-output of directives, and vice-versa.
  */
 class StrictCacheControl extends CacheControl {
   enum Directive {

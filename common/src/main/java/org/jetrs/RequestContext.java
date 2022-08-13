@@ -57,7 +57,8 @@ import org.slf4j.LoggerFactory;
 
 /**
  * @param <P> The type parameter of the associated properties.
- * @see <a href="http://download.oracle.com/otn-pub/jcp/jaxrs-2_0_rev_A-mrel-spec/jsr339-jaxrs-2.0-final-spec.pdf">JSR339 JAX-RS 2.0 [9.2]</a>
+ * @see <a href="http://download.oracle.com/otn-pub/jcp/jaxrs-2_0_rev_A-mrel-spec/jsr339-jaxrs-2.0-final-spec.pdf">JSR339 JAX-RS 2.0
+ *      [9.2]</a>
  */
 abstract class RequestContext<P> extends InterceptorContextImpl<P> {
   private static final Logger logger = LoggerFactory.getLogger(RequestContext.class);

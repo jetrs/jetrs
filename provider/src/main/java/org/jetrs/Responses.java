@@ -43,8 +43,7 @@ final class Responses {
    * Convert a numerical status code into the corresponding {@link StatusType}.
    *
    * @param status The status header string.
-   * @return The matching {@link StatusType} or {@code null} if the specified
-   *         string is null or the parsed {@code statusCode == -1}.
+   * @return The matching {@link StatusType} or {@code null} if the specified string is null or the parsed {@code statusCode == -1}.
    * @throws IllegalArgumentException If the parsed {@code statusCode < -1}.
    */
   static StatusType from(final String status) {
@@ -59,8 +58,7 @@ final class Responses {
    * Convert a numerical status code into the corresponding {@link StatusType}.
    *
    * @param statusCode The numerical status code.
-   * @return The matching {@link StatusType} or {@code null} if
-   *         {@code statusCode == -1}.
+   * @return The matching {@link StatusType} or {@code null} if {@code statusCode == -1}.
    * @throws IllegalArgumentException If {@code statusCode < -1}.
    */
   static StatusType from(final int statusCode) {
@@ -72,13 +70,12 @@ final class Responses {
    *
    * @param statusCode The numerical status code.
    * @param reasonPhrase The reason phrase.
-   * @return The {@link StatusType} or {@code null} if
-   *         {@code statusCode == -1}.
+   * @return The {@link StatusType} or {@code null} if {@code statusCode == -1}.
    * @throws IllegalArgumentException If {@code statusCode < -1}.
    */
   static StatusType from(final int statusCode, final String reasonPhrase) {
     if (statusCode < -1)
-      throw new IllegalArgumentException();
+      throw new IllegalArgumentException("statusCode = " + statusCode);
 
     if (statusCode == -1)
       return null;
