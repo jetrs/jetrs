@@ -467,6 +467,10 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
 
     if (annotation.annotationType() == HeaderParam.class) {
       final String headerParam = ((HeaderParam)annotation).value();
+      final List<String> headerStringValue = getHttpHeaders().get(headerParam);
+      if (headerStringValue == null)
+        return null;
+
       if (clazz == String.class)
         return getHeaderString(headerParam);
 
@@ -474,7 +478,7 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
         try {
           final Class<?> componentType = (Class<?>)((ParameterizedType)type).getActualTypeArguments()[0];
 
-          final List<?> headerValues = componentType == String.class ? getHttpHeaders().get(headerParam) : getHttpHeaders().getMirrorMap().get(headerParam); // FIXME: Should this be unmodifiable?
+          final List<?> headerValues = componentType == String.class ? headerStringValue : getHttpHeaders().getMirrorMap().get(headerParam); // FIXME: Should this be unmodifiable?
           // FIXME: Note this does not consider the generic type of the list -- should it try to do a conversion if the classes don't match?!
           if (clazz.isAssignableFrom(MirrorQualityList.class))
             return headerValues;
@@ -493,7 +497,7 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
       if (clazz.isArray()) {
         // FIXME: Note this does not consider the generic type of the list -- should it try to do a conversion if the classes don't match?!
         final Class<?> componentType = clazz.getComponentType();
-        final List<?> headerValues = componentType == String.class ? getHttpHeaders().get(headerParam) : getHttpHeaders().getMirrorMap().get(headerParam);
+        final List<?> headerValues = componentType == String.class ? headerStringValue : getHttpHeaders().getMirrorMap().get(headerParam);
         return headerValues.toArray((Object[])Array.newInstance(componentType, headerValues.size()));
       }
 
@@ -501,7 +505,7 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
       if (clazz.isAssignableFrom(headerValue.getClass()))
         return headerValue;
 
-      return ParameterUtil.convertParameter(clazz, type, annotations, getHttpHeaders().get(headerParam), runtimeContext.getParamConverterProviderFactories(), this);
+      return ParameterUtil.convertParameter(clazz, type, annotations, headerStringValue, runtimeContext.getParamConverterProviderFactories(), this);
     }
 
     throw new UnsupportedOperationException("Unsupported param annotation type: " + annotation.annotationType());
