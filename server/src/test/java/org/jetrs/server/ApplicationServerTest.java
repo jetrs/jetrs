@@ -411,7 +411,7 @@ public class ApplicationServerTest {
     final Date date = Dates.dropMilliseconds(new Date());
     final Response response = client.target(serviceUrl + "/books/header")
       .request()
-      .header(HttpHeaders.IF_UNMODIFIED_SINCE, SimpleDateFormats.ISO_1123.get().format(date))
+      .header(HttpHeaders.IF_UNMODIFIED_SINCE, SimpleDateFormats.RFC_1123.get().format(date))
       .get();
 
     final long data = assertResponse(200, response, long.class);

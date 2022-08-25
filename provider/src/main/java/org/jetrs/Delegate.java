@@ -220,7 +220,7 @@ abstract class Delegate<T> implements RuntimeDelegate.HeaderDelegate<T> {
         else if (part.startsWith("Expires")) {
           if ((index = part.indexOf('=')) != -1) {
             try {
-              expires = SimpleDateFormats.ISO_1123.get().parse(part.substring(index + 1).trim());
+              expires = SimpleDateFormats.RFC_1123.get().parse(part.substring(index + 1).trim());
               order.addLast(StrictNewCookie.Directive.EXPIRY);
             }
             catch (final ParseException e) {
@@ -285,12 +285,12 @@ abstract class Delegate<T> implements RuntimeDelegate.HeaderDelegate<T> {
 
     @Override
     Date valueOf(final String value) throws Exception {
-      return SimpleDateFormats.ISO_1123.get().parse(value);
+      return SimpleDateFormats.RFC_1123.get().parse(value);
     }
 
     @Override
     public String toString(final Date value) {
-      return SimpleDateFormats.ISO_1123.get().format(value);
+      return SimpleDateFormats.RFC_1123.get().format(value);
     }
   };
 
