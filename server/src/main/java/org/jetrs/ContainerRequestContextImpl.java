@@ -467,7 +467,41 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
 
     if (annotation.annotationType() == HeaderParam.class) {
       final String headerParam = ((HeaderParam)annotation).value();
-      return getHeaderString(headerParam);
+      if (clazz == String.class)
+        return getHeaderString(headerParam);
+
+      if (Set.class.isAssignableFrom(clazz) || List.class.isAssignableFrom(clazz) || SortedSet.class.isAssignableFrom(clazz)) {
+        try {
+          final Class<?> componentType = (Class<?>)((ParameterizedType)type).getActualTypeArguments()[0];
+
+          final List<?> headerValues = componentType == String.class ? getHttpHeaders().get(headerParam) : getHttpHeaders().getMirrorMap().get(headerParam); // FIXME: Should this be unmodifiable?
+          // FIXME: Note this does not consider the generic type of the list -- should it try to do a conversion if the classes don't match?!
+          if (clazz.isAssignableFrom(MirrorQualityList.class))
+            return headerValues;
+
+          final Collection list = ParameterUtil.newCollection(clazz);
+          list.addAll(headerValues);
+          return list;
+        }
+        catch (final IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException e) {
+          // FIXME: This error is kind of hidden in the logs, but it should somehow be highlighted to be fixed?!
+          logger.error(e.getMessage(), e);
+          return e instanceof InvocationTargetException ? e.getCause() : e;
+        }
+      }
+
+      if (clazz.isArray()) {
+        // FIXME: Note this does not consider the generic type of the list -- should it try to do a conversion if the classes don't match?!
+        final Class<?> componentType = clazz.getComponentType();
+        final List<?> headerValues = componentType == String.class ? getHttpHeaders().get(headerParam) : getHttpHeaders().getMirrorMap().get(headerParam);
+        return headerValues.toArray((Object[])Array.newInstance(componentType, headerValues.size()));
+      }
+
+      final Object headerValue = getHttpHeaders().getMirrorMap().getFirst(headerParam);
+      if (clazz.isAssignableFrom(headerValue.getClass()))
+        return headerValue;
+
+      return ParameterUtil.convertParameter(clazz, type, annotations, getHttpHeaders().get(headerParam), runtimeContext.getParamConverterProviderFactories(), this);
     }
 
     throw new UnsupportedOperationException("Unsupported param annotation type: " + annotation.annotationType());

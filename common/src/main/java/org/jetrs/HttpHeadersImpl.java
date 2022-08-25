@@ -62,7 +62,12 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
 
   static {
     // FIXME: Go through the list of all headers and pick out the ones that (1) have delimiters, (2) do not have delimiters
+    headerWithNonCommaDelimiters.put("Accept-Datetime", none);
     headerWithNonCommaDelimiters.put(HttpHeaders.DATE, none);
+    headerWithNonCommaDelimiters.put(HttpHeaders.EXPIRES, none);
+    headerWithNonCommaDelimiters.put(HttpHeaders.IF_MODIFIED_SINCE, none);
+    headerWithNonCommaDelimiters.put(HttpHeaders.IF_UNMODIFIED_SINCE, none);
+    headerWithNonCommaDelimiters.put(HttpHeaders.LAST_MODIFIED, none);
     headerWithNonCommaDelimiters.put(HttpHeaders.COOKIE, semiComma);
   }
 

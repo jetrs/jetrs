@@ -25,14 +25,15 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -46,6 +47,8 @@ import org.junit.AfterClass;
 import org.junit.Test;
 import org.libj.io.Streams;
 import org.libj.lang.Strings;
+import org.libj.util.Dates;
+import org.libj.util.SimpleDateFormats;
 
 public class ApplicationServerTest {
   private static final Random random = new Random();
@@ -401,6 +404,18 @@ public class ApplicationServerTest {
 
     final String data = assertResponse(200, response, String.class);
     assertEquals("POST", data);
+  }
+
+  @Test
+  public void testBooksHeader() throws Exception {
+    final Date date = Dates.dropMilliseconds(new Date());
+    final Response response = client.target(serviceUrl + "/books/header")
+      .request()
+      .header(HttpHeaders.IF_UNMODIFIED_SINCE, SimpleDateFormats.ISO_1123.get().format(date))
+      .get();
+
+    final long data = assertResponse(200, response, long.class);
+    assertEquals(date.getTime(), data);
   }
 
   @AfterClass

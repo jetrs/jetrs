@@ -240,10 +240,14 @@ public class HttpHeadersImplTest extends RuntimeDelegateTest {
       expectedObjects.sort(qualityComparator);
 
       final boolean isForward = i % 2 == 0;
-      if (isForward)
+      if (isForward) {
         strings.add(headerName, headerString);
-      else
+        assertEquals(expectedStrings.get(0), strings.getFirst(headerName));
+      }
+      else {
         objects.add(headerName, headerObject);
+        assertEquals(expectedObjects.get(0), objects.getFirst(headerName));
+      }
 
       assertEquals(i + ": " + headerString, expectedStrings, strings.get(headerName));
       assertEquals(i + ": " + headerString, expectedObjects, objects.get(headerName));

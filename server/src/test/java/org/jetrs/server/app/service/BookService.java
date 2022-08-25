@@ -20,15 +20,18 @@ import static org.junit.Assert.*;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.MatrixParam;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
@@ -105,6 +108,12 @@ public class BookService {
 
 
     return Response.status(200).entity("List of Books order by: " + aSeg2 + " :: " + bSeg2 + " :: " + orderBy).build();
+  }
+
+  @GET
+  @Path("header")
+  public long header(@HeaderParam(HttpHeaders.IF_UNMODIFIED_SINCE) final Date ifModifiedSince) {
+    return ifModifiedSince.getTime();
   }
 
   @GET

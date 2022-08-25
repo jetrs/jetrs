@@ -30,6 +30,7 @@ import javax.ws.rs.ext.InterceptorContext;
 
 import org.libj.lang.EnumerationIterator;
 import org.libj.lang.Enumerations;
+import org.libj.util.CollectionUtil;
 
 abstract class InterceptorContextImpl<P> implements InterceptorContext {
   final PropertiesAdapter<P> propertiesAdapter;
@@ -88,14 +89,7 @@ abstract class InterceptorContextImpl<P> implements InterceptorContext {
 
       @Override
       public boolean containsAll(final Collection<?> c) {
-        if (c.size() == 0)
-          return true;
-
-        for (final Object o : c) // [C]
-          if (!contains(o))
-            return false;
-
-        return true;
+        return CollectionUtil.containsAll(this, c);
       }
 
       @Override
