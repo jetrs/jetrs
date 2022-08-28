@@ -19,12 +19,12 @@ package org.jetrs;
 import static org.libj.lang.Assertions.*;
 
 import java.net.URI;
+import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -55,25 +55,10 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
 
   private static final List<Locale> WILDCARD_LOCALE = Arrays.asList(new Locale("*"));
   private static final List<MediaType> WILDCARD_ACCEPT = Arrays.asList(MediaType.WILDCARD_TYPE);
-  private static final HashMap<String,char[]> headerWithNonCommaDelimiters = new HashMap<>();
-  private static final char[] none = {};
-  private static final char[] comma = {','};
-  private static final char[] semiComma = {';', ','};
-
-  static {
-    // FIXME: Go through the list of all headers and pick out the ones that (1) have delimiters, (2) do not have delimiters
-    headerWithNonCommaDelimiters.put("Accept-Datetime", none);
-    headerWithNonCommaDelimiters.put(HttpHeaders.DATE, none);
-    headerWithNonCommaDelimiters.put(HttpHeaders.EXPIRES, none);
-    headerWithNonCommaDelimiters.put(HttpHeaders.IF_MODIFIED_SINCE, none);
-    headerWithNonCommaDelimiters.put(HttpHeaders.IF_UNMODIFIED_SINCE, none);
-    headerWithNonCommaDelimiters.put(HttpHeaders.LAST_MODIFIED, none);
-    headerWithNonCommaDelimiters.put(HttpHeaders.COOKIE, semiComma);
-  }
 
   static char[] getHeaderValueDelimiters(final String headerName) {
-    final char[] delimiters = headerWithNonCommaDelimiters.get(headerName);
-    return delimiters != null ? delimiters : comma;
+    final AbstractMap.SimpleEntry<HttpHeader<?>,HeaderDelegateImpl<?>> entry = HeaderDelegateImpl.lookup(headerName);
+    return entry.getKey() != null ? entry.getKey().getDelimiters() : HttpHeader.none;
   }
 
   private static void parseHeaderValuesFromString(final List<String> values, final String headerValue, final char[] delimiters) {
@@ -206,7 +191,7 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
         if (value == null)
           return null;
 
-        final Object reflection = Delegate.lookup(key).fromString(value);
+        final Object reflection = HeaderDelegateImpl.lookup(key).getValue().fromString(value);
         if (reflection == null)
           logger.warn("Got null reflection for header name: \"" + key + "\"");
 
@@ -215,7 +200,7 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
 
       @Override
       public String reflectionToValue(final String key, final Object value) {
-        return value == null ? null : Delegate.lookup(key, value.getClass()).toString(value);
+        return value == null ? null : HeaderDelegateImpl.lookup(key, value.getClass()).toString(value);
       }
     }, new MirrorQualityList.Qualifier<String,Object>() {
       @Override
@@ -254,7 +239,7 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
 
   @Override
   public String getHeaderString(final String name) {
-    return CollectionUtil.toString(getRequestHeader(name), getHeaderValueDelimiters(name)[0]);
+    return CollectionUtil.toString(get(name), getHeaderValueDelimiters(name)[0]);
   }
 
   @Override

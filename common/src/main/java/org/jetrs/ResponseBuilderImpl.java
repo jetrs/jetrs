@@ -18,7 +18,6 @@ package org.jetrs;
 
 import java.lang.annotation.Annotation;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;

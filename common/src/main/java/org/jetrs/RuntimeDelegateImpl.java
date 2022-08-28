@@ -70,7 +70,7 @@ public class RuntimeDelegateImpl extends RuntimeDelegate {
 
   @Override
   public <T>HeaderDelegate<T> createHeaderDelegate(final Class<T> type) {
-    return Delegate.lookup(assertNotNull(type, "type is null"));
+    return HeaderDelegateImpl.lookup(assertNotNull(type, "type is null"));
   }
 
   @Override

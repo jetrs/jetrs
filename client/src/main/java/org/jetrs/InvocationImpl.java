@@ -111,7 +111,13 @@ class InvocationImpl implements Invocation {
       if (headers != null) {
         for (final Map.Entry<String,List<String>> entry : headers.entrySet()) { // [S]
           final String headerName = entry.getKey();
-          connection.setRequestProperty(headerName, CollectionUtil.toString(entry.getValue(), HttpHeadersImpl.getHeaderValueDelimiters(headerName)[0]));
+          final String headerValue;
+          if (entry.getValue().size() > 1)
+            headerValue = CollectionUtil.toString(entry.getValue(), HttpHeadersImpl.getHeaderValueDelimiters(headerName)[0]);
+          else
+            headerValue = entry.getValue().get(0).toString();
+
+          connection.setRequestProperty(headerName, headerValue);
         }
       }
 
