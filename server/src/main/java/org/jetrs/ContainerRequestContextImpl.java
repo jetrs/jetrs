@@ -1007,18 +1007,6 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
     setEntityStream(is);
   }
 
-  @Override
-  @SuppressWarnings("unchecked")
-  public Object proceed() throws IOException, WebApplicationException {
-    if (++interceptorIndex < readerInterceptorProviderFactories.size())
-      return lastProceeded = readerInterceptorProviderFactories.get(interceptorIndex).getSingletonOrFromRequestContext(this).aroundReadFrom(this);
-
-    if (interceptorIndex == readerInterceptorProviderFactories.size())
-      lastProceeded = messageBodyReader.readFrom(getType(), getGenericType(), getAnnotations(), getMediaType(), getHeaders(), getInputStream());
-
-    return lastProceeded;
-  }
-
   private Object lastProceeded;
   private int interceptorIndex = -1;
 
@@ -1027,6 +1015,19 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
 
   Object readBody(final MessageBodyReader<?> messageBodyReader) throws IOException {
     this.messageBodyReader = messageBodyReader;
-    return proceed();
+    return EntityUtil.checkNotNull(proceed(), getAnnotations());
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
+  public Object proceed() throws IOException, WebApplicationException {
+    final int size = readerInterceptorProviderFactories.size();
+    if (++interceptorIndex < size)
+      return lastProceeded = readerInterceptorProviderFactories.get(interceptorIndex).getSingletonOrFromRequestContext(this).aroundReadFrom(this);
+
+    if (interceptorIndex == size && getInputStream() != null)
+      lastProceeded = messageBodyReader.readFrom(getType(), getGenericType(), getAnnotations(), getMediaType(), getHeaders(), getInputStream());
+
+    return lastProceeded;
   }
 }

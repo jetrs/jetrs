@@ -144,17 +144,18 @@ class ResponseImpl extends Response {
 
         @Override
         public Object proceed() throws IOException {
-          if (++interceptorIndex < readerInterceptorProviderFactories.size())
+          final int size = readerInterceptorProviderFactories.size();
+          if (++interceptorIndex < size)
             return lastProceeded = (readerInterceptorProviderFactories.get(interceptorIndex).getSingletonOrFromRequestContext(requestContext)).aroundReadFrom(this);
 
-          if (interceptorIndex == readerInterceptorProviderFactories.size())
+          if (interceptorIndex == size && getInputStream() != null)
             lastProceeded = ((MessageBodyReader)messageBodyReader).readFrom(getType(), getGenericType(), getAnnotations(), getMediaType(), getHeaders(), getInputStream());
 
           return lastProceeded;
         }
       };
 
-      return (T)(entity = readerInterceptorContext.proceed());
+      return EntityUtil.checkNotNull((T)(entity = readerInterceptorContext.proceed()), readerInterceptorContext.getAnnotations());
     }
     catch (final IOException e) {
       throw new ResponseProcessingException(this, e);
