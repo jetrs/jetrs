@@ -116,6 +116,7 @@ abstract class HeaderDelegateImpl<T> implements RuntimeDelegate.HeaderDelegate<T
   public static final HeaderDelegateImpl<Object> DEFAULT_NONE;
   public static final HeaderDelegateImpl<Response.StatusType> STATUS_TYPE;
   public static final HeaderDelegateImpl<String> STRING;
+  public static final HeaderDelegateImpl<String[]> STRING_ARRAY;
   public static final HeaderDelegateImpl<Tk> TK;
   public static final HeaderDelegateImpl<java.net.URI> URI;
 
@@ -532,6 +533,45 @@ abstract class HeaderDelegateImpl<T> implements RuntimeDelegate.HeaderDelegate<T
       @Override
       public String toString(final String value) {
         return value;
+      }
+    },
+    STRING_ARRAY = new HeaderDelegateImpl<String[]>(String[].class, true) {
+      private String[] fromString(final String value, final int start, final int depth) {
+        if (start >= value.length() - 1)
+          return new String[depth];
+
+        int end = value.indexOf(',', start);
+        if (start == end)
+          return fromString(value, end + 1, depth);
+
+        if (end == -1)
+          end = value.length();
+
+        final String token = value.substring(start, end).trim();
+        if (token.length() == 0)
+          return fromString(value, end + 1, depth);
+
+        final String[] array = fromString(value, end + 1, depth + 1);
+        array[depth] = token;
+        return array;
+      }
+
+      @Override
+      String[] valueOf(final String value) {
+        return value.length() == 0 ? Strings.EMPTY_ARRAY : fromString(value, 0, 0);
+      }
+
+      @Override
+      public String toString(final String[] value) {
+        if (value.length == 0)
+          return "";
+
+        final StringBuilder builder = new StringBuilder();
+        builder.append(value[0]);
+        for (int i = 1, i$ = value.length; i < i$; ++i) // [A]
+          builder.append(',').append(value[i]);
+
+        return builder.toString();
       }
     },
     TK = new HeaderDelegateImpl<Tk>(Tk.class, true) {
