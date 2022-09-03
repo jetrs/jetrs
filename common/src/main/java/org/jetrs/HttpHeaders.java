@@ -758,6 +758,15 @@ public final class HttpHeaders {
   public static final String X_FRAME_OPTIONS = "X-Frame-Options";
 
   /**
+   * Mainly used to identify Ajax requests (most JavaScript frameworks send this field with value of XMLHttpRequest); also
+   * identifies Android apps using WebView.
+   *
+   * @see <a href="https://en.wikipedia.org/wiki/List_of_HTTP_header_fields">List of HTTP header fields</a>
+   * @see <a href="https://www.stoutner.com/the-x-requested-with-header/">Specification</a>
+   */
+  public static final String X_REQUESTED_WITH = "X-Requested-With";
+
+  /**
    * @see <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-XSS-Protection">MDN Web Docs</a>
    */
   public static final String X_XSS_PROTECTION = "X-XSS-Protection";

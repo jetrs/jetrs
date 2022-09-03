@@ -790,6 +790,15 @@ final class HttpHeader<T> {
   static final HttpHeader<String> X_FRAME_OPTIONS = new HttpHeader<>(HttpHeaders.X_FRAME_OPTIONS, none, false, HeaderDelegateImpl.STRING); // FIXME: Strong Type Candidate
 
   /**
+   * Mainly used to identify Ajax requests (most JavaScript frameworks send this field with value of XMLHttpRequest); also
+   * identifies Android apps using WebView.
+   *
+   * @see <a href="https://en.wikipedia.org/wiki/List_of_HTTP_header_fields">List of HTTP header fields</a>
+   * @see <a href="https://www.stoutner.com/the-x-requested-with-header/">Specification</a>
+   */
+  static final HttpHeader<String> X_REQUESTED_WITH = new HttpHeader<>(HttpHeaders.X_REQUESTED_WITH, none, false, HeaderDelegateImpl.STRING);
+
+  /**
    * @see <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-XSS-Protection">MDN Web Docs</a>
    */
   static final HttpHeader<String> X_XSS_PROTECTION = new HttpHeader<>(HttpHeaders.X_XSS_PROTECTION, none, false, HeaderDelegateImpl.STRING); // FIXME: Strong Type Candidate
