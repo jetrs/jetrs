@@ -502,6 +502,9 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
       }
 
       final Object headerValue = getHttpHeaders().getMirrorMap().getFirst(headerParam);
+      if (headerValue == null)
+        throw new BadRequestException("Invalid header value: " + headerParam + ": " + headerStringValue.get(0));
+
       if (clazz.isAssignableFrom(headerValue.getClass()))
         return headerValue;
 
