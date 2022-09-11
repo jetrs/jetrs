@@ -224,27 +224,27 @@ class HttpHeadersMap<V,R> extends MirrorMultivaluedMap<String,V,R> {
 
   @Override
   public MirrorQualityList<V,R> get(final Object key) {
-    return (MirrorQualityList<V,R>)super.get(key);
+    return (MirrorQualityList<V,R>)super.get(format(key));
   }
 
   @Override
   public MirrorQualityList<V,R> put(final String key, final List<V> value) {
-    return (MirrorQualityList<V,R>)super.put(key, value);
+    return (MirrorQualityList<V,R>)super.put(format(key), value);
   }
 
   @Override
   public MirrorQualityList<V,R> putIfAbsent(final String key, final List<V> value) {
-    return (MirrorQualityList<V,R>)super.putIfAbsent(key, value);
+    return (MirrorQualityList<V,R>)super.putIfAbsent(format(key), value);
   }
 
   @Override
   public MirrorQualityList<V,R> remove(final Object key) {
-    return (MirrorQualityList<V,R>)super.remove(key);
+    return (MirrorQualityList<V,R>)super.remove(format(key));
   }
 
   @Override
   public MirrorQualityList<V,R> replace(final String key, final List<V> value) {
-    return (MirrorQualityList<V,R>)super.replace(key, value);
+    return (MirrorQualityList<V,R>)super.replace(format(key), value);
   }
 
   @Override

@@ -131,7 +131,7 @@ class ResponseBuilderImpl extends Response.ResponseBuilder implements Cloneable 
     else if (value instanceof String)
       headers.add(name, (String)value);
     else
-      headers.getMirrorMap().add(name, value);
+      headers.add(name, HeaderDelegateImpl.lookup(name, value.getClass()).toString(value));
 
     return this;
   }

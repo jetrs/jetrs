@@ -33,6 +33,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.security.Principal;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -649,19 +650,18 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
     if (HttpMethod.OPTIONS.equals(requestMethod)) {
       final Response.ResponseBuilder response = Response.ok();
 
-      final String allow = CollectionUtil.toString(maybeNotAllowed, ',');
-      response.header(ACCESS_CONTROL_ALLOW_METHODS, allow).header(ALLOW, allow);
+      for (final String header : maybeNotAllowed)
+        response.header(ACCESS_CONTROL_ALLOW_METHODS, header).header(ALLOW, header);
 
-      final String requestHeaders = httpServletRequest.getHeader(ACCESS_CONTROL_REQUEST_HEADERS);
-      response.header(ACCESS_CONTROL_ALLOW_HEADERS, requestHeaders);
+      final List<String> requestHeaders = getHeaders().get(ACCESS_CONTROL_REQUEST_HEADERS);
+      if (requestHeaders != null)
+        for (final String requestHeader : requestHeaders)
+          response.header(ACCESS_CONTROL_ALLOW_HEADERS, requestHeader);
 
       final String origin = httpServletRequest.getHeader(ORIGIN);
       if (origin != null) {
         response.header(ACCESS_CONTROL_ALLOW_ORIGIN, origin);
         response.header(VARY, ORIGIN);
-      }
-      else {
-        response.header(ACCESS_CONTROL_ALLOW_ORIGIN, "*");
       }
 
       abortWith(response.build());
@@ -785,9 +785,18 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
       if (i$ == 0)
         continue;
 
+      final String name = entry.getKey();
+      if (i$ > 1) {
+        final AbstractMap.SimpleEntry<HttpHeader<?>,HeaderDelegateImpl<?>> headerDelegate = HeaderDelegateImpl.lookup(name);
+        final char[] delimiters = headerDelegate.getKey().getDelimiters();
+        if (delimiters.length > 0) {
+          httpServletResponse.setHeader(name, CollectionUtil.toString(values, delimiters[0]));
+          continue;
+        }
+      }
+
       if (values instanceof RandomAccess) {
         int i = -1;
-        final String name = entry.getKey();
         if (httpServletResponse.containsHeader(name))
           httpServletResponse.setHeader(name, values.get(++i));
 
@@ -796,7 +805,6 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
       }
       else {
         final Iterator<String> i = values.iterator();
-        final String name = entry.getKey();
         if (httpServletResponse.containsHeader(name))
           httpServletResponse.setHeader(name, i.next());
 

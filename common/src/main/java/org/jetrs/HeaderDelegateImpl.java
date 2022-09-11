@@ -602,11 +602,6 @@ abstract class HeaderDelegateImpl<T> implements RuntimeDelegate.HeaderDelegate<T
     return values;
   }
 
-  static AbstractMap.SimpleEntry<HttpHeader<?>,HeaderDelegateImpl<?>> lookup(final String headerName) {
-    final AbstractMap.SimpleEntry<HttpHeader<?>,HeaderDelegateImpl<?>> entry = HttpHeader.headerNameToDelegate.get(headerName.toLowerCase());
-    return entry != null ? entry : defaultHeaderDelegate;
-  }
-
   @SuppressWarnings("unchecked")
   static <T>HeaderDelegateImpl<T> lookup(final Class<T> type) {
     if (type == null)
@@ -621,6 +616,11 @@ abstract class HeaderDelegateImpl<T> implements RuntimeDelegate.HeaderDelegate<T
     while ((cls = cls.getSuperclass()) != null);
 
     return (HeaderDelegateImpl<T>)DEFAULT_COMMA;
+  }
+
+  static AbstractMap.SimpleEntry<HttpHeader<?>,HeaderDelegateImpl<?>> lookup(final String headerName) {
+    final AbstractMap.SimpleEntry<HttpHeader<?>,HeaderDelegateImpl<?>> entry = HttpHeader.headerNameToDelegate.get(headerName.toLowerCase());
+    return entry != null ? entry : defaultHeaderDelegate;
   }
 
   @SuppressWarnings("rawtypes")
