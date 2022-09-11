@@ -266,13 +266,12 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
     return (MediaType)getMirrorMap().getFirst(HttpHeaders.CONTENT_TYPE);
   }
 
-  /**
-   * FIXME: Is it correct to drop the parameters when setting the CONTENT_TYPE in the response?! If so, then what about
-   * {@link ResponseBuilderImpl#header(String,Object)}.
-   *
-   * @param mediaType The {@link MediaType} object.
-   */
-  void setMediaType(final MediaType mediaType) {
+  void setMediaType(MediaType mediaType) {
+    if (mediaType == null) {
+      remove(HttpHeaders.CONTENT_TYPE);
+      return;
+    }
+
     getMirrorMap().putSingle(HttpHeaders.CONTENT_TYPE, mediaType.getParameters().size() == 0 ? mediaType : MediaTypes.cloneWithoutParameters(mediaType));
   }
 

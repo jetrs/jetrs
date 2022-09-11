@@ -86,12 +86,12 @@ class ServerBootstrap extends Bootstrap<ResourceInfoImpl> {
     }
   }
 
-  private static <T>void add(final HttpMethod httpMethodAnnotation, final Method method, final String baseUri, final Path classPath, final Path methodPath, final ArrayList<? super ResourceInfoImpl> resources, final Class<? extends T> clazz, final T singleton) {
+  private static <T>void add(final HttpMethod httpMethodAnnotation, final Method method, final String baseUri, final Path classPath, final Path methodPath, final ArrayList<? super ResourceInfoImpl> resourceInfos, final Class<? extends T> clazz, final T singleton) {
     final ResourceInfoImpl resourceInfo = new ResourceInfoImpl(httpMethodAnnotation, method, baseUri, classPath, methodPath, singleton);
     if (logger.isDebugEnabled())
       logger.debug((httpMethodAnnotation != null ? httpMethodAnnotation.value() : "*") + " " + resourceInfo.getUriTemplate().toString() + " -> " + clazz.getSimpleName() + "." + method.getName() + "()");
 
-    resources.add(resourceInfo);
+    resourceInfos.add(resourceInfo);
   }
 
   private final String baseUri;
@@ -121,7 +121,7 @@ class ServerBootstrap extends Bootstrap<ResourceInfoImpl> {
 
   @Override
   @SuppressWarnings("unchecked")
-  <T>boolean addResourceOrProvider(final ArrayList<Consumer<Set<Class<?>>>> afterAdd, final ArrayList<ResourceInfoImpl> resources, final Class<? extends T> clazz, final T singleton, final boolean scanned) throws IllegalAccessException, InstantiationException, InvocationTargetException {
+  <T>boolean addResourceOrProvider(final ArrayList<Consumer<Set<Class<?>>>> afterAdd, final ArrayList<ResourceInfoImpl> resourceInfos, final Class<? extends T> clazz, final T singleton, final boolean scanned) throws IllegalAccessException, InstantiationException, InvocationTargetException {
     if (clazz.isAnnotationPresent(Provider.class)) {
       if (ParamConverterProvider.class.isAssignableFrom(clazz))
         paramConverterProviderFactories.add(new ParamConverterProviderFactory((Class<ParamConverterProvider>)clazz, (ParamConverterProvider)singleton));
@@ -137,14 +137,14 @@ class ServerBootstrap extends Bootstrap<ResourceInfoImpl> {
     }
 
     if (!isRootResource(clazz))
-      return super.addResourceOrProvider(afterAdd, resources, singleton == null ? clazz : singleton.getClass(), singleton, scanned);
+      return super.addResourceOrProvider(afterAdd, resourceInfos, singleton == null ? clazz : singleton.getClass(), singleton, scanned);
 
     boolean added = false;
     final Method[] methods = clazz.getMethods();
     if (methods.length > 0) {
       final HashSet<HttpMethod> httpMethodAnnotations = new HashSet<>();
       for (final Method method : clazz.getMethods()) { // [A]
-        final Annotation[] annotations = method.getAnnotations();
+        final Annotation[] annotations = method.getAnnotations(); // FIXME: Is this allocating a new array?
         for (final Annotation annotation : annotations) { // [A]
           final HttpMethod httpMethodAnnotation = annotation.annotationType().getAnnotation(HttpMethod.class);
           if (httpMethodAnnotation != null)
@@ -155,7 +155,7 @@ class ServerBootstrap extends Bootstrap<ResourceInfoImpl> {
         final Path methodPath = method.getAnnotation(Path.class);
         if (httpMethodAnnotations.size() > 0) {
           for (final HttpMethod httpMethodAnnotation : httpMethodAnnotations) // [S]
-            add(httpMethodAnnotation, method, baseUri, classPath, methodPath, resources, clazz, singleton);
+            add(httpMethodAnnotation, method, baseUri, classPath, methodPath, resourceInfos, clazz, singleton);
 
           httpMethodAnnotations.clear();
           added = true;
@@ -167,7 +167,7 @@ class ServerBootstrap extends Bootstrap<ResourceInfoImpl> {
           if (!returnType.isAnnotation() && !returnType.isAnonymousClass() && !returnType.isArray() && !returnType.isEnum() && !returnType.isInterface() && !returnType.isPrimitive() && !returnType.isSynthetic() && returnType != Void.class && acceptPackage(returnType.getPackage())) {
             afterAdd.add(resourceClasses -> {
               if (resourceClasses.contains(returnType))
-                add(null, method, baseUri, classPath, methodPath, resources, clazz, singleton);
+                add(null, method, baseUri, classPath, methodPath, resourceInfos, clazz, singleton);
             });
           }
         }
@@ -178,8 +178,8 @@ class ServerBootstrap extends Bootstrap<ResourceInfoImpl> {
   }
 
   @Override
-  void init(final Set<?> singletons, final Set<Class<?>> classes, final ArrayList<ResourceInfoImpl> resources) throws IllegalAccessException, InstantiationException, InvocationTargetException, PackageNotFoundException, IOException {
-    super.init(singletons, classes, resources);
+  void init(final Set<?> singletons, final Set<Class<?>> classes, final ArrayList<ResourceInfoImpl> resourceInfos) throws IllegalAccessException, InstantiationException, InvocationTargetException, PackageNotFoundException, IOException {
+    super.init(singletons, classes, resourceInfos);
     preMatchContainerRequestFilterProviderFactories.sort(priorityComparator);
     containerRequestFilterProviderFactories.sort(priorityComparator);
     containerResponseFilterProviderFactories.sort(priorityComparator);

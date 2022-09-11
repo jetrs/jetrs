@@ -26,6 +26,7 @@ import javax.servlet.ServletException;
 import javax.ws.rs.core.MultivaluedMap;
 
 import org.libj.net.URLs;
+import org.libj.util.ArrayUtil;
 
 class ResourceMatch implements Comparable<ResourceMatch> {
   private static final Comparator<MultivaluedMap<String,String>> PATH_PARAMETERS_COMPARATOR = new Comparator<MultivaluedMap<String,String>>() {
@@ -57,18 +58,18 @@ class ResourceMatch implements Comparable<ResourceMatch> {
 
   private final String uriEncoded;
   private String uriDecoded;
-  private final CompatibleMediaType accept;
+  private final CompatibleMediaType[] producedMediaTypess;
   private final String[] pathSegmentParamNames;
   private final MultivaluedMap<String,String> pathParameters;
   private final long[] regionStartEnds;
 
-  ResourceMatch(final ResourceInfoImpl resourceInfo, final String uriEncoded, final CompatibleMediaType accept, final String[] pathSegmentParamNames, final long[] regionStartEnds, final MultivaluedMap<String,String> pathParameters) {
+  ResourceMatch(final ResourceInfoImpl resourceInfo, final String uriEncoded, final CompatibleMediaType[] producedMediaTypes, final String[] pathSegmentParamNames, final long[] regionStartEnds, final MultivaluedMap<String,String> pathParameters) {
     this.resourceInfo = assertNotNull(resourceInfo);
     this.resourceClass = resourceInfo.getResourceClass();
     this.instance = resourceInfo.getSingleton();
 
     this.uriEncoded = assertNotNull(uriEncoded);
-    this.accept = assertNotNull(accept);
+    this.producedMediaTypess = assertNotEmpty(producedMediaTypes);
 
     this.pathSegmentParamNames = assertNotNull(pathSegmentParamNames);
     this.regionStartEnds = assertNotNull(regionStartEnds);
@@ -95,12 +96,12 @@ class ResourceMatch implements Comparable<ResourceMatch> {
     return uriDecoded == null ? uriDecoded = URLs.decodePath(uriEncoded) : uriDecoded;
   }
 
-  Object getResourceInstance(final ContainerRequestContextImpl requestContext) throws IllegalAccessException, InstantiationException, IOException, InvocationTargetException {
-    return instance == null ? instance = requestContext.newResourceInstance(resourceClass) : instance;
+  CompatibleMediaType[] getProducedMediaTypes() {
+    return producedMediaTypess;
   }
 
-  CompatibleMediaType getAccept() {
-    return accept;
+  Object getResourceInstance(final ContainerRequestContextImpl requestContext) throws IllegalAccessException, InstantiationException, IOException, InvocationTargetException {
+    return instance == null ? instance = requestContext.newResourceInstance(resourceClass) : instance;
   }
 
   MultivaluedMap<String,String> getPathParameters() {
@@ -118,7 +119,10 @@ class ResourceMatch implements Comparable<ResourceMatch> {
       return c;
 
     c = PATH_PARAMETERS_COMPARATOR.compare(getPathParameters(), o.getPathParameters());
-    return c != 0 ? c : MediaTypes.QUALITY_COMPARATOR.compare(accept, o.accept);
+    if (c != 0)
+      return c;
+
+    return ArrayUtil.compare(producedMediaTypess, o.producedMediaTypess, MediaTypes.QUALITY_COMPARATOR);
   }
 
   @Override

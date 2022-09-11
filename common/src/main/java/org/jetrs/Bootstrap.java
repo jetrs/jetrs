@@ -72,7 +72,7 @@ class Bootstrap<R extends Comparable<? super R>> {
   }
 
   @SuppressWarnings("unchecked")
-  <T>boolean addResourceOrProvider(final ArrayList<Consumer<Set<Class<?>>>> afterAdds, final ArrayList<R> resources, final Class<? extends T> clazz, final T singleton, final boolean scanned) throws IllegalAccessException, InstantiationException, InvocationTargetException {
+  <T>boolean addResourceOrProvider(final ArrayList<Consumer<Set<Class<?>>>> afterAdds, final ArrayList<R> resourceInfos, final Class<? extends T> clazz, final T singleton, final boolean scanned) throws IllegalAccessException, InstantiationException, InvocationTargetException {
     if (clazz.isAnnotationPresent(Provider.class)) {
       if (ReaderInterceptor.class.isAssignableFrom(clazz))
         readerInterceptorProviderFactories.add(new ReaderInterceptorProviderFactory((Class<ReaderInterceptor>)clazz, (ReaderInterceptor)singleton));
@@ -97,18 +97,18 @@ class Bootstrap<R extends Comparable<? super R>> {
   }
 
   @SuppressWarnings("unchecked")
-  void init(final Set<?> singletons, final Set<Class<?>> classes, final ArrayList<R> resources) throws IllegalAccessException, InstantiationException, InvocationTargetException, PackageNotFoundException, IOException {
+  void init(final Set<?> singletons, final Set<Class<?>> classes, final ArrayList<R> resourceInfos) throws IllegalAccessException, InstantiationException, InvocationTargetException, PackageNotFoundException, IOException {
     final ArrayList<Consumer<Set<Class<?>>>> afterAdds = new ArrayList<>();
     if (singletons != null || classes != null) {
       if (singletons != null)
         for (final Object singleton : singletons) // [S]
           if (singleton != null)
-            addResourceOrProvider(afterAdds, resources, singleton.getClass(), singleton, false);
+            addResourceOrProvider(afterAdds, resourceInfos, singleton.getClass(), singleton, false);
 
       if (classes != null)
         for (final Class<?> cls : classes) // [S]
           if (cls != null)
-            addResourceOrProvider(afterAdds, resources, cls, null, false);
+            addResourceOrProvider(afterAdds, resourceInfos, cls, null, false);
 
       if (afterAdds.size() > 0) {
         final Set<Class<?>> resourceClasses;
@@ -135,7 +135,7 @@ class Bootstrap<R extends Comparable<? super R>> {
       final Predicate<Class<?>> initialize = t -> {
         if (!Modifier.isAbstract(t.getModifiers()) && !initedClasses.contains(t)) {
           try {
-            if (addResourceOrProvider(afterAdds, resources, t, null, true))
+            if (addResourceOrProvider(afterAdds, resourceInfos, t, null, true))
               (resourceClasses[1] == null ? resourceClasses[1] = new HashSet<>() : resourceClasses[1]).add(t);
           }
           catch (final IllegalAccessException | InstantiationException e) {
@@ -160,8 +160,8 @@ class Bootstrap<R extends Comparable<? super R>> {
           afterAdds.get(i).accept(resourceClasses0);
     }
 
-    if (resources != null)
-      resources.sort(null);
+    if (resourceInfos != null)
+      resourceInfos.sort(null);
 
     exceptionMapperProviderFactories.sort(providerResourceComparator);
     messageBodyReaderProviderFactories.sort(providerResourceComparator);

@@ -177,8 +177,7 @@ abstract class InterceptorContextImpl<P> implements InterceptorContext {
 
   @Override
   public final MediaType getMediaType() {
-    final MediaType mediaType = (MediaType)getHttpHeaders().getMirrorMap().getFirst(HttpHeaders.CONTENT_TYPE);
-    return mediaType != null ? mediaType : MediaType.WILDCARD_TYPE;
+    return (MediaType)getHttpHeaders().getMirrorMap().getFirst(HttpHeaders.CONTENT_TYPE);
   }
 
   @Override

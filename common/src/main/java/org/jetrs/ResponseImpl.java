@@ -209,7 +209,7 @@ class ResponseImpl extends Response {
 
   @Override
   public MediaType getMediaType() {
-    return (MediaType)getMetadata().getFirst(HttpHeaders.CONTENT_TYPE);
+    return (MediaType)getHeaders().getFirst(HttpHeaders.CONTENT_TYPE);
   }
 
   @Override
@@ -278,7 +278,13 @@ class ResponseImpl extends Response {
   }
 
   @Override
+  @Deprecated
   public MultivaluedMap<String,Object> getMetadata() {
+    return getHeaders();
+  }
+
+  @Override
+  public MultivaluedMap<String,Object> getHeaders() {
     return headers.getMirrorMap();
   }
 

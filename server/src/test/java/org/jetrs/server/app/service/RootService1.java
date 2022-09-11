@@ -40,7 +40,7 @@ public class RootService1 {
   @OPTIONS
   @Path("/1")
   public Response options1() {
-    return Response.ok().header("Access-Control-Allow-Methods", "GET,POST").build();
+    return Response.noContent().header("Access-Control-Allow-Methods", "GET,POST").build();
   }
 
   @HEAD

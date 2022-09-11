@@ -31,7 +31,6 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Application;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 
 import org.jetrs.ContainerRequestContextImpl.Stage;
@@ -56,7 +55,7 @@ abstract class RestApplicationServlet extends RestHttpServlet {
         // NOTE: only if data is expected (i.e. GET, HEAD, DELETE, OPTIONS methods will not have a body and should thus not
         // NOTE: expect a Content-Type header from the request)
         private void checkContentType() {
-          if (requestContext.getStage() != Stage.FILTER_REQUEST_PRE_MATCH && !requestContext.getResourceMatch().getResourceInfo().checkContentHeader(HttpHeaders.CONTENT_TYPE, Consumes.class, requestContext))
+          if (requestContext.getStage() != Stage.FILTER_REQUEST_PRE_MATCH && !requestContext.getResourceMatch().getResourceInfo().checkContentHeader(HttpHeader.CONTENT_TYPE, Consumes.class, requestContext))
             throw new BadRequestException("Request has data yet missing Content-Type header");
         }
 

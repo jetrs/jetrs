@@ -54,8 +54,8 @@ class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImpl> {
     }
   };
 
-  private static boolean logMissingHeaderWarning(final String headerName, final Class<?> type) {
-    logger.warn("Unmatched @" + type.getSimpleName() + " for " + headerName);
+  private static boolean logMissingHeaderWarning(final HttpHeader<?> httpHeader, final Class<?> type) {
+    logger.warn("Unmatched @" + type.getSimpleName() + " for " + httpHeader.getName());
     return false;
   }
 
@@ -125,15 +125,34 @@ class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImpl> {
     return resourceMethod.getGenericReturnType();
   }
 
-  CompatibleMediaType[] getCompatibleContentType(final MediaType mediaType, final List<String> acceptCharsets) {
-    return consumesMatcher.getCompatibleMediaType(mediaType, acceptCharsets);
+  boolean isCompatibleContentType(MediaType contentType) {
+    if (contentType == null) {
+      if (consumesMatcher.getMediaTypes() == null)
+        return true;
+
+      contentType = MediaType.APPLICATION_OCTET_STREAM_TYPE;
+    }
+
+    return consumesMatcher.getCompatibleMediaType(contentType, null) != null;
   }
 
   CompatibleMediaType[] getCompatibleAccept(final List<MediaType> acceptMediaTypes, final List<String> acceptCharsets) {
+    if (producesMatcher.getMediaTypes() == null) {
+      if (acceptMediaTypes == null)
+        return MediaTypes.WILDCARD_COMPATIBLE_TYPE;
+
+      for (final MediaType acceptMediaType : acceptMediaTypes)
+        if (acceptMediaType.isWildcardType() && acceptMediaType.isWildcardSubtype())
+          return MediaTypes.WILDCARD_COMPATIBLE_TYPE;
+
+      return null;
+    }
+
     return producesMatcher.getCompatibleMediaType(acceptMediaTypes, acceptCharsets);
   }
 
-  boolean checkContentHeader(final String headerName, final Class<? extends Annotation> annotationClass, final ContainerRequestContext containerRequestContext) {
+  @SuppressWarnings("unchecked")
+  boolean checkContentHeader(final HttpHeader<MediaType> httpHeader, final Class<? extends Annotation> annotationClass, final ContainerRequestContextImpl containerRequestContext) {
     final Annotation annotation = getResourceAnnotationProcessor(annotationClass).getAnnotation();
     if (annotation == null) {
       final String message = "@" + annotationClass.getSimpleName() + " annotation missing for " + resourceMethod.getDeclaringClass().getName() + "." + resourceMethod.getName() + "(" + ArrayUtil.toString(resourceMethod.getParameterTypes(), ',', Class::getName) + ")";
@@ -144,17 +163,13 @@ class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImpl> {
       return true;
     }
 
-    final String headerValue = containerRequestContext.getHeaderString(headerName);
-    if (headerValue == null || headerValue.length() == 0)
-      return logMissingHeaderWarning(headerName, annotationClass);
+    final List<?> headerValue = containerRequestContext.getHttpHeaders().getMirrorMap().get(httpHeader.getName());
+    if (headerValue == null)
+      return logMissingHeaderWarning(httpHeader, annotationClass);
 
     final String[] annotationValue = annotationClass == Produces.class ? ((Produces)annotation).value() : annotationClass == Consumes.class ? ((Consumes)annotation).value() : null;
     final ServerMediaType[] required = ServerMediaType.valueOf(annotationValue);
-    final MediaType[] mediaTypes = MediaTypes.parse(headerValue.split(","));
-    if (MediaTypes.getCompatible(required, mediaTypes, null) != null)
-      return true;
-
-    return logMissingHeaderWarning(headerName, annotationClass);
+    return MediaTypes.getCompatible(required, (List<MediaType>)headerValue, null) != null || logMissingHeaderWarning(httpHeader, annotationClass);
   }
 
   private void checkAllowed(final ContainerRequestContext containerRequestContext) {

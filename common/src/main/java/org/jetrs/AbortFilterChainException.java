@@ -18,14 +18,14 @@ package org.jetrs;
 
 import javax.ws.rs.core.Response;
 
-public class AbortFilterChainException extends RuntimeException {
+class AbortFilterChainException extends RuntimeException {
   private final Response response;
 
-  public AbortFilterChainException(final Response response) {
+  AbortFilterChainException(final Response response) {
     this.response = response;
   }
 
-  public Response getResponse() {
+  Response getResponse() {
     return response;
   }
 }

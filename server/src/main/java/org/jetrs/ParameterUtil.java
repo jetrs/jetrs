@@ -81,9 +81,9 @@ final class ParameterUtil {
   }
 
   @SuppressWarnings("unchecked")
-  static Collection<?> newCollection(final Class<?> parameterType) throws IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException {
+  static <T>Collection<T> newCollection(final Class<T> parameterType) throws IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException {
     final Class<?> cls = parameterType.isInterface() ? defaultCollectionClasses.get(parameterType) : parameterType;
-    return ((Class<? extends Collection<?>>)cls).getDeclaredConstructor().newInstance();
+    return ((Class<? extends Collection<T>>)cls).getDeclaredConstructor().newInstance();
   }
 
   // http://download.oracle.com/otn-pub/jcp/jaxrs-2_0_rev_A-mrel-eval-spec/jsr339-jaxrs-2.0-final-spec.pdf Section 3.2

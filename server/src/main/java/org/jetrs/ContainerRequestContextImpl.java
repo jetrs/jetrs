@@ -16,6 +16,8 @@
 
 package org.jetrs;
 
+import static org.jetrs.HttpHeaders.*;
+
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
@@ -39,6 +41,7 @@ import java.util.Map;
 import java.util.RandomAccess;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 
 import javax.servlet.ServletConfig;
@@ -47,7 +50,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.BadRequestException;
-import javax.ws.rs.Consumes;
 import javax.ws.rs.CookieParam;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.HttpMethod;
@@ -57,7 +59,6 @@ import javax.ws.rs.NotAcceptableException;
 import javax.ws.rs.NotAllowedException;
 import javax.ws.rs.NotSupportedException;
 import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -70,6 +71,7 @@ import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.PathSegment;
@@ -88,6 +90,7 @@ import javax.ws.rs.ext.ReaderInterceptorContext;
 import org.libj.lang.Classes;
 import org.libj.lang.Numbers;
 import org.libj.util.ArrayUtil;
+import org.libj.util.CollectionUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -483,6 +486,7 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
           if (clazz.isAssignableFrom(MirrorQualityList.class))
             return headerValues;
 
+          @SuppressWarnings("rawtypes")
           final Collection list = ParameterUtil.newCollection(clazz);
           list.addAll(headerValues);
           return list;
@@ -523,7 +527,7 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
   }
 
   boolean filterAndMatch() {
-    final ResourceMatches resourceMatches = filterAndMatch(httpServletRequest.getMethod(), true);
+    final ResourceMatches resourceMatches = filterAndMatch(httpServletRequest.getMethod(), false);
     if (resourceMatches == null)
       return false;
 
@@ -568,7 +572,7 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
     return null; //new int[depth];
   }
 
-  private ResourceMatches filterAndMatch(final String methodOverride, final boolean throwException) {
+  private ResourceMatches filterAndMatch(final String requestMethod, final boolean isOverride) {
     final UriInfo uriInfo = getUriInfo();
 
     // Match request URI with matrix params stripped out
@@ -579,7 +583,7 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
 
     final String requestUriMatched = requestUriBuilder.toString();
 
-    ArrayList<String> maybeNotAllowed = null;
+    TreeSet<String> maybeNotAllowed = null;
     boolean maybeNotSupported = false;
     boolean maybeNotAcceptable = false;
     ResourceMatches resourceMatches = null;
@@ -593,25 +597,25 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
       if (resourceInfo.getHttpMethod() == null)
         throw new UnsupportedOperationException("JAX-RS 2.1 3.4.1");
 
-      if (!methodOverride.equals(resourceInfo.getHttpMethod().value())) {
-        if (throwException) {
+      final String resourceMethod = resourceInfo.getHttpMethod().value();
+      if (!requestMethod.equals(resourceMethod)) {
+        if (!isOverride) {
           if (maybeNotAllowed == null)
-            maybeNotAllowed = new ArrayList<>();
+            maybeNotAllowed = new TreeSet<>();
 
-          maybeNotAllowed.add(resourceInfo.getHttpMethod().value());
+          maybeNotAllowed.add(resourceMethod);
         }
 
         continue;
       }
 
-      final List<String> acceptCharsets = getHeaders().get(HttpHeaders.ACCEPT_CHARSET);
       maybeNotSupported = true;
-      if (resourceInfo.getCompatibleContentType(getMediaType(), acceptCharsets) == null)
+      if (!resourceInfo.isCompatibleContentType(getMediaType()))
         continue;
 
       maybeNotAcceptable = true;
-      final CompatibleMediaType[] accepts = resourceInfo.getCompatibleAccept(getAcceptableMediaTypes(), acceptCharsets);
-      if (accepts == null)
+      final CompatibleMediaType[] producedMediaTypes = resourceInfo.getCompatibleAccept(getAcceptableMediaTypes(), getHeaders().get(ACCEPT_CHARSET));
+      if (producedMediaTypes == null)
         continue;
 
       if (resourceMatches == null)
@@ -631,7 +635,7 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
         regionStartEnds[j] = Numbers.Composite.encode(start, end);
       }
 
-      resourceMatches.add(new ResourceMatch(resourceInfo, matcher.group(), accepts[0], pathParamNames, regionStartEnds, pathParameters)); // We only care about the highest quality match of the Accept header
+      resourceMatches.add(new ResourceMatch(resourceInfo, matcher.group(), producedMediaTypes, pathParamNames, regionStartEnds, pathParameters)); // We only care about the highest quality match of the Accept header
     }
 
     if (resourceMatches != null) {
@@ -639,51 +643,34 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
       return resourceMatches;
     }
 
-    if (HttpMethod.OPTIONS.equals(methodOverride)) {
-      final StringBuilder allowMethods = new StringBuilder();
-      boolean allowContentType = false;
-      boolean allowAccept = false;
-      for (int i = 0, i$ = resourceInfos.size(); i < i$; ++i) { // [RA]
-        final ResourceInfoImpl resourceInfo = resourceInfos.get(i);
-        if (!allowContentType) {
-          final MediaTypeAnnotationProcessor<Consumes> resourceAnnotationProcessor = resourceInfo.getResourceAnnotationProcessor(Consumes.class);
-          allowContentType = resourceAnnotationProcessor.getMediaTypes() != null;
-        }
+    if (maybeNotAllowed == null || isOverride)
+      return null;
 
-        if (!allowAccept) {
-          final MediaTypeAnnotationProcessor<Produces> resourceAnnotationProcessor = resourceInfo.getResourceAnnotationProcessor(Produces.class);
-          allowAccept = resourceAnnotationProcessor.getMediaTypes() != null;
-        }
+    if (HttpMethod.OPTIONS.equals(requestMethod)) {
+      final Response.ResponseBuilder response = Response.ok();
 
-        if (resourceInfo.getUriTemplate().matcher(requestUriMatched).matches())
-          allowMethods.append(resourceInfo.getHttpMethod().value()).append(',');
+      final String allow = CollectionUtil.toString(maybeNotAllowed, ',');
+      response.header(ACCESS_CONTROL_ALLOW_METHODS, allow).header(ALLOW, allow);
+
+      final String requestHeaders = httpServletRequest.getHeader(ACCESS_CONTROL_REQUEST_HEADERS);
+      response.header(ACCESS_CONTROL_ALLOW_HEADERS, requestHeaders);
+
+      final String origin = httpServletRequest.getHeader(ORIGIN);
+      if (origin != null) {
+        response.header(ACCESS_CONTROL_ALLOW_ORIGIN, origin);
+        response.header(VARY, ORIGIN);
+      }
+      else {
+        response.header(ACCESS_CONTROL_ALLOW_ORIGIN, "*");
       }
 
-      if (allowMethods.length() > 0)
-        allowMethods.setLength(allowMethods.length() - 1);
-
-      final String methods = allowMethods.toString();
-      final Response.ResponseBuilder response = Response.ok()
-        .header(HttpHeaders.ALLOW, methods)
-        .header("Access-Control-Allow-Methods", methods);
-
-      if (allowAccept && allowContentType)
-        response.header("Access-Control-Allow-Headers", HttpHeaders.ACCEPT + "," + HttpHeaders.CONTENT_TYPE);
-      else if (allowAccept)
-        response.header("Access-Control-Allow-Headers", HttpHeaders.ACCEPT);
-      else if (allowContentType)
-        response.header("Access-Control-Allow-Headers", HttpHeaders.CONTENT_TYPE);
-
-      throw new AbortFilterChainException(response.build());
+      abortWith(response.build());
     }
-    else if (HttpMethod.HEAD.equals(methodOverride)) {
-      final ResourceMatches matches = filterAndMatch(HttpMethod.GET, false);
+    else if (HttpMethod.HEAD.equals(requestMethod)) {
+      final ResourceMatches matches = filterAndMatch(HttpMethod.GET, true);
       if (matches != null)
         return matches;
     }
-
-    if (!throwException)
-      return null;
 
     if (maybeNotAcceptable)
       throw new NotAcceptableException();
@@ -691,29 +678,45 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
     if (maybeNotSupported)
       throw new NotSupportedException();
 
-    if (maybeNotAllowed != null) {
-      final String[] allowed = new String[maybeNotAllowed.size() - 1];
-      for (int i = 0, i$ = allowed.length; i < i$; ++i) // [A]
-        allowed[i] = maybeNotAllowed.get(i + 1);
-
-      throw new NotAllowedException(maybeNotAllowed.get(0), allowed);
-    }
-
-    return null;
+    throw new NotAllowedException(Response.status(Response.Status.METHOD_NOT_ALLOWED).allow(maybeNotAllowed).build());
   }
 
   void service() throws IOException, ServletException {
-    final ServerMediaType[] mediaTypes = resourceMatch.getResourceInfo().getResourceAnnotationProcessor(Produces.class).getMediaTypes();
-    if (mediaTypes != null)
-      containerResponseContext.setMediaType(resourceMatch.getAccept());
-    else
-      containerResponseContext.setStatus(Response.Status.NO_CONTENT.getStatusCode());
+    final ResourceInfoImpl resourceInfo = resourceMatch.getResourceInfo();
+    final Object result = resourceMatch.service(this);
 
-    final Object body = resourceMatch.service(this);
-    if (body instanceof Response)
-      setResponse((Response)body, resourceMatch.getResourceInfo().getMethodAnnotations(), resourceMatch.getAccept());
-    else if (body != null)
-      containerResponseContext.setEntity(body, resourceMatch.getResourceInfo().getMethodAnnotations(), resourceMatch.getAccept());
+    // [JAX-RS 3.5 and 3.8 9]
+    MediaType contentType = null;
+    if (result instanceof Response)
+      contentType = ((Response)result).getMediaType();
+
+    if (contentType == null)
+      contentType = containerResponseContext.getMediaType();
+
+    if (contentType == null) {
+      contentType = resourceMatch.getProducedMediaTypes()[0];
+
+      if (contentType.isWildcardSubtype()) {
+        if (!contentType.isWildcardType() && !"application".equals(contentType.getType()))
+          throw new NotAcceptableException();
+
+        contentType = MediaType.APPLICATION_OCTET_STREAM_TYPE;
+      }
+      else if (contentType.getParameters().size() > 0) {
+        contentType = MediaTypes.cloneWithoutParameters(contentType);
+      }
+    }
+
+    if (result instanceof Response) {
+      setResponse((Response)result, resourceInfo.getMethodAnnotations(), contentType);
+    }
+    else if (result != null) {
+      containerResponseContext.setEntity(result, resourceInfo.getMethodAnnotations(), contentType);
+      containerResponseContext.setStatusInfo(Response.Status.OK);
+    }
+    else { // [JAX-RS 3.3.3]
+      containerResponseContext.setStatusInfo(Response.Status.NO_CONTENT);
+    }
   }
 
   void setAbortResponse(final AbortFilterChainException e) {
@@ -745,7 +748,7 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
     httpServletResponse.sendError(scInternalServerError);
   }
 
-  private Response setResponse(final Response response, final Annotation[] annotations, final CompatibleMediaType mediaType) {
+  private Response setResponse(final Response response, final Annotation[] annotations, final MediaType contentType) {
     containerResponseContext.setEntityStream(null);
 
     final MultivaluedMap<String,String> containerResponseHeaders = containerResponseContext.getStringHeaders();
@@ -768,23 +771,15 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
     final Annotation[] responseAnnotations = ((ResponseImpl)response).annotations;
     final Annotation[] entityAnnotations = annotations == null ? responseAnnotations : responseAnnotations == null ? annotations : ArrayUtil.concat(responseAnnotations, annotations);
 
-    // FIXME: Assuming that if the response has a MediaType that's set, it overrides the method's Produces annotation?!
-    containerResponseContext.setEntity(response.hasEntity() ? response.getEntity() : null, entityAnnotations, response.getMediaType() != null ? response.getMediaType() : mediaType);
-
-    if (response.getStatusInfo() != null) {
-      containerResponseContext.setStatusInfo(response.getStatusInfo());
-    }
-    else {
-      containerResponseContext.setStatusInfo(null);
-      containerResponseContext.setStatus(response.getStatus());
-    }
+    final Object entity = response.hasEntity() ? response.getEntity() : null;
+    containerResponseContext.setEntity(entity, entityAnnotations, contentType);
+    containerResponseContext.setStatusInfo(response.getStatusInfo());
 
     return response;
   }
 
   private void writeHeader() {
-    final MultivaluedMap<String,String> containerResponseHeaders = containerResponseContext.getStringHeaders();
-    for (final Map.Entry<String,List<String>> entry : containerResponseHeaders.entrySet()) { // [S]
+    for (final Map.Entry<String,List<String>> entry : containerResponseContext.getStringHeaders().entrySet()) { // [S]
       final List<String> values = entry.getValue();
       final int i$ = values.size();
       if (i$ == 0)
@@ -831,9 +826,13 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
       methodAnnotations = null;
     }
 
-    final MessageBodyWriter messageBodyWriter = getProviders().getMessageBodyWriter(containerResponseContext.getEntityClass(), methodReturnType, methodAnnotations, containerResponseContext.getMediaType());
+    MediaType mediaType = containerResponseContext.getMediaType();
+    if (mediaType == null)
+      mediaType = MediaType.WILDCARD_TYPE;
+
+    final MessageBodyWriter messageBodyWriter = getProviders().getMessageBodyWriter(containerResponseContext.getEntityClass(), methodReturnType, methodAnnotations, mediaType);
     if (messageBodyWriter == null)
-      throw new WebApplicationException("Could not find MessageBodyWriter for type: " + entity.getClass().getName());
+      throw new InternalServerErrorException("Could not find MessageBodyWriter for type: " + entity.getClass().getName()); // [JAX-RS 4.2.2 7]
 
     ByteArrayOutputStream outputStream = null;
     if (containerResponseContext.getOutputStream() == null)
@@ -860,7 +859,7 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
     try {
       if (outputStream != null) {
         final byte[] bytes = outputStream.toByteArray();
-        httpServletResponse.addHeader(HttpHeaders.CONTENT_LENGTH, String.valueOf(bytes.length));
+        httpServletResponse.addHeader(CONTENT_LENGTH, String.valueOf(bytes.length));
         httpServletResponse.getOutputStream().write(bytes);
       }
 

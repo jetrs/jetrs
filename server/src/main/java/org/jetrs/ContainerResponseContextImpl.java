@@ -175,19 +175,19 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
 
   @Override
   public void setEntity(final Object entity, final Annotation[] annotations, final MediaType mediaType) {
-    if (entity != null) {
-      if (entity instanceof GenericEntity) {
-        this.entity = ((GenericEntity<?>)entity).getEntity();
-        this.genericType = ((GenericEntity<?>)entity).getType();
-        this.type = ((GenericEntity<?>)entity).getRawType();
-      }
-      else {
-        this.entity = entity;
-        this.type = entity.getClass();
-      }
+    if (entity instanceof GenericEntity) {
+      this.entity = ((GenericEntity<?>)entity).getEntity();
+      this.genericType = ((GenericEntity<?>)entity).getType();
+      this.type = ((GenericEntity<?>)entity).getRawType();
+    }
+    else {
+      this.entity = entity;
+      this.type = entity == null ? null : entity.getClass();
     }
 
-    setAnnotations(annotations);
+    if (annotations != null)
+      setAnnotations(annotations);
+
     if (mediaType != null)
       getStringHeaders().setMediaType(mediaType);
   }

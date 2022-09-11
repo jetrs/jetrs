@@ -66,47 +66,36 @@ class MediaTypeAnnotationProcessor<T extends Annotation> {
   private final T annotation;
   private final ServerMediaType[] mediaTypes;
 
-  @SuppressWarnings("unchecked")
   MediaTypeAnnotationProcessor(final Method method, final Class<T> annotationClass) {
-    if (annotationClass == Consumes.class) {
-      annotation = (T)getMethodClassAnnotation((Class<Consumes>)annotationClass, method);
-      if (!hasEntityParameter(method)) {
-        this.mediaTypes = null;
-        if (annotation != null)
+    this.annotation = getMethodClassAnnotation(annotationClass, method);
+    if (annotation != null) {
+      if (annotationClass == Consumes.class) {
+        if (!hasEntityParameter(method))
           throw new IllegalAnnotationException(annotation, method.getDeclaringClass().getName() + "." + method.getName() + "(" + ArrayUtil.toString(method.getParameterTypes(), ',', Class::getName) + ") does not specify entity parameters, and thus cannot declare @Consumes annotation");
+
+        this.mediaTypes = ServerMediaType.valueOf(((Consumes)annotation).value());
       }
-      else {
-        this.mediaTypes = annotation != null ? ServerMediaType.valueOf(((Consumes)annotation).value()) : MediaTypes.WILDCARD_SERVER_TYPE;
-      }
-    }
-    else if (annotationClass == Produces.class) {
-      annotation = (T)getMethodClassAnnotation((Class<Produces>)annotationClass, method);
-      if (Void.TYPE.equals(method.getReturnType())) {
-        this.mediaTypes = null;
-        if (annotation != null)
+      else if (annotationClass == Produces.class) {
+        if (Void.TYPE.equals(method.getReturnType()))
           throw new IllegalAnnotationException(annotation, method.getDeclaringClass().getName() + "." + method.getName() + "(" + ArrayUtil.toString(method.getParameterTypes(), ',', Class::getName) + ") is void return type, and thus cannot declare @Produces annotation");
+
+        this.mediaTypes = ServerMediaType.valueOf(((Produces)annotation).value());
       }
       else {
-        this.mediaTypes = annotation != null ? ServerMediaType.valueOf(((Produces)annotation).value()) : MediaTypes.WILDCARD_SERVER_TYPE;
+        throw new UnsupportedOperationException("Expected @Consumes or @Produces, but got: " + annotationClass.getName());
       }
     }
     else {
-      throw new UnsupportedOperationException("Expected @Consumes or @Produces, but got: " + annotationClass.getName());
+      this.mediaTypes = null;
     }
   }
 
   CompatibleMediaType[] getCompatibleMediaType(final List<MediaType> mediaTypes, final List<String> acceptCharsets) {
-    if (this.mediaTypes == null)
-      return mediaTypes == null || mediaTypes.size() == 0 ? MediaTypes.WILDCARD_COMPATIBLE_TYPE : MediaTypes.getCompatible(MediaTypes.WILDCARD_SERVER_TYPE, mediaTypes, acceptCharsets);
-
-    return mediaTypes == null || mediaTypes.size() == 0 ? MediaTypes.WILDCARD_COMPATIBLE_TYPE : MediaTypes.getCompatible(this.mediaTypes, mediaTypes, acceptCharsets);
+    return this.mediaTypes == null ? null : MediaTypes.getCompatible(this.mediaTypes, mediaTypes, acceptCharsets);
   }
 
   CompatibleMediaType[] getCompatibleMediaType(final MediaType mediaType, final List<String> acceptCharsets) {
-    if (this.mediaTypes == null)
-      return mediaType == null ? MediaTypes.WILDCARD_COMPATIBLE_TYPE : MediaTypes.getCompatible(MediaTypes.WILDCARD_SERVER_TYPE, mediaType, acceptCharsets);
-
-    return mediaType == null ? MediaTypes.WILDCARD_COMPATIBLE_TYPE : MediaTypes.getCompatible(this.mediaTypes, mediaType, acceptCharsets);
+    return this.mediaTypes == null ? null : MediaTypes.getCompatible(this.mediaTypes, mediaType, acceptCharsets);
   }
 
   T getAnnotation() {

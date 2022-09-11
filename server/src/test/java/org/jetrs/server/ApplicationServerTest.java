@@ -33,10 +33,10 @@ import java.util.Random;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.jetrs.HttpHeaders;
 import org.jetrs.provider.ext.BytesProvider;
 import org.jetrs.provider.ext.CharacterProvider;
 import org.jetrs.provider.ext.NumberProvider;
@@ -351,8 +351,8 @@ public class ApplicationServerTest {
       .request()
       .options();
 
-    assertResponse(200, response, null);
-    assertEquals("GET,POST", response.getHeaderString("Access-Control-Allow-Methods"));
+    assertResponse(204, response, null);
+    assertEquals("GET,POST", response.getHeaderString(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS));
   }
 
   @Test
@@ -362,7 +362,7 @@ public class ApplicationServerTest {
       .options();
 
     assertResponse(200, response, null);
-    assertEquals(new HashSet<>(Arrays.asList("HEAD", "GET")), new HashSet<>(Arrays.asList(response.getHeaderString("Access-Control-Allow-Methods").split(","))));
+    assertEquals(new HashSet<>(Arrays.asList("HEAD", "GET")), new HashSet<>(Arrays.asList(response.getHeaderString(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS).split(","))));
   }
 
   @Test

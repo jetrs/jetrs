@@ -29,7 +29,7 @@ abstract class MessageBodyProviderFactory<T> extends TypeProviderFactory<T> {
   MessageBodyProviderFactory(final Class<T> clazz, final T singleton, final Class<?> interfaceType) throws IllegalAccessException, InstantiationException, InvocationTargetException {
     super(clazz, singleton, getGenericInterfaceFirstTypeArgument(clazz, interfaceType, Object.class));
     final Consumes consumes = clazz.getAnnotation(Consumes.class);
-    this.allowedTypes = consumes == null ? null : ServerMediaType.valueOf(consumes.value());
+    this.allowedTypes = consumes != null ? ServerMediaType.valueOf(consumes.value()) : MediaTypes.WILDCARD_SERVER_TYPE;
   }
 
   /**
@@ -43,8 +43,11 @@ abstract class MessageBodyProviderFactory<T> extends TypeProviderFactory<T> {
    * @param mediaType The {@link MediaType} of the entity.
    * @return A compatible {@link MediaType} for the specified {@code provider} and the entity of the given parameters, if one
    *         exists.
+   * @throws IllegalArgumentException If {@code mediaType} is null.
    */
   CompatibleMediaType[] getCompatibleMediaType(final RequestContext<?> requestContext, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
-    return allowedTypes == null ? MediaTypes.getCompatible(MediaTypes.WILDCARD_SERVER_TYPE, mediaType, null) : MediaTypes.getCompatible(allowedTypes, mediaType, null);
+    if (mediaType == null)
+      System.out.println();
+    return MediaTypes.getCompatible(allowedTypes, mediaType, null);
   }
 }
