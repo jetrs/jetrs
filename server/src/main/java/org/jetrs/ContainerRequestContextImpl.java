@@ -694,35 +694,12 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
     final ResourceInfoImpl resourceInfo = resourceMatch.getResourceInfo();
     final Object result = resourceMatch.service(this);
 
-    // [JAX-RS 3.5 and 3.8 9]
-    MediaType contentType = null;
-    if (result instanceof Response)
-      contentType = ((Response)result).getMediaType();
-
-    if (contentType == null)
-      contentType = containerResponseContext.getMediaType();
-
-    if (contentType == null) {
-      contentType = resourceMatch.getProducedMediaTypes()[0];
-
-      if (contentType.isWildcardSubtype()) {
-        if (!contentType.isWildcardType() && !"application".equals(contentType.getType()))
-          throw new NotAcceptableException();
-
-        contentType = MediaType.APPLICATION_OCTET_STREAM_TYPE;
-        if (logger.isWarnEnabled())
-          logger.warn("Content-Type not specified -- setting to " + MediaType.APPLICATION_OCTET_STREAM);
-      }
-      else if (contentType.getParameters().size() > 0) {
-        contentType = MediaTypes.cloneWithoutParameters(contentType);
-      }
-    }
-
     if (result instanceof Response) {
-      setResponse((Response)result, resourceInfo.getMethodAnnotations(), contentType);
+      setResponse((Response)result, resourceInfo.getMethodAnnotations());
     }
     else if (result != null) {
-      containerResponseContext.setEntity(result, resourceInfo.getMethodAnnotations(), contentType);
+      containerResponseContext.setEntity(result);
+      containerResponseContext.setAnnotations(resourceInfo.getMethodAnnotations());
       containerResponseContext.setStatusInfo(Response.Status.OK);
     }
     else { // [JAX-RS 3.3.3]
@@ -731,7 +708,7 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
   }
 
   void setAbortResponse(final AbortFilterChainException e) {
-    setResponse(e.getResponse(), null, null);
+    setResponse(e.getResponse(), null);
   }
 
   // [JAX-RS 2.1 3.3.4 1]
@@ -744,13 +721,13 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
       if (exceptionMapper != null) {
         final Response response = exceptionMapper.toResponse(t);
         if (response != null)
-          return setResponse(response, null, null);
+          return setResponse(response, null);
       }
     }
     while ((cls = cls.getSuperclass()) != null);
 
     if (t instanceof WebApplicationException)
-      return setResponse(((WebApplicationException)t).getResponse(), null, null);
+      return setResponse(((WebApplicationException)t).getResponse(), null);
 
     return null;
   }
@@ -759,7 +736,7 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
     httpServletResponse.sendError(scInternalServerError);
   }
 
-  private Response setResponse(final Response response, final Annotation[] annotations, final MediaType contentType) {
+  private Response setResponse(final Response response, final Annotation[] annotations) {
     containerResponseContext.setEntityStream(null);
 
     final MultivaluedMap<String,String> containerResponseHeaders = containerResponseContext.getStringHeaders();
@@ -783,7 +760,7 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
     final Annotation[] entityAnnotations = annotations == null ? responseAnnotations : responseAnnotations == null ? annotations : ArrayUtil.concat(responseAnnotations, annotations);
 
     final Object entity = response.hasEntity() ? response.getEntity() : null;
-    containerResponseContext.setEntity(entity, entityAnnotations, contentType);
+    containerResponseContext.setEntity(entity, entityAnnotations, response.getMediaType());
     containerResponseContext.setStatusInfo(response.getStatusInfo());
 
     return response;
@@ -856,6 +833,25 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
 
     // Start WriterInterceptor process chain
     containerResponseContext.writeBody(messageBodyWriter);
+
+    // [JAX-RS 3.5 and 3.8 9]
+    if (containerResponseContext.getMediaType() == null) {
+      MediaType contentType = resourceMatch.getProducedMediaTypes()[0];
+      if (contentType.isWildcardSubtype()) {
+        if (!contentType.isWildcardType() && !"application".equals(contentType.getType()))
+          throw new NotAcceptableException();
+
+        contentType = MediaType.APPLICATION_OCTET_STREAM_TYPE;
+        if (logger.isWarnEnabled())
+          logger.warn("Content-Type not specified -- setting to " + MediaType.APPLICATION_OCTET_STREAM);
+      }
+      else if (contentType.getParameters().size() > 0) {
+        contentType = MediaTypes.cloneWithoutParameters(contentType);
+      }
+
+      containerResponseContext.setMediaType(contentType);
+    }
+
     return outputStream;
   }
 
