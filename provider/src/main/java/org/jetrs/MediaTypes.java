@@ -44,6 +44,7 @@ import org.libj.util.CollectionUtil;
  *      Structured Syntax Suffix</a>
  */
 final class MediaTypes {
+  static final ServerMediaType[] OCTET_SERVER_TYPE = {ServerMediaType.APPLICATION_OCTET_STREAM_TYPE};
   static final CompatibleMediaType[] WILDCARD_COMPATIBLE_TYPE = {CompatibleMediaType.WILDCARD_TYPE};
   static final ServerMediaType[] WILDCARD_SERVER_TYPE = {ServerMediaType.WILDCARD_TYPE};
   static final MediaType[] WILDCARD_TYPE = {MediaType.WILDCARD_TYPE};
@@ -490,8 +491,8 @@ final class MediaTypes {
     return mediaTypes;
   }
 
+  static final ServerMediaType[] EMPTY_SERVER_TYPE = {};
   private static final QualifiedMediaType[] EMPTY_QUALIFIED_TYPE = {};
-  private static final ServerMediaType[] EMPTY_SERVER_TYPE = {};
   private static final MediaType[] EMPTY_MEDIA_TYPE = {};
 
   @SuppressWarnings("unchecked")

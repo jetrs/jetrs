@@ -68,34 +68,42 @@ class MediaTypeAnnotationProcessor<T extends Annotation> {
 
   MediaTypeAnnotationProcessor(final Method method, final Class<T> annotationClass) {
     this.annotation = getMethodClassAnnotation(annotationClass, method);
-    if (annotation != null) {
-      if (annotationClass == Consumes.class) {
+    ServerMediaType[] mediaTypes = MediaTypes.EMPTY_SERVER_TYPE;
+    if (annotationClass == Consumes.class) {
+      if (annotation != null) {
         if (!hasEntityParameter(method))
           throw new IllegalAnnotationException(annotation, method.getDeclaringClass().getName() + "." + method.getName() + "(" + ArrayUtil.toString(method.getParameterTypes(), ',', Class::getName) + ") does not specify entity parameters, and thus cannot declare @Consumes annotation");
 
-        this.mediaTypes = ServerMediaType.valueOf(((Consumes)annotation).value());
+        mediaTypes = ServerMediaType.valueOf(((Consumes)annotation).value());
       }
-      else if (annotationClass == Produces.class) {
+
+      if (mediaTypes.length == 0)
+        mediaTypes = MediaTypes.WILDCARD_SERVER_TYPE;
+    }
+    else if (annotationClass == Produces.class) {
+      if (annotation != null) {
         if (Void.TYPE.equals(method.getReturnType()))
           throw new IllegalAnnotationException(annotation, method.getDeclaringClass().getName() + "." + method.getName() + "(" + ArrayUtil.toString(method.getParameterTypes(), ',', Class::getName) + ") is void return type, and thus cannot declare @Produces annotation");
 
-        this.mediaTypes = ServerMediaType.valueOf(((Produces)annotation).value());
+        mediaTypes = ServerMediaType.valueOf(((Produces)annotation).value());
       }
-      else {
-        throw new UnsupportedOperationException("Expected @Consumes or @Produces, but got: " + annotationClass.getName());
-      }
+
+      if (mediaTypes.length == 0)
+        mediaTypes = MediaTypes.OCTET_SERVER_TYPE;
     }
     else {
-      this.mediaTypes = null;
+      throw new UnsupportedOperationException("Expected @Consumes or @Produces, but got: " + annotationClass.getName());
     }
+
+    this.mediaTypes = mediaTypes;
   }
 
   CompatibleMediaType[] getCompatibleMediaType(final List<MediaType> mediaTypes, final List<String> acceptCharsets) {
-    return this.mediaTypes == null ? null : MediaTypes.getCompatible(this.mediaTypes, mediaTypes, acceptCharsets);
+    return MediaTypes.getCompatible(this.mediaTypes, mediaTypes, acceptCharsets);
   }
 
   CompatibleMediaType[] getCompatibleMediaType(final MediaType mediaType, final List<String> acceptCharsets) {
-    return this.mediaTypes == null ? null : MediaTypes.getCompatible(this.mediaTypes, mediaType, acceptCharsets);
+    return MediaTypes.getCompatible(this.mediaTypes, mediaType, acceptCharsets);
   }
 
   T getAnnotation() {

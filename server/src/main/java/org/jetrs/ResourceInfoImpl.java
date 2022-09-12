@@ -78,8 +78,8 @@ class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImpl> {
   private final Class<?> resourceClass;
   private final Object singleton;
   private final UriTemplate uriTemplate;
-  private final MediaTypeAnnotationProcessor<Consumes> consumesMatcher;
-  private final MediaTypeAnnotationProcessor<Produces> producesMatcher;
+  private MediaTypeAnnotationProcessor<Consumes> consumesMatcher;
+  private MediaTypeAnnotationProcessor<Produces> producesMatcher;
 
   ResourceInfoImpl(final HttpMethod httpMethod, final Method method, final String baseUri, final Path classPath, final Path methodPath, final Object singleton) {
     this.httpMethod = httpMethod;
@@ -95,8 +95,14 @@ class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImpl> {
     }
 
     this.uriTemplate = new UriTemplate(baseUri, classPath, methodPath);
-    this.consumesMatcher = new MediaTypeAnnotationProcessor<>(method, Consumes.class);
-    this.producesMatcher = new MediaTypeAnnotationProcessor<>(method, Produces.class);
+  }
+
+  private MediaTypeAnnotationProcessor<Consumes> getConsumesMatcher() {
+    return consumesMatcher == null ? consumesMatcher = new MediaTypeAnnotationProcessor<>(resourceMethod, Consumes.class) : consumesMatcher;
+  }
+
+  private MediaTypeAnnotationProcessor<Produces> getProducesMatcher() {
+    return producesMatcher == null ? producesMatcher = new MediaTypeAnnotationProcessor<>(resourceMethod, Produces.class) : producesMatcher;
   }
 
   @Override
@@ -125,30 +131,12 @@ class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImpl> {
     return resourceMethod.getGenericReturnType();
   }
 
-  boolean isCompatibleContentType(MediaType contentType) {
-    if (contentType == null) {
-      if (consumesMatcher.getMediaTypes() == null)
-        return true;
-
-      contentType = MediaType.APPLICATION_OCTET_STREAM_TYPE;
-    }
-
-    return consumesMatcher.getCompatibleMediaType(contentType, null) != null;
+  boolean isCompatibleContentType(final MediaType contentType) {
+    return getConsumesMatcher().getCompatibleMediaType(contentType, null) != null;
   }
 
   CompatibleMediaType[] getCompatibleAccept(final List<MediaType> acceptMediaTypes, final List<String> acceptCharsets) {
-    if (producesMatcher.getMediaTypes() == null) {
-      if (acceptMediaTypes == null)
-        return MediaTypes.WILDCARD_COMPATIBLE_TYPE;
-
-      for (final MediaType acceptMediaType : acceptMediaTypes)
-        if (acceptMediaType.isWildcardType() && acceptMediaType.isWildcardSubtype())
-          return MediaTypes.WILDCARD_COMPATIBLE_TYPE;
-
-      return null;
-    }
-
-    return producesMatcher.getCompatibleMediaType(acceptMediaTypes, acceptCharsets);
+    return getProducesMatcher().getCompatibleMediaType(acceptMediaTypes, acceptCharsets);
   }
 
   @SuppressWarnings("unchecked")
@@ -247,7 +235,7 @@ class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImpl> {
 
   @SuppressWarnings("unchecked")
   <T extends Annotation>MediaTypeAnnotationProcessor<T> getResourceAnnotationProcessor(final Class<T> annotationClass) {
-    return annotationClass == Consumes.class ? (MediaTypeAnnotationProcessor<T>)consumesMatcher : annotationClass == Produces.class ? (MediaTypeAnnotationProcessor<T>)producesMatcher : null;
+    return annotationClass == Consumes.class ? (MediaTypeAnnotationProcessor<T>)getConsumesMatcher() : annotationClass == Produces.class ? (MediaTypeAnnotationProcessor<T>)getProducesMatcher() : null;
   }
 
   boolean isRestricted() {
@@ -276,7 +264,7 @@ class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImpl> {
       return false;
 
     final ResourceInfoImpl that = (ResourceInfoImpl)obj;
-    return Objects.equals(httpMethod, that.httpMethod) && securityAnnotation.equals(that.securityAnnotation) && resourceMethod.equals(that.resourceMethod) && resourceClass.equals(that.resourceClass) && uriTemplate.equals(that.uriTemplate) && consumesMatcher.equals(that.consumesMatcher) && producesMatcher.equals(that.producesMatcher);
+    return Objects.equals(httpMethod, that.httpMethod) && securityAnnotation.equals(that.securityAnnotation) && resourceMethod.equals(that.resourceMethod) && resourceClass.equals(that.resourceClass) && uriTemplate.equals(that.uriTemplate);
   }
 
   @Override
@@ -287,8 +275,6 @@ class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImpl> {
     hashCode = 31 * hashCode + resourceMethod.hashCode();
     hashCode = 31 * hashCode + resourceClass.hashCode();
     hashCode = 31 * hashCode + uriTemplate.hashCode();
-    hashCode = 31 * hashCode + consumesMatcher.hashCode();
-    hashCode = 31 * hashCode + producesMatcher.hashCode();
     return hashCode;
   }
 

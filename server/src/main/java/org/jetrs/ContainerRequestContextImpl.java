@@ -330,7 +330,8 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
       return null;
 
     final Providers providers = getProviders();
-    final MessageBodyReader<?> messageBodyReader = providers.getMessageBodyReader(clazz, type, annotations, getMediaType());
+    final MediaType contentType = getMediaType();
+    final MessageBodyReader<?> messageBodyReader = providers.getMessageBodyReader(clazz, type, annotations, contentType != null ? contentType : MediaType.APPLICATION_OCTET_STREAM_TYPE); // [JAX-RS 4.2.1]
     if (messageBodyReader == null)
       throw new WebApplicationException("Could not find MessageBodyReader for type: " + clazz.getName());
 
@@ -357,7 +358,8 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
       final List<String> values = pathParameters.get(pathParamNameToMatch);
       // FIXME: Another useful warning would be: notify if more than 1 @PathParam annotations specify the same name
       if (values == null)
-        logger.warn("@PathParam(\"" + pathParamNameToMatch + "\") not found in URI template of @Path on: " + element);
+        if (logger.isWarnEnabled())
+          logger.warn("@PathParam(\"" + pathParamNameToMatch + "\") not found in URI template of @Path on: " + element);
 
       if (clazz == PathSegment.class) {
         final List<PathSegment> pathSegments = uriInfo.getPathSegments(decode);
@@ -384,7 +386,9 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
           }
         }
 
-        logger.warn("@PathParam(\"" + pathParamNameToMatch + "\") PathSegment not found in URI template of @Path on: " + element);
+        if (logger.isWarnEnabled())
+          logger.warn("@PathParam(\"" + pathParamNameToMatch + "\") PathSegment not found in URI template of @Path on: " + element);
+
         return null;
       }
 
@@ -434,7 +438,9 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
         }
         catch (final IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException e) {
           // FIXME: This error is kind of hidden in the logs, but it should somehow be highlighted to be fixed?!
-          logger.error(e.getMessage(), e);
+          if (logger.isErrorEnabled())
+            logger.error(e.getMessage(), e);
+
           return e instanceof InvocationTargetException ? e.getCause() : e;
         }
       }
@@ -494,7 +500,9 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
         }
         catch (final IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException e) {
           // FIXME: This error is kind of hidden in the logs, but it should somehow be highlighted to be fixed?!
-          logger.error(e.getMessage(), e);
+          if (logger.isErrorEnabled())
+            logger.error(e.getMessage(), e);
+
           return e instanceof InvocationTargetException ? e.getCause() : e;
         }
       }
@@ -532,7 +540,7 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
     if (resourceMatches == null)
       return false;
 
-    if (resourceMatches.size() > 1 && resourceMatches.get(0).compareTo(resourceMatches.get(1)) == 0) {
+    if (resourceMatches.size() > 1 && resourceMatches.get(0).compareTo(resourceMatches.get(1)) == 0 && logger.isWarnEnabled()) {
       final StringBuilder builder = new StringBuilder("Multiple resources match ambiguously for request to \"" + httpServletRequest.getRequestURI() + "\": {");
       for (int i = 0, i$ = resourceMatches.size(); i < i$; ++i) // [RA]
         builder.append('"').append(resourceMatches.get(i)).append("\", ");
@@ -611,7 +619,8 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
       }
 
       maybeNotSupported = true;
-      if (!resourceInfo.isCompatibleContentType(getMediaType()))
+      final MediaType contentType = getMediaType();
+      if (!resourceInfo.isCompatibleContentType(contentType != null ? contentType : MediaType.APPLICATION_OCTET_STREAM_TYPE)) // [JAX-RS 4.2.1]
         continue;
 
       maybeNotAcceptable = true;
@@ -701,6 +710,8 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
           throw new NotAcceptableException();
 
         contentType = MediaType.APPLICATION_OCTET_STREAM_TYPE;
+        if (logger.isWarnEnabled())
+          logger.warn("Content-Type not specified -- setting to " + MediaType.APPLICATION_OCTET_STREAM);
       }
       else if (contentType.getParameters().size() > 0) {
         contentType = MediaTypes.cloneWithoutParameters(contentType);
@@ -834,11 +845,8 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
       methodAnnotations = null;
     }
 
-    MediaType mediaType = containerResponseContext.getMediaType();
-    if (mediaType == null)
-      mediaType = MediaType.WILDCARD_TYPE;
-
-    final MessageBodyWriter messageBodyWriter = getProviders().getMessageBodyWriter(containerResponseContext.getEntityClass(), methodReturnType, methodAnnotations, mediaType);
+    final MediaType mediaType = containerResponseContext.getMediaType();
+    final MessageBodyWriter messageBodyWriter = getProviders().getMessageBodyWriter(containerResponseContext.getEntityClass(), methodReturnType, methodAnnotations, mediaType != null ? mediaType : MediaType.WILDCARD_TYPE);
     if (messageBodyWriter == null)
       throw new InternalServerErrorException("Could not find MessageBodyWriter for type: " + entity.getClass().getName()); // [JAX-RS 4.2.2 7]
 
@@ -881,7 +889,8 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
           getEntityStream().close();
         }
         catch (final Throwable t) {
-          logger.error(t.getMessage(), t);
+          if (logger.isErrorEnabled())
+            logger.error(t.getMessage(), t);
         }
       }
 
@@ -890,7 +899,8 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
           containerResponseContext.getOutputStream().close();
         }
         catch (final Throwable t) {
-          logger.error(t.getMessage(), t);
+          if (logger.isErrorEnabled())
+            logger.error(t.getMessage(), t);
         }
       }
     }
