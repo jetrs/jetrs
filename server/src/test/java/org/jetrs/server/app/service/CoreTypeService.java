@@ -25,6 +25,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.PathSegment;
@@ -54,7 +55,9 @@ public class CoreTypeService {
   @GET
   @Path("boolean/a{param::.+}/{param::.+}b/c{param::.+}d")
   @Produces(MediaType.TEXT_PLAIN)
-  public String getBoolean(@Context final UriInfo uriInfo, @PathParam("param") final boolean firstPrimitive, @PathParam("param") final Boolean firstObject, @PathParam("param") final boolean[] arrayPrivimite, @PathParam("param") final Boolean[] arrayObject, @PathParam("param") final List<Boolean> list, @PathParam("param") final PathSegment firstSegment, @PathParam("param") final PathSegment[] segmentArray, @PathParam("param") final List<PathSegment> segmentList) {
+  public String getBoolean(@Context final UriInfo uriInfo, @PathParam("param") final boolean firstPrimitive, @PathParam("param") final Boolean firstObject, @PathParam("param") final boolean[] arrayPrivimite, @PathParam("param") final Boolean[] arrayObject, @PathParam("param") final List<Boolean> list, @PathParam("param") final PathSegment firstSegment, @PathParam("param") final PathSegment[] segmentArray, @PathParam("param") final List<PathSegment> segmentList, @QueryParam("q") final boolean queryParam, @QueryParam("Q") final Boolean queryParamObj) {
+    assertEquals(firstPrimitive, queryParam);
+    assertEquals(firstObject, queryParamObj);
     assertEquals(firstPrimitive, firstObject.booleanValue());
     assertEquals(firstPrimitive, arrayPrivimite[0]);
     assertEquals(3, arrayPrivimite.length);
@@ -81,7 +84,9 @@ public class CoreTypeService {
   @GET
   @Path("char/a{param::.+}/{param::.+}b/c{param::.+}d")
   @Produces(MediaType.TEXT_PLAIN)
-  public String getCharacter(@Context final UriInfo uriInfo, @PathParam("param") final char firstPrimitive, @PathParam("param") final Character firstObject, @PathParam("param") final char[] arrayPrivimite, @PathParam("param") final Character[] arrayObject, @PathParam("param") final List<Character> list, @PathParam("param") final PathSegment firstSegment, @PathParam("param") final PathSegment[] segmentArray, @PathParam("param") final List<PathSegment> segmentList) {
+  public String getCharacter(@Context final UriInfo uriInfo, @PathParam("param") final char firstPrimitive, @PathParam("param") final Character firstObject, @PathParam("param") final char[] arrayPrivimite, @PathParam("param") final Character[] arrayObject, @PathParam("param") final List<Character> list, @PathParam("param") final PathSegment firstSegment, @PathParam("param") final PathSegment[] segmentArray, @PathParam("param") final List<PathSegment> segmentList, @QueryParam("q") final char queryParam, @QueryParam("Q") final Character queryParamObj) {
+    assertEquals(firstPrimitive, queryParam);
+    assertEquals(firstObject, queryParamObj);
     assertEquals(firstPrimitive, firstObject.charValue(), 0);
     assertEquals(firstPrimitive, arrayPrivimite[0], 0);
     assertEquals(3, arrayPrivimite.length);
@@ -108,7 +113,9 @@ public class CoreTypeService {
   @GET
   @Path("byte/a{param::-?\\d{1,3}}/{param::-?\\d{1,3}}b/c{param::-?\\d{1,3}}d")
   @Produces(MediaType.TEXT_PLAIN)
-  public int getByte(@Context final UriInfo uriInfo, @PathParam("param") final byte firstPrimitive, @PathParam("param") final Byte firstObject, @PathParam("param") final byte[] arrayPrivimite, @PathParam("param") final Byte[] arrayObject, @PathParam("param") final List<Byte> list, @PathParam("param") final PathSegment firstSegment, @PathParam("param") final PathSegment[] segmentArray, @PathParam("param") final List<PathSegment> segmentList) {
+  public int getByte(@Context final UriInfo uriInfo, @PathParam("param") final byte firstPrimitive, @PathParam("param") final Byte firstObject, @PathParam("param") final byte[] arrayPrivimite, @PathParam("param") final Byte[] arrayObject, @PathParam("param") final List<Byte> list, @PathParam("param") final PathSegment firstSegment, @PathParam("param") final PathSegment[] segmentArray, @PathParam("param") final List<PathSegment> segmentList, @QueryParam("q") final byte queryParam, @QueryParam("Q") final Byte queryParamObj) {
+    assertEquals(firstPrimitive, queryParam);
+    assertEquals(firstObject, queryParamObj);
     assertEquals(firstPrimitive, firstObject.byteValue());
     assertEquals(firstPrimitive, arrayPrivimite[0]);
     assertEquals(3, arrayPrivimite.length);
@@ -135,7 +142,9 @@ public class CoreTypeService {
   @GET
   @Path("short/a{param::-?\\d{1,5}}/{param::-?\\d{1,5}}b/c{param::-?\\d{1,5}}d")
   @Produces(MediaType.TEXT_PLAIN)
-  public int getShort(@Context final UriInfo uriInfo, @PathParam("param") final short firstPrimitive, @PathParam("param") final Short firstObject, @PathParam("param") final short[] arrayPrivimite, @PathParam("param") final Short[] arrayObject, @PathParam("param") final List<Short> list, @PathParam("param") final PathSegment firstSegment, @PathParam("param") final PathSegment[] segmentArray, @PathParam("param") final List<PathSegment> segmentList) {
+  public int getShort(@Context final UriInfo uriInfo, @PathParam("param") final short firstPrimitive, @PathParam("param") final Short firstObject, @PathParam("param") final short[] arrayPrivimite, @PathParam("param") final Short[] arrayObject, @PathParam("param") final List<Short> list, @PathParam("param") final PathSegment firstSegment, @PathParam("param") final PathSegment[] segmentArray, @PathParam("param") final List<PathSegment> segmentList, @QueryParam("q") final short queryParam, @QueryParam("Q") final Short queryParamObj) {
+    assertEquals(firstPrimitive, queryParam);
+    assertEquals(firstObject, queryParamObj);
     assertEquals(firstPrimitive, firstObject.shortValue());
     assertEquals(firstPrimitive, arrayPrivimite[0]);
     assertEquals(3, arrayPrivimite.length);
@@ -162,7 +171,9 @@ public class CoreTypeService {
   @GET
   @Path("int/a{param::-?\\d{1,10}}/{param::-?\\d{1,10}}b/c{param::-?\\d{1,10}}d")
   @Produces(MediaType.TEXT_PLAIN)
-  public int getInt(@Context final UriInfo uriInfo, @PathParam("param") final int firstPrimitive, @PathParam("param") final Integer firstObject, @PathParam("param") final int[] arrayPrivimite, @PathParam("param") final Integer[] arrayObject, @PathParam("param") final List<Integer> list, @PathParam("param") final PathSegment firstSegment, @PathParam("param") final PathSegment[] segmentArray, @PathParam("param") final List<PathSegment> segmentList) {
+  public int getInt(@Context final UriInfo uriInfo, @PathParam("param") final int firstPrimitive, @PathParam("param") final Integer firstObject, @PathParam("param") final int[] arrayPrivimite, @PathParam("param") final Integer[] arrayObject, @PathParam("param") final List<Integer> list, @PathParam("param") final PathSegment firstSegment, @PathParam("param") final PathSegment[] segmentArray, @PathParam("param") final List<PathSegment> segmentList, @QueryParam("q") final int queryParam, @QueryParam("Q") final Integer queryParamObj) {
+    assertEquals(firstPrimitive, queryParam);
+    assertEquals(firstObject, queryParamObj);
     assertEquals(firstPrimitive, firstObject.intValue());
     assertEquals(firstPrimitive, arrayPrivimite[0]);
     assertEquals(3, arrayPrivimite.length);
@@ -189,7 +200,9 @@ public class CoreTypeService {
   @GET
   @Path("long/a{param::-?\\d{1,19}}/{param::-?\\d{1,19}}b/c{param::-?\\d{1,19}}d")
   @Produces(MediaType.TEXT_PLAIN)
-  public long getLong(@Context final UriInfo uriInfo, @PathParam("param") final long firstPrimitive, @PathParam("param") final Long firstObject, @PathParam("param") final long[] arrayPrivimite, @PathParam("param") final Long[] arrayObject, @PathParam("param") final List<Long> list, @PathParam("param") final PathSegment firstSegment, @PathParam("param") final PathSegment[] segmentArray, @PathParam("param") final List<PathSegment> segmentList) {
+  public long getLong(@Context final UriInfo uriInfo, @PathParam("param") final long firstPrimitive, @PathParam("param") final Long firstObject, @PathParam("param") final long[] arrayPrivimite, @PathParam("param") final Long[] arrayObject, @PathParam("param") final List<Long> list, @PathParam("param") final PathSegment firstSegment, @PathParam("param") final PathSegment[] segmentArray, @PathParam("param") final List<PathSegment> segmentList, @QueryParam("q") final long queryParam, @QueryParam("Q") final Long queryParamObj) {
+    assertEquals(firstPrimitive, queryParam);
+    assertEquals(firstObject, queryParamObj);
     assertEquals(firstPrimitive, firstObject.longValue());
     assertEquals(firstPrimitive, arrayPrivimite[0]);
     assertEquals(3, arrayPrivimite.length);
@@ -216,7 +229,9 @@ public class CoreTypeService {
   @GET
   @Path("float/a{param::-?\\d*\\.?\\d{1,10}(E-?\\d+)?}/{param::-?\\d*\\.?\\d{1,10}(E-?\\d+)?}b/c{param::-?\\d*\\.?\\d{1,10}(E-?\\d+)?}d")
   @Produces(MediaType.TEXT_PLAIN)
-  public float getFloat(@Context final UriInfo uriInfo, @PathParam("param") final float firstPrimitive, @PathParam("param") final Float firstObject, @PathParam("param") final float[] arrayPrivimite, @PathParam("param") final Float[] arrayObject, @PathParam("param") final List<Float> list, @PathParam("param") final PathSegment firstSegment, @PathParam("param") final PathSegment[] segmentArray, @PathParam("param") final List<PathSegment> segmentList) {
+  public float getFloat(@Context final UriInfo uriInfo, @PathParam("param") final float firstPrimitive, @PathParam("param") final Float firstObject, @PathParam("param") final float[] arrayPrivimite, @PathParam("param") final Float[] arrayObject, @PathParam("param") final List<Float> list, @PathParam("param") final PathSegment firstSegment, @PathParam("param") final PathSegment[] segmentArray, @PathParam("param") final List<PathSegment> segmentList, @QueryParam("q") final float queryParam, @QueryParam("Q") final Float queryParamObj) {
+    assertEquals(firstPrimitive, queryParam, 0);
+    assertEquals(firstObject, queryParamObj);
     assertEquals(firstPrimitive, firstObject.floatValue(), 0);
     assertEquals(firstPrimitive, arrayPrivimite[0], 0);
     assertEquals(3, arrayPrivimite.length);
@@ -243,7 +258,9 @@ public class CoreTypeService {
   @GET
   @Path("double/a{param::-?\\d*\\.?\\d{1,19}(E-?\\d+)?}/{param::-?\\d*\\.?\\d{1,19}(E-?\\d+)?}b/c{param::-?\\d*\\.?\\d{1,19}(E-?\\d+)?}d")
   @Produces(MediaType.TEXT_PLAIN)
-  public double getDouble(@Context final UriInfo uriInfo, @PathParam("param") final double firstPrimitive, @PathParam("param") final Double firstObject, @PathParam("param") final double[] arrayPrivimite, @PathParam("param") final Double[] arrayObject, @PathParam("param") final List<Double> list, @PathParam("param") final PathSegment firstSegment, @PathParam("param") final PathSegment[] segmentArray, @PathParam("param") final List<PathSegment> segmentList) {
+  public double getDouble(@Context final UriInfo uriInfo, @PathParam("param") final double firstPrimitive, @PathParam("param") final Double firstObject, @PathParam("param") final double[] arrayPrivimite, @PathParam("param") final Double[] arrayObject, @PathParam("param") final List<Double> list, @PathParam("param") final PathSegment firstSegment, @PathParam("param") final PathSegment[] segmentArray, @PathParam("param") final List<PathSegment> segmentList, @QueryParam("q") final double queryParam, @QueryParam("Q") final Double queryParamObj) {
+    assertEquals(firstPrimitive, queryParam, 0);
+    assertEquals(firstObject, queryParamObj);
     assertEquals(firstPrimitive, firstObject.doubleValue(), 0);
     assertEquals(firstPrimitive, arrayPrivimite[0], 0);
     assertEquals(3, arrayPrivimite.length);

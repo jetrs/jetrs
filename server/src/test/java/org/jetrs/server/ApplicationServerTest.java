@@ -82,6 +82,8 @@ public class ApplicationServerTest {
       final boolean b = random.nextBoolean();
       final boolean c = random.nextBoolean();
       final Response response = client.target(serviceUrl + "/type/boolean/a" + a + "/" + b + "b/c" + c + "d")
+        .queryParam("q", a)
+        .queryParam("Q", a)
         .request()
         .get();
 
@@ -97,6 +99,8 @@ public class ApplicationServerTest {
       final char b = Strings.getRandomAlpha(1).charAt(0);
       final char c = Strings.getRandomAlpha(1).charAt(0);
       final Response response = client.target(serviceUrl + "/type/char/a" + a + "/" + b + "b/c" + c + "d")
+        .queryParam("q", a)
+        .queryParam("Q", a)
         .request()
         .get();
 
@@ -112,6 +116,8 @@ public class ApplicationServerTest {
       final byte b = (byte)random.nextInt();
       final byte c = (byte)random.nextInt();
       final Response response = client.target(serviceUrl + "/type/byte/a" + a + "/" + b + "b/c" + c + "d")
+        .queryParam("q", a)
+        .queryParam("Q", a)
         .request()
         .get();
 
@@ -127,6 +133,8 @@ public class ApplicationServerTest {
       final short b = (short)random.nextInt();
       final short c = (short)random.nextInt();
       final Response response = client.target(serviceUrl + "/type/short/a" + a + "/" + b + "b/c" + c + "d")
+        .queryParam("q", a)
+        .queryParam("Q", a)
         .request()
         .get();
 
@@ -142,6 +150,8 @@ public class ApplicationServerTest {
       final int b = random.nextInt();
       final int c = random.nextInt();
       final Response response = client.target(serviceUrl + "/type/int/a" + a + "/" + b + "b/c" + c + "d")
+        .queryParam("q", a)
+        .queryParam("Q", a)
         .request()
         .get();
 
@@ -157,6 +167,8 @@ public class ApplicationServerTest {
       final long b = random.nextLong();
       final long c = random.nextLong();
       final Response response = client.target(serviceUrl + "/type/long/a" + a + "/" + b + "b/c" + c + "d")
+        .queryParam("q", a)
+        .queryParam("Q", a)
         .request()
         .get();
 
@@ -172,6 +184,8 @@ public class ApplicationServerTest {
       final float b = random.nextFloat();
       final float c = random.nextFloat();
       final Response response = client.target(serviceUrl + "/type/float/a" + a + "/" + b + "b/c" + c + "d")
+        .queryParam("q", a)
+        .queryParam("Q", a)
         .request()
         .get();
 
@@ -187,6 +201,8 @@ public class ApplicationServerTest {
       final double b = random.nextDouble();
       final double c = random.nextDouble();
       final Response response = client.target(serviceUrl + "/type/double/a" + a + "/" + b + "b/c" + c + "d")
+        .queryParam("q", a)
+        .queryParam("Q", a)
         .request()
         .get();
 
