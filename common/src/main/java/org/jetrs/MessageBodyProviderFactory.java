@@ -46,8 +46,6 @@ abstract class MessageBodyProviderFactory<T> extends TypeProviderFactory<T> {
    * @throws IllegalArgumentException If {@code mediaType} is null.
    */
   CompatibleMediaType[] getCompatibleMediaType(final RequestContext<?> requestContext, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
-    if (mediaType == null)
-      System.out.println();
     return MediaTypes.getCompatible(allowedTypes, mediaType, null);
   }
 }
