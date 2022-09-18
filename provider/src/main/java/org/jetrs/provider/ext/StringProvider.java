@@ -24,6 +24,8 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 
+import javax.ws.rs.Consumes;
+import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
@@ -36,6 +38,8 @@ import org.libj.io.Readers;
  * JAX-RS 2.1 Section 4.2.4
  */
 @Provider
+@Consumes({MediaType.TEXT_PLAIN, MediaType.WILDCARD})
+@Produces({MediaType.TEXT_PLAIN, MediaType.WILDCARD})
 public class StringProvider extends MessageBodyProvider<String> {
   @Override
   public boolean isReadable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {

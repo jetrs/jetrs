@@ -22,6 +22,8 @@ import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
+import javax.ws.rs.Consumes;
+import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
@@ -33,6 +35,8 @@ import org.jetrs.MessageBodyProvider;
  * JAX-RS 2.1 Section 4.2.4
  */
 @Provider
+@Consumes({MediaType.APPLICATION_OCTET_STREAM, MediaType.WILDCARD})
+@Produces({MediaType.APPLICATION_OCTET_STREAM, MediaType.WILDCARD})
 public class InputStreamProvider extends MessageBodyProvider<InputStream> {
   @Override
   public boolean isReadable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {

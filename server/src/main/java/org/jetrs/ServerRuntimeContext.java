@@ -144,6 +144,7 @@ class ServerRuntimeContext extends RuntimeContext {
       @Override
       public void close() throws IOException {
         threadLocalRequestContext.remove();
+        super.close();
       }
     };
 

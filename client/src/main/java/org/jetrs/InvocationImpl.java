@@ -16,6 +16,7 @@
 
 package org.jetrs;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.CookieHandler;
@@ -108,18 +109,6 @@ class InvocationImpl implements Invocation {
       connection.setRequestMethod(method);
       connection.setConnectTimeout((int)connectTimeout);
       connection.setReadTimeout((int)readTimeout);
-      if (headers != null) {
-        for (final Map.Entry<String,List<String>> entry : headers.entrySet()) { // [S]
-          final String headerName = entry.getKey();
-          final String headerValue;
-          if (entry.getValue().size() > 1)
-            headerValue = CollectionUtil.toString(entry.getValue(), HttpHeadersImpl.getHeaderValueDelimiters(headerName)[0]);
-          else
-            headerValue = entry.getValue().get(0).toString();
-
-          connection.setRequestProperty(headerName, headerValue);
-        }
-      }
 
       if (cookies != null)
         connection.setRequestProperty(HttpHeaders.COOKIE, CollectionUtil.toString(cookies, ';'));
@@ -129,19 +118,39 @@ class InvocationImpl implements Invocation {
       else
         connection.setUseCaches(false);
 
+      final ByteArrayOutputStream out;
       if (entity != null) {
         connection.setDoOutput(true);
         final Providers providers = requestContext.getProviders();
         final Class<?> entityClass = entity.getEntity().getClass();
         final MessageBodyWriter messageBodyWriter = providers.getMessageBodyWriter(entityClass, null, entity.getAnnotations(), entity.getMediaType());
-        if (messageBodyWriter == null) {
-          providers.getMessageBodyWriter(entityClass, null, entity.getAnnotations(), entity.getMediaType());
+        if (messageBodyWriter == null)
           throw new ProcessingException("Provider not found for " + entityClass.getName());
-        }
 
-        final OutputStream entityStream = connection.getOutputStream();
-        MessageBodyProvider.writeTo(messageBodyWriter, entity.getEntity(), entityClass, null, entity.getAnnotations(), entity.getMediaType(), headers == null ? null : headers.getMirrorMap(), entityStream);
-        entityStream.flush();
+        out = new ByteArrayOutputStream();
+        MessageBodyProvider.writeTo(messageBodyWriter, entity.getEntity(), entityClass, null, entity.getAnnotations(), entity.getMediaType(), headers.getMirrorMap(), out);
+        out.flush();
+      }
+      else {
+        out = null;
+      }
+
+      for (final Map.Entry<String,List<String>> entry : headers.entrySet()) { // [S]
+        final String headerName = entry.getKey();
+        final String headerValue;
+        if (entry.getValue().size() > 1)
+          headerValue = CollectionUtil.toString(entry.getValue(), HttpHeadersImpl.getHeaderValueDelimiters(headerName)[0]);
+        else
+          headerValue = entry.getValue().get(0).toString();
+
+        connection.setRequestProperty(headerName, headerValue);
+      }
+
+      if (out != null) {
+        try (final OutputStream entityStream = connection.getOutputStream()) {
+          entityStream.write(out.toByteArray());
+          entityStream.flush();
+        }
       }
 
       final int statusCode = connection.getResponseCode();

@@ -28,6 +28,8 @@ import javax.ws.rs.core.Application;
 import javax.ws.rs.ext.RuntimeDelegate;
 
 import org.jetrs.provider.ext.BytesProvider;
+import org.jetrs.provider.ext.FormMultivaluedMapProvider;
+import org.jetrs.provider.ext.FormProvider;
 import org.jetrs.provider.ext.InputStreamProvider;
 import org.jetrs.provider.ext.NumberProvider;
 import org.jetrs.provider.ext.StringProvider;
@@ -63,7 +65,7 @@ public class ApplicationServer extends Application implements AutoCloseable {
   public ApplicationServer() {
     try {
       this.container = new EmbeddedServletContainer.Builder()
-        .withPort(0)
+        .withPort(8180)
         .withUncaughtServletExceptionHandler(new UncaughtServletExceptionHandler() {
           @Override
           public void uncaughtServletException(final ServletRequest request, final ServletResponse response, final Exception e) {
@@ -97,6 +99,8 @@ public class ApplicationServer extends Application implements AutoCloseable {
     singletons.add(new BytesProvider());
     singletons.add(new NumberProvider());
     singletons.add(new StringProvider());
+    singletons.add(new FormMultivaluedMapProvider());
+    singletons.add(new FormProvider());
     singletons.add(new WebApplicationExceptionMapper(true));
 
     // Specific

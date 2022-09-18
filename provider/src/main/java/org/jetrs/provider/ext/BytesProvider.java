@@ -1,4 +1,4 @@
-/* Copyright (c) 2016 JetRS
+    /* Copyright (c) 2016 JetRS
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,6 +22,8 @@ import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
+import javax.ws.rs.Consumes;
+import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
@@ -35,6 +37,8 @@ import org.libj.io.Streams;
  * JAX-RS 2.1 Section 4.2.4
  */
 @Provider
+@Consumes({MediaType.APPLICATION_OCTET_STREAM, MediaType.WILDCARD})
+@Produces({MediaType.APPLICATION_OCTET_STREAM, MediaType.WILDCARD})
 public class BytesProvider extends MessageBodyProvider<byte[]> {
   @Override
   public boolean isReadable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {

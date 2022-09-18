@@ -19,6 +19,12 @@ package org.jetrs;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.UncheckedIOException;
+import java.nio.charset.Charset;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.ServletInputStream;
@@ -26,14 +32,16 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.jetrs.ContainerRequestContextImpl.Stage;
+import org.libj.net.BufferedServletInputStream;
+import org.libj.util.ArrayUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,25 +59,141 @@ abstract class RestApplicationServlet extends RestHttpServlet {
   protected final void service(final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse) throws IOException, ServletException {
     try (final ContainerRequestContextImpl requestContext = getRuntimeContext().newRequestContext(new RequestImpl(httpServletRequest.getMethod()))) {
       requestContext.init(new HttpServletRequestWrapper(httpServletRequest) {
+        private String _queryEncoding;
+        private boolean contentTypeChecked = false;
+        private Boolean isFormUrlEncoded;
+        private ServletInputStream in;
+        private BufferedReader reader;
+        private Map<String,String[]> parameterMap;
+        private Map<String,String[]> queryParameterMap;
+        private Map<String,String[]> formParameterMap;
+
         // NOTE: Check for the existence of the @Consumes header, and subsequently the Content-Type header in the request,
         // NOTE: only if data is expected (i.e. GET, HEAD, DELETE, OPTIONS methods will not have a body and should thus not
         // NOTE: expect a Content-Type header from the request)
         private void checkContentType() {
-          if (requestContext.getStage() != Stage.FILTER_REQUEST_PRE_MATCH && !requestContext.getResourceMatch().getResourceInfo().checkContentHeader(HttpHeader.CONTENT_TYPE, Consumes.class, requestContext))
-            throw new BadRequestException("Request has data yet missing Content-Type header");
+          if (contentTypeChecked)
+            return;
+
+          if (requestContext.getStage() != Stage.FILTER_REQUEST_PRE_MATCH)
+            requestContext.getResourceMatch().getResourceInfo().checkContentHeader(HttpHeader.CONTENT_TYPE, Consumes.class, requestContext);
+
+          contentTypeChecked = true;
+        }
+
+        @Override
+        public String getParameter(final String name) {
+          final String[] values = getParameterMap().get(name);
+          return values == null ? null : values[0];
+        }
+
+        @Override
+        public void setAttribute(final String name, final Object o) {
+          // NOTE: This it copy+pasted from jetty-server `Request`
+          if ("org.eclipse.jetty.server.Request.queryEncoding".equals(name))
+            _queryEncoding = o == null ? null : o.toString();
+
+          super.setAttribute(name, o);
+        }
+
+        private Map<String,String[]> getQueryParameterMap() {
+          if (this.queryParameterMap == null) {
+            final String queryString = httpServletRequest.getQueryString();
+            this.queryParameterMap = queryString != null ? EntityUtil.toStringArrayMap(EntityUtil.readQueryString(queryString, _queryEncoding)) : Collections.EMPTY_MAP;
+          }
+
+          return this.queryParameterMap;
+        }
+
+        private Map<String,String[]> getFormParameterMap() {
+          if (this.formParameterMap == null) {
+            if (isFormUrlEncoded() && httpServletRequest.getContentLength() != 0) {
+              try {
+                this.formParameterMap = EntityUtil.toStringArrayMap(EntityUtil.readFormParams(getInputStream(), Charset.forName(getCharacterEncoding()), true));
+              }
+              catch (final IOException e) {
+                throw new UncheckedIOException(e);
+              }
+            }
+            else {
+              this.formParameterMap = Collections.EMPTY_MAP;
+            }
+          }
+
+          return this.formParameterMap;
+        }
+
+        @Override
+        public Map<String,String[]> getParameterMap() {
+          if (this.parameterMap == null) {
+            final Map<String,String[]> parameterMap = getFormParameterMap();
+            final Map<String,String[]> queryParameterMap = getQueryParameterMap();
+            if (queryParameterMap.size() > 0) {
+              for (final Map.Entry<String,String[]> entry : parameterMap.entrySet()) {
+                final String[] value = queryParameterMap.get(entry.getKey());
+                if (value != null)
+                  entry.setValue(ArrayUtil.concat(entry.getValue(), value));
+              }
+            }
+
+            this.parameterMap = parameterMap;
+          }
+
+          return this.parameterMap;
+        }
+
+        @Override
+        public Enumeration<String> getParameterNames() {
+          return Collections.enumeration(getParameterMap().keySet());
+        }
+
+        @Override
+        public String[] getParameterValues(final String name) {
+          return getParameterMap().get(name);
+        }
+
+        private boolean isFormUrlEncoded() {
+          return isFormUrlEncoded == null ? isFormUrlEncoded = MediaType.APPLICATION_FORM_URLENCODED.equals(httpServletRequest.getContentType()) : isFormUrlEncoded;
         }
 
         @Override
         public ServletInputStream getInputStream() throws IOException {
-          if (getContentLengthLong() != -1)
-            checkContentType();
+          if (this.in == null) {
+            if (getContentLengthLong() != -1)
+              checkContentType();
 
-          return httpServletRequest.getInputStream();
+            final ServletInputStream in = httpServletRequest.getInputStream();
+            this.in = isFormUrlEncoded() && httpServletRequest.getContentLength() != 0 ? new BufferedServletInputStream(in, EntityUtil.getMaxFormContentSize()) {
+              @Override
+              public void close() throws IOException {
+                try {
+                  super.close();
+                }
+                finally {
+                  if (reader != null)
+                    reader.close();
+                }
+              }
+            } : in;
+          }
+
+          return this.in;
         }
 
         @Override
         public BufferedReader getReader() throws IOException {
-          throw new UnsupportedOperationException();
+          return reader == null ? reader = new BufferedReader(new InputStreamReader(getInputStream())) {
+            @Override
+            public void close() throws IOException {
+              try {
+                super.close();
+              }
+              finally {
+                if (in != null)
+                  in.close();
+              }
+            }
+          } : reader;
         }
       }, httpServletResponse);
 

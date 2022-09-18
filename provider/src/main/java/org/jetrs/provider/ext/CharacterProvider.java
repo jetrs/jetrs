@@ -38,8 +38,8 @@ import org.jetrs.MessageBodyProvider;
  * JAX-RS 2.1 Section 4.2.4
  */
 @Provider
-@Consumes(MediaType.TEXT_PLAIN)
-@Produces(MediaType.TEXT_PLAIN)
+@Consumes({MediaType.TEXT_PLAIN, MediaType.WILDCARD})
+@Produces({MediaType.TEXT_PLAIN, MediaType.WILDCARD})
 public class CharacterProvider extends MessageBodyProvider<Character> {
   @Override
   public boolean isReadable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {

@@ -21,13 +21,15 @@ import static org.junit.Assert.*;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.ws.rs.GET;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriInfo;
 
@@ -48,14 +50,15 @@ public class CoreTypeService {
   }
 
   private @Context UriInfo uriInfo;
-  private @PathParam("param") PathSegment firstSegment;
-  private @PathParam("param") PathSegment[] segmentArray;
-  private @PathParam("param") List<PathSegment> segmentList;
+  private @PathParam("p") PathSegment firstSegment;
+  private @PathParam("p") PathSegment[] segmentArray;
+  private @PathParam("p") List<PathSegment> segmentList;
 
-  @GET
-  @Path("boolean/a{param::.+}/{param::.+}b/c{param::.+}d")
+  @POST
+  @Path("boolean/a{p::.+}/{p::.+}b/c{p::.+}d")
+  @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
   @Produces(MediaType.TEXT_PLAIN)
-  public String getBoolean(@Context final UriInfo uriInfo, @PathParam("param") final boolean firstPrimitive, @PathParam("param") final Boolean firstObject, @PathParam("param") final boolean[] arrayPrivimite, @PathParam("param") final Boolean[] arrayObject, @PathParam("param") final List<Boolean> list, @PathParam("param") final PathSegment firstSegment, @PathParam("param") final PathSegment[] segmentArray, @PathParam("param") final List<PathSegment> segmentList, @QueryParam("q") final boolean queryParam, @QueryParam("Q") final Boolean queryParamObj) {
+  public String getBoolean(@Context final UriInfo uriInfo, @PathParam("p") final boolean firstPrimitive, @PathParam("p") final Boolean firstObject, @PathParam("p") final boolean[] arrayPrivimite, @PathParam("p") final Boolean[] arrayObject, @PathParam("p") final List<Boolean> list, @PathParam("p") final PathSegment firstSegment, @PathParam("p") final PathSegment[] segmentArray, @PathParam("p") final List<PathSegment> segmentList, @QueryParam("q") final boolean queryParam, @QueryParam("Q") final Boolean queryParamObj, final MultivaluedMap<String,String> body) {
     assertEquals(firstPrimitive, queryParam);
     assertEquals(firstObject, queryParamObj);
     assertEquals(firstPrimitive, firstObject.booleanValue());
@@ -76,15 +79,21 @@ public class CoreTypeService {
     assertSame(this.segmentList, segmentList);
 
     assertEquals(1, uriInfo.getPathParameters().size());
-    assertEquals(3, uriInfo.getPathParameters().get("param").size());
-    assertPathSegments(uriInfo.getPathParameters().get("param"), arrayObject, firstSegment, segmentArray, segmentList);
+    assertEquals(3, uriInfo.getPathParameters().get("p").size());
+    assertPathSegments(uriInfo.getPathParameters().get("p"), arrayObject, firstSegment, segmentArray, segmentList);
+
+    assertEquals(body.toString(), 3, body.size());
+    assertEquals(body.toString(), String.valueOf(firstObject), body.getFirst("p"));
+    assertEquals(body.toString(), String.valueOf(firstObject), body.getFirst("q"));
+    assertEquals(body.toString(), String.valueOf(firstObject), body.getFirst("Q"));
     return total;
   }
 
-  @GET
-  @Path("char/a{param::.+}/{param::.+}b/c{param::.+}d")
+  @POST
+  @Path("char/a{p::.+}/{p::.+}b/c{p::.+}d")
+  @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
   @Produces(MediaType.TEXT_PLAIN)
-  public String getCharacter(@Context final UriInfo uriInfo, @PathParam("param") final char firstPrimitive, @PathParam("param") final Character firstObject, @PathParam("param") final char[] arrayPrivimite, @PathParam("param") final Character[] arrayObject, @PathParam("param") final List<Character> list, @PathParam("param") final PathSegment firstSegment, @PathParam("param") final PathSegment[] segmentArray, @PathParam("param") final List<PathSegment> segmentList, @QueryParam("q") final char queryParam, @QueryParam("Q") final Character queryParamObj) {
+  public String getCharacter(@Context final UriInfo uriInfo, @PathParam("p") final char firstPrimitive, @PathParam("p") final Character firstObject, @PathParam("p") final char[] arrayPrivimite, @PathParam("p") final Character[] arrayObject, @PathParam("p") final List<Character> list, @PathParam("p") final PathSegment firstSegment, @PathParam("p") final PathSegment[] segmentArray, @PathParam("p") final List<PathSegment> segmentList, @QueryParam("q") final char queryParam, @QueryParam("Q") final Character queryParamObj, final MultivaluedMap<String,String> body) {
     assertEquals(firstPrimitive, queryParam);
     assertEquals(firstObject, queryParamObj);
     assertEquals(firstPrimitive, firstObject.charValue(), 0);
@@ -105,15 +114,21 @@ public class CoreTypeService {
     assertSame(this.segmentList, segmentList);
 
     assertEquals(1, uriInfo.getPathParameters().size());
-    assertEquals(3, uriInfo.getPathParameters().get("param").size());
-    assertPathSegments(uriInfo.getPathParameters().get("param"), arrayObject, firstSegment, segmentArray, segmentList);
+    assertEquals(3, uriInfo.getPathParameters().get("p").size());
+    assertPathSegments(uriInfo.getPathParameters().get("p"), arrayObject, firstSegment, segmentArray, segmentList);
+
+    assertEquals(body.toString(), 3, body.size());
+    assertEquals(body.toString(), String.valueOf(firstObject), body.getFirst("p"));
+    assertEquals(body.toString(), String.valueOf(firstObject), body.getFirst("q"));
+    assertEquals(body.toString(), String.valueOf(firstObject), body.getFirst("Q"));
     return total;
   }
 
-  @GET
-  @Path("byte/a{param::-?\\d{1,3}}/{param::-?\\d{1,3}}b/c{param::-?\\d{1,3}}d")
+  @POST
+  @Path("byte/a{p::-?\\d{1,3}}/{p::-?\\d{1,3}}b/c{p::-?\\d{1,3}}d")
+  @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
   @Produces(MediaType.TEXT_PLAIN)
-  public int getByte(@Context final UriInfo uriInfo, @PathParam("param") final byte firstPrimitive, @PathParam("param") final Byte firstObject, @PathParam("param") final byte[] arrayPrivimite, @PathParam("param") final Byte[] arrayObject, @PathParam("param") final List<Byte> list, @PathParam("param") final PathSegment firstSegment, @PathParam("param") final PathSegment[] segmentArray, @PathParam("param") final List<PathSegment> segmentList, @QueryParam("q") final byte queryParam, @QueryParam("Q") final Byte queryParamObj) {
+  public int getByte(@Context final UriInfo uriInfo, @PathParam("p") final byte firstPrimitive, @PathParam("p") final Byte firstObject, @PathParam("p") final byte[] arrayPrivimite, @PathParam("p") final Byte[] arrayObject, @PathParam("p") final List<Byte> list, @PathParam("p") final PathSegment firstSegment, @PathParam("p") final PathSegment[] segmentArray, @PathParam("p") final List<PathSegment> segmentList, @QueryParam("q") final byte queryParam, @QueryParam("Q") final Byte queryParamObj, final MultivaluedMap<String,String> body) {
     assertEquals(firstPrimitive, queryParam);
     assertEquals(firstObject, queryParamObj);
     assertEquals(firstPrimitive, firstObject.byteValue());
@@ -134,15 +149,21 @@ public class CoreTypeService {
     assertSame(this.segmentList, segmentList);
 
     assertEquals(1, uriInfo.getPathParameters().size());
-    assertEquals(3, uriInfo.getPathParameters().get("param").size());
-    assertPathSegments(uriInfo.getPathParameters().get("param"), arrayObject, firstSegment, segmentArray, segmentList);
+    assertEquals(3, uriInfo.getPathParameters().get("p").size());
+    assertPathSegments(uriInfo.getPathParameters().get("p"), arrayObject, firstSegment, segmentArray, segmentList);
+
+    assertEquals(body.toString(), 3, body.size());
+    assertEquals(body.toString(), String.valueOf(firstObject), body.getFirst("p"));
+    assertEquals(body.toString(), String.valueOf(firstObject), body.getFirst("q"));
+    assertEquals(body.toString(), String.valueOf(firstObject), body.getFirst("Q"));
     return total;
   }
 
-  @GET
-  @Path("short/a{param::-?\\d{1,5}}/{param::-?\\d{1,5}}b/c{param::-?\\d{1,5}}d")
+  @POST
+  @Path("short/a{p::-?\\d{1,5}}/{p::-?\\d{1,5}}b/c{p::-?\\d{1,5}}d")
+  @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
   @Produces(MediaType.TEXT_PLAIN)
-  public int getShort(@Context final UriInfo uriInfo, @PathParam("param") final short firstPrimitive, @PathParam("param") final Short firstObject, @PathParam("param") final short[] arrayPrivimite, @PathParam("param") final Short[] arrayObject, @PathParam("param") final List<Short> list, @PathParam("param") final PathSegment firstSegment, @PathParam("param") final PathSegment[] segmentArray, @PathParam("param") final List<PathSegment> segmentList, @QueryParam("q") final short queryParam, @QueryParam("Q") final Short queryParamObj) {
+  public int getShort(@Context final UriInfo uriInfo, @PathParam("p") final short firstPrimitive, @PathParam("p") final Short firstObject, @PathParam("p") final short[] arrayPrivimite, @PathParam("p") final Short[] arrayObject, @PathParam("p") final List<Short> list, @PathParam("p") final PathSegment firstSegment, @PathParam("p") final PathSegment[] segmentArray, @PathParam("p") final List<PathSegment> segmentList, @QueryParam("q") final short queryParam, @QueryParam("Q") final Short queryParamObj, final MultivaluedMap<String,String> body) {
     assertEquals(firstPrimitive, queryParam);
     assertEquals(firstObject, queryParamObj);
     assertEquals(firstPrimitive, firstObject.shortValue());
@@ -163,15 +184,21 @@ public class CoreTypeService {
     assertSame(this.segmentList, segmentList);
 
     assertEquals(1, uriInfo.getPathParameters().size());
-    assertEquals(3, uriInfo.getPathParameters().get("param").size());
-    assertPathSegments(uriInfo.getPathParameters().get("param"), arrayObject, firstSegment, segmentArray, segmentList);
+    assertEquals(3, uriInfo.getPathParameters().get("p").size());
+    assertPathSegments(uriInfo.getPathParameters().get("p"), arrayObject, firstSegment, segmentArray, segmentList);
+
+    assertEquals(body.toString(), 3, body.size());
+    assertEquals(body.toString(), String.valueOf(firstObject), body.getFirst("p"));
+    assertEquals(body.toString(), String.valueOf(firstObject), body.getFirst("q"));
+    assertEquals(body.toString(), String.valueOf(firstObject), body.getFirst("Q"));
     return total;
   }
 
-  @GET
-  @Path("int/a{param::-?\\d{1,10}}/{param::-?\\d{1,10}}b/c{param::-?\\d{1,10}}d")
+  @POST
+  @Path("int/a{p::-?\\d{1,10}}/{p::-?\\d{1,10}}b/c{p::-?\\d{1,10}}d")
+  @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
   @Produces(MediaType.TEXT_PLAIN)
-  public int getInt(@Context final UriInfo uriInfo, @PathParam("param") final int firstPrimitive, @PathParam("param") final Integer firstObject, @PathParam("param") final int[] arrayPrivimite, @PathParam("param") final Integer[] arrayObject, @PathParam("param") final List<Integer> list, @PathParam("param") final PathSegment firstSegment, @PathParam("param") final PathSegment[] segmentArray, @PathParam("param") final List<PathSegment> segmentList, @QueryParam("q") final int queryParam, @QueryParam("Q") final Integer queryParamObj) {
+  public int getInt(@Context final UriInfo uriInfo, @PathParam("p") final int firstPrimitive, @PathParam("p") final Integer firstObject, @PathParam("p") final int[] arrayPrivimite, @PathParam("p") final Integer[] arrayObject, @PathParam("p") final List<Integer> list, @PathParam("p") final PathSegment firstSegment, @PathParam("p") final PathSegment[] segmentArray, @PathParam("p") final List<PathSegment> segmentList, @QueryParam("q") final int queryParam, @QueryParam("Q") final Integer queryParamObj, final MultivaluedMap<String,String> body) {
     assertEquals(firstPrimitive, queryParam);
     assertEquals(firstObject, queryParamObj);
     assertEquals(firstPrimitive, firstObject.intValue());
@@ -192,15 +219,21 @@ public class CoreTypeService {
     assertSame(this.segmentList, segmentList);
 
     assertEquals(1, uriInfo.getPathParameters().size());
-    assertEquals(3, uriInfo.getPathParameters().get("param").size());
-    assertPathSegments(uriInfo.getPathParameters().get("param"), arrayObject, firstSegment, segmentArray, segmentList);
+    assertEquals(3, uriInfo.getPathParameters().get("p").size());
+    assertPathSegments(uriInfo.getPathParameters().get("p"), arrayObject, firstSegment, segmentArray, segmentList);
+
+    assertEquals(body.toString(), 3, body.size());
+    assertEquals(body.toString(), String.valueOf(firstObject), body.getFirst("p"));
+    assertEquals(body.toString(), String.valueOf(firstObject), body.getFirst("q"));
+    assertEquals(body.toString(), String.valueOf(firstObject), body.getFirst("Q"));
     return total;
   }
 
-  @GET
-  @Path("long/a{param::-?\\d{1,19}}/{param::-?\\d{1,19}}b/c{param::-?\\d{1,19}}d")
+  @POST
+  @Path("long/a{p::-?\\d{1,19}}/{p::-?\\d{1,19}}b/c{p::-?\\d{1,19}}d")
+  @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
   @Produces(MediaType.TEXT_PLAIN)
-  public long getLong(@Context final UriInfo uriInfo, @PathParam("param") final long firstPrimitive, @PathParam("param") final Long firstObject, @PathParam("param") final long[] arrayPrivimite, @PathParam("param") final Long[] arrayObject, @PathParam("param") final List<Long> list, @PathParam("param") final PathSegment firstSegment, @PathParam("param") final PathSegment[] segmentArray, @PathParam("param") final List<PathSegment> segmentList, @QueryParam("q") final long queryParam, @QueryParam("Q") final Long queryParamObj) {
+  public long getLong(@Context final UriInfo uriInfo, @PathParam("p") final long firstPrimitive, @PathParam("p") final Long firstObject, @PathParam("p") final long[] arrayPrivimite, @PathParam("p") final Long[] arrayObject, @PathParam("p") final List<Long> list, @PathParam("p") final PathSegment firstSegment, @PathParam("p") final PathSegment[] segmentArray, @PathParam("p") final List<PathSegment> segmentList, @QueryParam("q") final long queryParam, @QueryParam("Q") final Long queryParamObj, final MultivaluedMap<String,String> body) {
     assertEquals(firstPrimitive, queryParam);
     assertEquals(firstObject, queryParamObj);
     assertEquals(firstPrimitive, firstObject.longValue());
@@ -221,15 +254,21 @@ public class CoreTypeService {
     assertSame(this.segmentList, segmentList);
 
     assertEquals(1, uriInfo.getPathParameters().size());
-    assertEquals(3, uriInfo.getPathParameters().get("param").size());
-    assertPathSegments(uriInfo.getPathParameters().get("param"), arrayObject, firstSegment, segmentArray, segmentList);
+    assertEquals(3, uriInfo.getPathParameters().get("p").size());
+    assertPathSegments(uriInfo.getPathParameters().get("p"), arrayObject, firstSegment, segmentArray, segmentList);
+
+    assertEquals(body.toString(), 3, body.size());
+    assertEquals(body.toString(), String.valueOf(firstObject), body.getFirst("p"));
+    assertEquals(body.toString(), String.valueOf(firstObject), body.getFirst("q"));
+    assertEquals(body.toString(), String.valueOf(firstObject), body.getFirst("Q"));
     return total;
   }
 
-  @GET
-  @Path("float/a{param::-?\\d*\\.?\\d{1,10}(E-?\\d+)?}/{param::-?\\d*\\.?\\d{1,10}(E-?\\d+)?}b/c{param::-?\\d*\\.?\\d{1,10}(E-?\\d+)?}d")
+  @POST
+  @Path("float/a{p::-?\\d*\\.?\\d{1,10}(E-?\\d+)?}/{p::-?\\d*\\.?\\d{1,10}(E-?\\d+)?}b/c{p::-?\\d*\\.?\\d{1,10}(E-?\\d+)?}d")
+  @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
   @Produces(MediaType.TEXT_PLAIN)
-  public float getFloat(@Context final UriInfo uriInfo, @PathParam("param") final float firstPrimitive, @PathParam("param") final Float firstObject, @PathParam("param") final float[] arrayPrivimite, @PathParam("param") final Float[] arrayObject, @PathParam("param") final List<Float> list, @PathParam("param") final PathSegment firstSegment, @PathParam("param") final PathSegment[] segmentArray, @PathParam("param") final List<PathSegment> segmentList, @QueryParam("q") final float queryParam, @QueryParam("Q") final Float queryParamObj) {
+  public float getFloat(@Context final UriInfo uriInfo, @PathParam("p") final float firstPrimitive, @PathParam("p") final Float firstObject, @PathParam("p") final float[] arrayPrivimite, @PathParam("p") final Float[] arrayObject, @PathParam("p") final List<Float> list, @PathParam("p") final PathSegment firstSegment, @PathParam("p") final PathSegment[] segmentArray, @PathParam("p") final List<PathSegment> segmentList, @QueryParam("q") final float queryParam, @QueryParam("Q") final Float queryParamObj, final MultivaluedMap<String,String> body) {
     assertEquals(firstPrimitive, queryParam, 0);
     assertEquals(firstObject, queryParamObj);
     assertEquals(firstPrimitive, firstObject.floatValue(), 0);
@@ -250,15 +289,21 @@ public class CoreTypeService {
     assertSame(this.segmentList, segmentList);
 
     assertEquals(1, uriInfo.getPathParameters().size());
-    assertEquals(3, uriInfo.getPathParameters().get("param").size());
-    assertPathSegments(uriInfo.getPathParameters().get("param"), arrayObject, firstSegment, segmentArray, segmentList);
+    assertEquals(3, uriInfo.getPathParameters().get("p").size());
+    assertPathSegments(uriInfo.getPathParameters().get("p"), arrayObject, firstSegment, segmentArray, segmentList);
+
+    assertEquals(body.toString(), 3, body.size());
+    assertEquals(body.toString(), String.valueOf(firstObject), body.getFirst("p"));
+    assertEquals(body.toString(), String.valueOf(firstObject), body.getFirst("q"));
+    assertEquals(body.toString(), String.valueOf(firstObject), body.getFirst("Q"));
     return total;
   }
 
-  @GET
-  @Path("double/a{param::-?\\d*\\.?\\d{1,19}(E-?\\d+)?}/{param::-?\\d*\\.?\\d{1,19}(E-?\\d+)?}b/c{param::-?\\d*\\.?\\d{1,19}(E-?\\d+)?}d")
+  @POST
+  @Path("double/a{p::-?\\d*\\.?\\d{1,19}(E-?\\d+)?}/{p::-?\\d*\\.?\\d{1,19}(E-?\\d+)?}b/c{p::-?\\d*\\.?\\d{1,19}(E-?\\d+)?}d")
+  @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
   @Produces(MediaType.TEXT_PLAIN)
-  public double getDouble(@Context final UriInfo uriInfo, @PathParam("param") final double firstPrimitive, @PathParam("param") final Double firstObject, @PathParam("param") final double[] arrayPrivimite, @PathParam("param") final Double[] arrayObject, @PathParam("param") final List<Double> list, @PathParam("param") final PathSegment firstSegment, @PathParam("param") final PathSegment[] segmentArray, @PathParam("param") final List<PathSegment> segmentList, @QueryParam("q") final double queryParam, @QueryParam("Q") final Double queryParamObj) {
+  public double getDouble(@Context final UriInfo uriInfo, @PathParam("p") final double firstPrimitive, @PathParam("p") final Double firstObject, @PathParam("p") final double[] arrayPrivimite, @PathParam("p") final Double[] arrayObject, @PathParam("p") final List<Double> list, @PathParam("p") final PathSegment firstSegment, @PathParam("p") final PathSegment[] segmentArray, @PathParam("p") final List<PathSegment> segmentList, @QueryParam("q") final double queryParam, @QueryParam("Q") final Double queryParamObj, final MultivaluedMap<String,String> body) {
     assertEquals(firstPrimitive, queryParam, 0);
     assertEquals(firstObject, queryParamObj);
     assertEquals(firstPrimitive, firstObject.doubleValue(), 0);
@@ -279,8 +324,13 @@ public class CoreTypeService {
     assertSame(this.segmentList, segmentList);
 
     assertEquals(1, uriInfo.getPathParameters().size());
-    assertEquals(3, uriInfo.getPathParameters().get("param").size());
-    assertPathSegments(uriInfo.getPathParameters().get("param"), arrayObject, firstSegment, segmentArray, segmentList);
+    assertEquals(3, uriInfo.getPathParameters().get("p").size());
+    assertPathSegments(uriInfo.getPathParameters().get("p"), arrayObject, firstSegment, segmentArray, segmentList);
+
+    assertEquals(body.toString(), 3, body.size());
+    assertEquals(body.toString(), String.valueOf(firstObject), body.getFirst("p"));
+    assertEquals(body.toString(), String.valueOf(firstObject), body.getFirst("q"));
+    assertEquals(body.toString(), String.valueOf(firstObject), body.getFirst("Q"));
     return total;
   }
 }

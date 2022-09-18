@@ -26,6 +26,8 @@ import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import javax.ws.rs.Consumes;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
@@ -40,6 +42,8 @@ import org.libj.util.function.Throwing;
  * JAX-RS 2.1 Section 4.2.4
  */
 @Provider
+@Consumes({MediaType.APPLICATION_OCTET_STREAM, MediaType.WILDCARD})
+@Produces({MediaType.APPLICATION_OCTET_STREAM, MediaType.WILDCARD})
 public class FileProvider extends MessageBodyProvider<File> {
   static long writeTo(final Object range, final File file, final OutputStream out, final BiObjBiLongConsumer<? super RandomAccessFile,? super OutputStream> consumer) throws IOException {
     final String rangeString;

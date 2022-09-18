@@ -95,7 +95,7 @@ import org.libj.util.CollectionUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-abstract class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> implements Closeable, ContainerRequestContext, ReaderInterceptorContext {
+class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> implements Closeable, ContainerRequestContext, ReaderInterceptorContext {
   private static final Logger logger = LoggerFactory.getLogger(ContainerRequestContextImpl.class);
 
   enum Stage {
@@ -659,12 +659,12 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
     if (HttpMethod.OPTIONS.equals(requestMethod)) {
       final Response.ResponseBuilder response = Response.ok();
 
-      for (final String header : maybeNotAllowed)
+      for (final String header : maybeNotAllowed) // [S]
         response.header(ACCESS_CONTROL_ALLOW_METHODS, header).header(ALLOW, header);
 
       final List<String> requestHeaders = getHeaders().get(ACCESS_CONTROL_REQUEST_HEADERS);
       if (requestHeaders != null)
-        for (final String requestHeader : requestHeaders)
+        for (final String requestHeader : requestHeaders) // [L]
           response.header(ACCESS_CONTROL_ALLOW_HEADERS, requestHeader);
 
       final String origin = httpServletRequest.getHeader(ORIGIN);
@@ -836,17 +836,25 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
 
     // [JAX-RS 3.5 and 3.8 9]
     if (containerResponseContext.getMediaType() == null) {
-      MediaType contentType = resourceMatch.getProducedMediaTypes()[0];
-      if (contentType.isWildcardSubtype()) {
-        if (!contentType.isWildcardType() && !"application".equals(contentType.getType()))
-          throw new NotAcceptableException();
-
+      MediaType contentType;
+      if (resourceMatch == null) {
         contentType = MediaType.APPLICATION_OCTET_STREAM_TYPE;
         if (logger.isWarnEnabled())
           logger.warn("Content-Type not specified -- setting to " + MediaType.APPLICATION_OCTET_STREAM);
       }
-      else if (contentType.getParameters().size() > 0) {
-        contentType = MediaTypes.cloneWithoutParameters(contentType);
+      else {
+        contentType = resourceMatch.getProducedMediaTypes()[0];
+        if (contentType.isWildcardSubtype()) {
+          if (!contentType.isWildcardType() && !"application".equals(contentType.getType()))
+            throw new NotAcceptableException();
+
+          contentType = MediaType.APPLICATION_OCTET_STREAM_TYPE;
+          if (logger.isWarnEnabled())
+            logger.warn("Content-Type not specified -- setting to " + MediaType.APPLICATION_OCTET_STREAM);
+        }
+        else if (contentType.getParameters().size() > 0) {
+          contentType = MediaTypes.cloneWithoutParameters(contentType);
+        }
       }
 
       containerResponseContext.setMediaType(contentType);
@@ -1031,7 +1039,7 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
 
   Object readBody(final MessageBodyReader<?> messageBodyReader) throws IOException {
     this.messageBodyReader = messageBodyReader;
-    return EntityUtil.checkNotNull(proceed(), getAnnotations());
+    return EntityUtil.checktNotNull(proceed(), getAnnotations());
   }
 
   @Override
@@ -1045,5 +1053,11 @@ abstract class ContainerRequestContextImpl extends RequestContext<HttpServletReq
       lastProceeded = messageBodyReader.readFrom(getType(), getGenericType(), getAnnotations(), getMediaType(), getHeaders(), getInputStream());
 
     return lastProceeded;
+  }
+
+  @Override
+  public void close() throws IOException {
+    if (entityStream != null)
+      entityStream.close();
   }
 }

@@ -18,13 +18,16 @@ package org.jetrs;
 
 import static org.libj.lang.Assertions.*;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.net.URLDecoder;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.RandomAccess;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.PathSegment;
@@ -235,27 +238,40 @@ class UriInfoImpl implements UriInfo {
 
   @Override
   public MultivaluedMap<String,String> getQueryParameters(final boolean decode) {
-    if (decode) {
-      if (queryParametersDecoded != null)
-        return queryParametersDecoded;
-    }
-    else if (queryParametersEncoded != null) {
-      return queryParametersEncoded;
-    }
+    try {
+      if (decode) {
+        if (queryParametersDecoded != null)
+          return queryParametersDecoded;
 
-    final MultivaluedMap<String,String> parameters = new MultivaluedHashMap<>();
-    if (decode) {
-      for (final Map.Entry<String,String[]> entry : httpServletRequest.getParameterMap().entrySet()) // [S]
-        for (final String value : entry.getValue()) // [A]
-          parameters.add(entry.getKey(), URLs.decodePath(value));
-    }
-    else {
-      for (final Map.Entry<String,String[]> entry : httpServletRequest.getParameterMap().entrySet()) // [S]
-        parameters.addAll(entry.getKey(), entry.getValue());
-    }
+        if (queryParametersEncoded != null) {
+          queryParametersDecoded = new MultivaluedHashMap<>();
+          for (final Map.Entry<String,List<String>> entry : queryParametersEncoded.entrySet()) // [S]
+            for (final String value : entry.getValue()) // [L]
+              queryParametersDecoded.add(URLDecoder.decode(entry.getKey(), "UTF-8"), URLDecoder.decode(value, "UTF-8"));
+        }
+      }
+      else if (queryParametersEncoded != null) {
+        return queryParametersEncoded;
+      }
 
-    // FIXME: Make `parameters` unmodifiable, as per the spec.
-    return decode ? queryParametersDecoded = parameters : (queryParametersEncoded = parameters);
+      final MultivaluedMap<String,String> parameters = new MultivaluedHashMap<>();
+      if (decode) {
+        final String queryString = httpServletRequest.getQueryString();
+        if (queryString != null)
+          URIs.decodeParameters(parameters, queryString, "UTF-8");
+      }
+      else {
+        final String queryString = httpServletRequest.getQueryString();
+        if (queryString != null)
+          URIs.decodeParameters(parameters, queryString, null);
+      }
+
+      // FIXME: Make `parameters` unmodifiable, as per the spec.
+      return decode ? queryParametersDecoded = parameters : (queryParametersEncoded = parameters);
+    }
+    catch (final UnsupportedEncodingException e) {
+      throw new ProcessingException(e);
+    }
   }
 
   @Override

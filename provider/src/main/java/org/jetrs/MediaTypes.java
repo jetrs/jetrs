@@ -18,6 +18,8 @@ package org.jetrs;
 
 import static org.libj.lang.Assertions.*;
 
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
@@ -43,7 +45,7 @@ import org.libj.util.CollectionUtil;
  * @see <a href= "https://datatracker.ietf.org/doc/html/draft-ietf-appsawg-media-type-suffix-regs-02#section-3.1">The +json
  *      Structured Syntax Suffix</a>
  */
-final class MediaTypes {
+public final class MediaTypes {
   static final ServerMediaType[] OCTET_SERVER_TYPE = {ServerMediaType.APPLICATION_OCTET_STREAM_TYPE};
   static final CompatibleMediaType[] WILDCARD_COMPATIBLE_TYPE = {CompatibleMediaType.WILDCARD_TYPE};
   static final ServerMediaType[] WILDCARD_SERVER_TYPE = {ServerMediaType.WILDCARD_TYPE};
@@ -734,6 +736,23 @@ final class MediaTypes {
     }
 
     return builder.toString();
+  }
+
+  /**
+   * Returns the {@link Charset} specified in the provided {@link MediaType}, set by the media type parameter "charset".
+   * <p>
+   * If the provided {@link MediaType} is null, or the parameter is not present, the {@link StandardCharsets#UTF_8} charset is
+   * returned.
+   *
+   * @param mediaType The {@link MediaType}.
+   * @return The {@link Charset} specified in the provided {@link MediaType}.
+   */
+  public static Charset getCharset(final MediaType mediaType) {
+    if (mediaType == null)
+      return StandardCharsets.UTF_8;
+
+    final String name = mediaType.getParameters().get(MediaType.CHARSET_PARAMETER);
+    return name == null ? StandardCharsets.UTF_8 : Charset.forName(name);
   }
 
   private MediaTypes() {
