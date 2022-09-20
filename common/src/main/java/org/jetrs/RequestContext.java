@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import javax.inject.Singleton;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Cookie;
@@ -285,8 +286,26 @@ abstract class RequestContext<P> extends InterceptorContextImpl<P> {
 
     final T instance = newInstanceSansFields(clazz, false);
     if (instance != null) {
-      final Field[] uninjectedFields = injectFields(instance, Classes.getDeclaredFieldsDeep(instance.getClass(), injectableFieldPredicate));
+      final Field[] fields = Classes.getDeclaredFieldsDeep(instance.getClass(), injectableFieldPredicate);
+      final Field[] uninjectedFields = injectFields(instance, fields);
       contextInsances.put(clazz, new Object[] {instance, uninjectedFields});
+      if (clazz.isAnnotationPresent(Singleton.class)) { // Warn if this @Singleton has @Context fields
+        StringBuilder builder = null;
+        for (final Field field : fields) {
+          if (field.isAnnotationPresent(Context.class)) {
+            if (builder == null)
+              builder = new StringBuilder();
+
+            builder.append(", ").append(field.getName());
+          }
+        }
+
+        if (builder != null) {
+          builder.setCharAt(0, ':');
+          builder.setCharAt(1, ' ');
+          logger.warn("Class " + clazz.getName() + " with @Singleton annotation has @Context fields" + builder);
+        }
+      }
     }
     else {
       contextInsances.put(clazz, NULL);

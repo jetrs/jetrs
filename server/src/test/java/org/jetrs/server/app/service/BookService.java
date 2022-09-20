@@ -24,6 +24,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.inject.Singleton;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.MatrixParam;
@@ -40,6 +41,7 @@ import javax.ws.rs.core.UriInfo;
 import org.jetrs.server.ApplicationServerTest;
 
 @Path("/books")
+@Singleton
 public class BookService {
   private static String toString(final Object ... args) {
     final StringBuilder builder = new StringBuilder();

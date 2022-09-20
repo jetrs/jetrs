@@ -16,11 +16,13 @@
 
 package org.jetrs.provider.ext.mapper;
 
+import javax.inject.Singleton;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
 
 @Provider
+@Singleton
 public class WebApplicationExceptionMapper extends ThrowableMapper<WebApplicationException> {
   public WebApplicationExceptionMapper(final boolean verbose) {
     super(verbose);

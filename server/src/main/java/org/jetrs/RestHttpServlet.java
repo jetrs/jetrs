@@ -105,7 +105,7 @@ abstract class RestHttpServlet extends HttpServlet {
         application = applicationSpec == null ? null : (Application)Class.forName(applicationSpec).getDeclaredConstructor().newInstance();
       }
 
-      final Set<?> singletons;
+      final Set<Object> singletons;
       final Set<Class<?>> classes;
       if (application != null) {
         singletons = application.getSingletons();

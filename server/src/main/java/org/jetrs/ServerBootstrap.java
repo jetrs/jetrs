@@ -178,7 +178,7 @@ class ServerBootstrap extends Bootstrap<ResourceInfoImpl> {
   }
 
   @Override
-  void init(final Set<?> singletons, final Set<Class<?>> classes, final ArrayList<ResourceInfoImpl> resourceInfos) throws IllegalAccessException, InstantiationException, InvocationTargetException, PackageNotFoundException, IOException {
+  void init(final Set<Object> singletons, final Set<Class<?>> classes, final ArrayList<ResourceInfoImpl> resourceInfos) throws IllegalAccessException, InstantiationException, InvocationTargetException, PackageNotFoundException, IOException {
     super.init(singletons, classes, resourceInfos);
     preMatchContainerRequestFilterProviderFactories.sort(priorityComparator);
     containerRequestFilterProviderFactories.sort(priorityComparator);

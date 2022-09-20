@@ -23,6 +23,7 @@ import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.function.Function;
 
 import javax.ws.rs.WebApplicationException;
@@ -58,7 +59,7 @@ public abstract class MessageBodyProvider<T> implements MessageBodyReader<T>, Me
     }
   }
 
-  private static final Charset defaultCharset = Charset.forName("UTF-8");
+  private static final Charset defaultCharset = StandardCharsets.UTF_8;
 
   protected static Charset getCharset(final MediaType mediaType) {
     if (mediaType == null)

@@ -16,6 +16,7 @@
 
 package org.jetrs.provider.ext.mapper;
 
+import javax.inject.Singleton;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -23,6 +24,7 @@ import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
 @Provider
+@Singleton
 public class ThrowableMapper<T extends Throwable> implements ExceptionMapper<T> {
   private final boolean verbose;
 

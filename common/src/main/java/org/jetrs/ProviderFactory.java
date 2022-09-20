@@ -19,8 +19,10 @@ package org.jetrs;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.Priority;
+import javax.inject.Singleton;
 import javax.ws.rs.Priorities;
 
 import org.libj.lang.Classes;
@@ -31,8 +33,9 @@ class ProviderFactory<T> {
     return typeArguments.length > 0 && typeArguments[0] instanceof Class ? (Class<?>)typeArguments[0] : defaultValue;
   }
 
+  private final AtomicBoolean checkedSingletonAnnotation = new AtomicBoolean(false);
   private final Class<T> clazz;
-  private final T singleton;
+  private T singleton;
   private final int priority;
 
   ProviderFactory(final Class<T> clazz, final T singleton) {
@@ -55,6 +58,19 @@ class ProviderFactory<T> {
       return singleton;
 
     try {
+      if (!checkedSingletonAnnotation.get()) {
+        synchronized (checkedSingletonAnnotation) {
+          if (singleton != null)
+            return singleton;
+
+          if (!checkedSingletonAnnotation.get()) {
+            checkedSingletonAnnotation.set(true);
+            if (clazz.isAnnotationPresent(Singleton.class))
+              return this.singleton = requestContext.getProviderInstance(clazz);
+          }
+        }
+      }
+
       return requestContext.getProviderInstance(clazz);
     }
     catch (final IllegalAccessException | InstantiationException | IOException e) {

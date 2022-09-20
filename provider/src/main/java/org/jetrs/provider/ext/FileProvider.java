@@ -26,6 +26,7 @@ import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
@@ -42,6 +43,7 @@ import org.libj.util.function.Throwing;
  * JAX-RS 2.1 Section 4.2.4
  */
 @Provider
+@Singleton
 @Consumes({MediaType.APPLICATION_OCTET_STREAM, MediaType.WILDCARD})
 @Produces({MediaType.APPLICATION_OCTET_STREAM, MediaType.WILDCARD})
 public class FileProvider extends MessageBodyProvider<File> {

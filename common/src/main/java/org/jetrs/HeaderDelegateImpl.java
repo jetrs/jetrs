@@ -647,7 +647,9 @@ abstract class HeaderDelegateImpl<T> implements RuntimeDelegate.HeaderDelegate<T
       return valueOf(value);
     }
     catch (final Exception e) {
-      logger.error("Exception parsing header value: \"" + value + "\"", e);
+      if (logger.isDebugEnabled())
+        logger.debug("Exception parsing header value: \"" + value + "\"", e);
+
       return null;
     }
   }

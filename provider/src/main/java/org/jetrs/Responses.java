@@ -17,9 +17,8 @@
 package org.jetrs;
 
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -31,8 +30,8 @@ import javax.ws.rs.core.Response.StatusType;
  */
 final class Responses {
   private static final Status[] statuses = Status.values();
-  private static final Map<String,StatusType> codeReasonToStatus = new HashMap<>();
   private static final int[] statusCodes = new int[statuses.length];
+  private static final ConcurrentHashMap<String,StatusType> codeReasonToStatus = new ConcurrentHashMap<>();
 
   static {
     for (int i = 0, i$ = statuses.length; i < i$; ++i) // [A]

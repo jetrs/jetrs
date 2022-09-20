@@ -16,6 +16,7 @@
 
 package org.jetrs.server.app.service;
 
+import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.HEAD;
@@ -28,6 +29,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 @Path("root1/")
+@Singleton
 @SuppressWarnings("unused")
 public class RootService1 {
   @GET

@@ -21,6 +21,7 @@ import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
+import javax.inject.Singleton;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
@@ -33,6 +34,7 @@ import javax.ws.rs.ext.Provider;
  * JAX-RS 2.1 Section 4.2.4
  */
 @Provider
+@Singleton
 @Produces({MediaType.APPLICATION_OCTET_STREAM, MediaType.WILDCARD})
 public class StreamingOutputProvider implements MessageBodyWriter<StreamingOutput> {
   @Override

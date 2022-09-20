@@ -22,6 +22,7 @@ import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
+import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
@@ -35,6 +36,7 @@ import org.jetrs.MessageBodyProvider;
  * JAX-RS 2.1 Section 4.2.4
  */
 @Provider
+@Singleton
 @Consumes({MediaType.APPLICATION_OCTET_STREAM, MediaType.WILDCARD})
 @Produces({MediaType.APPLICATION_OCTET_STREAM, MediaType.WILDCARD})
 public class InputStreamProvider extends MessageBodyProvider<InputStream> {

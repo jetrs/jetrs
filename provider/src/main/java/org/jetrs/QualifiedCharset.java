@@ -19,13 +19,14 @@ package org.jetrs;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharsetEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
 import org.libj.lang.Numbers;
 
 class QualifiedCharset extends Charset implements Equatable, Qualified {
   // FIXME: This is repeated in MessageBodyProvider!
-  private static final QualifiedCharset defaultCharset = new QualifiedCharset(Charset.forName("UTF-8"));
+  private static final QualifiedCharset defaultCharset = new QualifiedCharset(StandardCharsets.UTF_8);
   private static final QualifiedCharset wildcardCharset = new QualifiedCharset(defaultCharset, "*", null);
 
   static QualifiedCharset valueOf(final String value) {

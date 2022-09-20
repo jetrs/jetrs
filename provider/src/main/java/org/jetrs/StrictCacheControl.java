@@ -238,7 +238,7 @@ class StrictCacheControl extends CacheControl {
     abstract void toString(CacheControl cacheControl, StringBuilder builder);
 
     private static String fieldToString(String field) {
-      return (field = field.trim()).length() == 0 ? null : "\"" + field + "\"";
+      return (field = field.trim()).length() > 0 ? "\"" + field + "\"" : null;
     }
 
     static boolean parseDirective(final StrictCacheControl cacheControl, final String directiveString) {

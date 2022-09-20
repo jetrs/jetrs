@@ -26,6 +26,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+import javax.inject.Singleton;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
@@ -97,13 +98,19 @@ class Bootstrap<R extends Comparable<? super R>> {
   }
 
   @SuppressWarnings("unchecked")
-  void init(final Set<?> singletons, final Set<Class<?>> classes, final ArrayList<R> resourceInfos) throws IllegalAccessException, InstantiationException, InvocationTargetException, PackageNotFoundException, IOException {
+  void init(final Set<Object> singletons, final Set<Class<?>> classes, final ArrayList<R> resourceInfos) throws IllegalAccessException, InstantiationException, InvocationTargetException, PackageNotFoundException, IOException {
     final ArrayList<Consumer<Set<Class<?>>>> afterAdds = new ArrayList<>();
     if (singletons != null || classes != null) {
-      if (singletons != null)
-        for (final Object singleton : singletons) // [S]
-          if (singleton != null)
+      if (singletons != null) {
+        for (final Object singleton : singletons) { // [S]
+          if (singleton != null) {
+            if (!singleton.getClass().isAnnotationPresent(Singleton.class))
+              logger.warn("Object of class " + singleton.getClass().getName() + " without @Singleton annotation is member of Application.getSingletons()");
+
             addResourceOrProvider(afterAdds, resourceInfos, singleton.getClass(), singleton, false);
+          }
+        }
+      }
 
       if (classes != null)
         for (final Class<?> cls : classes) // [S]

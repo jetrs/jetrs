@@ -65,7 +65,6 @@ public class ApplicationServer extends Application implements AutoCloseable {
   public ApplicationServer() {
     try {
       this.container = new EmbeddedServletContainer.Builder()
-        .withPort(8180)
         .withUncaughtServletExceptionHandler(new UncaughtServletExceptionHandler() {
           @Override
           public void uncaughtServletException(final ServletRequest request, final ServletResponse response, final Exception e) {
