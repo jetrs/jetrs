@@ -19,7 +19,6 @@ package org.jetrs;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.UncheckedIOException;
 import java.nio.charset.Charset;
 import java.util.Collections;
@@ -63,7 +62,6 @@ abstract class RestApplicationServlet extends RestHttpServlet {
         private boolean contentTypeChecked = false;
         private Boolean isFormUrlEncoded;
         private ServletInputStream in;
-        private BufferedReader reader;
         private Map<String,String[]> parameterMap;
         private Map<String,String[]> queryParameterMap;
         private Map<String,String[]> formParameterMap;
@@ -162,19 +160,14 @@ abstract class RestApplicationServlet extends RestHttpServlet {
             if (getContentLengthLong() != -1)
               checkContentType();
 
-            final ServletInputStream in = httpServletRequest.getInputStream();
-            this.in = isFormUrlEncoded() && httpServletRequest.getContentLength() != 0 ? new BufferedServletInputStream(in, EntityUtil.getMaxFormContentSize()) {
-              @Override
-              public void close() throws IOException {
-                try {
-                  super.close();
-                }
-                finally {
-                  if (reader != null)
-                    reader.close();
-                }
-              }
-            } : in;
+            ServletInputStream in = httpServletRequest.getInputStream();
+            if (isFormUrlEncoded() && httpServletRequest.getContentLength() != 0) {
+              final int maxSize = EntityUtil.getMaxFormContentSize();
+              in = new BufferedServletInputStream(in, maxSize);
+              in.mark(maxSize);
+            }
+
+            this.in = in;
           }
 
           return this.in;
@@ -182,18 +175,7 @@ abstract class RestApplicationServlet extends RestHttpServlet {
 
         @Override
         public BufferedReader getReader() throws IOException {
-          return reader == null ? reader = new BufferedReader(new InputStreamReader(getInputStream())) {
-            @Override
-            public void close() throws IOException {
-              try {
-                super.close();
-              }
-              finally {
-                if (in != null)
-                  in.close();
-              }
-            }
-          } : reader;
+          return httpServletRequest.getReader();
         }
       }, httpServletResponse);
 
