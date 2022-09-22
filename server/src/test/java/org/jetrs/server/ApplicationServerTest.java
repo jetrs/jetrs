@@ -45,7 +45,9 @@ import org.jetrs.provider.ext.FormProvider;
 import org.jetrs.provider.ext.NumberProvider;
 import org.jetrs.provider.ext.StringProvider;
 import org.jetrs.server.app.ApplicationServer;
+import org.jetrs.server.app.filter.Filter1;
 import org.jetrs.server.app.provider.MyCharacterProvider;
+import org.jetrs.server.app.service.CoreTypeService;
 import org.junit.AfterClass;
 import org.junit.Test;
 import org.libj.io.Streams;
@@ -474,6 +476,9 @@ public class ApplicationServerTest {
 
   @AfterClass
   public static void afterClass() throws Exception {
+    assertEquals(Filter1.instanceCount, Filter1.postConstructCalled);
+    assertEquals(MyCharacterProvider.instanceCount, MyCharacterProvider.postConstructCalled);
+    assertEquals(CoreTypeService.instanceCount, CoreTypeService.postConstructCalled);
     server.close();
   }
 

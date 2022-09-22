@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import javax.annotation.PostConstruct;
 import javax.inject.Singleton;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.Context;
@@ -251,8 +252,10 @@ abstract class RequestContext<P> extends InterceptorContextImpl<P> {
 
   final <T>T newResourceInstance(final Class<T> clazz) throws IllegalAccessException, InstantiationException, IOException, InvocationTargetException {
     final T instance = newInstanceSansFields(clazz, true);
-    if (instance != null)
+    if (instance != null) {
       injectFields(instance);
+      postConstruct(instance);
+    }
 
     return instance;
   }
@@ -303,9 +306,12 @@ abstract class RequestContext<P> extends InterceptorContextImpl<P> {
         if (builder != null) {
           builder.setCharAt(0, ':');
           builder.setCharAt(1, ' ');
-          logger.warn("Class " + clazz.getName() + " with @Singleton annotation has @Context fields" + builder);
+          if (logger.isWarnEnabled())
+            logger.warn("Class " + clazz.getName() + " with @Singleton annotation has @Context fields" + builder);
         }
       }
+
+      postConstruct(instance);
     }
     else {
       contextInsances.put(clazz, NULL);
@@ -330,7 +336,9 @@ abstract class RequestContext<P> extends InterceptorContextImpl<P> {
         final Annotation[] annotations = parameterAnnotations[i];
         final Annotation injectableAnnotation = findInjectableAnnotation(annotations, isResource);
         if (injectableAnnotation == null) {
-          logger.warn("Unsupported parameter type: " + parameter.getName() + " on: " + clazz.getName() + "(" + Arrays.stream(parameters).map(p -> p.getType().getSimpleName()).collect(Collectors.joining(",")) + ")");
+          if (logger.isWarnEnabled())
+            logger.warn("Unsupported parameter type: " + parameter.getName() + " on: " + clazz.getName() + "(" + Arrays.stream(parameters).map(p -> p.getType().getSimpleName()).collect(Collectors.joining(",")) + ")");
+
           continue OUT;
         }
 
@@ -341,6 +349,30 @@ abstract class RequestContext<P> extends InterceptorContextImpl<P> {
     }
 
     throw new InstantiationException("No suitable constructor found on provider " + clazz.getName());
+  }
+
+  private static void postConstruct(final Object instance) throws InstantiationException {
+    final Class<?> cls = instance.getClass();
+    final Method[] methods = Classes.getDeclaredMethodsWithAnnotation(cls, PostConstruct.class);
+    if (methods.length == 0)
+      return;
+
+    if (methods.length > 1)
+      throw new InstantiationException("@PostConstruct annotation specified on multiple methods");
+
+    final Method method = methods[0];
+    if (method.getParameterCount() > 0)
+      throw new InstantiationException("@PostConstruct method must have no parameters");
+
+    try {
+      method.setAccessible(true);
+      method.invoke(instance);
+    }
+    catch (final Exception e) {
+      final InstantiationException ie = new InstantiationException();
+      ie.initCause(e.getCause());
+      throw ie;
+    }
   }
 
   private Field[] injectFields(final Object instance, final Field[] fields) throws IllegalAccessException, IOException {

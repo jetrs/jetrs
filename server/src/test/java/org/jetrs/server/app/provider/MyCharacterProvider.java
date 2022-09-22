@@ -16,6 +16,9 @@
 
 package org.jetrs.server.app.provider;
 
+import static org.junit.Assert.*;
+
+import javax.annotation.PostConstruct;
 import javax.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
@@ -26,10 +29,17 @@ import org.jetrs.provider.ext.CharacterProvider;
 @Provider
 @Singleton
 public class MyCharacterProvider extends CharacterProvider {
+  public static int instanceCount = 0;
+  public static int postConstructCalled = 0;
+
   @Context
   private HttpServletRequest request;
-  
-  public static int instanceCount = 0;
+
+  @PostConstruct
+  private void postConstruct() {
+    ++postConstructCalled;
+    assertNotNull(request);
+  }
 
   public MyCharacterProvider() {
     ++instanceCount;

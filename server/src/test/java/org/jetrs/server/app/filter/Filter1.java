@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import java.io.IOException;
 
+import javax.annotation.PostConstruct;
 import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
@@ -16,11 +17,25 @@ import org.jetrs.server.app.service.RootService2;
 
 @Provider
 public class Filter1 implements ContainerRequestFilter {
+  public static int instanceCount = 0;
+  public static int postConstructCalled = 0;
+
   @Context
   private UriInfo uriInfo;
 
   @Context
   private ResourceInfo resourceInfo;
+
+  public Filter1() {
+    ++instanceCount;
+  }
+
+  @PostConstruct
+  private void postConstruct() {
+    ++postConstructCalled;
+    assertNotNull(uriInfo);
+    assertNotNull(resourceInfo);
+  }
 
   @Override
   public void filter(final ContainerRequestContext requestContext) throws IOException {

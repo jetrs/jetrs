@@ -21,6 +21,7 @@ import static org.junit.Assert.*;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.annotation.PostConstruct;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -35,6 +36,18 @@ import javax.ws.rs.core.UriInfo;
 
 @Path("type")
 public class CoreTypeService {
+  public static int instanceCount = 0;
+  public static int postConstructCalled = 0;
+
+  @PostConstruct
+  private void postConstruct() {
+    ++postConstructCalled;
+    assertNotNull(uriInfo);
+    assertNotNull(firstSegment);
+    assertNotNull(segmentArray);
+    assertNotNull(segmentList);
+  }
+
   private static void assertPathSegments(final List<String> pathParameters, final Object[] v, final PathSegment s, final PathSegment[] a, final List<PathSegment> l) {
     assertEquals("a" + v[0], s.getPath());
     assertEquals("a" + v[0], a[0].getPath());
@@ -53,6 +66,10 @@ public class CoreTypeService {
   private @PathParam("p") PathSegment firstSegment;
   private @PathParam("p") PathSegment[] segmentArray;
   private @PathParam("p") List<PathSegment> segmentList;
+
+  public CoreTypeService() {
+    ++instanceCount;
+  }
 
   @POST
   @Path("boolean/a{p::.+}/{p::.+}b/c{p::.+}d")
