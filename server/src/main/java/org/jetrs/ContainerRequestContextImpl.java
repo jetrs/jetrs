@@ -52,6 +52,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.CookieParam;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.InternalServerErrorException;
@@ -90,6 +91,7 @@ import javax.ws.rs.ext.ReaderInterceptorContext;
 
 import org.libj.lang.Classes;
 import org.libj.lang.Numbers;
+import org.libj.net.BufferedServletInputStream;
 import org.libj.util.ArrayUtil;
 import org.libj.util.CollectionUtil;
 import org.slf4j.Logger;
@@ -108,7 +110,7 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
   }
 
   @SuppressWarnings("unchecked")
-  private static final Class<Annotation>[] injectableAnnotationTypes = new Class[] {CookieParam.class, HeaderParam.class, MatrixParam.class, PathParam.class, QueryParam.class};
+  static final Class<Annotation>[] injectableAnnotationTypes = new Class[] {CookieParam.class, FormParam.class, HeaderParam.class, MatrixParam.class, PathParam.class, QueryParam.class};
   // FIXME: Support `AsyncResponse` (JAX-RS 2.1 8.2)
 
   private static Field[] EMPTY_FIELDS = {};
@@ -349,6 +351,9 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
       final boolean decode = ParameterUtil.decode(annotations);
       return ParameterUtil.convertParameter(clazz, type, annotations, uriInfo.getQueryParameters(decode).get(((QueryParam)annotation).value()), runtimeContext.getParamConverterProviderFactories(), this);
     }
+
+    if (annotation.annotationType() == FormParam.class)
+      return httpServletRequest.getParameter(((FormParam)annotation).value());
 
     if (annotation.annotationType() == PathParam.class) {
       final boolean decode = ParameterUtil.decode(annotations);
@@ -963,17 +968,25 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
   public void setEntityStream(InputStream input) {
     if (input != null) {
       try {
-        if (!input.markSupported())
-          input = new BufferedInputStream(input, 1);
-
-        input.mark(1);
-        if (hasEntity = input.read() != -1) {
-          input.reset();
-          entityStream = input;
+        if (input instanceof BufferedServletInputStream) {
+          hasEntity = ((BufferedServletInputStream)input).size() > 0;
+          entityStream = hasEntity ? input : null;
         }
         else {
-          input.close();
-          entityStream = null;
+          if (!input.markSupported())
+            input = new BufferedInputStream(input, 1);
+
+          input.mark(1);
+
+          hasEntity = input.read() != -1;
+          if (hasEntity) {
+            input.reset();
+            entityStream = input;
+          }
+          else {
+            input.close();
+            entityStream = null;
+          }
         }
       }
       catch (final IOException e) {

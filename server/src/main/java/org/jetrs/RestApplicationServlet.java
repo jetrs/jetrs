@@ -21,6 +21,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Map;
@@ -107,7 +108,19 @@ abstract class RestApplicationServlet extends RestHttpServlet {
           if (this.formParameterMap == null) {
             if (isFormUrlEncoded() && httpServletRequest.getContentLength() != 0) {
               try {
-                this.formParameterMap = EntityUtil.toStringArrayMap(EntityUtil.readFormParams(getInputStream(), Charset.forName(getCharacterEncoding()), true));
+                // FIXME: EntityUtil.readFormParams() may be called twice on the same stream -- once from FormProvider or
+                // FIXME: FormMultivaluedMapProvider, and once from here. The likelihood of this is low, because the resource
+                // FIXME: method must (1) have a Form or MultivaluedHashMap<String,String> body param, (2) have a @FormParam, or (3)
+                // FIXME: directly call HttpServletRequest.getFormParameter*(). HttpServletRequest, its ServletInputStream,
+                // FIXME: FormProvider and FormMultivaluedMapProvider are all disparate classes that do not have a common context.
+                final String characterEncoding = getCharacterEncoding();
+                final ServletInputStream in = getInputStream();
+                if (!(in instanceof BufferedServletInputStream))
+                  throw new IllegalStateException("Expected getInputStream() to return BufferedServletInputStream");
+
+                in.reset(); // Assume the stream was marked at pos=0 when it was created
+                this.formParameterMap = EntityUtil.toStringArrayMap(EntityUtil.readFormParams(in, characterEncoding != null ? Charset.forName(characterEncoding) : StandardCharsets.ISO_8859_1, true));
+                in.reset(); // Reset back to pos=0
               }
               catch (final IOException e) {
                 throw new UncheckedIOException(e);

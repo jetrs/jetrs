@@ -23,21 +23,13 @@ import java.util.List;
 import java.util.Objects;
 
 import javax.ws.rs.Consumes;
-import javax.ws.rs.CookieParam;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.MatrixParam;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 import org.libj.lang.IllegalAnnotationException;
 import org.libj.util.ArrayUtil;
 
 class MediaTypeAnnotationProcessor<T extends Annotation> {
-  private static final Class<?>[] paramAnnotations = {Context.class, CookieParam.class, HeaderParam.class, MatrixParam.class, PathParam.class, QueryParam.class};
-
   static <T extends Annotation>T getMethodClassAnnotation(final Class<T> annotationClass, final Method method) {
     final T annotation = method.getAnnotation(annotationClass);
     return annotation != null ? annotation : method.getDeclaringClass().getAnnotation(annotationClass);
@@ -53,7 +45,7 @@ class MediaTypeAnnotationProcessor<T extends Annotation> {
     OUT:
     for (final Annotation[] annotations : method.getParameterAnnotations()) { // [A]
       for (final Annotation annotation : annotations) // [A]
-        for (final Class<?> paramAnnotation : paramAnnotations) // [A]
+        for (final Class<?> paramAnnotation : ContainerRequestContextImpl.injectableAnnotationTypes) // [A]
           if (paramAnnotation.equals(annotation.annotationType()))
             continue OUT;
 
