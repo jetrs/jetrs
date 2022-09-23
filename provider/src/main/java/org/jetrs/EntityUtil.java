@@ -84,7 +84,7 @@ public class EntityUtil {
     }
   }
 
-  public static Map<String,String[]> toStringArrayMap(final MultivaluedMap<String,String> multiMap) {
+  public static Map<String,String[]> toStringArrayMap(final Map<String,List<String>> multiMap) {
     final Map<String,String[]> map = new LinkedHashMap<String,String[]>(multiMap.size() * 3 / 2) {
       @Override
       public String toString() {
@@ -137,7 +137,7 @@ public class EntityUtil {
     return true;
   }
 
-  private static MultivaluedHashMap<String,String> readFormParams(final InputStream in, final Charset encoding) throws IOException {
+  static MultivaluedHashMap<String,String> readFormParamsEncoded(final InputStream in, final Charset encoding) throws IOException {
     final StringBuilder b = new StringBuilder();
     String name = null;
     final MultivaluedHashMap<String,String> map = new MultivaluedHashMap<>();
@@ -166,8 +166,11 @@ public class EntityUtil {
   }
 
   public static MultivaluedMap<String,String> readFormParams(final InputStream in, final Charset encoding, final boolean decode) throws IOException {
+    if (in instanceof FormServletInputStream)
+      return ((FormServletInputStream)in).getFormParameterMap(decode);
+
     if (!decode)
-      return readFormParams(in, encoding);
+      return readFormParamsEncoded(in, encoding);
 
     final MultivaluedLinkedHashMap<String> params = new MultivaluedLinkedHashMap<>();
     UrlEncoded.decodeTo(in, params, encoding, _maxFormContentSize, _maxFormKeys);

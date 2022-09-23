@@ -20,8 +20,6 @@ import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Map;
@@ -40,7 +38,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.jetrs.ContainerRequestContextImpl.Stage;
-import org.libj.net.BufferedServletInputStream;
 import org.libj.util.ArrayUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -106,28 +103,15 @@ abstract class RestApplicationServlet extends RestHttpServlet {
 
         private Map<String,String[]> getFormParameterMap() {
           if (this.formParameterMap == null) {
-            if (isFormUrlEncoded() && httpServletRequest.getContentLength() != 0) {
-              try {
-                // FIXME: EntityUtil.readFormParams() may be called twice on the same stream -- once from FormProvider or
-                // FIXME: FormMultivaluedMapProvider, and once from here. The likelihood of this is low, because the resource
-                // FIXME: method must (1) have a Form or MultivaluedHashMap<String,String> body param, (2) have a @FormParam, or (3)
-                // FIXME: directly call HttpServletRequest.getFormParameter*(). HttpServletRequest, its ServletInputStream,
-                // FIXME: FormProvider and FormMultivaluedMapProvider are all disparate classes that do not have a common context.
-                final String characterEncoding = getCharacterEncoding();
-                final ServletInputStream in = getInputStream();
-                if (!(in instanceof BufferedServletInputStream))
-                  throw new IllegalStateException("Expected getInputStream() to return BufferedServletInputStream");
-
-                in.reset(); // Assume the stream was marked at pos=0 when it was created
-                this.formParameterMap = EntityUtil.toStringArrayMap(EntityUtil.readFormParams(in, characterEncoding != null ? Charset.forName(characterEncoding) : StandardCharsets.ISO_8859_1, true));
-                in.reset(); // Reset back to pos=0
-              }
-              catch (final IOException e) {
-                throw new UncheckedIOException(e);
-              }
+            try {
+              final ServletInputStream in = getInputStream();
+              if (in instanceof FormServletInputStream)
+                this.formParameterMap = EntityUtil.toStringArrayMap(((FormServletInputStream)in).getFormParameterMap(true));
+              else
+                this.formParameterMap = Collections.EMPTY_MAP;
             }
-            else {
-              this.formParameterMap = Collections.EMPTY_MAP;
+            catch (final IOException e) {
+              throw new UncheckedIOException(e);
             }
           }
 
@@ -174,11 +158,8 @@ abstract class RestApplicationServlet extends RestHttpServlet {
               checkContentType();
 
             ServletInputStream in = httpServletRequest.getInputStream();
-            if (isFormUrlEncoded() && httpServletRequest.getContentLength() != 0) {
-              final int maxSize = EntityUtil.getMaxFormContentSize();
-              in = new BufferedServletInputStream(in, maxSize);
-              in.mark(maxSize);
-            }
+            if (isFormUrlEncoded() && httpServletRequest.getContentLength() != 0)
+              in = new FormServletInputStream(in, getCharacterEncoding());
 
             this.in = in;
           }

@@ -91,7 +91,6 @@ import javax.ws.rs.ext.ReaderInterceptorContext;
 
 import org.libj.lang.Classes;
 import org.libj.lang.Numbers;
-import org.libj.net.BufferedServletInputStream;
 import org.libj.util.ArrayUtil;
 import org.libj.util.CollectionUtil;
 import org.slf4j.Logger;
@@ -966,10 +965,14 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
 
   @Override
   public void setEntityStream(InputStream input) {
-    if (input != null) {
+    if (input == null) {
+      hasEntity = false;
+      entityStream = null;
+    }
+    else {
       try {
-        if (input instanceof BufferedServletInputStream) {
-          hasEntity = ((BufferedServletInputStream)input).size() > 0;
+        if (input.available() > 0) {
+          hasEntity = true;
           entityStream = hasEntity ? input : null;
         }
         else {
@@ -978,8 +981,7 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
 
           input.mark(1);
 
-          hasEntity = input.read() != -1;
-          if (hasEntity) {
+          if (hasEntity = input.read() != -1) {
             input.reset();
             entityStream = input;
           }
@@ -992,10 +994,6 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
       catch (final IOException e) {
         throw new InternalServerErrorException(e);
       }
-    }
-    else {
-      hasEntity = false;
-      entityStream = null;
     }
   }
 
