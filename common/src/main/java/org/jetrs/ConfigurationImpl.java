@@ -83,9 +83,11 @@ class ConfigurationImpl implements Cloneable, Configuration, Serializable {
 
   @Override
   public boolean isEnabled(final Class<? extends Feature> featureClass) {
-    for (final Feature feature : features()) // [S]
-      if (featureClass.isInstance(feature))
-        return true;
+    final Set<Feature> features = features();
+    if (features.size() > 0)
+      for (final Feature feature : features) // [S]
+        if (featureClass.isInstance(feature))
+          return true;
 
     return false;
   }

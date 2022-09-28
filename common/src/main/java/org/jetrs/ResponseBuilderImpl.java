@@ -16,6 +16,8 @@
 
 package org.jetrs;
 
+import static org.libj.lang.Assertions.*;
+
 import java.lang.annotation.Annotation;
 import java.net.URI;
 import java.util.Date;
@@ -106,8 +108,9 @@ class ResponseBuilderImpl extends Response.ResponseBuilder implements Cloneable 
 
   @Override
   public Response.ResponseBuilder allow(final Set<String> methods) {
-    for (final String method : methods) // [S]
-      headers.add(HttpHeaders.ALLOW, method);
+    if (assertNotNull(methods).size() > 0)
+      for (final String method : methods) // [S]
+        headers.add(HttpHeaders.ALLOW, method);
 
     return this;
   }
@@ -138,16 +141,19 @@ class ResponseBuilderImpl extends Response.ResponseBuilder implements Cloneable 
 
   @Override
   public Response.ResponseBuilder replaceAll(final MultivaluedMap<String,Object> headers) {
+    assertNotNull(headers);
     this.headers.clear();
-    for (final Map.Entry<String,List<Object>> entry : headers.entrySet()) { // [S]
-      final List<Object> values = entry.getValue();
-      if (values instanceof RandomAccess) {
-        for (int i = 0, i$ = values.size(); i < i$; ++i) // [RA]
-          addHeader(entry.getKey(), values.get(i));
-      }
-      else {
-        for (final Object value : values) // [L]
-          addHeader(entry.getKey(), value);
+    if (headers.size() > 0) {
+      for (final Map.Entry<String,List<Object>> entry : headers.entrySet()) { // [S]
+        final List<Object> values = entry.getValue();
+        if (values instanceof RandomAccess) {
+          for (int i = 0, i$ = values.size(); i < i$; ++i) // [RA]
+            addHeader(entry.getKey(), values.get(i));
+        }
+        else {
+          for (final Object value : values) // [L]
+            addHeader(entry.getKey(), value);
+        }
       }
     }
 

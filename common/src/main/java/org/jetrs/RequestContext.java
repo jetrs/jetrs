@@ -145,13 +145,7 @@ abstract class RequestContext<P> extends InterceptorContextImpl<P> {
     return runtimeContext.getMessageBodyReaderProviderFactories();
   }
 
-  private boolean messageBodyWriterCalled = false;
-
   ArrayList<MessageBodyProviderFactory<MessageBodyWriter<?>>> getMessageBodyWriterFactoryList() {
-    if (messageBodyWriterCalled)
-      throw new IllegalStateException();
-
-    messageBodyWriterCalled = true;
     return runtimeContext.getMessageBodyWriterProviderFactories();
   }
 

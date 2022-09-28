@@ -20,6 +20,8 @@ import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Map;
@@ -38,6 +40,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.jetrs.ContainerRequestContextImpl.Stage;
+import org.libj.io.Charsets;
 import org.libj.util.ArrayUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,7 +59,7 @@ abstract class RestApplicationServlet extends RestHttpServlet {
   protected final void service(final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse) throws IOException, ServletException {
     try (final ContainerRequestContextImpl requestContext = getRuntimeContext().newRequestContext(new RequestImpl(httpServletRequest.getMethod()))) {
       requestContext.init(new HttpServletRequestWrapper(httpServletRequest) {
-        private String _queryEncoding;
+        private Charset queryCharset;
         private boolean contentTypeChecked = false;
         private Boolean isFormUrlEncoded;
         private ServletInputStream in;
@@ -87,7 +90,7 @@ abstract class RestApplicationServlet extends RestHttpServlet {
         public void setAttribute(final String name, final Object o) {
           // NOTE: This it copy+pasted from jetty-server `Request`
           if ("org.eclipse.jetty.server.Request.queryEncoding".equals(name))
-            _queryEncoding = o == null ? null : o.toString();
+            queryCharset = o == null ? StandardCharsets.UTF_8 : Charsets.lookup(o.toString());
 
           super.setAttribute(name, o);
         }
@@ -95,7 +98,7 @@ abstract class RestApplicationServlet extends RestHttpServlet {
         private Map<String,String[]> getQueryParameterMap() {
           if (this.queryParameterMap == null) {
             final String queryString = httpServletRequest.getQueryString();
-            this.queryParameterMap = queryString != null ? EntityUtil.toStringArrayMap(EntityUtil.readQueryString(queryString, _queryEncoding)) : Collections.EMPTY_MAP;
+            this.queryParameterMap = queryString != null ? EntityUtil.toStringArrayMap(EntityUtil.readQueryString(queryString, queryCharset)) : Collections.EMPTY_MAP;
           }
 
           return this.queryParameterMap;

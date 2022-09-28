@@ -26,6 +26,8 @@ import java.nio.charset.StandardCharsets;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.MultivaluedHashMap;
 
+import org.libj.lang.Strings;
+
 public class UriInfoImplTest {
   // FIXME: Implement a test around this
   private static void testQueryParameters(final HttpServletRequest request) {
@@ -36,7 +38,7 @@ public class UriInfoImplTest {
     if (queryString == null || queryString.equals(""))
       return;
 
-    final String[] params = queryString.split("&");
+    final String[] params = Strings.split(queryString, '&');
     for (final String param : params) { // [A]
       if (param.indexOf('=') >= 0) {
         final String[] nv = param.split("=", 2);

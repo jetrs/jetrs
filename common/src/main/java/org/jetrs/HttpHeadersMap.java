@@ -198,8 +198,9 @@ class HttpHeadersMap<V,R> extends MirrorMultivaluedMap<String,V,R> {
 
   @Override
   public void putAll(final Map<? extends String,? extends List<V>> m) {
-    for (final Map.Entry<? extends String,? extends List<V>> entry : m.entrySet()) // [S]
-      put(format(entry.getKey()), entry.getValue());
+    if (assertNotNull(m).size() > 0)
+      for (final Map.Entry<? extends String,? extends List<V>> entry : m.entrySet()) // [S]
+        put(format(entry.getKey()), entry.getValue());
   }
 
   @Override

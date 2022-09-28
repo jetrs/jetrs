@@ -72,7 +72,11 @@ public class ApplicationServerTest {
   }
 
   public static String encodeLexicographically(final Map<String,?> map) {
-    final ArrayList<String> list = new ArrayList<>(map.size());
+    final int size = map.size();
+    if (size == 0)
+      return "[]";
+
+    final ArrayList<String> list = new ArrayList<>(size);
     for (final Map.Entry<String,?> entry : map.entrySet()) // [S]
       list.add(entry.getKey() + ":" + String.valueOf(entry.getValue()));
 
@@ -418,7 +422,7 @@ public class ApplicationServerTest {
       .options();
 
     assertResponse(200, response, null);
-    assertEquals(new HashSet<>(Arrays.asList("HEAD", "GET")), new HashSet<>(Arrays.asList(response.getHeaderString(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS).split(","))));
+    assertEquals(new HashSet<>(Arrays.asList("HEAD", "GET")), new HashSet<>(Arrays.asList(Strings.split(response.getHeaderString(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS), ','))));
   }
 
   @Test

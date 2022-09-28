@@ -16,9 +16,9 @@
 
 package org.jetrs;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 
-class DirectiveList<D extends Enum<D>> extends LinkedList<D> {
+class DirectiveList<D extends Enum<D>> extends ArrayList<D> {
   @Override
   public boolean add(final D e) {
     remove(e);

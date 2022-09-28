@@ -18,24 +18,22 @@ package org.jetrs;
 
 import static org.libj.lang.Assertions.*;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
-import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.RandomAccess;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
+import org.eclipse.jetty.util.UrlEncoded;
 import org.libj.lang.Strings;
-import org.libj.net.URIComponent;
 import org.libj.net.URIs;
 import org.libj.net.URLs;
 
@@ -189,8 +187,6 @@ class UriInfoImpl implements UriInfo {
   private MultivaluedMap<String,String> pathParametersDecoded;
   private MultivaluedMap<String,String> pathParametersEncoded;
 
-  private static final MultivaluedMap<String,String> EMPTY_MAP = new MultivaluedHashMap<>(0); // FIXME: Make this unmodifiable
-
   @Override
   public MultivaluedMap<String,String> getPathParameters() {
     return getPathParameters(true);
@@ -198,30 +194,35 @@ class UriInfoImpl implements UriInfo {
 
   @Override
   public MultivaluedMap<String,String> getPathParameters(final boolean decode) {
-    if (requestContext.getResourceMatches() == null)
-      return EMPTY_MAP;
+    final ResourceMatches resourceMatches = requestContext.getResourceMatches();
+    if (resourceMatches == null)
+      return EntityUtil.EMPTY_MAP;
 
     // FIXME: Note that this code always picks the 1st ResourceMatch to obtain the PathParameters.
     // FIXME: This is done under the assumption that it is not possible to have a situation where
     // FIXME: any other ResourceMatch would be retrieved. Is this truly the case?!
     if (pathParametersEncoded == null)
-      pathParametersEncoded = requestContext.getResourceMatches().get(0).getPathParameters();
+      pathParametersEncoded = resourceMatches.get(0).getPathParameters();
 
     if (!decode)
       return pathParametersEncoded;
 
     if (pathParametersDecoded == null) {
-      pathParametersDecoded = new MultivaluedHashMap<>(pathParametersEncoded.size());
+      final int size = pathParametersEncoded.size();
+      if (size == 0)
+        return pathParametersDecoded = EntityUtil.EMPTY_MAP;
+
+      // FIXME: What's the deal with Charset vs URL encoding?
+      pathParametersDecoded = new MultivaluedHashMap<>(size);
       for (final Map.Entry<String,List<String>> entry : pathParametersEncoded.entrySet()) { // [S]
+        final String key = entry.getKey();
         final List<String> values = entry.getValue();
-        if (values instanceof RandomAccess) {
+        if (values instanceof RandomAccess)
           for (int i = 0, i$ = values.size(); i < i$; ++i) // [RA]
-            pathParametersDecoded.add(entry.getKey(), URIComponent.decode(values.get(i)));
-        }
-        else {
+            addDecoded(pathParametersDecoded, key, values.get(i));
+        else
           for (final String value : values) // [L]
-            pathParametersDecoded.add(entry.getKey(), URIComponent.decode(value));
-        }
+            addDecoded(pathParametersDecoded, key, value);
       }
     }
 
@@ -238,40 +239,42 @@ class UriInfoImpl implements UriInfo {
 
   @Override
   public MultivaluedMap<String,String> getQueryParameters(final boolean decode) {
-    try {
-      if (decode) {
-        if (queryParametersDecoded != null)
-          return queryParametersDecoded;
+    if (queryParametersEncoded == null)
+      queryParametersEncoded = EntityUtil.readQueryString(httpServletRequest.getQueryString(), null);
 
-        if (queryParametersEncoded != null) {
-          queryParametersDecoded = new MultivaluedHashMap<>();
-          for (final Map.Entry<String,List<String>> entry : queryParametersEncoded.entrySet()) // [S]
-            for (final String value : entry.getValue()) // [L]
-              queryParametersDecoded.add(URLDecoder.decode(entry.getKey(), "UTF-8"), URLDecoder.decode(value, "UTF-8"));
+    if (!decode)
+      return queryParametersEncoded;
+
+    if (queryParametersDecoded == null) {
+      final int size = queryParametersEncoded.size();
+      if (size == 0)
+        return queryParametersDecoded = EntityUtil.EMPTY_MAP;
+
+      // FIXME: What's the deal with Charset vs URL encoding?
+      queryParametersDecoded = new MultivaluedHashMap<>(size);
+      for (final Map.Entry<String,List<String>> entry : queryParametersEncoded.entrySet()) { // [S]
+        final List<String> values = entry.getValue();
+        String key = entry.getKey();
+        key = UrlEncoded.decodeString(key, 0, key.length(), StandardCharsets.UTF_8);
+        if (values.size() == 0) {
+          queryParametersDecoded.put(key, values);
+        }
+        else {
+          if (values instanceof RandomAccess)
+            for (int i = 0, i$ = values.size(); i < i$; ++i) // [RA]
+              addDecoded(queryParametersDecoded, key, values.get(i));
+          else
+            for (final String value : values) // [L]
+              addDecoded(queryParametersDecoded, key, value);
         }
       }
-      else if (queryParametersEncoded != null) {
-        return queryParametersEncoded;
-      }
-
-      final MultivaluedMap<String,String> parameters = new MultivaluedHashMap<>();
-      if (decode) {
-        final String queryString = httpServletRequest.getQueryString();
-        if (queryString != null)
-          URIs.decodeParameters(parameters, queryString, "UTF-8");
-      }
-      else {
-        final String queryString = httpServletRequest.getQueryString();
-        if (queryString != null)
-          URIs.decodeParameters(parameters, queryString, null);
-      }
-
-      // FIXME: Make `parameters` unmodifiable, as per the spec.
-      return decode ? queryParametersDecoded = parameters : (queryParametersEncoded = parameters);
     }
-    catch (final UnsupportedEncodingException e) {
-      throw new ProcessingException(e);
-    }
+
+    return queryParametersDecoded;
+  }
+
+  private static void addDecoded(final MultivaluedMap<String,String> map, final String key, final String value) {
+    map.add(key, UrlEncoded.decodeString(value, 0, value.length(), StandardCharsets.UTF_8));
   }
 
   @Override

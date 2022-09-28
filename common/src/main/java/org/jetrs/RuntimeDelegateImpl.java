@@ -30,17 +30,19 @@ import javax.ws.rs.core.Variant.VariantListBuilder;
 import javax.ws.rs.ext.RuntimeDelegate;
 
 import org.libj.lang.Classes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RuntimeDelegateImpl extends RuntimeDelegate {
-  private static final String endpointFactoryClass = "org.jetrs.EndpointFactory";
+  private static final Logger logger = LoggerFactory.getLogger(RuntimeDelegateImpl.class);
+  private static final String endpointFactoryClassName = "org.jetrs.EndpointFactory";
 
   private final BiFunction<Application,Class<?>,HttpServlet> endpointFactory;
   private RuntimeContext runtimeContext;
 
   @SuppressWarnings("unchecked")
   public RuntimeDelegateImpl() {
-    this.runtimeContext = null;
-    final Class<?> cls = Classes.forNameOrNull(endpointFactoryClass, true, Thread.currentThread().getContextClassLoader());
+    final Class<?> cls = Classes.forNameOrNull(endpointFactoryClassName, true, Thread.currentThread().getContextClassLoader());
     if (cls == null) {
       this.endpointFactory = null;
     }
@@ -52,6 +54,9 @@ public class RuntimeDelegateImpl extends RuntimeDelegate {
         throw new IllegalStateException(e);
       }
     }
+
+    if (logger.isDebugEnabled())
+      logger.debug("cls: " + cls + ", endpointFactory: " + System.identityHashCode(endpointFactory));
   }
 
   void setRuntimeContext(final RuntimeContext runtimeContext) {

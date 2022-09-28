@@ -245,8 +245,8 @@ abstract class HeaderDelegateImpl<T> implements RuntimeDelegate.HeaderDelegate<T
         if (value instanceof StrictCacheControl) {
           final StrictCacheControl cacheControl = (StrictCacheControl)value;
           final DirectiveList<Directive> directives = cacheControl.order;
-          for (final Directive directive : directives) // [L]
-            directive.toString(cacheControl, builder);
+          for (int i = 0, i$ = directives.size(); i < i$; ++i) // [RA]
+            directives.get(i).toString(cacheControl, builder);
 
           StrictCacheControl.Directive.EXTENSION.toString(cacheControl, builder);
           builder.setLength(builder.length() - 1);
@@ -400,7 +400,7 @@ abstract class HeaderDelegateImpl<T> implements RuntimeDelegate.HeaderDelegate<T
       // FIXME: This should be re-implemented with a char-by-char algorithm
       @Override
       NewCookie valueOf(final String string) {
-        final String[] parts = string.split(";");
+        final String[] parts = Strings.split(string, ';');
         final String part0 = parts[0];
         int index = part0.indexOf('=');
         if (index == -1)
@@ -423,38 +423,38 @@ abstract class HeaderDelegateImpl<T> implements RuntimeDelegate.HeaderDelegate<T
           if (part.startsWith("Path")) {
             if ((index = part.indexOf('=')) != -1) {
               path = Strings.trim(part.substring(index + 1).trim(), '"');
-              order.addLast(StrictNewCookie.Directive.PATH);
+              order.add(StrictNewCookie.Directive.PATH);
             }
           }
           else if (part.startsWith("Domain")) {
             if ((index = part.indexOf('=')) != -1) {
               domain = part.substring(index + 1).trim();
-              order.addLast(StrictNewCookie.Directive.DOMAIN);
+              order.add(StrictNewCookie.Directive.DOMAIN);
             }
           }
           else if (part.startsWith("Version")) {
             if ((index = part.indexOf('=')) != -1) {
               version = Integer.parseInt(Strings.trim(part.substring(index + 1).trim(), '"'));
-              order.addLast(StrictNewCookie.Directive.VERSION);
+              order.add(StrictNewCookie.Directive.VERSION);
             }
           }
           else if (part.startsWith("Comment")) {
             if ((index = part.indexOf('=')) != -1) {
               comment = part.substring(index + 1).trim();
-              order.addLast(StrictNewCookie.Directive.COMMENT);
+              order.add(StrictNewCookie.Directive.COMMENT);
             }
           }
           else if (part.startsWith("Max-Age")) {
             if ((index = part.indexOf('=')) != -1) {
               maxAge = Integer.parseInt(part.substring(index + 1).trim());
-              order.addLast(StrictNewCookie.Directive.MAX_AGE);
+              order.add(StrictNewCookie.Directive.MAX_AGE);
             }
           }
           else if (part.startsWith("Expires")) {
             if ((index = part.indexOf('=')) != -1) {
               try {
                 expires = SimpleDateFormats.RFC_1123.get().parse(part.substring(index + 1).trim());
-                order.addLast(StrictNewCookie.Directive.EXPIRY);
+                order.add(StrictNewCookie.Directive.EXPIRY);
               }
               catch (final ParseException e) {
               }
@@ -462,11 +462,11 @@ abstract class HeaderDelegateImpl<T> implements RuntimeDelegate.HeaderDelegate<T
           }
           else if (part.startsWith("Secure")) {
             secure = true;
-            order.addLast(StrictNewCookie.Directive.SECURE);
+            order.add(StrictNewCookie.Directive.SECURE);
           }
           else if (part.startsWith("HttpOnly")) {
             httpOnly = true;
-            order.addLast(StrictNewCookie.Directive.HTTP_ONLY);
+            order.add(StrictNewCookie.Directive.HTTP_ONLY);
           }
         }
 
@@ -480,8 +480,8 @@ abstract class HeaderDelegateImpl<T> implements RuntimeDelegate.HeaderDelegate<T
         if (value instanceof StrictNewCookie) {
           final StrictNewCookie cacheControl = (StrictNewCookie)value;
           final DirectiveList<StrictNewCookie.Directive> directives = cacheControl.order;
-          for (final StrictNewCookie.Directive directive : directives) // [L]
-            directive.toString(cacheControl, builder);
+          for (int i = 0, i$ = directives.size(); i < i$; ++i) // [RA]
+            directives.get(i).toString(cacheControl, builder);
         }
         else {
           for (final StrictNewCookie.Directive directive : StrictNewCookie.Directive.values()) // [A]

@@ -107,8 +107,9 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
    */
   HttpHeadersImpl(final Map<String,List<String>> headers) {
     this();
-    for (final Map.Entry<String,List<String>> entry : assertNotNull(headers).entrySet()) // [S]
-      addAll(entry.getKey(), entry.getValue());
+    if (assertNotNull(headers).size() > 0)
+      for (final Map.Entry<String,List<String>> entry : headers.entrySet()) // [S]
+        addAll(entry.getKey(), entry.getValue());
   }
 
   /**
@@ -120,7 +121,8 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
   HttpHeadersImpl(final MultivaluedMap<String,Object> headers) {
     this();
     final MirrorMultivaluedMap<String,Object,String> mirrorMap = getMirrorMap();
-    for (final Map.Entry<String,List<Object>> entry : assertNotNull(headers).entrySet()) // [S]
+    if (assertNotNull(headers).size() > 0)
+      for (final Map.Entry<String,List<Object>> entry : headers.entrySet()) // [S]
       mirrorMap.addAll(entry.getKey(), entry.getValue());
   }
 
@@ -166,18 +168,17 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
       return;
 
     final Collection<String> headerNames = response.getHeaderNames();
-    if (headerNames == null)
+    if (headerNames == null || headerNames.size() == 0)
       return;
 
     for (final String headerName : headerNames) { // [C]
       final Collection<String> headerValues = response.getHeaders(headerName);
-      if (headerValues == null || headerValues.size() == 0)
-        continue;
-
-      final List<String> values = getValues(headerName);
-      final char[] delimiters = getHeaderValueDelimiters(headerName);
-      for (final String headerValue : headerValues) // [C]
-        parseHeaderValuesFromString(values, headerValue, delimiters);
+      if (headerValues != null && headerValues.size() > 0) {
+        final List<String> values = getValues(headerName);
+        final char[] delimiters = getHeaderValueDelimiters(headerName);
+        for (final String headerValue : headerValues) // [C]
+          parseHeaderValuesFromString(values, headerValue, delimiters);
+      }
     }
   }
 

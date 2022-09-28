@@ -35,6 +35,7 @@ import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriBuilderException;
 
+import org.libj.lang.Strings;
 import org.libj.util.ArrayUtil;
 
 class UriBuilderImpl extends UriBuilder implements Cloneable {
@@ -504,15 +505,17 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
 
       final StringBuilder path = new StringBuilder(this.path);
       path.delete(matrixIndex, path.length());
-      for (final String paramName : map.keySet()) { // [S]
-        final List<String> paramValues = map.get(paramName);
-        if (paramValues instanceof RandomAccess) {
-          for (int i = 0, i$ = paramValues.size(); i < i$; ++i) // [RA]
-            appendParam(path, paramName, paramValues.get(i));
-        }
-        else {
-          for (final String paramValue : paramValues) // [L]
-            appendParam(path, paramName, paramValue);
+      if (map.size() > 0) {
+        for (final String paramName : map.keySet()) { // [S]
+          final List<String> paramValues = map.get(paramName);
+          if (paramValues instanceof RandomAccess) {
+            for (int i = 0, i$ = paramValues.size(); i < i$; ++i) // [RA]
+              appendParam(path, paramName, paramValues.get(i));
+          }
+          else {
+            for (final String paramValue : paramValues) // [L]
+              appendParam(path, paramName, paramValue);
+          }
         }
       }
 
@@ -575,7 +578,7 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
     if (query == null || query.isEmpty())
       return values == null || values.length == 0 ? this : queryParam(name, values);
 
-    final String[] params = query.split("&");
+    final String[] params = Strings.split(query, '&');
     query = null;
 
     final String encodedName = UriEncoder.QUERY_PARAM.encode(name);

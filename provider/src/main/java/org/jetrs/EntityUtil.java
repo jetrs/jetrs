@@ -39,6 +39,7 @@ import javax.ws.rs.core.MultivaluedMap;
 
 import org.eclipse.jetty.util.MultiMap;
 import org.eclipse.jetty.util.UrlEncoded;
+import org.libj.net.URIs;
 
 public class EntityUtil {
   // NOTE: This was copy+pasted from jetty-server `ContextHandler`
@@ -49,6 +50,8 @@ public class EntityUtil {
 
   private static final int _maxFormKeys = Integer.getInteger(MAX_FORM_KEYS_KEY, DEFAULT_MAX_FORM_KEYS);
   private static final int _maxFormContentSize = Integer.getInteger(MAX_FORM_CONTENT_SIZE_KEY, DEFAULT_MAX_FORM_CONTENT_SIZE);
+
+  static final MultivaluedMap<String,String> EMPTY_MAP = new MultivaluedHashMap<>(0); // FIXME: Make this unmodifiable
 
   static class MultivaluedLinkedHashMap<V> extends MultiMap<V> implements MultivaluedMap<String,V> {
     @Override
@@ -177,15 +180,23 @@ public class EntityUtil {
     return params;
   }
 
-  public static MultivaluedMap<String,String> readQueryString(final String queryString, final String encoding) {
-    final MultivaluedLinkedHashMap<String> params = new MultivaluedLinkedHashMap<>();
-    final Charset charset;
-    if (encoding == null || (charset = Charset.forName(encoding)) == null || StandardCharsets.UTF_8.equals(charset))
-      UrlEncoded.decodeUtf8To(queryString, params);
-    else
-      UrlEncoded.decodeTo(queryString, params, charset);
+  static MultivaluedMap<String,String> readQueryString(final String queryString, final Charset encoding) {
+    if (queryString == null || queryString.length() == 0)
+      return EMPTY_MAP;
 
-    return params;
+    if (encoding == null) {
+      final MultivaluedHashMap<String,String> parameters = new MultivaluedHashMap<>();
+      URIs.parseParameters(parameters, queryString);
+      return parameters;
+    }
+
+    final MultivaluedLinkedHashMap<String> parameters = new MultivaluedLinkedHashMap<>();
+    if (StandardCharsets.UTF_8.equals(encoding))
+      UrlEncoded.decodeUtf8To(queryString, parameters);
+    else
+      UrlEncoded.decodeTo(queryString, parameters, encoding);
+
+    return parameters;
   }
 
   public static void writeFormParams(final MultivaluedMap<String,String> t, final MediaType mediaType, final OutputStream entityStream) throws IOException {

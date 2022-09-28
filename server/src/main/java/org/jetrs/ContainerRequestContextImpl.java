@@ -35,6 +35,7 @@ import java.net.URI;
 import java.security.Principal;
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -76,6 +77,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.NoContentException;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
@@ -340,7 +342,12 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
     setType(clazz);
     setGenericType(clazz.getGenericSuperclass());
     setAnnotations(annotations);
-    return (T)readBody(messageBodyReader);
+    try {
+      return (T)readBody(messageBodyReader);
+    }
+    catch (final NoContentException e) {
+      throw new BadRequestException(e); // [JAX-RS 4.2.4]
+    }
   }
 
   @SuppressWarnings("unchecked")
@@ -452,24 +459,6 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
       return ParameterUtil.convertParameter(clazz, type, annotations, values, runtimeContext.getParamConverterProviderFactories(), this);
     }
 
-    if (annotation.annotationType() == MatrixParam.class) {
-      final boolean decode = ParameterUtil.decode(annotations);
-      final List<PathSegment> pathSegments = uriInfo.getPathSegments(decode);
-      if (!(pathSegments instanceof RandomAccess))
-        throw new IllegalStateException();
-
-      final String matrixParamName = ((MatrixParam)annotation).value();
-      final ArrayList<String> matrixParameters = new ArrayList<>();
-      for (int i = 0, i$ = pathSegments.size(); i < i$; ++i) { // [RA]
-        final PathSegment pathSegment = pathSegments.get(i);
-        for (final Map.Entry<String,List<String>> entry : pathSegment.getMatrixParameters().entrySet()) // [S]
-          if (matrixParamName.equals(entry.getKey()))
-            matrixParameters.addAll(entry.getValue());
-      }
-
-      return ParameterUtil.convertParameter(clazz, type, annotations, matrixParameters, runtimeContext.getParamConverterProviderFactories(), this);
-    }
-
     if (annotation.annotationType() == CookieParam.class) {
       final Map<String,Cookie> cookies = getCookies();
       if (cookies == null)
@@ -528,7 +517,67 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
       return ParameterUtil.convertParameter(clazz, type, annotations, headerStringValue, runtimeContext.getParamConverterProviderFactories(), this);
     }
 
+    if (annotation.annotationType() == MatrixParam.class) {
+      final boolean decode = ParameterUtil.decode(annotations);
+      final List<PathSegment> pathSegments = uriInfo.getPathSegments(decode);
+      if (!(pathSegments instanceof RandomAccess))
+        throw new IllegalStateException();
+
+      final int i$ = pathSegments.size();
+      final List<String> matrixParams;
+      if (i$ == 0) {
+        matrixParams = null;
+      }
+      else {
+        final String[] values = getMatrixParamValue(((MatrixParam)annotation).value(), pathSegments, i$);
+        matrixParams = values == null ? null : Arrays.asList(values);
+      }
+
+      return ParameterUtil.convertParameter(clazz, type, annotations, matrixParams, runtimeContext.getParamConverterProviderFactories(), this);
+    }
+
     throw new UnsupportedOperationException("Unsupported param annotation type: " + annotation.annotationType());
+  }
+
+  private String[] getMatrixParamValue(final String matrixParamName, final List<PathSegment> pathSegments, final int size) {
+    for (int i = 0; i < size; ++i) { // [RA]
+      final MultivaluedMap<String,String> matrixParameters = pathSegments.get(i).getMatrixParameters();
+      if (matrixParameters.size() > 0)
+        return getMatrixParamValues(matrixParamName, pathSegments, i, size, matrixParameters.entrySet().iterator(), 0);
+    }
+
+    return null;
+  }
+
+  private String[] getMatrixParamValues(final String matrixParamName, final List<PathSegment> pathSegments, int index, final int size, final Iterator<Map.Entry<String,List<String>>> iterator, final int depth) {
+    if (!iterator.hasNext()) {
+      for (int i = ++index; i < size; ++i) { // [RA]
+        final MultivaluedMap<String,String> matrixParameters = pathSegments.get(i).getMatrixParameters();
+        if (matrixParameters.size() > 0)
+          return getMatrixParamValues(matrixParamName, pathSegments, i, size, matrixParameters.entrySet().iterator(), depth);
+      }
+
+      return depth == 0 ? null : new String[depth];
+    }
+
+    final Map.Entry<String,List<String>> entry = iterator.next();
+    if (!matrixParamName.equals(entry.getKey()))
+      return getMatrixParamValues(matrixParamName, pathSegments, index, size, iterator, depth);
+
+    final List<String> values = entry.getValue();
+    final int i$ = values.size();
+    final String[] array = getMatrixParamValues(matrixParamName, pathSegments, index, size, iterator, depth + i$);
+    if (values instanceof RandomAccess) {
+      for (int i = 0; i < i$; ++i) // [RA]
+        array[depth + i] = values.get(i);
+    }
+    else {
+      int i = depth;
+      for (final String value : values) // [L]
+        array[i++] = value;
+    }
+
+    return array;
   }
 
   private static boolean rangeOverlaps(final int startA, final int endA, final int startB, final int endB) {
@@ -667,9 +716,14 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
         response.header(ACCESS_CONTROL_ALLOW_METHODS, header).header(ALLOW, header);
 
       final List<String> requestHeaders = getHeaders().get(ACCESS_CONTROL_REQUEST_HEADERS);
-      if (requestHeaders != null)
-        for (final String requestHeader : requestHeaders) // [L]
-          response.header(ACCESS_CONTROL_ALLOW_HEADERS, requestHeader);
+      final int i$;
+      if (requestHeaders != null && (i$ = requestHeaders.size()) > 0)
+        if (requestHeaders instanceof RandomAccess)
+          for (int i = 0; i < i$; ++i) // [RA]
+            response.header(ACCESS_CONTROL_ALLOW_HEADERS, requestHeaders.get(i));
+        else
+          for (final String requestHeader : requestHeaders) // [L]
+            response.header(ACCESS_CONTROL_ALLOW_HEADERS, requestHeader);
 
       final String origin = httpServletRequest.getHeader(ORIGIN);
       if (origin != null) {
@@ -747,15 +801,18 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
     containerResponseHeaders.clear();
 
     final MultivaluedMap<String,String> responseHeaders = response.getStringHeaders();
-    for (final Map.Entry<String,List<String>> entry : responseHeaders.entrySet()) { // [S]
-      final List<String> values = entry.getValue();
-      if (values instanceof RandomAccess) {
-        for (int i = 0, i$ = values.size(); i < i$; ++i) // [RA]
-          containerResponseHeaders.add(entry.getKey(), values.get(i));
-      }
-      else {
-        for (final String value : values) // [L]
-          containerResponseHeaders.add(entry.getKey(), value);
+    if (responseHeaders.size() > 0) {
+      for (final Map.Entry<String,List<String>> entry : responseHeaders.entrySet()) { // [S]
+        final String key = entry.getKey();
+        final List<String> values = entry.getValue();
+        if (values instanceof RandomAccess) {
+          for (int i = 0, i$ = values.size(); i < i$; ++i) // [RA]
+            containerResponseHeaders.add(key, values.get(i));
+        }
+        else {
+          for (final String value : values) // [L]
+            containerResponseHeaders.add(key, value);
+        }
       }
     }
 
@@ -771,37 +828,40 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
   }
 
   private void writeHeader() {
-    for (final Map.Entry<String,List<String>> entry : containerResponseContext.getStringHeaders().entrySet()) { // [S]
-      final List<String> values = entry.getValue();
-      final int i$ = values.size();
-      if (i$ == 0)
-        continue;
-
-      final String name = entry.getKey();
-      if (i$ > 1) {
-        final AbstractMap.SimpleEntry<HttpHeader<?>,HeaderDelegateImpl<?>> headerDelegate = HeaderDelegateImpl.lookup(name);
-        final char[] delimiters = headerDelegate.getKey().getDelimiters();
-        if (delimiters.length > 0) {
-          httpServletResponse.setHeader(name, CollectionUtil.toString(values, delimiters[0]));
+    final MultivaluedMap<String,String> containerResponseHeaders = containerResponseContext.getStringHeaders();
+    if (containerResponseHeaders.size() > 0) {
+      for (final Map.Entry<String,List<String>> entry : containerResponseHeaders.entrySet()) { // [S]
+        final List<String> values = entry.getValue();
+        final int i$ = values.size();
+        if (i$ == 0)
           continue;
+
+        final String name = entry.getKey();
+        if (i$ > 1) {
+          final AbstractMap.SimpleEntry<HttpHeader<?>,HeaderDelegateImpl<?>> headerDelegate = HeaderDelegateImpl.lookup(name);
+          final char[] delimiters = headerDelegate.getKey().getDelimiters();
+          if (delimiters.length > 0) {
+            httpServletResponse.setHeader(name, CollectionUtil.toString(values, delimiters[0]));
+            continue;
+          }
         }
-      }
 
-      if (values instanceof RandomAccess) {
-        int i = -1;
-        if (httpServletResponse.containsHeader(name))
-          httpServletResponse.setHeader(name, values.get(++i));
+        if (values instanceof RandomAccess) {
+          int i = -1;
+          if (httpServletResponse.containsHeader(name))
+            httpServletResponse.setHeader(name, values.get(++i));
 
-        while (++i < i$)
-          httpServletResponse.addHeader(entry.getKey(), values.get(i));
-      }
-      else {
-        final Iterator<String> i = values.iterator();
-        if (httpServletResponse.containsHeader(name))
-          httpServletResponse.setHeader(name, i.next());
+          while (++i < i$)
+            httpServletResponse.addHeader(entry.getKey(), values.get(i));
+        }
+        else {
+          final Iterator<String> i = values.iterator();
+          if (httpServletResponse.containsHeader(name))
+            httpServletResponse.setHeader(name, i.next());
 
-        while (i.hasNext())
-          httpServletResponse.addHeader(entry.getKey(), i.next());
+          while (i.hasNext())
+            httpServletResponse.addHeader(entry.getKey(), i.next());
+        }
       }
     }
 

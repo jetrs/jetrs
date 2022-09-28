@@ -218,12 +218,15 @@ class StrictCacheControl extends CacheControl {
 
       @Override
       void toString(final CacheControl cacheControl, final StringBuilder builder) {
-        for (final Map.Entry<String,String> entry : cacheControl.getCacheExtension().entrySet()) { // [S]
-          builder.append(entry.getKey());
-          if (entry.getValue() != null)
-            builder.append('=').append(entry.getValue());
+        final Map<String,String> cacheExtension = cacheControl.getCacheExtension();
+        if (cacheExtension.size() > 0) {
+          for (final Map.Entry<String,String> entry : cacheExtension.entrySet()) { // [S]
+            builder.append(entry.getKey());
+            if (entry.getValue() != null)
+              builder.append('=').append(entry.getValue());
 
-          builder.append(',');
+            builder.append(',');
+          }
         }
       }
     };
@@ -254,7 +257,7 @@ class StrictCacheControl extends CacheControl {
   }
 
   static StrictCacheControl parse(final String value) {
-    final String[] directives = value.split(",");
+    final String[] directives = Strings.split(value, ',');
     for (int i = 0, i$ = directives.length; i < i$; ++i) // [A]
       directives[i] = directives[i].trim();
 

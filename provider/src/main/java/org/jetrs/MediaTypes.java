@@ -715,7 +715,7 @@ public final class MediaTypes {
     assertNotNull(mediaType);
     final StringBuilder builder = new StringBuilder();
     builder.append(mediaType.getType()).append('/').append(mediaType.getSubtype());
-    if (mediaType.getParameters() != null) {
+    if (mediaType.getParameters().size() > 0) {
       for (final Map.Entry<String,String> entry : mediaType.getParameters().entrySet()) { // [S]
         final String value = entry.getValue();
         boolean quoted = false;

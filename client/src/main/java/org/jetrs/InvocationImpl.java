@@ -135,15 +135,17 @@ class InvocationImpl implements Invocation {
         out = null;
       }
 
-      for (final Map.Entry<String,List<String>> entry : headers.entrySet()) { // [S]
-        final String headerName = entry.getKey();
-        final String headerValue;
-        if (entry.getValue().size() > 1)
-          headerValue = CollectionUtil.toString(entry.getValue(), HttpHeadersImpl.getHeaderValueDelimiters(headerName)[0]);
-        else
-          headerValue = entry.getValue().get(0).toString();
+      if (headers.size() > 0) {
+        for (final Map.Entry<String,List<String>> entry : headers.entrySet()) { // [S]
+          final String headerName = entry.getKey();
+          final String headerValue;
+          if (entry.getValue().size() > 1)
+            headerValue = CollectionUtil.toString(entry.getValue(), HttpHeadersImpl.getHeaderValueDelimiters(headerName)[0]);
+          else
+            headerValue = entry.getValue().get(0).toString();
 
-        connection.setRequestProperty(headerName, headerValue);
+          connection.setRequestProperty(headerName, headerValue);
+        }
       }
 
       if (out != null) {
@@ -335,15 +337,17 @@ class InvocationImpl implements Invocation {
     @Override
     public Invocation.Builder headers(final MultivaluedMap<String,Object> headers) {
       getHeaders().clear();
-      for (final Map.Entry<String,List<Object>> entry : headers.entrySet()) { // [S]
-        final List<Object> values = entry.getValue();
-        if (values instanceof RandomAccess) {
-          for (int i = 0, i$ = values.size(); i < i$; ++i) // [RA]
-            header(entry.getKey(), values.get(i));
-        }
-        else {
-          for (final Object value : values) // [L]
-            header(entry.getKey(), value);
+      if (headers.size() > 0) {
+        for (final Map.Entry<String,List<Object>> entry : headers.entrySet()) { // [S]
+          final List<Object> values = entry.getValue();
+          if (values instanceof RandomAccess) {
+            for (int i = 0, i$ = values.size(); i < i$; ++i) // [RA]
+              header(entry.getKey(), values.get(i));
+          }
+          else {
+            for (final Object value : values) // [L]
+              header(entry.getKey(), value);
+          }
         }
       }
 
@@ -504,16 +508,22 @@ class InvocationImpl implements Invocation {
     }
   }
 
+  private static void appendHeader(final StringBuilder str, final String key, final String value) {
+    str.append("-H '").append(key).append(": ").append(value.replace("'", "\\'")).append("' ");
+  }
+
   private static void appendHeaders(final StringBuilder str, final HttpHeadersMap<String,Object> headers) {
-    for (final Map.Entry<String,List<String>> entry : headers.entrySet()) { // [S]
-      final List<String> values = entry.getValue();
-      if (values instanceof RandomAccess) {
-        for (int i = 0, i$ = values.size(); i < i$; ++i) // [RA]
-          str.append("-H '").append(entry.getKey()).append(": ").append(values.get(i).replace("'", "\\'")).append("' ");
-      }
-      else {
-        for (final String value : values) // [L]
-          str.append("-H '").append(entry.getKey()).append(": ").append(value.replace("'", "\\'")).append("' ");
+    if (headers.size() > 0) {
+      for (final Map.Entry<String,List<String>> entry : headers.entrySet()) { // [S]
+        final List<String> values = entry.getValue();
+        if (values instanceof RandomAccess) {
+          for (int i = 0, i$ = values.size(); i < i$; ++i) // [RA]
+            appendHeader(str, entry.getKey(), values.get(i));
+        }
+        else {
+          for (final String value : values) // [L]
+            appendHeader(str, entry.getKey(), value);
+        }
       }
     }
   }

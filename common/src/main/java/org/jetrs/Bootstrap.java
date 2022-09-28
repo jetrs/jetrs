@@ -97,11 +97,13 @@ class Bootstrap<R extends Comparable<? super R>> {
     return false;
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({"null", "unchecked"})
   void init(final Set<Object> singletons, final Set<Class<?>> classes, final ArrayList<R> resourceInfos) throws IllegalAccessException, InstantiationException, InvocationTargetException, PackageNotFoundException, IOException {
     final ArrayList<Consumer<Set<Class<?>>>> afterAdds = new ArrayList<>();
-    if (singletons != null || classes != null) {
-      if (singletons != null) {
+    final boolean hasSingletons = singletons != null && singletons.size() > 0;
+    final boolean hasClasses = classes != null && classes.size() > 0;
+    if (hasSingletons || hasClasses) {
+      if (hasSingletons) {
         for (final Object singleton : singletons) { // [S]
           if (singleton != null) {
             if (!singleton.getClass().isAnnotationPresent(Singleton.class))
@@ -112,17 +114,17 @@ class Bootstrap<R extends Comparable<? super R>> {
         }
       }
 
-      if (classes != null)
+      if (hasClasses)
         for (final Class<?> cls : classes) // [S]
           if (cls != null)
             addResourceOrProvider(afterAdds, resourceInfos, cls, null, false);
 
       if (afterAdds.size() > 0) {
         final Set<Class<?>> resourceClasses;
-        if (singletons == null) {
+        if (!hasSingletons) {
           resourceClasses = classes;
         }
-        else if (classes != null) {
+        else if (hasClasses) {
           resourceClasses = new HashSet<>(classes.size() + singletons.size());
           resourceClasses.addAll(classes);
           for (final Object singleton : singletons) // [S]

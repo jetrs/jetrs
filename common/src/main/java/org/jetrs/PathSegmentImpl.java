@@ -90,7 +90,7 @@ class PathSegmentImpl implements PathSegment {
   }
 
   boolean hasMatrixParams() {
-    return matrixParameters != null;
+    return matrixParameters.size() > 0;
   }
 
   @Override
@@ -109,7 +109,7 @@ class PathSegmentImpl implements PathSegment {
     if (path != null)
       builder.append(path);
 
-    if (matrixParameters != null)
+    if (matrixParameters.size() > 0)
       for (final String name : matrixParameters.keySet()) { // [S]
         final List<String> values = matrixParameters.get(name);
         if (values instanceof RandomAccess) {
