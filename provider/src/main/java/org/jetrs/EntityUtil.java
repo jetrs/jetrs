@@ -146,7 +146,7 @@ public class EntityUtil {
     final MultivaluedHashMap<String,String> map = new MultivaluedHashMap<>();
     final Reader r = new InputStreamReader(in, encoding);
     try {
-      for (int ch; (ch = r.read()) != -1;) { // [X]
+      for (int ch; (ch = r.read()) != -1;) { // [ST]
         if (ch == '&') {
           map.add(name, b.toString());
           b.setLength(0);
@@ -200,6 +200,9 @@ public class EntityUtil {
   }
 
   public static void writeFormParams(final MultivaluedMap<String,String> t, final MediaType mediaType, final OutputStream entityStream) throws IOException {
+    if (t.size() == 0)
+      return;
+
     final Charset charset = MediaTypes.getCharset(mediaType);
     final OutputStreamWriter writer = new OutputStreamWriter(entityStream, charset);
     final Iterator<Map.Entry<String,List<String>>> i1 = t.entrySet().iterator();
@@ -207,21 +210,22 @@ public class EntityUtil {
       final Map.Entry<String,List<String>> entity = i1.next();
       final String key = entity.getKey();
       final List<String> values = entity.getValue();
-      if (values.size() > 0) {
-        final Iterator<String> i2 = values.iterator();
-        do {
-          if (i++ > 0)
-            writer.write('&');
+      if (values.size() == 0)
+        continue;
 
-          writer.write(UrlEncoded.encodeString(key, charset));
-          final String value = i2.next();
-          if (value != null && value.length() > 0) {
-            writer.write('=');
-            writer.write(UrlEncoded.encodeString(value, charset));
-          }
+      final Iterator<String> i2 = values.iterator();
+      do {
+        if (i++ > 0)
+          writer.write('&');
+
+        writer.write(UrlEncoded.encodeString(key, charset));
+        final String value = i2.next();
+        if (value != null && value.length() > 0) {
+          writer.write('=');
+          writer.write(UrlEncoded.encodeString(value, charset));
         }
-        while (i2.hasNext());
       }
+      while (i2.hasNext());
     }
 
     writer.flush();

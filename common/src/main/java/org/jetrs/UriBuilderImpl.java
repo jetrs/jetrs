@@ -530,7 +530,7 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
       final Matcher matcher = UriEncoder.PARAM_REPLACEMENT.matcher(path);
       final StringBuilder builder = new StringBuilder();
       int from = 0;
-      for (int i = 0; matcher.find(); ++i, from = matcher.end()) { // [X]
+      for (int i = 0; matcher.find(); ++i, from = matcher.end()) { // [RA]
         builder.append(this.path, from, matcher.start());
         builder.append(pathParams.get(i));
       }
