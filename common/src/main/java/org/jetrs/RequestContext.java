@@ -38,7 +38,6 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Singleton;
-import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MediaType;
@@ -190,7 +189,7 @@ abstract class RequestContext<P> extends InterceptorContextImpl<P> {
   private Map<List<Object>,Object> injectedValueCache;
 
   @SuppressWarnings("unchecked")
-  private <T>T findInjectableValueFromCache(final AnnotatedElement element, final Annotation[] annotations, final Class<T> clazz, final Type type) throws IOException {
+  <T>T findInjectableValueFromCache(final AnnotatedElement element, final int parameterIndex, final Annotation[] annotations, final Class<T> clazz, final Type type) throws IOException {
     if (injectedValueCache == null) {
       injectedValueCache = new HashMap<>();
     }
@@ -201,7 +200,7 @@ abstract class RequestContext<P> extends InterceptorContextImpl<P> {
         return (T)instance;
     }
 
-    final T instance = findInjectableValue(element, annotations, clazz, type);
+    final T instance = findInjectableValue(element, parameterIndex, annotations, clazz, type);
     if (instance == null)
       return null;
 
@@ -210,25 +209,7 @@ abstract class RequestContext<P> extends InterceptorContextImpl<P> {
     return instance;
   }
 
-  final Object invokeMethod(final Object obj, final Method method) throws IllegalAccessException, InvocationTargetException, IOException {
-    if (method.getParameterCount() == 0)
-      return method.invoke(obj);
-
-    final Parameter[] parameters = method.getParameters();
-    final Class<?>[] parameterTypes = method.getParameterTypes();
-    final Type[] genericParameterTypes = method.getGenericParameterTypes();
-    final Annotation[][] parameterAnnotations = method.getParameterAnnotations();
-    final Object[] arguments = new Object[parameters.length];
-    for (int i = 0, i$ = parameters.length; i < i$; ++i) { // [A]
-      final Object arg = arguments[i] = findInjectableValueFromCache(parameters[i], parameterAnnotations[i], parameterTypes[i], genericParameterTypes[i]);
-      if (arg instanceof Exception)
-        throw new BadRequestException((Exception)arg);
-    }
-
-    return method.invoke(obj, arguments);
-  }
-
-  <T>T findInjectableValue(final AnnotatedElement element, final Annotation[] annotations, final Class<T> clazz, final Type type) throws IOException {
+  <T>T findInjectableValue(final AnnotatedElement element, final int parameterIndex, final Annotation[] annotations, final Class<T> clazz, final Type type) throws IOException {
     return findInjectableContextValue(clazz);
   }
 
@@ -316,15 +297,15 @@ abstract class RequestContext<P> extends InterceptorContextImpl<P> {
       for (int i = 0, i$ = parameters.length; i < i$; ++i) { // [A]
         final Parameter parameter = parameters[i];
         final Annotation[] annotations = parameterAnnotations[i];
-        final Annotation injectableAnnotation = findInjectableAnnotation(annotations, isResource);
-        if (injectableAnnotation == null) {
+        final Annotation annotation = findInjectableAnnotation(annotations, isResource);
+        if (annotation == null) {
           if (logger.isWarnEnabled())
             logger.warn("Unsupported parameter type: " + parameter.getName() + " on: " + clazz.getName() + "(" + Arrays.stream(parameters).map(p -> p.getType().getSimpleName()).collect(Collectors.joining(",")) + ")");
 
           continue OUT;
         }
 
-        arguments[i] = findInjectableValueFromCache(parameter, annotations, parameter.getType(), parameter.getParameterizedType());
+        arguments[i] = findInjectableValueFromCache(parameter, -1, annotations, parameter.getType(), parameter.getParameterizedType());
       }
 
       return constructor.newInstance(arguments);
@@ -351,6 +332,7 @@ abstract class RequestContext<P> extends InterceptorContextImpl<P> {
       method.invoke(instance);
     }
     catch (final Exception e) {
+      e.printStackTrace();
       final InstantiationException ie = new InstantiationException();
       ie.initCause(e.getCause());
       throw ie;
@@ -366,7 +348,7 @@ abstract class RequestContext<P> extends InterceptorContextImpl<P> {
       return depth == 0 ? null : new Field[depth];
 
     final Field field = fields[index];
-    final Object value = findInjectableValue(field, field.getAnnotations(), field.getType(), field.getGenericType());
+    final Object value = findInjectableValueFromCache(field, -1, field.getAnnotations(), field.getType(), field.getGenericType());
     if (value == null) {
       final Field[] uninjectedFields = injectFields(instance, fields, index + 1, depth + 1);
       uninjectedFields[depth] = field;
@@ -389,7 +371,7 @@ abstract class RequestContext<P> extends InterceptorContextImpl<P> {
     Classes.getDeclaredFieldsDeep(instance.getClass(), Throwing.rethrow((ThrowingPredicate<Field,?>)(final Field field) -> {
       final int modifiers = field.getModifiers();
       if (!Modifier.isStatic(modifiers) && !Modifier.isFinal(modifiers)) {
-        final Object value = findInjectableValueFromCache(field, field.getAnnotations(), field.getType(), field.getGenericType());
+        final Object value = findInjectableValueFromCache(field, -1, field.getAnnotations(), field.getType(), field.getGenericType());
         if (value != null) {
           field.setAccessible(true);
           field.set(instance, value);

@@ -500,7 +500,7 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
     final int matrixIndex = path.indexOf(';', start);
     if (matrixIndex > -1) {
       final MultivaluedHashMap<String,String> map = new MultivaluedHashMap<>();
-      PathSegmentImpl.parseMatrixParams(map, path, matrixIndex, false);
+      PathSegmentImpl.parseMatrixParams(map, path, matrixIndex);
       map.remove(name);
 
       final StringBuilder path = new StringBuilder(this.path);
@@ -508,13 +508,16 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
       if (map.size() > 0) {
         for (final String paramName : map.keySet()) { // [S]
           final List<String> paramValues = map.get(paramName);
-          if (paramValues instanceof RandomAccess) {
-            for (int i = 0, i$ = paramValues.size(); i < i$; ++i) // [RA]
-              appendParam(path, paramName, paramValues.get(i));
-          }
-          else {
-            for (final String paramValue : paramValues) // [L]
-              appendParam(path, paramName, paramValue);
+          final int size = paramValues.size();
+          if (size > 0) {
+            if (paramValues instanceof RandomAccess) {
+              for (int i = 0; i < size; ++i) // [RA]
+                appendParam(path, paramName, paramValues.get(i));
+            }
+            else {
+              for (final String paramValue : paramValues) // [L]
+                appendParam(path, paramName, paramValue);
+            }
           }
         }
       }

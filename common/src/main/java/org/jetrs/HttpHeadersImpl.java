@@ -368,7 +368,17 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
     if (i$ == 0)
       return "";
 
-    final char delimiter = getHeaderValueDelimiters(headerName)[0];
+    if (i$ == 1)
+      return values.get(0);
+
+    final char delimiter;
+    try {
+      delimiter = getHeaderValueDelimiters(headerName)[0];
+    }
+    catch (final ArrayIndexOutOfBoundsException e) {
+      throw new IllegalStateException("Found multiple header values for " + headerName + " that does not specify a delimiter", e);
+    }
+
     final StringBuilder builder = new StringBuilder();
     if (CollectionUtil.isRandomAccess(values)) {
       for (int i = 0; i < i$; ++i) { // [RA]

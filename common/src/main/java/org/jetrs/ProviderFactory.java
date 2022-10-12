@@ -54,7 +54,7 @@ class ProviderFactory<T> {
   }
 
   final T getSingletonOrFromRequestContext(final RequestContext<?> requestContext) {
-    if (singleton != null)
+    if (singleton != null || requestContext == null)
       return singleton;
 
     try {

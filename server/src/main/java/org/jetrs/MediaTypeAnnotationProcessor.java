@@ -36,14 +36,14 @@ class MediaTypeAnnotationProcessor<T extends Annotation> {
   }
 
   /**
-   * Tests whether the specified method contains an entity parameter.
+   * Tests whether the method of the specified resourceInfo contains an entity parameter.
    *
-   * @param method The {@link Method}.
+   * @param resourceInfo The {@link ResourceInfoImpl}.
    * @return {@code true} if the specified method contains an entity parameter; otherwise {@code false}.
    */
-  private static boolean hasEntityParameter(final Method method) {
+  private static boolean hasEntityParameter(final ResourceInfoImpl resourceInfo) {
     OUT:
-    for (final Annotation[] annotations : method.getParameterAnnotations()) { // [A]
+    for (final Annotation[] annotations : resourceInfo.getMethodParameterAnnotations()) { // [A]
       for (final Annotation annotation : annotations) // [A]
         for (final Class<?> paramAnnotation : ContainerRequestContextImpl.injectableAnnotationTypes) // [A]
           if (paramAnnotation.equals(annotation.annotationType()))
@@ -58,13 +58,13 @@ class MediaTypeAnnotationProcessor<T extends Annotation> {
   private final T annotation;
   private final ServerMediaType[] mediaTypes;
 
-  MediaTypeAnnotationProcessor(final Method method, final Class<T> annotationClass) {
-    this.annotation = getMethodClassAnnotation(annotationClass, method);
+  MediaTypeAnnotationProcessor(final ResourceInfoImpl resourceInfo, final Class<T> annotationClass) {
+    this.annotation = getMethodClassAnnotation(annotationClass, resourceInfo.getResourceMethod());
     ServerMediaType[] mediaTypes = MediaTypes.EMPTY_SERVER_TYPE;
     if (annotationClass == Consumes.class) {
       if (annotation != null) {
-        if (!hasEntityParameter(method))
-          throw new IllegalAnnotationException(annotation, method.getDeclaringClass().getName() + "." + method.getName() + "(" + ArrayUtil.toString(method.getParameterTypes(), ',', Class::getName) + ") does not specify entity parameters, and thus cannot declare @Consumes annotation");
+        if (!hasEntityParameter(resourceInfo))
+          throw new IllegalAnnotationException(annotation, resourceInfo.getResourceClass().getName() + "." + resourceInfo.getMethodName() + "(" + ArrayUtil.toString(resourceInfo.getMethodParameterTypes(), ',', Class::getName) + ") does not specify entity parameters, and thus cannot declare @Consumes annotation");
 
         mediaTypes = ServerMediaType.valueOf(((Consumes)annotation).value());
       }
@@ -74,8 +74,8 @@ class MediaTypeAnnotationProcessor<T extends Annotation> {
     }
     else if (annotationClass == Produces.class) {
       if (annotation != null) {
-        if (Void.TYPE.equals(method.getReturnType()))
-          throw new IllegalAnnotationException(annotation, method.getDeclaringClass().getName() + "." + method.getName() + "(" + ArrayUtil.toString(method.getParameterTypes(), ',', Class::getName) + ") is void return type, and thus cannot declare @Produces annotation");
+        if (Void.TYPE.equals(resourceInfo.getMethodReturnType()))
+          throw new IllegalAnnotationException(annotation, resourceInfo.getResourceClass().getName() + "." + resourceInfo.getMethodName() + "(" + ArrayUtil.toString(resourceInfo.getMethodParameterTypes(), ',', Class::getName) + ") is void return type, and thus cannot declare @Produces annotation");
 
         mediaTypes = ServerMediaType.valueOf(((Produces)annotation).value());
       }

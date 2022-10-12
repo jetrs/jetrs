@@ -18,11 +18,15 @@ package org.jetrs;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 
@@ -32,6 +36,7 @@ import javax.annotation.security.RolesAllowed;
 import javax.servlet.ServletException;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.ForbiddenException;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.NotAuthorizedException;
@@ -40,6 +45,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.ext.ParamConverterProvider;
 
 import org.libj.util.ArrayUtil;
 import org.slf4j.Logger;
@@ -72,24 +78,44 @@ class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImpl> {
     return null;
   }
 
+  private final ResourceInfos resourceInfos;
   private final HttpMethod httpMethod;
   private final Annotation securityAnnotation;
   private final Method resourceMethod;
+  private final String methodName;
+  private final Annotation[] methodAnnotations;
+  private final Annotation[][] methodParameterAnnotations;
+  private final int methodParameterCount;
+  private final Parameter[] methodParameters;
+  private final Class<?>[] methodParameterTypes;
+  private final Type[] methodGenericParameterTypes;
+  private final Class<?> methodReturnClass;
+  private final Type methodReturnType;
   private final Class<?> resourceClass;
   private final Object singleton;
   private final UriTemplate uriTemplate;
   private MediaTypeAnnotationProcessor<Consumes> consumesMatcher;
   private MediaTypeAnnotationProcessor<Produces> producesMatcher;
 
-  ResourceInfoImpl(final HttpMethod httpMethod, final Method method, final String baseUri, final Path classPath, final Path methodPath, final Object singleton) {
+  ResourceInfoImpl(final ResourceInfos resourceInfos, final HttpMethod httpMethod, final Method method, final String baseUri, final Path classPath, final Path methodPath, final Object singleton) {
+    this.resourceInfos = resourceInfos;
     this.httpMethod = httpMethod;
     final Annotation securityAnnotation = findSecurityAnnotation(method);
     this.securityAnnotation = securityAnnotation != null ? securityAnnotation : permitAll;
     this.resourceMethod = method;
+    this.methodName = method.getName();
+    this.methodAnnotations = method.getAnnotations();
+    this.methodParameterAnnotations = method.getParameterAnnotations();
+    this.methodParameterCount = method.getParameterCount();
+    this.methodParameters = method.getParameters();
+    this.methodParameterTypes = method.getParameterTypes();
+    this.methodGenericParameterTypes = method.getGenericParameterTypes();
+    this.methodReturnClass = method.getReturnType();
+    this.methodReturnType = method.getGenericReturnType();
     this.resourceClass = method.getDeclaringClass();
     this.singleton = singleton;
     if (singleton != null) {
-      final Field[] fields = ContainerRequestContextImpl.getContextFields(singleton);
+      final Field[] fields = ContainerRequestContextImpl.getContextFields(singleton.getClass());
       if (fields.length > 0)
         logger.warn("Fields with injectable annotations " + Arrays.toString(fields) + " will not be injected on singleton of class " + resourceClass.getName());
     }
@@ -98,11 +124,80 @@ class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImpl> {
   }
 
   private MediaTypeAnnotationProcessor<Consumes> getConsumesMatcher() {
-    return consumesMatcher == null ? consumesMatcher = new MediaTypeAnnotationProcessor<>(resourceMethod, Consumes.class) : consumesMatcher;
+    return consumesMatcher == null ? consumesMatcher = new MediaTypeAnnotationProcessor<>(this, Consumes.class) : consumesMatcher;
   }
 
   private MediaTypeAnnotationProcessor<Produces> getProducesMatcher() {
-    return producesMatcher == null ? producesMatcher = new MediaTypeAnnotationProcessor<>(resourceMethod, Produces.class) : producesMatcher;
+    return producesMatcher == null ? producesMatcher = new MediaTypeAnnotationProcessor<>(this, Produces.class) : producesMatcher;
+  }
+
+  private DefaultValueImpl[] defaultValues;
+
+  void initDefaultValues(final ArrayList<ProviderFactory<ParamConverterProvider>> paramConverterProviderFactories) {
+    if (defaultValues != null)
+      throw new IllegalStateException();
+
+    resourceInfos.initDefaultValues(resourceClass, paramConverterProviderFactories);
+    final int length = methodParameters.length;
+    if (length == 0) {
+      defaultValues = DefaultValueImpl.EMPTY_ARRAY;
+      return;
+    }
+
+    defaultValues = new DefaultValueImpl[length];
+    for (int i = 0; i < length; ++i) { // [A]
+      final Annotation[] parameterAnnotations = methodParameterAnnotations[i];
+      for (final Annotation parameterAnnotation : parameterAnnotations) { // [A]
+        if (parameterAnnotation instanceof DefaultValue) {
+          defaultValues[i] = ResourceInfos.digestDefaultValue((DefaultValue)parameterAnnotation, methodParameterTypes[i], methodGenericParameterTypes[i], parameterAnnotations, paramConverterProviderFactories);
+          break;
+        }
+      }
+    }
+  }
+
+  DefaultValueImpl getDefaultValue(final AnnotatedElement element, final int parameterIndex) {
+    if (parameterIndex != -1)
+      return defaultValues[parameterIndex];
+
+    final HashMap<AnnotatedElement,DefaultValueImpl> defaultValues = resourceInfos.getDefaultValues(resourceClass);
+    return defaultValues == null ? null : defaultValues.get(element);
+  }
+
+  String getMethodName() {
+    return methodName;
+  }
+
+  public int getParameterCount() {
+    return methodParameterCount;
+  }
+
+  Parameter[] getMethodParameters() {
+    return methodParameters;
+  }
+
+  Class<?>[] getMethodParameterTypes() {
+    return methodParameterTypes;
+  }
+
+  Type[] getMethodGenericParameterTypes() {
+    return methodGenericParameterTypes;
+  }
+
+  Annotation[][] getMethodParameterAnnotations() {
+    return methodParameterAnnotations;
+  }
+
+  Annotation[] getMethodAnnotations() {
+    return methodAnnotations;
+  }
+
+  Class<?> getMethodReturnClass() {
+    return methodReturnClass;
+  }
+
+  Type getMethodReturnType() {
+    return methodReturnType;
   }
 
   @Override
@@ -117,18 +212,6 @@ class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImpl> {
 
   Object getSingleton() {
     return singleton;
-  }
-
-  Annotation[] getMethodAnnotations() {
-    return resourceMethod.getAnnotations();
-  }
-
-  Class<?> getMethodReturnClass() {
-    return resourceMethod.getReturnType();
-  }
-
-  Type getMethodReturnType() {
-    return resourceMethod.getGenericReturnType();
   }
 
   boolean isCompatibleContentType(final MediaType contentType) {
@@ -203,7 +286,7 @@ class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImpl> {
     checkAllowed(requestContext);
     try {
       final Object instance = resourceMatch.getResourceInstance(requestContext);
-      return requestContext.invokeMethod(instance, resourceMethod);
+      return requestContext.invokeMethod(instance);
     }
     catch (final IllegalAccessException | InstantiationException e) {
       throw new ServletException(e);

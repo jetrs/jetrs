@@ -72,7 +72,7 @@ abstract class RestHttpServlet extends HttpServlet {
       }
     }
 
-    final ArrayList<ResourceInfoImpl> resourceInfos = new ArrayList<>();
+    final ResourceInfos resourceInfos = new ResourceInfos();
     final ArrayList<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories = new ArrayList<>();
     final ArrayList<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorProviderFactories = new ArrayList<>();
     final ArrayList<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderProviderFactories = new ArrayList<>();

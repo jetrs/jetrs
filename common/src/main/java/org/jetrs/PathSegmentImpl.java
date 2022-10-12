@@ -32,7 +32,7 @@ class PathSegmentImpl implements PathSegment {
   private final String path;
   private final MultivaluedMap<String,String> matrixParameters;
 
-  static void parseMatrixParams(final MultivaluedMap<String,String> matrixParameters, final String pathEncoded, int j, final boolean decode) {
+  static void parseMatrixParams(final MultivaluedMap<String,String> matrixParameters, final String pathEncoded, int j) {
     int i = j;
     final int len = pathEncoded.length();
 
@@ -61,28 +61,40 @@ class PathSegmentImpl implements PathSegment {
           value = param.substring(eq + 1);
         }
 
-        if (decode)
-          matrixParameters.add(URLs.decodePath(name), value == null ? null : URLs.decodePath(value));
-        else
-          matrixParameters.add(name, value);
+        matrixParameters.add(name, value);
       }
     }
     while (i < len);
   }
 
   PathSegmentImpl(final String pathEncoded, final boolean decode) {
-    final int s = pathEncoded.indexOf(';');
-    if (s < 0) {
-      this.matrixParameters = emptyMap;
-      this.pathEncoded = pathEncoded;
+    if (decode) {
+      final String path = URLs.decodePath(pathEncoded);
+      final int s = path.indexOf(';');
+      if (s < 0) {
+        this.path = path;
+        this.pathEncoded = pathEncoded;
+        this.matrixParameters = emptyMap;
+      }
+      else {
+        this.path = path.substring(0, s);
+        this.pathEncoded = pathEncoded.substring(0, pathEncoded.indexOf(';'));
+        parseMatrixParams(this.matrixParameters = new MultivaluedHashMap<>(), path, s);
+      }
     }
     else {
-      this.matrixParameters = new MultivaluedHashMap<>();
-      parseMatrixParams(this.matrixParameters, pathEncoded, s, decode);
-      this.pathEncoded = pathEncoded.substring(0, s);
+      final String path = pathEncoded;
+      final int s = path.indexOf(';');
+      if (s < 0) {
+        this.path = path;
+        this.pathEncoded = pathEncoded;
+        this.matrixParameters = emptyMap;
+      }
+      else {
+        this.path = this.pathEncoded = path.substring(0, s);
+        parseMatrixParams(this.matrixParameters = new MultivaluedHashMap<>(), path, s);
+      }
     }
-
-    this.path = decode ? URLs.decodePath(this.pathEncoded) : this.pathEncoded;
   }
 
   String getPathEncoded() {

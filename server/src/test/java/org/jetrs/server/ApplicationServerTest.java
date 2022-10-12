@@ -33,6 +33,8 @@ import java.util.Random;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.Response;
@@ -86,22 +88,38 @@ public class ApplicationServerTest {
 
   private static final int numTests = 100;
 
+  public static String s(final Object obj) {
+    return obj == null ? "" : obj.toString();
+  }
+
+  private static Response post(final Class<?> cls, final Object a, final Object b, final Object c) {
+    final MultivaluedHashMap<String,String> form = new MultivaluedHashMap<>(3);
+    if (a != null) {
+      form.add("p", String.valueOf(a));
+      form.add("q", String.valueOf(a));
+      form.add("Q", String.valueOf(a));
+    }
+
+    final WebTarget webTarget = client.target(serviceUrl + "/type/" + cls.getCanonicalName() + "/a" + s(a) + "/" + s(b) + "b/c" + s(c) + "d");
+    if (a != null)
+      webTarget
+        .queryParam("q", a)
+        .queryParam("Q", a);
+
+    final Invocation.Builder builder = webTarget.request();
+    if (a == null)
+      builder.header("X-Assert", "false");
+
+    return builder.post(Entity.form(form));
+  }
+
   @Test
   public void testTypeBoolean() throws Exception {
     for (int i = 0; i < numTests; ++i) { // [N]
       final boolean a = random.nextBoolean();
       final boolean b = random.nextBoolean();
       final boolean c = random.nextBoolean();
-      final MultivaluedHashMap<String,String> form = new MultivaluedHashMap<>(3);
-      form.add("p", String.valueOf(a));
-      form.add("q", String.valueOf(a));
-      form.add("Q", String.valueOf(a));
-      final Response response = client.target(serviceUrl + "/type/boolean/a" + a + "/" + b + "b/c" + c + "d")
-        .queryParam("q", a)
-        .queryParam("Q", a)
-        .request()
-        .post(Entity.form(form));
-
+      final Response response = post(boolean.class, a, b, c);
       final String data = assertResponse(200, response, String.class);
       assertEquals("" + a + b + c, data);
     }
@@ -113,17 +131,7 @@ public class ApplicationServerTest {
       final char a = Strings.getRandomAlpha(1).charAt(0);
       final char b = Strings.getRandomAlpha(1).charAt(0);
       final char c = Strings.getRandomAlpha(1).charAt(0);
-      final MultivaluedHashMap<String,String> form = new MultivaluedHashMap<>(3);
-      form.add("p", String.valueOf(a));
-      form.add("q", String.valueOf(a));
-      form.add("Q", String.valueOf(a));
-      final Response response = client.target(serviceUrl + "/type/char/a" + a + "/" + b + "b/c" + c + "d")
-        .queryParam("q", a)
-        .queryParam("Q", a)
-        .request()
-        .post(Entity.form(form));
-//        .post(Entity.entity(form, MediaType.TEXT_PLAIN));
-
+      final Response response = post(char.class, a, b, c);
       final String data = assertResponse(200, response, String.class);
       assertEquals("" + a + b + c, data);
     }
@@ -135,16 +143,7 @@ public class ApplicationServerTest {
       final byte a = (byte)random.nextInt();
       final byte b = (byte)random.nextInt();
       final byte c = (byte)random.nextInt();
-      final MultivaluedHashMap<String,String> form = new MultivaluedHashMap<>(3);
-      form.add("p", String.valueOf(a));
-      form.add("q", String.valueOf(a));
-      form.add("Q", String.valueOf(a));
-      final Response response = client.target(serviceUrl + "/type/byte/a" + a + "/" + b + "b/c" + c + "d")
-        .queryParam("q", a)
-        .queryParam("Q", a)
-        .request()
-        .post(Entity.form(form));
-
+      final Response response = post(byte.class, a, b, c);
       final String data = assertResponse(200, response, String.class);
       assertEquals(a + b + c, Integer.parseInt(data));
     }
@@ -156,16 +155,7 @@ public class ApplicationServerTest {
       final short a = (short)random.nextInt();
       final short b = (short)random.nextInt();
       final short c = (short)random.nextInt();
-      final MultivaluedHashMap<String,String> form = new MultivaluedHashMap<>(3);
-      form.add("p", String.valueOf(a));
-      form.add("q", String.valueOf(a));
-      form.add("Q", String.valueOf(a));
-      final Response response = client.target(serviceUrl + "/type/short/a" + a + "/" + b + "b/c" + c + "d")
-        .queryParam("q", a)
-        .queryParam("Q", a)
-        .request()
-        .post(Entity.form(form));
-
+      final Response response = post(short.class, a, b, c);
       final String data = assertResponse(200, response, String.class);
       assertEquals(a + b + c, Integer.parseInt(data));
     }
@@ -173,20 +163,13 @@ public class ApplicationServerTest {
 
   @Test
   public void testTypeInt() throws Exception {
+    Response response = post(int.class, null, null, null);
+    System.err.println(response.getStatus());
     for (int i = 0; i < numTests; ++i) { // [N]
       final int a = random.nextInt();
       final int b = random.nextInt();
       final int c = random.nextInt();
-      final MultivaluedHashMap<String,String> form = new MultivaluedHashMap<>(3);
-      form.add("p", String.valueOf(a));
-      form.add("q", String.valueOf(a));
-      form.add("Q", String.valueOf(a));
-      final Response response = client.target(serviceUrl + "/type/int/a" + a + "/" + b + "b/c" + c + "d")
-        .queryParam("q", a)
-        .queryParam("Q", a)
-        .request()
-        .post(Entity.form(form));
-
+      response = post(int.class, a, b, c);
       final String data = assertResponse(200, response, String.class);
       assertEquals(a + b + c, Integer.parseInt(data));
     }
@@ -198,16 +181,7 @@ public class ApplicationServerTest {
       final long a = random.nextLong();
       final long b = random.nextLong();
       final long c = random.nextLong();
-      final MultivaluedHashMap<String,String> form = new MultivaluedHashMap<>(3);
-      form.add("p", String.valueOf(a));
-      form.add("q", String.valueOf(a));
-      form.add("Q", String.valueOf(a));
-      final Response response = client.target(serviceUrl + "/type/long/a" + a + "/" + b + "b/c" + c + "d")
-        .queryParam("q", a)
-        .queryParam("Q", a)
-        .request()
-        .post(Entity.form(form));
-
+      final Response response = post(long.class, a, b, c);
       final String data = assertResponse(200, response, String.class);
       assertEquals(a + b + c, Long.parseLong(data));
     }
@@ -219,16 +193,7 @@ public class ApplicationServerTest {
       final float a = random.nextFloat();
       final float b = random.nextFloat();
       final float c = random.nextFloat();
-      final MultivaluedHashMap<String,String> form = new MultivaluedHashMap<>(3);
-      form.add("p", String.valueOf(a));
-      form.add("q", String.valueOf(a));
-      form.add("Q", String.valueOf(a));
-      final Response response = client.target(serviceUrl + "/type/float/a" + a + "/" + b + "b/c" + c + "d")
-        .queryParam("q", a)
-        .queryParam("Q", a)
-        .request()
-        .post(Entity.form(form));
-
+      final Response response = post(float.class, a, b, c);
       final String data = assertResponse(200, response, String.class);
       assertEquals(a + b + c, Float.parseFloat(data), 0);
     }
@@ -240,16 +205,7 @@ public class ApplicationServerTest {
       final double a = random.nextDouble();
       final double b = random.nextDouble();
       final double c = random.nextDouble();
-      final MultivaluedHashMap<String,String> form = new MultivaluedHashMap<>(3);
-      form.add("p", String.valueOf(a));
-      form.add("q", String.valueOf(a));
-      form.add("Q", String.valueOf(a));
-      final Response response = client.target(serviceUrl + "/type/double/a" + a + "/" + b + "b/c" + c + "d")
-        .queryParam("q", a)
-        .queryParam("Q", a)
-        .request()
-        .post(Entity.form(form));
-
+      final Response response = post(double.class, a, b, c);
       final String data = assertResponse(200, response, String.class);
       assertEquals(a + b + c, Double.parseDouble(data), 0);
     }
@@ -339,7 +295,7 @@ public class ApplicationServerTest {
       .get();
 
     final String data = assertResponse(200, response, String.class);
-    assertEquals("List of Books order by: [aA, BaCb] :: [BaCb, ba, , , , , , , foo, bar, hi, hello, good, bye] :: null", data);
+    assertEquals("List of Books order by: [aA, BaCb] :: [BaCb, ba, , , , , , , foo, bar, hi, hello, good, bye] :: []", data);
   }
 
   @Test

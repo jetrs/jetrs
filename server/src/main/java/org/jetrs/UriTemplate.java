@@ -210,18 +210,19 @@ class UriTemplate implements Comparable<UriTemplate> {
         }
       }
       else if (ch == ':') {
-        if (mark == -1) {
-          mark = i;
-          if (name == null) {
-            if (i - start == 0)
-              throw new IllegalArgumentException("Expression \"" + uriTemplate + "\" does not match expected format: \"(\\w+)\\s*(:\\s*(.+))?\" at index 0");
+        if (mark != -1)
+          throw new IllegalArgumentException("Expression \"" + uriTemplate + "\" does not match expected format: \"(\\w+)\\s*(:\\s*(.+))?\" at index 0");
 
-            name = escapeName(uriTemplate, start, i);
-            start = -1;
-          }
+        mark = i;
+        if (name == null) {
+          if (i - start == 0)
+            throw new IllegalArgumentException("Expression \"" + uriTemplate + "\" does not match expected format: \"(\\w+)\\s*(:\\s*(.+))?\" at index 0");
 
-          continue;
+          name = escapeName(uriTemplate, start, i);
+          start = -1;
         }
+
+        continue;
       }
       else if (ch == '}') {
         if (i - start == 0)

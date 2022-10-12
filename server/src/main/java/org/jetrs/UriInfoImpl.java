@@ -20,6 +20,7 @@ import static org.libj.lang.Assertions.*;
 
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -117,7 +118,7 @@ class UriInfoImpl implements UriInfo {
   }
 
   @Override
-  public List<PathSegment> getPathSegments(final boolean decode) {
+  public ArrayList<PathSegment> getPathSegments(final boolean decode) {
     if (decode) {
       if (pathSegmentsDecoded != null)
         return pathSegmentsDecoded;

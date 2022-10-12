@@ -39,7 +39,7 @@ import org.libj.lang.PackageNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class Bootstrap<R extends Comparable<? super R>> {
+class Bootstrap<R extends ArrayList<? extends Comparable<?>>> {
   static final Logger logger = LoggerFactory.getLogger(Bootstrap.class);
   static final Comparator<TypeProviderFactory<?>> providerResourceComparator = Comparator.nullsFirst((o1, o2) -> o1.getType() == o2.getType() ? Integer.compare(o1.getPriority(), o2.getPriority()) : o1.getType().isAssignableFrom(o2.getType()) ? -1 : 1);
   private static final String[] excludeStartsWith = {"jdk.", "java.", "javax.", "com.sun.", "sun.", "org.w3c.", "org.xml.", "org.jvnet.", "org.joda.", "org.jcp.", "apple.security."};
@@ -73,7 +73,7 @@ class Bootstrap<R extends Comparable<? super R>> {
   }
 
   @SuppressWarnings("unchecked")
-  <T>boolean addResourceOrProvider(final ArrayList<Consumer<Set<Class<?>>>> afterAdds, final ArrayList<R> resourceInfos, final Class<? extends T> clazz, final T singleton, final boolean scanned) throws IllegalAccessException, InstantiationException, InvocationTargetException {
+  <T>boolean addResourceOrProvider(final ArrayList<Consumer<Set<Class<?>>>> afterAdds, final R resourceInfos, final Class<? extends T> clazz, final T singleton, final boolean scanned) throws IllegalAccessException, InstantiationException, InvocationTargetException {
     if (clazz.isAnnotationPresent(Provider.class)) {
       if (ReaderInterceptor.class.isAssignableFrom(clazz))
         readerInterceptorProviderFactories.add(new ReaderInterceptorProviderFactory((Class<ReaderInterceptor>)clazz, (ReaderInterceptor)singleton));
@@ -98,7 +98,7 @@ class Bootstrap<R extends Comparable<? super R>> {
   }
 
   @SuppressWarnings({"null", "unchecked"})
-  void init(final Set<Object> singletons, final Set<Class<?>> classes, final ArrayList<R> resourceInfos) throws IllegalAccessException, InstantiationException, InvocationTargetException, PackageNotFoundException, IOException {
+  void init(final Set<Object> singletons, final Set<Class<?>> classes, final R resourceInfos) throws IllegalAccessException, InstantiationException, InvocationTargetException, PackageNotFoundException, IOException {
     final ArrayList<Consumer<Set<Class<?>>>> afterAdds = new ArrayList<>();
     final boolean hasSingletons = singletons != null && singletons.size() > 0;
     final boolean hasClasses = classes != null && classes.size() > 0;
@@ -141,11 +141,11 @@ class Bootstrap<R extends Comparable<? super R>> {
     else {
       final Set<Class<?>>[] resourceClasses = new Set[1];
       final Set<Class<?>> initedClasses = new HashSet<>();
-      final Predicate<Class<?>> initialize = t -> {
-        if (!Modifier.isAbstract(t.getModifiers()) && !initedClasses.contains(t)) {
+      final Predicate<Class<?>> initialize = cls -> {
+        if (!Modifier.isAbstract(cls.getModifiers()) && !initedClasses.contains(cls)) {
           try {
-            if (addResourceOrProvider(afterAdds, resourceInfos, t, null, true))
-              (resourceClasses[1] == null ? resourceClasses[1] = new HashSet<>() : resourceClasses[1]).add(t);
+            if (addResourceOrProvider(afterAdds, resourceInfos, cls, null, true))
+              (resourceClasses[1] == null ? resourceClasses[1] = new HashSet<>() : resourceClasses[1]).add(cls);
           }
           catch (final IllegalAccessException | InstantiationException e) {
             throw new ProviderInstantiationException(e);
@@ -155,7 +155,7 @@ class Bootstrap<R extends Comparable<? super R>> {
           }
         }
 
-        initedClasses.add(t);
+        initedClasses.add(cls);
         return false;
       };
 

@@ -242,6 +242,7 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
 
   void writeBody(final MessageBodyWriter<?> messageBodyWriter) throws IOException {
     this.messageBodyWriter = messageBodyWriter;
+    this.interceptorIndex = -1;
     proceed();
   }
 }

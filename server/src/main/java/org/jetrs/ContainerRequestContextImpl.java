@@ -29,7 +29,6 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Parameter;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.security.Principal;
@@ -41,8 +40,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.RandomAccess;
-import java.util.Set;
-import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 
@@ -116,11 +113,11 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
 
   private static Field[] EMPTY_FIELDS = {};
 
-  final static Field[] getContextFields(final Object instance) {
-    return getInjectableFields(Classes.getDeclaredFieldsDeep(instance.getClass()), 0, 0);
+  final static Field[] getContextFields(final Class<?> cls) {
+    return getContextFields(Classes.getDeclaredFieldsDeep(cls), 0, 0);
   }
 
-  private static Field[] getInjectableFields(final Field[] fields, final int index, final int depth) {
+  private static Field[] getContextFields(final Field[] fields, final int index, final int depth) {
     if (index == fields.length)
       return depth == 0 ? EMPTY_FIELDS : new Field[depth];
 
@@ -132,7 +129,7 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
 
     hasContext |= field.isAnnotationPresent(Context.class);
 
-    final Field[] result = getInjectableFields(fields, index + 1, hasContext ? depth + 1 : depth);
+    final Field[] result = getContextFields(fields, index + 1, hasContext ? depth + 1 : depth);
     if (hasContext)
       result[depth] = field;
 
@@ -150,6 +147,7 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
 
   private ResourceMatches resourceMatches;
   private ResourceMatch resourceMatch;
+  private ResourceInfoImpl resourceInfo;
   private UriInfoImpl uriInfo;
 
   private HttpHeadersImpl headers;
@@ -295,7 +293,7 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
       return (T)httpServletResponse;
 
     if (ResourceInfo.class.isAssignableFrom(clazz))
-      return resourceMatch == null ? null : (T)resourceMatch.getResourceInfo();
+      return (T)resourceInfo;
 
     if (UriInfo.class.isAssignableFrom(clazz))
       return (T)getUriInfo();
@@ -312,16 +310,34 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
     return super.findInjectableContextValue(clazz);
   }
 
+  final Object invokeMethod(final Object obj) throws IllegalAccessException, InvocationTargetException, IOException {
+    if (resourceInfo.getParameterCount() == 0)
+      return resourceInfo.getResourceMethod().invoke(obj);
+
+    final Parameter[] parameters = resourceInfo.getMethodParameters();
+    final Class<?>[] parameterTypes = resourceInfo.getMethodParameterTypes();
+    final Type[] genericParameterTypes = resourceInfo.getMethodGenericParameterTypes();
+    final Annotation[][] parameterAnnotations = resourceInfo.getMethodParameterAnnotations();
+    final Object[] arguments = new Object[parameters.length];
+    for (int i = 0, i$ = parameters.length; i < i$; ++i) { // [A]
+      final Object arg = arguments[i] = findInjectableValueFromCache(parameters[i], i, parameterAnnotations[i], parameterTypes[i], genericParameterTypes[i]);
+      if (arg instanceof Exception)
+        throw new BadRequestException((Exception)arg);
+    }
+
+    return resourceInfo.getResourceMethod().invoke(obj, arguments);
+  }
+
   @Override
   @SuppressWarnings("unchecked")
-  <T>T findInjectableValue(final AnnotatedElement element, final Annotation[] annotations, final Class<T> clazz, final Type type) throws IOException {
-    T injectableObject = super.findInjectableValue(element, annotations, clazz, type);
+  <T>T findInjectableValue(final AnnotatedElement element, final int parameterIndex, final Annotation[] annotations, final Class<T> clazz, final Type type) throws IOException {
+    T injectableObject = super.findInjectableValue(element, parameterIndex, annotations, clazz, type);
     if (injectableObject != null)
       return injectableObject;
 
     final Annotation annotation = findInjectableAnnotation(annotations, true);
     if (annotation != null) {
-      final Object argument = getParamObject(element, annotation, annotations, clazz, type);
+      final Object argument = getParamObject(element, parameterIndex, annotation, annotations, clazz, type);
       if (argument instanceof Exception)
         throw new BadRequestException((Exception)argument);
 
@@ -350,32 +366,152 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
     }
   }
 
+  private DefaultValueImpl getDefaultValue(final AnnotatedElement element, final int parameterIndex) {
+    return resourceInfo.getDefaultValue(element, parameterIndex);
+  }
+
+  private static boolean componentTypeMatches(final Class<?> componentType, final Object value) {
+    return componentType.isInstance(value);
+  }
+
+  private static List<?> getHeaderValues(final Class<?> componentType, final MirrorQualityList<String,Object> headerStringValues, final String headerName) {
+    if (componentType == String.class)
+      return headerStringValues;
+
+    final MirrorQualityList<Object,String> headerObjectValue = headerStringValues.getMirrorList();
+    final Object headerValue = headerObjectValue.get(0);
+    if (headerValue != null && componentTypeMatches(componentType, headerValue))
+      return headerObjectValue;
+
+    throw new BadRequestException("Invalid header value: " + headerName + ": " + headerStringValues.get(0)); // [JAX-RS 3.2]
+  }
+
   @SuppressWarnings("unchecked")
-  private Object getParamObject(final AnnotatedElement element, final Annotation annotation, final Annotation[] annotations, final Class<?> clazz, final Type type) {
-    final UriInfo uriInfo = getUriInfo();
-    if (annotation.annotationType() == QueryParam.class) {
-      final boolean decode = ParameterUtil.decode(annotations);
-      return ParameterUtil.convertParameter(clazz, type, annotations, uriInfo.getQueryParameters(decode).get(((QueryParam)annotation).value()), runtimeContext.getParamConverterProviderFactories(), this);
+  private Object getParamObject(final AnnotatedElement element, final int parameterIndex, final Annotation annotation, final Annotation[] annotations, final Class<?> rawType, final Type genericType) throws IOException {
+    final Class<? extends Annotation> annotationType = annotation.annotationType();
+    if (annotationType == CookieParam.class) {
+      final Map<String,Cookie> cookies = getCookies();
+      final Object value;
+      if (cookies != null && (value = cookies.get(((CookieParam)annotation).value())) != null)
+        return value; // FIXME: This is wrong!
+
+      final ParamPlurality<?> paramPlurality = ParamPlurality.fromClass(rawType);
+
+      final DefaultValueImpl defaultValue = getDefaultValue(element, parameterIndex);
+      if (defaultValue == null)
+        return paramPlurality.getNullValue(rawType);
+
+      if (defaultValue.isConverted)
+        return defaultValue.convertedValue;
+
+      final String stringValue = defaultValue.annotatedValue;
+
+      // FIXME: Param types other than `Cookie` still need to be implemented.
+      return DefaultParamConverterProvider.convertParameter(rawType, genericType, annotations, paramPlurality, stringValue, null, false, runtimeContext.getParamConverterProviderFactories(), this);
     }
 
-    if (annotation.annotationType() == FormParam.class)
-      return httpServletRequest.getParameter(((FormParam)annotation).value());
+    if (annotationType == HeaderParam.class) {
+      final String headerName = ((HeaderParam)annotation).value();
+      String stringValue = getHttpHeaders().getString(headerName);
 
-    if (annotation.annotationType() == PathParam.class) {
-      final boolean decode = ParameterUtil.decode(annotations);
+      final ParamPlurality<?> paramPlurality = ParamPlurality.fromClass(rawType);
+      if (stringValue == null) {
+        final DefaultValueImpl defaultValue = getDefaultValue(element, parameterIndex);
+        if (defaultValue == null)
+          return paramPlurality.getNullValue(rawType);
+
+        if (defaultValue.isConverted)
+          return defaultValue.convertedValue;
+
+        stringValue = defaultValue.annotatedValue;
+      }
+
+      final MirrorQualityList<String,Object> headerStringValues = getHttpHeaders().get(headerName);
+      if (paramPlurality == ParamPlurality.COLLECTION) {
+        final Class<?> componentType = paramPlurality.getMemberClass(annotationType, genericType);
+        final List<?> headerValues = getHeaderValues(componentType, headerStringValues, headerName);
+        // FIXME: Note this does not consider the generic type of the list -- should it try to do a conversion if the classes don't match?!
+        if (rawType.isAssignableFrom(MirrorQualityList.class))
+          return headerValues;
+
+        @SuppressWarnings("rawtypes")
+        final Collection list = ParamPlurality.COLLECTION.newContainer(rawType, parameterIndex);
+        list.addAll(headerValues);
+        return list;
+      }
+
+      if (paramPlurality == ParamPlurality.ARRAY) {
+        // FIXME: Note this does not consider the generic type of the list -- should it try to do a conversion if the classes don't match?!
+        final Class<?> componentType = paramPlurality.getMemberClass(annotationType, genericType);
+        final List<?> headerValues = getHeaderValues(componentType, headerStringValues, headerName);
+        return headerValues.toArray((Object[])Array.newInstance(componentType, headerValues.size()));
+      }
+
+      if (rawType == String.class)
+        return headerStringValues.get(0);
+
+      final MirrorQualityList<Object,String> headerObjectValue = headerStringValues.getMirrorList();
+      final Object obj = headerObjectValue.get(0);
+      if (rawType.isInstance(obj))
+        return obj;
+
+      final Object converted = DefaultParamConverterProvider.convertParameter(rawType, genericType, annotations, paramPlurality, stringValue, null, false, runtimeContext.getParamConverterProviderFactories(), this);
+      if (converted != null)
+        return converted;
+
+      throw new BadRequestException("Invalid header value: " + headerName + ": " + headerStringValues.get(0)); // [JAX-RS 3.2]
+    }
+
+    if (annotationType == FormParam.class) {
+      final InputStream entityStream = getEntityStream();
+      String firstValue = null;
+      List<String> values = null;
+      if (entityStream != null) {
+        final MultivaluedMap<String,String> map = EntityUtil.readFormParams(entityStream, MediaTypes.getCharset(getMediaType()), EntityUtil.shouldDecode(annotations));
+        values = map.get(((FormParam)annotation).value());
+      }
+
+      final ParamPlurality<?> paramPlurality = ParamPlurality.fromClass(rawType);
+      if (values == null) {
+        final DefaultValueImpl defaultValue = getDefaultValue(element, parameterIndex);
+        if (defaultValue == null)
+          return paramPlurality.getNullValue(rawType);
+
+        if (defaultValue.isConverted)
+          return defaultValue.convertedValue;
+
+        firstValue = defaultValue.annotatedValue;
+      }
+
+      return DefaultParamConverterProvider.convertParameter(rawType, genericType, annotations, paramPlurality, firstValue, values, false, runtimeContext.getParamConverterProviderFactories(), this);
+    }
+
+    if (annotationType == QueryParam.class) {
+      final boolean decode = EntityUtil.shouldDecode(annotations);
+      List<String> values = getUriInfo().getQueryParameters(decode).get(((QueryParam)annotation).value());
+      String stringValue = null;
+
+      final ParamPlurality<?> paramPlurality = ParamPlurality.fromClass(rawType);
+      if (values == null) {
+        final DefaultValueImpl defaultValue = getDefaultValue(element, parameterIndex);
+        if (defaultValue == null)
+          return paramPlurality.getNullValue(rawType);
+
+        if (defaultValue.isConverted)
+          return defaultValue.convertedValue;
+
+        stringValue = defaultValue.annotatedValue;
+      }
+
+      return DefaultParamConverterProvider.convertParameter(rawType, genericType, annotations, paramPlurality, stringValue, values, false, runtimeContext.getParamConverterProviderFactories(), this);
+    }
+
+    if (annotationType == PathParam.class) {
+      final boolean decode = EntityUtil.shouldDecode(annotations);
       final String pathParamNameToMatch = ((PathParam)annotation).value();
 
-      final MultivaluedMap<String,String> pathParameters = uriInfo.getPathParameters(decode);
-      final List<String> values = pathParameters.get(pathParamNameToMatch);
-      // FIXME: Another useful warning would be: notify if more than 1 @PathParam annotations specify the same name
-      if (values == null)
-        if (logger.isWarnEnabled())
-          logger.warn("@PathParam(\"" + pathParamNameToMatch + "\") not found in URI template of @Path on: " + element);
-
-      if (clazz == PathSegment.class) {
-        final List<PathSegment> pathSegments = uriInfo.getPathSegments(decode);
-        if (!(pathSegments instanceof RandomAccess))
-          throw new IllegalStateException();
+      if (rawType == PathSegment.class) {
+        final ArrayList<PathSegment> pathSegments = getUriInfo().getPathSegments(decode);
 
         final String[] pathParamNames = resourceMatch.getPathParamNames();
         final long[] regionStartEnds = resourceMatch.getRegionStartEnds();
@@ -403,125 +539,72 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
         return null;
       }
 
-      if ((Set.class.isAssignableFrom(clazz) || List.class.isAssignableFrom(clazz) || SortedSet.class.isAssignableFrom(clazz)) && (Class<?>)((ParameterizedType)type).getActualTypeArguments()[0] == PathSegment.class || clazz.isArray() && clazz.getComponentType() == PathSegment.class) {
-        final List<PathSegment> pathSegments = uriInfo.getPathSegments(decode);
-        if (!(pathSegments instanceof RandomAccess))
-          throw new IllegalStateException();
+      final ParamPlurality<?> paramPlurality = ParamPlurality.fromClass(rawType);
+
+      final Class<?> memberClass;
+      if ((paramPlurality == ParamPlurality.COLLECTION || paramPlurality == ParamPlurality.ARRAY) && (memberClass = paramPlurality.getMemberClass(rawType, genericType)) == PathSegment.class) {
+        final ArrayList<PathSegment> pathSegments = getUriInfo().getPathSegments(decode);
 
         int segStart = 0, segEnd;
         final String[] pathParamNames = resourceMatch.getPathParamNames();
         final long[] regionStartEnds = resourceMatch.getRegionStartEnds();
-        try {
-          final Collection<PathSegment> matchedSegments = clazz.isArray() ? new ArrayList<>() : (Collection<PathSegment>)ParameterUtil.newCollection(clazz);
-          OUT:
-          for (int i = 0, j = 0; i < pathParamNames.length; ++i) { // [A]
-            if (matches(pathParamNameToMatch, pathParamNames[i])) {
-              boolean inRegion = false;
-              final long regionStartEnd = regionStartEnds[i];
-              final int regionStart = Numbers.Composite.decodeInt(regionStartEnd, 0);
-              final int regionEnd = Numbers.Composite.decodeInt(regionStartEnd, 1);
-              while (true) {
-                final PathSegment pathSegment = pathSegments.get(j);
-                final String path = ((PathSegmentImpl)pathSegment).getPathEncoded();
-                segEnd = segStart + path.length();
+        final Collection<PathSegment> matchedSegments = paramPlurality == ParamPlurality.ARRAY ? new ArrayList<>() : (Collection<PathSegment>)paramPlurality.newContainer(rawType, Integer.MAX_VALUE); // FIXME: Size is unknown at this time.
+        OUT:
+        for (int i = 0, j = 0; i < pathParamNames.length; ++i) { // [A]
+          if (matches(pathParamNameToMatch, pathParamNames[i])) {
+            boolean inRegion = false;
+            final long regionStartEnd = regionStartEnds[i];
+            final int regionStart = Numbers.Composite.decodeInt(regionStartEnd, 0);
+            final int regionEnd = Numbers.Composite.decodeInt(regionStartEnd, 1);
+            for (;;) {
+              final PathSegment pathSegment = pathSegments.get(j);
+              final String path = ((PathSegmentImpl)pathSegment).getPathEncoded();
+              segEnd = segStart + path.length();
 
-                if (inRegion) {
-                  if (rangeOverlaps(segStart, segEnd, regionStart, regionEnd)) {
-                    matchedSegments.add(pathSegment);
-                  }
-                  else {
-                    break;
-                  }
-                }
-                else if (inRegion = rangeOverlaps(segStart, segEnd, regionStart, regionEnd)) {
+              if (inRegion) {
+                if (rangeOverlaps(segStart, segEnd, regionStart, regionEnd))
                   matchedSegments.add(pathSegment);
-                }
-
-                if (++j == pathSegments.size())
-                  break OUT;
-
-                segStart = segEnd + 1; // add '/' char
+                else
+                  break;
               }
+              else if (inRegion = rangeOverlaps(segStart, segEnd, regionStart, regionEnd)) {
+                matchedSegments.add(pathSegment);
+              }
+
+              if (++j == pathSegments.size())
+                break OUT;
+
+              segStart = segEnd + 1; // add '/' char
             }
           }
-
-          return clazz.isArray() ? matchedSegments.toArray((Object[])Array.newInstance(clazz.getComponentType(), matchedSegments.size())) : matchedSegments;
         }
-        catch (final IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException e) {
-          // FIXME: This error is kind of hidden in the logs, but it should somehow be highlighted to be fixed?!
-          if (logger.isErrorEnabled())
-            logger.error(e.getMessage(), e);
 
-          return e instanceof InvocationTargetException ? e.getCause() : e;
+        return paramPlurality == ParamPlurality.ARRAY ? matchedSegments.toArray((Object[])Array.newInstance(memberClass, matchedSegments.size())) : matchedSegments;
+      }
+
+      final MultivaluedMap<String,String> pathParameters = getUriInfo().getPathParameters(decode);
+      List<String> values = pathParameters.get(pathParamNameToMatch);
+      // FIXME: Another useful warning would be: notify if more than 1 @PathParam annotations specify the same name
+      String value = null;
+      if (values == null) {
+        if (logger.isWarnEnabled())
+          logger.warn("@PathParam(\"" + pathParamNameToMatch + "\") not found in URI template of @Path on: " + element);
+
+        final DefaultValueImpl defaultValue = getDefaultValue(element, parameterIndex);
+        if (defaultValue != null) {
+          if (defaultValue.isConverted)
+            return defaultValue.convertedValue;
+
+          value = defaultValue.annotatedValue;
         }
       }
 
-      return ParameterUtil.convertParameter(clazz, type, annotations, values, runtimeContext.getParamConverterProviderFactories(), this);
+      return DefaultParamConverterProvider.convertParameter(rawType, genericType, annotations, paramPlurality, value, values, false, runtimeContext.getParamConverterProviderFactories(), this);
     }
 
-    if (annotation.annotationType() == CookieParam.class) {
-      final Map<String,Cookie> cookies = getCookies();
-      if (cookies == null)
-        return null;
-
-      final String cookieParam = ((CookieParam)annotation).value();
-      return cookies.get(cookieParam);
-    }
-
-    if (annotation.annotationType() == HeaderParam.class) {
-      final String headerParam = ((HeaderParam)annotation).value();
-      final List<String> headerStringValue = getHttpHeaders().get(headerParam);
-      if (headerStringValue == null)
-        return null;
-
-      if (clazz == String.class)
-        return getHeaderString(headerParam);
-
-      if (Set.class.isAssignableFrom(clazz) || List.class.isAssignableFrom(clazz) || SortedSet.class.isAssignableFrom(clazz)) {
-        try {
-          final Class<?> componentType = (Class<?>)((ParameterizedType)type).getActualTypeArguments()[0];
-
-          final List<?> headerValues = componentType == String.class ? headerStringValue : getHttpHeaders().getMirrorMap().get(headerParam); // FIXME: Should this be unmodifiable?
-          // FIXME: Note this does not consider the generic type of the list -- should it try to do a conversion if the classes don't match?!
-          if (clazz.isAssignableFrom(MirrorQualityList.class))
-            return headerValues;
-
-          @SuppressWarnings("rawtypes")
-          final Collection list = ParameterUtil.newCollection(clazz);
-          list.addAll(headerValues);
-          return list;
-        }
-        catch (final IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException e) {
-          // FIXME: This error is kind of hidden in the logs, but it should somehow be highlighted to be fixed?!
-          if (logger.isErrorEnabled())
-            logger.error(e.getMessage(), e);
-
-          return e instanceof InvocationTargetException ? e.getCause() : e;
-        }
-      }
-
-      if (clazz.isArray()) {
-        // FIXME: Note this does not consider the generic type of the list -- should it try to do a conversion if the classes don't match?!
-        final Class<?> componentType = clazz.getComponentType();
-        final List<?> headerValues = componentType == String.class ? headerStringValue : getHttpHeaders().getMirrorMap().get(headerParam);
-        return headerValues.toArray((Object[])Array.newInstance(componentType, headerValues.size()));
-      }
-
-      final Object headerValue = getHttpHeaders().getMirrorMap().getFirst(headerParam);
-      if (headerValue == null)
-        throw new BadRequestException("Invalid header value: " + headerParam + ": " + headerStringValue.get(0));
-
-      if (clazz.isAssignableFrom(headerValue.getClass()))
-        return headerValue;
-
-      return ParameterUtil.convertParameter(clazz, type, annotations, headerStringValue, runtimeContext.getParamConverterProviderFactories(), this);
-    }
-
-    if (annotation.annotationType() == MatrixParam.class) {
-      final boolean decode = ParameterUtil.decode(annotations);
-      final List<PathSegment> pathSegments = uriInfo.getPathSegments(decode);
-      if (!(pathSegments instanceof RandomAccess))
-        throw new IllegalStateException();
+    if (annotationType == MatrixParam.class) {
+      final boolean decode = EntityUtil.shouldDecode(annotations);
+      final ArrayList<PathSegment> pathSegments = getUriInfo().getPathSegments(decode);
 
       final int i$ = pathSegments.size();
       final List<String> matrixParams;
@@ -533,10 +616,26 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
         matrixParams = values == null ? null : Arrays.asList(values);
       }
 
-      return ParameterUtil.convertParameter(clazz, type, annotations, matrixParams, runtimeContext.getParamConverterProviderFactories(), this);
+      final ParamPlurality<?> paramPlurality = ParamPlurality.fromClass(rawType);
+      final String stringValue;
+      if (matrixParams == null) {
+        final DefaultValueImpl defaultValue = getDefaultValue(element, parameterIndex);
+        if (defaultValue == null)
+          return paramPlurality.getNullValue(rawType);
+
+        if (defaultValue.isConverted)
+          return defaultValue.convertedValue;
+
+        stringValue = defaultValue.annotatedValue;
+      }
+      else {
+        stringValue = matrixParams.get(0);
+      }
+
+      return DefaultParamConverterProvider.convertParameter(rawType, genericType, annotations, paramPlurality, stringValue, matrixParams, false, runtimeContext.getParamConverterProviderFactories(), this);
     }
 
-    throw new UnsupportedOperationException("Unsupported param annotation type: " + annotation.annotationType());
+    throw new UnsupportedOperationException("Unsupported param annotation type: " + annotationType);
   }
 
   private String[] getMatrixParamValue(final String matrixParamName, final List<PathSegment> pathSegments, final int size) {
@@ -607,6 +706,7 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
     // FIXME: any other ResourceMatch would be retrieved. Is this truly the case?!
     this.resourceMatches = resourceMatches;
     this.resourceMatch = resourceMatches.get(0);
+    this.resourceInfo = resourceMatch.getResourceInfo();
     return true;
   }
 
@@ -749,7 +849,6 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
   }
 
   void service() throws IOException, ServletException {
-    final ResourceInfoImpl resourceInfo = resourceMatch.getResourceInfo();
     final Object result = resourceMatch.service(this);
 
     if (result instanceof Response) {
@@ -876,8 +975,7 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
 
     final Type methodReturnType;
     final Annotation[] methodAnnotations;
-    if (resourceMatch != null) {
-      final ResourceInfoImpl resourceInfo = resourceMatch.getResourceInfo();
+    if (resourceInfo != null) {
       methodReturnType = resourceInfo.getMethodReturnType();
       methodAnnotations = resourceInfo.getMethodAnnotations();
     }
