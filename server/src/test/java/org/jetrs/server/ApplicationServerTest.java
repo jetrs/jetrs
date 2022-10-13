@@ -115,11 +115,12 @@ public class ApplicationServerTest {
 
   @Test
   public void testTypeBoolean() throws Exception {
+    Response response = post(boolean.class, null, null, null);
     for (int i = 0; i < numTests; ++i) { // [N]
       final boolean a = random.nextBoolean();
       final boolean b = random.nextBoolean();
       final boolean c = random.nextBoolean();
-      final Response response = post(boolean.class, a, b, c);
+      response = post(boolean.class, a, b, c);
       final String data = assertResponse(200, response, String.class);
       assertEquals("" + a + b + c, data);
     }
@@ -127,11 +128,12 @@ public class ApplicationServerTest {
 
   @Test
   public void testTypeChar() throws Exception {
+    Response response = post(char.class, null, null, null);
     for (int i = 0; i < numTests; ++i) { // [N]
       final char a = Strings.getRandomAlpha(1).charAt(0);
       final char b = Strings.getRandomAlpha(1).charAt(0);
       final char c = Strings.getRandomAlpha(1).charAt(0);
-      final Response response = post(char.class, a, b, c);
+      response = post(char.class, a, b, c);
       final String data = assertResponse(200, response, String.class);
       assertEquals("" + a + b + c, data);
     }
@@ -139,11 +141,12 @@ public class ApplicationServerTest {
 
   @Test
   public void testTypeByte() throws Exception {
+    Response response = post(byte.class, null, null, null);
     for (int i = 0; i < numTests; ++i) { // [N]
       final byte a = (byte)random.nextInt();
       final byte b = (byte)random.nextInt();
       final byte c = (byte)random.nextInt();
-      final Response response = post(byte.class, a, b, c);
+      response = post(byte.class, a, b, c);
       final String data = assertResponse(200, response, String.class);
       assertEquals(a + b + c, Integer.parseInt(data));
     }
@@ -151,11 +154,12 @@ public class ApplicationServerTest {
 
   @Test
   public void testTypeShort() throws Exception {
+    Response response = post(short.class, null, null, null);
     for (int i = 0; i < numTests; ++i) { // [N]
       final short a = (short)random.nextInt();
       final short b = (short)random.nextInt();
       final short c = (short)random.nextInt();
-      final Response response = post(short.class, a, b, c);
+      response = post(short.class, a, b, c);
       final String data = assertResponse(200, response, String.class);
       assertEquals(a + b + c, Integer.parseInt(data));
     }
@@ -164,7 +168,6 @@ public class ApplicationServerTest {
   @Test
   public void testTypeInt() throws Exception {
     Response response = post(int.class, null, null, null);
-    System.err.println(response.getStatus());
     for (int i = 0; i < numTests; ++i) { // [N]
       final int a = random.nextInt();
       final int b = random.nextInt();
@@ -177,11 +180,12 @@ public class ApplicationServerTest {
 
   @Test
   public void testTypeLong() throws Exception {
+    Response response = post(long.class, null, null, null);
     for (int i = 0; i < numTests; ++i) { // [N]
       final long a = random.nextLong();
       final long b = random.nextLong();
       final long c = random.nextLong();
-      final Response response = post(long.class, a, b, c);
+      response = post(long.class, a, b, c);
       final String data = assertResponse(200, response, String.class);
       assertEquals(a + b + c, Long.parseLong(data));
     }
@@ -189,11 +193,12 @@ public class ApplicationServerTest {
 
   @Test
   public void testTypeFloat() throws Exception {
+    Response response = post(float.class, null, null, null);
     for (int i = 0; i < numTests; ++i) { // [N]
       final float a = random.nextFloat();
       final float b = random.nextFloat();
       final float c = random.nextFloat();
-      final Response response = post(float.class, a, b, c);
+      response = post(float.class, a, b, c);
       final String data = assertResponse(200, response, String.class);
       assertEquals(a + b + c, Float.parseFloat(data), 0);
     }
@@ -201,11 +206,12 @@ public class ApplicationServerTest {
 
   @Test
   public void testTypeDouble() throws Exception {
+    Response response = post(double.class, null, null, null);
     for (int i = 0; i < numTests; ++i) { // [N]
       final double a = random.nextDouble();
       final double b = random.nextDouble();
       final double c = random.nextDouble();
-      final Response response = post(double.class, a, b, c);
+      response = post(double.class, a, b, c);
       final String data = assertResponse(200, response, String.class);
       assertEquals(a + b + c, Double.parseDouble(data), 0);
     }

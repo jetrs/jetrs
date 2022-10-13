@@ -73,7 +73,7 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
 
   private static Character parseCharacter(final String str, final Character defaultValue) {
     final int value;
-    return str.length() == 0 || (value = str.charAt(0)) < Character.MIN_VALUE || value > Character.MAX_VALUE ? defaultValue : (char)value;
+    return str.length() == 0 || (value = str.charAt(0)) < Character.MIN_VALUE || value > Character.MAX_VALUE ? defaultValue : Character.valueOf((char)value);
   }
 
   private static <T>ParamConverter<T> lookupParamConverter(final ArrayList<ProviderFactory<ParamConverterProvider>> paramConverterProviderFactories, final RequestContext<?> requestContext, final Class<T> rawType, final Type genericType, final Annotation[] annotations) {
