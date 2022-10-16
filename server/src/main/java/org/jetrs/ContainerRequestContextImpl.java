@@ -18,7 +18,6 @@ package org.jetrs;
 
 import static org.jetrs.HttpHeaders.*;
 
-import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
@@ -1124,30 +1123,13 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
   @Override
   public void setEntityStream(InputStream input) {
     if (input == null) {
-      hasEntity = false;
       entityStream = null;
+      hasEntity = false;
     }
     else {
       try {
-        if (input.available() > 0) {
-          hasEntity = true;
-          entityStream = hasEntity ? input : null;
-        }
-        else {
-          if (!input.markSupported())
-            input = new BufferedInputStream(input, 1);
-
-          input.mark(1);
-
-          if (hasEntity = input.read() != -1) {
-            input.reset();
-            entityStream = input;
-          }
-          else {
-            input.close();
-            entityStream = null;
-          }
-        }
+        entityStream = EntityUtil.makeReadAwareNonEmptyOrNull(input, false);
+        hasEntity = entityStream != null;
       }
       catch (final IOException e) {
         throw new InternalServerErrorException(e);

@@ -16,6 +16,9 @@
 
 package org.jetrs;
 
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -229,5 +232,142 @@ public class EntityUtil {
     }
 
     writer.flush();
+  }
+
+  private static void consumeAndClose(final InputStream in) throws IOException {
+    IOException suppressed = null;
+    try {
+      while (in.read() > 0);
+    }
+    catch (final IOException e) {
+      suppressed = e;
+    }
+    try {
+      in.close();
+    }
+    catch (final IOException e) {
+      if (suppressed != null)
+        e.addSuppressed(suppressed);
+
+      throw e;
+    }
+  }
+
+  private static class ConsumableFilterInputStream extends FilterInputStream implements Consumable {
+    private boolean isConsumed;
+
+    private ConsumableFilterInputStream(final InputStream in) {
+      super(in);
+    }
+
+    @Override
+    public int read() throws IOException {
+      final int r = super.read();
+      if (r == -1)
+        isConsumed = true;
+
+      return r;
+    }
+
+    @Override
+    public boolean isConsumed() {
+      return isConsumed;
+    }
+
+    @Override
+    public void close() throws IOException {
+      consumeAndClose(in);
+    }
+  }
+
+  private static class ConsumableBufferedInputStream extends BufferedInputStream implements Consumable {
+    private boolean isConsumed;
+
+    private ConsumableBufferedInputStream(final InputStream in, final int size) {
+      super(in, size);
+    }
+
+    @Override
+    public synchronized int read() throws IOException {
+      final int r = super.read();
+      if (r == -1)
+        isConsumed = true;
+
+      return r;
+    }
+
+    @Override
+    public boolean isConsumed() {
+      return isConsumed;
+    }
+
+    @Override
+    public void close() throws IOException {
+      consumeAndClose(in);
+    }
+  }
+
+  static class ConsumableByteArrayInputStream extends ByteArrayInputStream implements Consumable {
+    private boolean isConsumed;
+
+    ConsumableByteArrayInputStream(final byte[] buf) {
+      super(buf);
+    }
+
+    @Override
+    public synchronized int read() {
+      final int r = super.read();
+      if (r == -1)
+        isConsumed = true;
+
+      return r;
+    }
+
+    @Override
+    public boolean isConsumed() {
+      return isConsumed;
+    }
+
+    @Override
+    public void close() throws IOException {
+      pos = count;
+    }
+  }
+
+  private static boolean hasData(final InputStream in) throws IOException {
+    in.mark(1);
+    if (in.read() == -1) {
+      in.close();
+      return false;
+    }
+
+    in.reset();
+    return true;
+  }
+
+  static InputStream makeReadAwareNonEmptyOrNull(InputStream in, final boolean readAware) throws IOException {
+    final boolean hasAvailable = in.available() > 0;
+    if (readAware) {
+      if (hasAvailable) {
+        return new ConsumableFilterInputStream(in);
+      }
+      else if (!in.markSupported()) {
+        in = new ConsumableBufferedInputStream(in, 1);
+      }
+      else if (!hasData(in)) {
+        return null;
+      }
+      else {
+        in = new ConsumableFilterInputStream(in);
+      }
+    }
+    else if (hasAvailable) {
+      return in;
+    }
+    else if (!in.markSupported()) {
+      in = new BufferedInputStream(in, 1);
+    }
+
+    return hasData(in) ? in : null;
   }
 }

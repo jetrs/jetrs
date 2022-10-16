@@ -18,6 +18,7 @@ package org.jetrs;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.CookieHandler;
 import java.net.CookieManager;
@@ -179,15 +180,31 @@ class InvocationImpl implements Invocation {
         }
       }
 
-      return new ResponseImpl(requestContext, statusCode, statusInfo, headers, cookies, 200 <= statusCode && statusCode < 400 ? connection.getInputStream() : connection.getErrorStream(), null) {
+      final InputStream entityStream = EntityUtil.makeReadAwareNonEmptyOrNull(statusCode < 400 ? connection.getInputStream() : connection.getErrorStream(), true);
+      return new ResponseImpl(requestContext, statusCode, statusInfo, headers, cookies, entityStream, null) {
         @Override
-        public void close() {
+        public void close() throws ProcessingException {
+          ProcessingException exception = null;
           try {
             super.close();
           }
-          finally {
-            connection.disconnect();
+          catch (final ProcessingException e) {
+            exception = e;
           }
+
+          if (entityStream != null) {
+            try {
+              entityStream.close();
+            }
+            catch (final IOException e) {
+              if (exception != null)
+                exception.addSuppressed(e);
+            }
+          }
+
+          connection.disconnect();
+          if (exception != null)
+            throw exception;
         }
       };
     }
