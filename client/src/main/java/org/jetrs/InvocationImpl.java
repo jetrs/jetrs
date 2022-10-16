@@ -16,10 +16,9 @@
 
 package org.jetrs;
 
-import java.io.ByteArrayOutputStream;
+import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.CookieHandler;
 import java.net.CookieManager;
 import java.net.CookiePolicy;
@@ -75,20 +74,20 @@ class InvocationImpl implements Invocation {
   private final URL url;
   private final String method;
   private final Entity<?> entity;
-  private final HttpHeadersMap<String,Object> headers;
+  private final HttpHeadersMap<String,Object> requestHeaders;
   private final ArrayList<Cookie> cookies;
   private final CacheControl cacheControl;
   private final ExecutorService executorService;
   private final long connectTimeout;
   private final long readTimeout;
 
-  InvocationImpl(final ClientImpl client, final ClientRuntimeContext runtimeContext, final URL url, final String method, final Entity<?> entity, final HttpHeadersMap<String,Object> headers, final ArrayList<Cookie> cookies, final CacheControl cacheControl, final ExecutorService executorService, final long connectTimeout, final long readTimeout) {
+  InvocationImpl(final ClientImpl client, final ClientRuntimeContext runtimeContext, final URL url, final String method, final Entity<?> entity, final HttpHeadersMap<String,Object> requestHeaders, final ArrayList<Cookie> cookies, final CacheControl cacheControl, final ExecutorService executorService, final long connectTimeout, final long readTimeout) {
     this.client = client;
     this.requestContext = runtimeContext.newRequestContext(new RequestImpl(method));
     this.url = url;
     this.method = method;
     this.entity = entity;
-    this.headers = headers;
+    this.requestHeaders = requestHeaders;
     this.cookies = cookies;
     this.cacheControl = cacheControl;
     this.executorService = executorService;
@@ -100,6 +99,56 @@ class InvocationImpl implements Invocation {
   public Invocation property(final String name, final Object value) {
     // TODO
     return this;
+  }
+
+  private class ConnectionOutputStream extends FilterOutputStream {
+    private final HttpURLConnection connection;
+    private boolean writing = false;
+
+    private ConnectionOutputStream(final HttpURLConnection connection) {
+      super(null);
+      this.connection = connection;
+    }
+
+    @Override
+    public void write(final int b) throws IOException {
+      if (!writing) {
+        flushHeaders(connection);
+
+        final HttpHeadersMap<Object,String> mirrorMap = requestHeaders.getMirrorMap();
+        final Number contentLength = (Number)mirrorMap.getFirst(HttpHeaders.CONTENT_LENGTH);
+        if (contentLength != null)
+          connection.setFixedLengthStreamingMode(contentLength.longValue());
+
+        super.out = connection.getOutputStream();
+        writing = true;
+      }
+
+      super.write(b);
+    }
+
+    @Override
+    public void flush() throws IOException {
+      if (out != null)
+        out.flush();
+    }
+
+    @Override
+    public void close() throws IOException {
+      if (out != null)
+        super.close();
+    }
+  }
+
+  private void flushHeaders(final HttpURLConnection connection) {
+    if (requestHeaders.size() > 0) {
+      int size;
+      String name;
+      List<String> values;
+      for (final Map.Entry<String,List<String>> entry : requestHeaders.entrySet()) // [S]
+        if ((values = entry.getValue()) != null && (size = values.size()) > 0)
+          connection.setRequestProperty((name = entry.getKey()), size == 1 ? values.get(0).toString() : CollectionUtil.toString(values, HttpHeadersImpl.getHeaderValueDelimiters(name)[0]));
+    }
   }
 
   @Override
@@ -119,8 +168,10 @@ class InvocationImpl implements Invocation {
       else
         connection.setUseCaches(false);
 
-      final ByteArrayOutputStream out;
-      if (entity != null) {
+      if (entity == null) {
+        flushHeaders(connection);
+      }
+      else {
         connection.setDoOutput(true);
         final Providers providers = requestContext.getProviders();
         final Class<?> entityClass = entity.getEntity().getClass();
@@ -128,50 +179,28 @@ class InvocationImpl implements Invocation {
         if (messageBodyWriter == null)
           throw new ProcessingException("Provider not found for " + entityClass.getName());
 
-        out = new ByteArrayOutputStream();
-        MessageBodyProvider.writeTo(messageBodyWriter, entity.getEntity(), entityClass, null, entity.getAnnotations(), entity.getMediaType(), headers.getMirrorMap(), out);
-        out.flush();
-      }
-      else {
-        out = null;
-      }
-
-      if (headers.size() > 0) {
-        for (final Map.Entry<String,List<String>> entry : headers.entrySet()) { // [S]
-          final String headerName = entry.getKey();
-          final String headerValue;
-          if (entry.getValue().size() > 1)
-            headerValue = CollectionUtil.toString(entry.getValue(), HttpHeadersImpl.getHeaderValueDelimiters(headerName)[0]);
-          else
-            headerValue = entry.getValue().get(0).toString();
-
-          connection.setRequestProperty(headerName, headerValue);
-        }
-      }
-
-      if (out != null) {
-        try (final OutputStream entityStream = connection.getOutputStream()) {
-          entityStream.write(out.toByteArray());
-          entityStream.flush();
+        try (final ConnectionOutputStream out = new ConnectionOutputStream(connection)) {
+          messageBodyWriter.writeTo(entity.getEntity(), entityClass, null, entity.getAnnotations(), entity.getMediaType(), requestHeaders.getMirrorMap(), out);
+          out.flush();
         }
       }
 
       final int statusCode = connection.getResponseCode();
       final String reasonPhrase = connection.getResponseMessage();
       final StatusType statusInfo = reasonPhrase != null ? Responses.from(statusCode, reasonPhrase) : Responses.from(statusCode);
-      final HttpHeadersImpl headers = new HttpHeadersImpl(connection.getHeaderFields());
+      final HttpHeadersImpl responseHeaders = new HttpHeadersImpl(connection.getHeaderFields());
 
       final List<HttpCookie> httpCookies = cookieStore.getCookies();
       final Map<String,NewCookie> cookies;
-      final int i$ = httpCookies.size();
-      if (i$ == 0) {
+      final int noCookies = httpCookies.size();
+      if (noCookies == 0) {
         cookies = null;
       }
       else {
-        final Date date = headers.getDate();
-        cookies = new HashMap<>(i$);
+        final Date date = responseHeaders.getDate();
+        cookies = new HashMap<>(noCookies);
         if (httpCookies instanceof RandomAccess) {
-          for (int i = 0; i < i$; ++i) // [RA]
+          for (int i = 0; i < noCookies; ++i) // [RA]
             addCookie(cookies, httpCookies.get(i), date);
         }
         else {
@@ -181,15 +210,15 @@ class InvocationImpl implements Invocation {
       }
 
       final InputStream entityStream = EntityUtil.makeReadAwareNonEmptyOrNull(statusCode < 400 ? connection.getInputStream() : connection.getErrorStream(), true);
-      return new ResponseImpl(requestContext, statusCode, statusInfo, headers, cookies, entityStream, null) {
+      return new ResponseImpl(requestContext, statusCode, statusInfo, responseHeaders, cookies, entityStream, null) {
         @Override
         public void close() throws ProcessingException {
-          ProcessingException exception = null;
+          ProcessingException pe = null;
           try {
             super.close();
           }
           catch (final ProcessingException e) {
-            exception = e;
+            pe = e;
           }
 
           if (entityStream != null) {
@@ -197,14 +226,14 @@ class InvocationImpl implements Invocation {
               entityStream.close();
             }
             catch (final IOException e) {
-              if (exception != null)
-                exception.addSuppressed(e);
+              if (pe != null)
+                pe.addSuppressed(e);
             }
           }
 
           connection.disconnect();
-          if (exception != null)
-            throw exception;
+          if (pe != null)
+            throw pe;
         }
       };
     }
@@ -355,15 +384,21 @@ class InvocationImpl implements Invocation {
     public Invocation.Builder headers(final MultivaluedMap<String,Object> headers) {
       getHeaders().clear();
       if (headers.size() > 0) {
+        int size;
+        String name;
+        List<Object> values;
         for (final Map.Entry<String,List<Object>> entry : headers.entrySet()) { // [S]
-          final List<Object> values = entry.getValue();
-          if (values instanceof RandomAccess) {
-            for (int i = 0, i$ = values.size(); i < i$; ++i) // [RA]
-              header(entry.getKey(), values.get(i));
-          }
-          else {
-            for (final Object value : values) // [L]
-              header(entry.getKey(), value);
+          values = entry.getValue();
+          if (values != null && (size = values.size()) > 0) {
+            name = entry.getKey();
+            if (values instanceof RandomAccess) {
+              for (int i = 0; i < size; ++i) // [RA]
+                header(name, values.get(i));
+            }
+            else {
+              for (final Object value : values) // [L]
+                header(name, value);
+            }
           }
         }
       }
@@ -531,15 +566,21 @@ class InvocationImpl implements Invocation {
 
   private static void appendHeaders(final StringBuilder str, final HttpHeadersMap<String,Object> headers) {
     if (headers.size() > 0) {
+      int size;
+      String name;
+      List<String> values;
       for (final Map.Entry<String,List<String>> entry : headers.entrySet()) { // [S]
-        final List<String> values = entry.getValue();
-        if (values instanceof RandomAccess) {
-          for (int i = 0, i$ = values.size(); i < i$; ++i) // [RA]
-            appendHeader(str, entry.getKey(), values.get(i));
-        }
-        else {
-          for (final String value : values) // [L]
-            appendHeader(str, entry.getKey(), value);
+        values = entry.getValue();
+        if (values != null && (size = values.size()) > 0) {
+          name = entry.getKey();
+          if (values instanceof RandomAccess) {
+            for (int i = 0; i < size; ++i) // [RA]
+              appendHeader(str, name, values.get(i));
+          }
+          else {
+            for (final String value : values) // [L]
+              appendHeader(str, name, value);
+          }
         }
       }
     }
@@ -549,7 +590,7 @@ class InvocationImpl implements Invocation {
   public String toString() {
     final StringBuilder str = new StringBuilder();
     str.append("-X").append(method).append(' ');
-    appendHeaders(str, headers);
+    appendHeaders(str, requestHeaders);
     if (entity != null)
       str.append(" -d '").append(entity.toString().replace("'", "\\'")).append("' ");
 

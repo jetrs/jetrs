@@ -227,7 +227,7 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
       writerInterceptorProviderFactories.get(interceptorIndex).getSingletonOrFromRequestContext(requestContext).aroundWriteTo(this);
     }
     else if (interceptorIndex == writerInterceptorProviderFactories.size()) {
-      MessageBodyProvider.writeTo(messageBodyWriter, getEntity(), getEntityClass(), getEntityType(), getEntityAnnotations(), getMediaType(), getHeaders(), getEntityStream());
+      messageBodyWriter.writeTo(getEntity(), getEntityClass(), getEntityType(), getEntityAnnotations(), getMediaType(), getHeaders(), getEntityStream());
       getEntityStream().close();
     }
     else {
