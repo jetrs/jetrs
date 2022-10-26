@@ -1,11 +1,11 @@
 /* Copyright (c) 2022 JetRS
  *
- * Permission is hereby granted, final free of charge, final to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), final to deal
- * in the Software without restriction, final including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, final and/or sell
- * copies of the Software, final and to permit persons to whom the Software is
- * furnished to do so, final subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
@@ -110,5 +110,5 @@ public abstract class ClientDriver {
     }
   }
 
-  abstract Invocation build(ClientImpl client, ClientRuntimeContext runtimeContext, URL url, String method, Entity<?> entity, HttpHeadersMap<String,Object> requestHeaders, ArrayList<Cookie> cookies, CacheControl cacheControl, ExecutorService executorService, ScheduledExecutorService scheduledExecutorService, long connectTimeout, long readTimeout) throws Exception;
+  abstract Invocation build(ClientImpl client, ClientRuntimeContext runtimeContext, URL url, String method, Entity<?> entity, HttpHeadersMap<String,Object> requestHeaders, ArrayList<Cookie> cookies, CacheControl cacheControl, ExecutorService executorService, ScheduledExecutorService scheduledExecutorService, long connectTimeout, long readTimeout, boolean async) throws Exception;
 }

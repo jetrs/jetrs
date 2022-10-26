@@ -24,6 +24,7 @@ import java.util.ServiceConfigurationError;
 import java.util.ServiceLoader;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Supplier;
 
@@ -86,6 +87,14 @@ abstract class Invoker<R> {
     }
   }
 
+  static ExecutorService getDefaultExecutorService() {
+    return Executors.newCachedThreadPool(); // FIXME: Make configurable
+  }
+
+  static ScheduledExecutorService getDefaultScheduledExecutorService() {
+    return Executors.newSingleThreadScheduledExecutor(); // FIXME: Make configurable
+  }
+
   private final ClientDriver driver;
   final ClientImpl client;
   final ClientRuntimeContext runtimeContext;
@@ -96,12 +105,12 @@ abstract class Invoker<R> {
   final long readTimeout;
 
   Invoker(final ClientImpl client, final ClientRuntimeContext runtimeContext, final URL url, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final long connectTimeout, final long readTimeout) {
-    this.driver = loadService(ClientDriver.JETRS_CLIENT_DRIVER_PROPERTY, DefaultClientDriver::new);
+    this.driver = loadService(ClientDriver.JETRS_CLIENT_DRIVER_PROPERTY, Jdk8ClientDriver::new);
     this.client = client;
     this.runtimeContext = runtimeContext;
     this.url = url;
-    this.executorService = executorService;
-    this.scheduledExecutorService = scheduledExecutorService;
+    this.executorService = executorService != null ? executorService : getDefaultExecutorService();
+    this.scheduledExecutorService = scheduledExecutorService != null ? scheduledExecutorService : getDefaultScheduledExecutorService();
     this.connectTimeout = connectTimeout;
     this.readTimeout = readTimeout;
   }
@@ -136,14 +145,14 @@ abstract class Invoker<R> {
 
   public abstract R method(String name, Entity<?> entity);
 
-  Invocation build(final String method, final Entity<?> entity, final HttpHeadersImpl requestHeaders, final ArrayList<Cookie> cookies, final CacheControl cacheControl) {
+  final Invocation build(final String method, final Entity<?> entity, final HttpHeadersImpl requestHeaders, final ArrayList<Cookie> cookies, final CacheControl cacheControl, final boolean async) {
     client.assertNotClosed();
     final HttpHeadersImpl headers = requestHeaders != null ? requestHeaders.clone() : new HttpHeadersImpl();
     if (entity != null && entity.getMediaType() != null && headers.getMediaType() == null)
       headers.setMediaType(entity.getMediaType());
 
     try {
-      return driver.build(client, runtimeContext, url, method, entity, headers, cookies, cacheControl, executorService, scheduledExecutorService, connectTimeout, readTimeout);
+      return driver.build(client, runtimeContext, url, method, entity, headers, cookies, cacheControl, executorService, scheduledExecutorService, connectTimeout, readTimeout, async);
     }
     catch (final Exception e) {
       throw new ProcessingException(e);

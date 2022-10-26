@@ -1,11 +1,11 @@
 /* Copyright (c) 2022 JetRS
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, final free of charge, final to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), final to deal
+ * in the Software without restriction, final including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, final and/or sell
+ * copies of the Software, final and to permit persons to whom the Software is
+ * furnished to do so, final subject to the following conditions:
  *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.RandomAccess;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -90,20 +89,10 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
   private static final String[] excludeHeaders = {HttpHeader.CONTENT_LENGTH.getName(), HttpHeader.TRANSFER_ENCODING.getName()};
 
   @Override
-  Invocation build(final CloseableHttpClient httpClient, final ClientImpl client, final ClientRuntimeContext runtimeContext, final URL url, final String method, final Entity<?> entity, final HttpHeadersMap<String,Object> requestHeaders, final ArrayList<javax.ws.rs.core.Cookie> cookies, final CacheControl cacheControl, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final long connectTimeout, final long readTimeout) throws Exception {
+  Invocation build(final CloseableHttpClient httpClient, final ClientImpl client, final ClientRuntimeContext runtimeContext, final URL url, final String method, final Entity<?> entity, final HttpHeadersMap<String,Object> requestHeaders, final ArrayList<javax.ws.rs.core.Cookie> cookies, final CacheControl cacheControl, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final long connectTimeout, final long readTimeout, final boolean async) throws Exception {
     return new InvocationImpl(client, runtimeContext, url, method, entity, requestHeaders, cookies, cacheControl, executorService, scheduledExecutorService, connectTimeout, readTimeout) {
       private final Timeout connectTimeoutObj = Timeout.of(connectTimeout, TimeUnit.MILLISECONDS);
       private final Timeout readTimeoutObj = Timeout.of(readTimeout, TimeUnit.MILLISECONDS);
-
-      @Override
-      ExecutorService getDefaultExecutorService() {
-        return Executors.newCachedThreadPool(); // FIXME: Make configurable
-      }
-
-      @Override
-      ScheduledExecutorService getDefaultScheduledExecutorService() {
-        return Executors.newSingleThreadScheduledExecutor(); // FIXME: Make configurable
-      }
 
       private void flushHeaders(final HttpUriRequestBase request) {
         if (requestHeaders.size() > 0) {
@@ -201,6 +190,7 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
           }
 
           $telemetry(Span.RESPONSE_READ);
+
           final HttpEntity entity = response.getEntity();
           final InputStream entityStream = entity == null ? null : EntityUtil.makeConsumableNonEmptyOrNull(entity.getContent(), true);
           if (entityStream != null)

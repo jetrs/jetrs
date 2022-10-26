@@ -1,11 +1,11 @@
 /* Copyright (c) 2019 JetRS
  *
- * Permission is hereby granted, final free of charge, final to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), final to deal
- * in the Software without restriction, final including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, final and/or sell
- * copies of the Software, final and to permit persons to whom the Software is
- * furnished to do so, final subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
@@ -32,10 +32,14 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
+import javax.ws.rs.HttpMethod;
+import javax.ws.rs.client.AsyncInvoker;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -46,7 +50,7 @@ import org.jetrs.provider.ext.FormProvider;
 import org.jetrs.provider.ext.InputStreamProvider;
 import org.jetrs.provider.ext.StringProvider;
 import org.junit.AfterClass;
-import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.libj.io.Streams;
 import org.libj.lang.Classes;
@@ -54,7 +58,8 @@ import org.libj.net.Sockets;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 
-public class DefaultClientTest {
+@SuppressWarnings("unused")
+public class Jdk8ClientTest {
   private static byte[] createRandomBytes(final int length) {
     final byte[] bytes = new byte[length];
     final Random random = new Random();
@@ -78,80 +83,130 @@ public class DefaultClientTest {
 
   private static int tests = 10;
 
-  @ClassRule
-  public static final WireMockRule serverGet = new WireMockRule(Sockets.findRandomOpenPort());
+  private abstract static class Trial {
+    private Trial(final String method) throws InterruptedException, IOException {
+      this(method, null);
+    }
+
+    private Trial(final String method, final Supplier<Entity<?>> entity) throws InterruptedException, IOException {
+      final WireMockRule server = new WireMockRule(Sockets.findRandomOpenPort());
+      server.start();
+      configServer(server);
+
+      final Invocation.Builder builder = buildRequest("http://localhost:" + server.port());
+      for (int i = 0; i < tests; ++i)
+        assertResponse(entity != null ? builder.method(method, entity.get()) : builder.method(method));
+
+      final ExecutorService executor = Executors.newFixedThreadPool(tests);
+      final CountDownLatch latch = new CountDownLatch(tests);
+      for (int i = 0; i < tests; ++i) {
+        executor.submit(() -> {
+          try {
+            final AsyncInvoker invoker = builder.async();
+            assertResponse((entity != null ? invoker.method(method, entity.get()) : invoker.method(method)).get());
+            latch.countDown();
+            return true;
+          }
+          catch (final Exception e) {
+            synchronized (Jdk8ClientTest.class) {
+              e.printStackTrace();
+              System.exit(1);
+              return false;
+            }
+          }
+        });
+      }
+
+      latch.await();
+    }
+
+    abstract void configServer(WireMockRule server);
+    abstract Invocation.Builder buildRequest(String host);
+    abstract void assertResponse(Response response) throws IOException;
+  }
 
   @Test
-  public void testGet() {
+  public void testGet() throws InterruptedException, IOException {
     final String message = "{\"message\": \"SUCCESS\"}";
-    serverGet.stubFor(get("/get")
-      .willReturn(ok()
-        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
-        .withBody(message)));
+    new Trial(HttpMethod.GET) {
+      @Override
+      void configServer(final WireMockRule server) {
+        server.stubFor(get("/get")
+          .willReturn(ok()
+            .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+            .withBody(message)));
+      }
 
-    for (int i = 0; i < tests; ++i) {
-      try (final Response response = client.target("http://localhost:" + serverGet.port() + "/get")
-        .request()
-        .header(HttpHeaders.ACCEPT, "text/xml;q=.5,text/html")
-        .buildGet()
-        .invoke()) {
+      @Override
+      Invocation.Builder buildRequest(final String host) {
+        return client.target(host + "/get")
+          .request().header(HttpHeaders.ACCEPT, "text/xml;q=.5,text/html");
+      }
+
+      @Override
+      void assertResponse(final Response response) {
         assertEquals(Response.Status.OK, response.getStatusInfo());
         assertEquals(message, response.readEntity(String.class));
       }
-    }
+    };
   }
 
-  @ClassRule
-  public static final WireMockRule serverPut = new WireMockRule(Sockets.findRandomOpenPort());
-
   @Test
-  public void testPut() {
+  public void testPut() throws InterruptedException, IOException {
     final String message = "<response>SUCCESS</response>";
-    serverPut.stubFor(put("/put")
-      .withHeader(HttpHeaders.CONTENT_TYPE, containing(MediaType.TEXT_XML))
-      .willReturn(ok()
-        .withBody(message)
-        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_XML)));
-
-    for (int i = 0; i < tests; ++i) {
-      try (final Response response = client
-        .target("http://localhost:" + serverPut.port() + "/put")
-        .request("text/xml;q=.5,text/html", "text/x-dvi; q=0.8, text/x-c")
-        .buildPut(Entity.entity(message, MediaType.TEXT_XML)).invoke()) {
-          assertEquals(Response.Status.OK, response.getStatusInfo());
-          assertEquals(message, response.readEntity(String.class));
+    new Trial(HttpMethod.PUT, () -> Entity.entity(message, MediaType.TEXT_XML)) {
+      @Override
+      void configServer(final WireMockRule server) {
+        server.stubFor(put("/put")
+          .withHeader(HttpHeaders.CONTENT_TYPE, containing(MediaType.TEXT_XML))
+          .willReturn(ok()
+            .withBody(message)
+            .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_XML)));
       }
-    }
+
+      @Override
+      Invocation.Builder buildRequest(final String host) {
+        return client.target(host + "/put")
+          .request("text/xml;q=.5,text/html", "text/x-dvi; q=0.8, text/x-c");
+      }
+
+      @Override
+      void assertResponse(final Response response) {
+        assertEquals(Response.Status.OK, response.getStatusInfo());
+        assertEquals(message, response.readEntity(String.class));
+      }
+    };
   }
 
-  @ClassRule
-  public static final WireMockRule serverPostSmall = new WireMockRule(Sockets.findRandomOpenPort());
-
   @Test
-  public void testPostSmall() {
+  public void testPostSmall() throws InterruptedException, IOException {
     final String message = "<response>SUCCESS</response>";
-    serverPostSmall.stubFor(post("/post")
-      .withHeader(HttpHeaders.CONTENT_TYPE, containing(MediaType.APPLICATION_OCTET_STREAM))
-      .willReturn(ok()
-        .withBody(message)
-        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_XML)));
-
-    for (int i = 0; i < tests; ++i) {
-      try (final Response response = client
-        .target("http://localhost:" + serverPostSmall.port() + "/post")
-        .request()
-        .buildPost(Entity.entity(message, MediaType.APPLICATION_OCTET_STREAM)).invoke()) {
-          assertEquals(Response.Status.OK, response.getStatusInfo());
-          assertEquals(message, response.readEntity(String.class));
+    new Trial(HttpMethod.POST, () -> Entity.entity(message, MediaType.APPLICATION_OCTET_STREAM)) {
+      @Override
+      void configServer(final WireMockRule server) {
+        server.stubFor(post("/post")
+          .withHeader(HttpHeaders.CONTENT_TYPE, containing(MediaType.APPLICATION_OCTET_STREAM))
+          .willReturn(ok()
+            .withBody(message)
+            .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_XML)));
       }
-    }
+
+      @Override
+      Invocation.Builder buildRequest(final String host) {
+        return client.target(host + "/post")
+          .request();
+      }
+
+      @Override
+      void assertResponse(final Response response) {
+        assertEquals(Response.Status.OK, response.getStatusInfo());
+        assertEquals(message, response.readEntity(String.class));
+      }
+    };
   }
 
-  @ClassRule
-  public static final WireMockRule serverPostForm = new WireMockRule(Sockets.findRandomOpenPort());
-
   @Test
-  public void testPostForm() throws IOException {
+  public void testPostForm() throws InterruptedException, IOException {
     final MultivaluedLinkedHashMap<String> form = new MultivaluedLinkedHashMap<>();
     form.add("foo", "bar");
     form.add("one", "two");
@@ -163,52 +218,60 @@ public class DefaultClientTest {
 
     final ByteArrayOutputStream entity = new ByteArrayOutputStream();
     EntityUtil.writeFormParams(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE, entity);
-    serverPostForm.stubFor(post("/post")
-      .withHeader(HttpHeaders.CONTENT_TYPE, containing(MediaType.APPLICATION_FORM_URLENCODED))
-      .willReturn(ok()
-        .withBody(entity.toByteArray())
-        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_XML)));
 
-    for (int i = 0; i < tests; ++i) {
-      try (final Response response = client
-        .target("http://localhost:" + serverPostForm.port() + "/post")
-        .request()
-        .buildPost(Entity.form(form)).invoke()) {
+    new Trial(HttpMethod.POST, () -> Entity.form(form)) {
+      @Override
+      void configServer(final WireMockRule server) {
+        server.stubFor(post("/post")
+          .withHeader(HttpHeaders.CONTENT_TYPE, containing(MediaType.APPLICATION_FORM_URLENCODED))
+          .willReturn(ok()
+            .withBody(entity.toByteArray())
+            .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_XML)));
+      }
+
+      @Override
+      Invocation.Builder buildRequest(final String host) {
+        return client.target(host + "/post")
+          .request();
+      }
+
+      @Override
+      void assertResponse(final Response response) throws IOException {
         assertEquals(Response.Status.OK, response.getStatusInfo());
-
         final ByteArrayOutputStream out = new ByteArrayOutputStream();
         EntityUtil.writeFormParams(form, null, out);
         final String message = new String(out.toByteArray());
-
         assertEquals(message, response.readEntity(String.class));
       }
-    }
+    };
   }
 
-  @ClassRule
-  public static final WireMockRule serverPostRandom = new WireMockRule(Sockets.findRandomOpenPort());
-
   @Test
-  public void testPostRandom() throws IOException {
-    serverPostRandom.stubFor(post("/post")
-      .withHeader(HttpHeaders.CONTENT_TYPE, containing(MediaType.APPLICATION_OCTET_STREAM))
-      .willReturn(ok()
-        .withBody(testBytes)
-        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_XML)));
+  public void testPostRandom() throws InterruptedException, IOException {
+    final String message = "<response>SUCCESS</response>";
+    new Trial(HttpMethod.POST, () -> Entity.entity(new ByteArrayInputStream(testBytes), MediaType.APPLICATION_OCTET_STREAM)) {
+      @Override
+      void configServer(final WireMockRule server) {
+        server.stubFor(post("/post")
+          .withHeader(HttpHeaders.CONTENT_TYPE, containing(MediaType.APPLICATION_OCTET_STREAM))
+          .willReturn(ok()
+            .withBody(testBytes)
+            .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_XML)));
+      }
 
-    for (int i = 0; i < tests; ++i) {
-      try (
-        final InputStream in = new ByteArrayInputStream(testBytes);
-        final Response response = client
-          .target("http://localhost:" + serverPostRandom.port() + "/post")
-          .request()
-          .buildPost(Entity.entity(in, MediaType.APPLICATION_OCTET_STREAM)).invoke();
-      ) {
+      @Override
+      Invocation.Builder buildRequest(final String host) {
+        return client.target(host + "/post")
+          .request();
+      }
+
+      @Override
+      void assertResponse(final Response response) throws IOException {
         assertEquals(Response.Status.OK.getStatusCode(), response.getStatusInfo().getStatusCode());
         final byte[] actual = Streams.readBytes((InputStream)response.getEntity());
         assertArrayEquals(testBytes, actual);
       }
-    }
+    };
   }
 
   @Test

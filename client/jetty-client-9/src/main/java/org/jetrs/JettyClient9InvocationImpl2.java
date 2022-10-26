@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.RandomAccess;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -62,7 +61,7 @@ class JettyClient9InvocationImpl2 extends InvocationImpl {
     httpClient.setStopTimeout(30000); // FIXME: Put in config
     httpClient.setMaxConnectionsPerDestination(64);  // FIXME: Put into config
 //    httpClient.setConnectTimeout(connectTimeout);
-    httpClient.setCookieStore(DefaultClientDriver.cookieStore);
+    httpClient.setCookieStore(Jdk8ClientDriver.cookieStore);
     try {
       httpClient.start();
     }
@@ -73,16 +72,6 @@ class JettyClient9InvocationImpl2 extends InvocationImpl {
 
   JettyClient9InvocationImpl2(final ClientImpl client, final ClientRuntimeContext runtimeContext, final URL url, final String method, final Entity<?> entity, final HttpHeadersMap<String,Object> requestHeaders, final ArrayList<Cookie> cookies, final CacheControl cacheControl, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final long connectTimeout, final long readTimeout) throws Exception {
     super(client, runtimeContext, url, method, entity, requestHeaders, cookies, cacheControl, executorService, scheduledExecutorService, connectTimeout, readTimeout);
-  }
-
-  @Override
-  ExecutorService getDefaultExecutorService() {
-    return Executors.newCachedThreadPool(); // FIXME: Make configurable
-  }
-
-  @Override
-  ScheduledExecutorService getDefaultScheduledExecutorService() {
-    return Executors.newSingleThreadScheduledExecutor(); // FIXME: Make configurable
   }
 
   private class ConnectionOutputStream extends FilterOutputStream {
@@ -311,7 +300,7 @@ class JettyClient9InvocationImpl2 extends InvocationImpl {
       for (final HttpField header : response.getHeaders())
         responseHeaders.add(header.getName(), header.getValue());
 
-      final List<HttpCookie> httpCookies = DefaultClientDriver.cookieStore.getCookies();
+      final List<HttpCookie> httpCookies = Jdk8ClientDriver.cookieStore.getCookies();
       final Map<String,NewCookie> cookies;
       final int noCookies = httpCookies.size();
       if (noCookies == 0) {
@@ -322,11 +311,11 @@ class JettyClient9InvocationImpl2 extends InvocationImpl {
         cookies = new HashMap<>(noCookies);
         if (httpCookies instanceof RandomAccess) {
           for (int i = 0; i < noCookies; ++i) // [RA]
-            DefaultClientDriver.addCookie(cookies, httpCookies.get(i), date);
+            Jdk8ClientDriver.addCookie(cookies, httpCookies.get(i), date);
         }
         else {
           for (final HttpCookie httpCookie : httpCookies) // [L]
-            DefaultClientDriver.addCookie(cookies, httpCookie, date);
+            Jdk8ClientDriver.addCookie(cookies, httpCookie, date);
         }
       }
 

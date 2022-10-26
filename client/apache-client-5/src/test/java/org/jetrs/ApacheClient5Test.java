@@ -16,5 +16,5 @@
 
 package org.jetrs;
 
-public class ApacheClient5Test extends DefaultClientTest {
+public class ApacheClient5Test extends Jdk8ClientTest {
 }

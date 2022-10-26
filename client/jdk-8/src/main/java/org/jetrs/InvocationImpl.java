@@ -77,17 +77,14 @@ abstract class InvocationImpl implements Invocation {
     this.requestHeaders = requestHeaders;
     this.cookies = cookies;
     this.cacheControl = cacheControl;
-    this.executorService = executorService != null ? executorService : getDefaultExecutorService();
-    this.scheduledExecutorService = scheduledExecutorService != null ? scheduledExecutorService : getDefaultScheduledExecutorService();
+    this.executorService = executorService;
+    this.scheduledExecutorService = scheduledExecutorService;
     this.connectTimeout = connectTimeout;
     this.readTimeout = readTimeout;
   }
 
-  abstract ExecutorService getDefaultExecutorService();
-  abstract ScheduledExecutorService getDefaultScheduledExecutorService();
-
   @SuppressWarnings({"rawtypes", "unchecked"})
-  void writeContentSync(final MessageBodyWriter messageBodyWriter, final Class<?> entityClass, final ThrowingSupplier<OutputStream,IOException> onFirstWrite, final Runnable onClose) throws IOException {
+  void writeContentSync(final MessageBodyWriter messageBodyWriter, final Class<?> entityClass, final ThrowingSupplier<OutputStream,IOException> onFirstWrite, final Runnable onClose) throws InterruptedException, IOException, TimeoutException {
     try (final EntityOutputStream entityStream = new EntityOutputStream() {
       @Override
       void onWrite() throws IOException {
@@ -106,7 +103,7 @@ abstract class InvocationImpl implements Invocation {
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
-  void writeContentAsync(final MessageBodyWriter messageBodyWriter, final Class<?> entityClass, final ThrowingSupplier<OutputStream,IOException> onFirstWrite, final Runnable onClose) throws InterruptedException, TimeoutException {
+  void writeContentAsync(final MessageBodyWriter messageBodyWriter, final Class<?> entityClass, final ThrowingSupplier<OutputStream,IOException> onFirstWrite, final Runnable onClose) throws InterruptedException, IOException, TimeoutException {
     final AtomicBoolean ready = new AtomicBoolean();
     final ReentrantLock lock = new ReentrantLock();
     final Condition condition = lock.newCondition();
@@ -426,7 +423,7 @@ abstract class InvocationImpl implements Invocation {
 
     @Override
     public Invocation build(final String method, final Entity<?> entity) {
-      return build(method, entity, requestHeaders, cookies, cacheControl);
+      return build(method, entity, requestHeaders, cookies, cacheControl, false);
     }
 
     @Override

@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.RandomAccess;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -52,7 +51,7 @@ import javax.ws.rs.ext.MessageBodyWriter;
 import org.libj.util.CollectionUtil;
 import org.libj.util.Dates;
 
-public class DefaultClientDriver extends ClientDriver {
+public class Jdk8ClientDriver extends ClientDriver {
   static final CookieStore cookieStore;
 
   static {
@@ -69,7 +68,7 @@ public class DefaultClientDriver extends ClientDriver {
   }
 
   @Override
-  Invocation build(final ClientImpl client, final ClientRuntimeContext runtimeContext, final URL url, final String method, final Entity<?> entity, final HttpHeadersMap<String,Object> requestHeaders, final ArrayList<Cookie> cookies, final CacheControl cacheControl, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final long connectTimeout, final long readTimeout) throws Exception {
+  Invocation build(final ClientImpl client, final ClientRuntimeContext runtimeContext, final URL url, final String method, final Entity<?> entity, final HttpHeadersMap<String,Object> requestHeaders, final ArrayList<Cookie> cookies, final CacheControl cacheControl, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final long connectTimeout, final long readTimeout, final boolean async) throws Exception {
     return new InvocationImpl(client, runtimeContext, url, method, entity, requestHeaders, cookies, cacheControl, executorService, scheduledExecutorService, connectTimeout, readTimeout) {
       private final SSLContext sslContext;
 
@@ -79,16 +78,6 @@ public class DefaultClientDriver extends ClientDriver {
           sslContext = SSLContext.getDefault();
 
         this.sslContext = sslContext;
-      }
-
-      @Override
-      ExecutorService getDefaultExecutorService() {
-        return Executors.newCachedThreadPool(); // FIXME: Make configurable
-      }
-
-      @Override
-      ScheduledExecutorService getDefaultScheduledExecutorService() {
-        return Executors.newSingleThreadScheduledExecutor(); // FIXME: Make configurable
       }
 
       private void flushHeaders(final HttpURLConnection connection) {
@@ -131,6 +120,7 @@ public class DefaultClientDriver extends ClientDriver {
           }
           else {
             $telemetry(Span.ENTITY_INIT);
+
             connection.setDoOutput(true);
             final Class<?> entityClass = entity.getEntity().getClass();
             final MessageBodyWriter messageBodyWriter = requestContext.getProviders().getMessageBodyWriter(entityClass, null, entity.getAnnotations(), entity.getMediaType());

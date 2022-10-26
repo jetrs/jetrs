@@ -16,5 +16,5 @@
 
 package org.jetrs;
 
-public class JettyClient9Test extends DefaultClientTest {
+public class JettyClient9Test extends Jdk8ClientTest {
 }

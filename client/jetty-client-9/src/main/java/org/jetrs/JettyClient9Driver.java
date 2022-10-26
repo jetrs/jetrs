@@ -16,6 +16,9 @@
 
 package org.jetrs;
 
+import static org.eclipse.jetty.http.HttpHeader.*;
+
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -28,7 +31,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.RandomAccess;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -44,9 +46,11 @@ import javax.ws.rs.core.Response.StatusType;
 import javax.ws.rs.ext.MessageBodyWriter;
 
 import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.util.OutputStreamContentProvider;
 import org.eclipse.jetty.http.HttpField;
+import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.libj.util.CollectionUtil;
 
@@ -84,7 +88,7 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
 //    httpClient.getDestination(JETRS_CLIENT_DRIVER_PROPERTY, JETRS_CLIENT_DRIVER_PROPERTY, 0)
     httpClient.setStopTimeout(0); // FIXME: Put in config
     httpClient.setMaxConnectionsPerDestination(64);  // FIXME: Put into config
-    httpClient.setCookieStore(DefaultClientDriver.cookieStore);
+    httpClient.setCookieStore(Jdk8ClientDriver.cookieStore);
     try {
       httpClient.start();
     }
@@ -96,22 +100,15 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
   }
 
   @Override
-  Invocation build(final HttpClient httpClient, final ClientImpl client, final ClientRuntimeContext runtimeContext, final URL url, final String method, final Entity<?> entity, final HttpHeadersMap<String,Object> requestHeaders, final ArrayList<Cookie> cookies, final CacheControl cacheControl, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final long connectTimeout, final long readTimeout) throws Exception {
+  Invocation build(final HttpClient httpClient, final ClientImpl client, final ClientRuntimeContext runtimeContext, final URL url, final String method, final Entity<?> entity, final HttpHeadersMap<String,Object> requestHeaders, final ArrayList<Cookie> cookies, final CacheControl cacheControl, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final long connectTimeout, final long readTimeout, final boolean async) throws Exception {
     connectTimeoutLocal.set(connectTimeout);
     return new InvocationImpl(client, runtimeContext, url, method, entity, requestHeaders, cookies, cacheControl, executorService, scheduledExecutorService, connectTimeout, readTimeout) {
-      @Override
-      ExecutorService getDefaultExecutorService() {
-        return Executors.newCachedThreadPool(); // FIXME: Make configurable
-      }
-
-      @Override
-      ScheduledExecutorService getDefaultScheduledExecutorService() {
-        return Executors.newSingleThreadScheduledExecutor(); // FIXME: Make configurable
-      }
-
       private void flushHeaders(final Request request) {
-//        request.getHeaders().remove(org.eclipse.jetty.http.HttpHeader.ACCEPT_ENCODING);
-//        request.getHeaders().remove(org.eclipse.jetty.http.HttpHeader.USER_AGENT);
+        // Remove headers that are set by default (unsolicited).
+        final HttpFields headers = request.getHeaders();
+        headers.remove(ACCEPT_ENCODING);
+        headers.remove(USER_AGENT);
+
         if (requestHeaders.size() > 0) {
           int size;
           String name;
@@ -127,6 +124,7 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
       public Response invoke() {
         try {
           $telemetry(Span.TOTAL, Span.INIT);
+
           final Request request = httpClient.newRequest(url.toURI())
             .method(method)
             .timeout(connectTimeout + readTimeout, TimeUnit.MILLISECONDS);
@@ -137,13 +135,12 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
           if (cacheControl != null)
             request.header(HttpHeaders.CACHE_CONTROL, cacheControl.toString());
 
-          final InputStreamResponseListener listener = new InputStreamResponseListener();
+          final InputStreamResponseListener listener = async ? new InputStreamResponseListener() : null;
 
           $telemetry(Span.INIT);
 
           if (entity == null) {
             flushHeaders(request);
-            request.send(listener);
           }
           else {
             $telemetry(Span.ENTITY_INIT);
@@ -166,13 +163,22 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
             }, () -> $telemetry(Span.ENTITY_WRITE));
 
             $telemetry(Span.RESPONSE_WAIT);
+          }
 
+          final InputStream in;
+          final org.eclipse.jetty.client.api.Response response;
+          if (async) {
             request.send(listener);
+            response = listener.get(readTimeout, TimeUnit.MILLISECONDS);
+            in = listener.getInputStream();
+          }
+          else {
+            final ContentResponse contentResponse = request.send();
+            response = contentResponse;
+            in = new ByteArrayInputStream(contentResponse.getContent());
           }
 
           // System.err.println(request.getHeaders().toString());
-
-          final org.eclipse.jetty.client.api.Response response = listener.get(readTimeout, TimeUnit.MILLISECONDS);
 
           $telemetry(Span.RESPONSE_WAIT, Span.RESPONSE_READ);
 
@@ -182,7 +188,7 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
           for (final HttpField header : response.getHeaders())
             responseHeaders.add(header.getName(), header.getValue());
 
-          final List<HttpCookie> httpCookies = DefaultClientDriver.cookieStore.getCookies();
+          final List<HttpCookie> httpCookies = Jdk8ClientDriver.cookieStore.getCookies();
           final Map<String,NewCookie> cookies;
           final int noCookies = httpCookies.size();
           if (noCookies == 0) {
@@ -193,16 +199,15 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
             cookies = new HashMap<>(noCookies);
             if (httpCookies instanceof RandomAccess) {
               for (int i = 0; i < noCookies; ++i) // [RA]
-                DefaultClientDriver.addCookie(cookies, httpCookies.get(i), date);
+                Jdk8ClientDriver.addCookie(cookies, httpCookies.get(i), date);
             }
             else {
               for (final HttpCookie httpCookie : httpCookies) // [L]
-                DefaultClientDriver.addCookie(cookies, httpCookie, date);
+                Jdk8ClientDriver.addCookie(cookies, httpCookie, date);
             }
           }
 
           $telemetry(Span.RESPONSE_READ);
-          final InputStream in = listener.getInputStream();
           final InputStream entityStream = EntityUtil.makeConsumableNonEmptyOrNull(in, true);
           if (entityStream != null)
             $telemetry(Span.ENTITY_READ);

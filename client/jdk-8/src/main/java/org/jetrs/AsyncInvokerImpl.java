@@ -23,7 +23,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 
 import javax.ws.rs.HttpMethod;
-import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.AsyncInvoker;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
@@ -162,23 +161,24 @@ class AsyncInvokerImpl extends Invoker<Future<Response>> implements AsyncInvoker
 
   @Override
   public Future<Response> method(final String name, final Entity<?> entity) {
-    return method(name, null, Response.class);
-  }
-
-  private ExecutorService getExecutorService() {
-    if (executorService == null)
-      throw new ProcessingException("ExecutorService was not provided");
-
-    return executorService;
+    return method(name, entity, Response.class);
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public <T>Future<T> method(final String name, final Entity<?> entity, final Class<T> responseType) {
     client.assertNotClosed();
-    final Invocation invocation = build(name, entity, requestHeaders, cookies, cacheControl);
-    return getExecutorService().submit(() -> {
-      try (final Response response = invocation.invoke()) {
+    final Invocation invocation = build(name, entity, requestHeaders, cookies, cacheControl, true);
+    return executorService.submit(() -> {
+      final Response response = invocation.invoke();
+      if (Response.class.isAssignableFrom(responseType))
+        return (T)response;
+
+      try {
         return response.readEntity(responseType);
+      }
+      finally {
+        response.close();
       }
     });
   }
@@ -186,8 +186,9 @@ class AsyncInvokerImpl extends Invoker<Future<Response>> implements AsyncInvoker
   @Override
   public <T>Future<T> method(final String name, final Entity<?> entity, final GenericType<T> responseType) {
     client.assertNotClosed();
-    return getExecutorService().submit(() -> {
-      try (final Response response = build(name, entity, requestHeaders, cookies, cacheControl).invoke()) {
+    final Invocation invocation = build(name, entity, requestHeaders, cookies, cacheControl, true);
+    return executorService.submit(() -> {
+      try (final Response response = invocation.invoke()) {
         return response.readEntity(responseType);
       }
     });
@@ -197,8 +198,9 @@ class AsyncInvokerImpl extends Invoker<Future<Response>> implements AsyncInvoker
   @SuppressWarnings("unchecked")
   public <T>Future<T> method(final String name, final Entity<?> entity, final InvocationCallback<T> callback) {
     client.assertNotClosed();
-    return getExecutorService().submit(() -> {
-      try (final Response response = build(name, entity, requestHeaders, cookies, cacheControl).invoke()) {
+    final Invocation invocation = build(name, entity, requestHeaders, cookies, cacheControl, true);
+    return executorService.submit(() -> {
+      try (final Response response = invocation.invoke()) {
         final T message = (T)response.getEntity();
         callback.completed(message);
         return message;
