@@ -55,23 +55,23 @@ public class EntityUtilTest {
 
   @Test
   public void testEmpty() throws IOException {
-    assertNull(EntityUtil.makeReadAwareNonEmptyOrNull(empty, false));
-    assertNull(EntityUtil.makeReadAwareNonEmptyOrNull(empty, true));
+    assertNull(EntityUtil.makeConsumableNonEmptyOrNull(empty, false));
+    assertNull(EntityUtil.makeConsumableNonEmptyOrNull(empty, true));
   }
 
   @Test
   public void testAvailable() throws IOException {
-    assertSame(available, EntityUtil.makeReadAwareNonEmptyOrNull(available, false));
+    assertSame(available, EntityUtil.makeConsumableNonEmptyOrNull(available, false));
   }
 
   @Test
   public void testUnbuffered() throws IOException {
-    InputStream in = EntityUtil.makeReadAwareNonEmptyOrNull(unbuffered, false);
+    InputStream in = EntityUtil.makeConsumableNonEmptyOrNull(unbuffered, false);
     assertNotSame(unbuffered, in);
     assertFalse(in instanceof Consumable);
     assertTrue(in instanceof BufferedInputStream);
 
-    in = EntityUtil.makeReadAwareNonEmptyOrNull(unbuffered, true);
+    in = EntityUtil.makeConsumableNonEmptyOrNull(unbuffered, true);
     assertNotSame(unbuffered, in);
     assertTrue(in instanceof Consumable);
     assertTrue(in instanceof BufferedInputStream);
@@ -79,11 +79,11 @@ public class EntityUtilTest {
 
   @Test
   public void testBuffered() throws IOException {
-    InputStream in = EntityUtil.makeReadAwareNonEmptyOrNull(buffered, false);
+    InputStream in = EntityUtil.makeConsumableNonEmptyOrNull(buffered, false);
     assertSame(buffered, in);
     assertFalse(in instanceof Consumable);
 
-    in = EntityUtil.makeReadAwareNonEmptyOrNull(buffered, true);
+    in = EntityUtil.makeConsumableNonEmptyOrNull(buffered, true);
     assertNotSame(buffered, in);
     assertTrue(in instanceof Consumable);
     assertTrue(in instanceof FilterInputStream);

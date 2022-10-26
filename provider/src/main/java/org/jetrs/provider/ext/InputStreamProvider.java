@@ -31,6 +31,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.Provider;
 
 import org.jetrs.MessageBodyProvider;
+import org.libj.io.Streams;
 
 /**
  * JAX-RS 2.1 Section 4.2.4
@@ -62,7 +63,6 @@ public class InputStreamProvider extends MessageBodyProvider<InputStream> {
 
   @Override
   public void writeTo(final InputStream t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,Object> httpHeaders, final OutputStream entityStream) throws IOException, WebApplicationException {
-    for (int ch; (ch = t.read()) != -1; entityStream.write(ch)); // [ST]
-    t.close();
+    Streams.transferTo(t, entityStream);
   }
 }

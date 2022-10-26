@@ -71,7 +71,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.NoContentException;
 import javax.ws.rs.core.PathSegment;
@@ -466,7 +465,7 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
       String firstValue = null;
       List<String> values = null;
       if (entityStream != null) {
-        final MultivaluedMap<String,String> map = EntityUtil.readFormParams(entityStream, MediaTypes.getCharset(getMediaType()), EntityUtil.shouldDecode(annotations));
+        final MultivaluedArrayMap<String,String> map = EntityUtil.readFormParams(entityStream, MediaTypes.getCharset(getMediaType()), EntityUtil.shouldDecode(annotations));
         values = map.get(((FormParam)annotation).value());
       }
 
@@ -581,7 +580,7 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
         return paramPlurality == ParamPlurality.ARRAY ? matchedSegments.toArray((Object[])Array.newInstance(memberClass, matchedSegments.size())) : matchedSegments;
       }
 
-      final MultivaluedMap<String,String> pathParameters = getUriInfo().getPathParameters(decode);
+      final MultivaluedArrayMap<String,String> pathParameters = getUriInfo().getPathParameters(decode);
       List<String> values = pathParameters.get(pathParamNameToMatch);
       // FIXME: Another useful warning would be: notify if more than 1 @PathParam annotations specify the same name
       String value = null;
@@ -603,7 +602,7 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
 
     if (annotationType == MatrixParam.class) {
       final boolean decode = EntityUtil.shouldDecode(annotations);
-      final ArrayList<PathSegment> pathSegments = getUriInfo().getPathSegments(decode);
+      final ArrayList<PathSegmentImpl> pathSegments = getUriInfo().getPathSegmentImpls(decode);
 
       final int i$ = pathSegments.size();
       final List<String> matrixParams;
@@ -637,7 +636,7 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
     throw new UnsupportedOperationException("Unsupported param annotation type: " + annotationType);
   }
 
-  private String[] getMatrixParamValue(final String matrixParamName, final List<PathSegment> pathSegments, final int size) {
+  private String[] getMatrixParamValue(final String matrixParamName, final ArrayList<PathSegmentImpl> pathSegments, final int size) {
     for (int i = 0; i < size; ++i) { // [RA]
       final MultivaluedMap<String,String> matrixParameters = pathSegments.get(i).getMatrixParameters();
       if (matrixParameters.size() > 0)
@@ -647,7 +646,7 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
     return null;
   }
 
-  private String[] getMatrixParamValues(final String matrixParamName, final List<PathSegment> pathSegments, int index, final int size, final Iterator<Map.Entry<String,List<String>>> iterator, final int depth) {
+  private String[] getMatrixParamValues(final String matrixParamName, final List<PathSegmentImpl> pathSegments, int index, final int size, final Iterator<Map.Entry<String,List<String>>> iterator, final int depth) {
     if (!iterator.hasNext()) {
       for (int i = ++index; i < size; ++i) { // [RA]
         final MultivaluedMap<String,String> matrixParameters = pathSegments.get(i).getMatrixParameters();
@@ -665,15 +664,8 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
     final List<String> values = entry.getValue();
     final int i$ = values.size();
     final String[] array = getMatrixParamValues(matrixParamName, pathSegments, index, size, iterator, depth + i$);
-    if (values instanceof RandomAccess) {
-      for (int i = 0; i < i$; ++i) // [RA]
-        array[depth + i] = values.get(i);
-    }
-    else {
-      int i = depth;
-      for (final String value : values) // [L]
-        array[i++] = value;
-    }
+    for (int i = 0; i < i$; ++i) // [RA]
+      array[depth + i] = values.get(i);
 
     return array;
   }
@@ -784,7 +776,7 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
         resourceMatches = new ResourceMatches();
 
       final String[] pathParamNames = uriTemplate.getPathParamNames();
-      final MultivaluedMap<String,String> pathParameters = new MultivaluedHashMap<>(pathParamNames.length);
+      final MultivaluedArrayMap<String,String> pathParameters = new MultivaluedArrayHashMap<>(pathParamNames.length);
       final long[] regionStartEnds = new long[pathParamNames.length];
 
       for (int j = 0, j$ = pathParamNames.length; j < j$; ++j) { // [A]
@@ -817,12 +809,8 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
       final List<String> requestHeaders = getHeaders().get(ACCESS_CONTROL_REQUEST_HEADERS);
       final int i$;
       if (requestHeaders != null && (i$ = requestHeaders.size()) > 0)
-        if (requestHeaders instanceof RandomAccess)
-          for (int i = 0; i < i$; ++i) // [RA]
-            response.header(ACCESS_CONTROL_ALLOW_HEADERS, requestHeaders.get(i));
-        else
-          for (final String requestHeader : requestHeaders) // [L]
-            response.header(ACCESS_CONTROL_ALLOW_HEADERS, requestHeader);
+        for (int i = 0; i < i$; ++i) // [RA]
+          response.header(ACCESS_CONTROL_ALLOW_HEADERS, requestHeaders.get(i));
 
       final String origin = httpServletRequest.getHeader(ORIGIN);
       if (origin != null) {
@@ -895,7 +883,7 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
   private Response setResponse(final Response response, final Annotation[] annotations) {
     containerResponseContext.setEntityStream(null);
 
-    final MultivaluedMap<String,String> containerResponseHeaders = containerResponseContext.getStringHeaders();
+    final MultivaluedArrayMap<String,String> containerResponseHeaders = containerResponseContext.getStringHeaders();
     containerResponseHeaders.clear();
 
     final MultivaluedMap<String,String> responseHeaders = response.getStringHeaders();
@@ -926,7 +914,7 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
   }
 
   private void writeHeader() {
-    final MultivaluedMap<String,String> containerResponseHeaders = containerResponseContext.getStringHeaders();
+    final MultivaluedArrayMap<String,String> containerResponseHeaders = containerResponseContext.getStringHeaders();
     if (containerResponseHeaders.size() > 0) {
       for (final Map.Entry<String,List<String>> entry : containerResponseHeaders.entrySet()) { // [S]
         final List<String> values = entry.getValue();
@@ -944,22 +932,12 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
           }
         }
 
-        if (values instanceof RandomAccess) {
-          int i = -1;
-          if (httpServletResponse.containsHeader(name))
-            httpServletResponse.setHeader(name, values.get(++i));
+        int i = -1;
+        if (httpServletResponse.containsHeader(name))
+          httpServletResponse.setHeader(name, values.get(++i));
 
-          while (++i < i$)
-            httpServletResponse.addHeader(entry.getKey(), values.get(i));
-        }
-        else {
-          final Iterator<String> i = values.iterator();
-          if (httpServletResponse.containsHeader(name))
-            httpServletResponse.setHeader(name, i.next());
-
-          while (i.hasNext())
-            httpServletResponse.addHeader(entry.getKey(), i.next());
-        }
+        while (++i < i$)
+          httpServletResponse.addHeader(entry.getKey(), values.get(i));
       }
     }
 
@@ -1084,7 +1062,7 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
   }
 
   @Override
-  public MultivaluedMap<String,String> getHeaders() {
+  public MultivaluedArrayMap<String,String> getHeaders() {
     return getHttpHeaders();
   }
 
@@ -1128,7 +1106,7 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
     }
     else {
       try {
-        entityStream = EntityUtil.makeReadAwareNonEmptyOrNull(input, false);
+        entityStream = EntityUtil.makeConsumableNonEmptyOrNull(input, false);
         hasEntity = entityStream != null;
       }
       catch (final IOException e) {

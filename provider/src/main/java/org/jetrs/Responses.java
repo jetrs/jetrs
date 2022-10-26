@@ -104,6 +104,15 @@ final class Responses {
         public Family getFamily() {
           return Family.familyOf(statusCode);
         }
+
+        @Override
+        public String toString() {
+          final StringBuilder b = new StringBuilder("HTTP ").append(statusCode);
+          if (reasonPhrase != null)
+            b.append(' ').append(reasonPhrase);
+
+          return b.toString();
+        }
       });
     }
 

@@ -42,7 +42,7 @@ public class MirrorMultivaluedMapTest {
       }
     };
 
-    final MirrorMultivaluedMap<String,String,Integer> map = new MirrorMultivaluedMap<>(new HashMap<>(), new HashMap<>(), new MirrorMultivaluedMap.Mirror<String,String,Integer>() {
+    final MirrorMultivaluedArrayMap<String,String,Integer> map = new MirrorMultivaluedArrayMap<>(new HashMap<>(), new HashMap<>(), new MirrorMultivaluedArrayMap.Mirror<String,String,Integer>() {
       private MirrorList.Mirror<Integer,String> reverse;
 
       @Override

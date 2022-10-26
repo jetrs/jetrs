@@ -17,22 +17,19 @@
 package org.jetrs;
 
 import java.util.List;
-import java.util.RandomAccess;
 
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.PathSegment;
 
 import org.libj.net.URLs;
 
 class PathSegmentImpl implements PathSegment {
-  private static final MultivaluedHashMap<String,String> emptyMap = new MultivaluedHashMap<>(); // FIXME: Make this unmodifiable
+  private static final MultivaluedArrayHashMap<String,String> emptyMap = new MultivaluedArrayHashMap<>(0); // FIXME: Make this unmodifiable
 
   private final String pathEncoded;
   private final String path;
-  private final MultivaluedMap<String,String> matrixParameters;
+  private final MultivaluedArrayHashMap<String,String> matrixParameters;
 
-  static void parseMatrixParams(final MultivaluedMap<String,String> matrixParameters, final String pathEncoded, int j) {
+  static void parseMatrixParams(final MultivaluedArrayHashMap<String,String> matrixParameters, final String pathEncoded, int j) {
     int i = j;
     final int len = pathEncoded.length();
 
@@ -79,7 +76,7 @@ class PathSegmentImpl implements PathSegment {
       else {
         this.path = path.substring(0, s);
         this.pathEncoded = pathEncoded.substring(0, pathEncoded.indexOf(';'));
-        parseMatrixParams(this.matrixParameters = new MultivaluedHashMap<>(), path, s);
+        parseMatrixParams(this.matrixParameters = new MultivaluedArrayHashMap<>(), path, s);
       }
     }
     else {
@@ -92,7 +89,7 @@ class PathSegmentImpl implements PathSegment {
       }
       else {
         this.path = this.pathEncoded = path.substring(0, s);
-        parseMatrixParams(this.matrixParameters = new MultivaluedHashMap<>(), path, s);
+        parseMatrixParams(this.matrixParameters = new MultivaluedArrayHashMap<>(), path, s);
       }
     }
   }
@@ -111,7 +108,7 @@ class PathSegmentImpl implements PathSegment {
   }
 
   @Override
-  public MultivaluedMap<String,String> getMatrixParameters() {
+  public MultivaluedArrayHashMap<String,String> getMatrixParameters() {
     return matrixParameters;
   }
 
@@ -121,18 +118,13 @@ class PathSegmentImpl implements PathSegment {
     if (path != null)
       builder.append(path);
 
-    if (matrixParameters.size() > 0)
+    if (matrixParameters.size() > 0) {
       for (final String name : matrixParameters.keySet()) { // [S]
         final List<String> values = matrixParameters.get(name);
-        if (values instanceof RandomAccess) {
-          for (int i = 0, i$ = values.size(); i < i$; ++i) // [RA]
-            builder.append(';').append(UriEncoder.MATRIX.encode(name)).append('=').append(UriEncoder.MATRIX.encode(values.get(i)));
-        }
-        else {
-          for (final String value : values) // [L]
-            builder.append(';').append(UriEncoder.MATRIX.encode(name)).append('=').append(UriEncoder.MATRIX.encode(value));
-        }
+        for (int i = 0, i$ = values.size(); i < i$; ++i) // [RA]
+          builder.append(';').append(UriEncoder.MATRIX.encode(name)).append('=').append(UriEncoder.MATRIX.encode(values.get(i)));
       }
+    }
 
     return builder.toString();
   }

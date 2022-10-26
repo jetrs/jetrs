@@ -24,15 +24,14 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.libj.lang.Strings;
 
 public class UriInfoImplTest {
   // FIXME: Implement a test around this
   private static void testQueryParameters(final HttpServletRequest request) {
-    final MultivaluedHashMap<String,String> queryParametersDecoded = new MultivaluedHashMap<>();
-    final MultivaluedHashMap<String,String> queryParametersEncoded = new MultivaluedHashMap<>();
+    final MultivaluedArrayHashMap<String,String> queryParametersDecoded = new MultivaluedArrayHashMap<>();
+    final MultivaluedArrayHashMap<String,String> queryParametersEncoded = new MultivaluedArrayHashMap<>();
     final URI absoluteUri = URI.create(UriInfoImpl.getAbsoluteUri(request));
     final String queryString = absoluteUri.getRawQuery();
     if (queryString == null || queryString.equals(""))

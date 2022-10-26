@@ -38,7 +38,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
 
 import org.libj.lang.Numbers;
 import org.libj.util.CollectionUtil;
@@ -118,9 +117,9 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
    * @param headers The map of headers as lists of objects.
    * @throws IllegalArgumentException If the specified map is null.
    */
-  HttpHeadersImpl(final MultivaluedMap<String,Object> headers) {
+  HttpHeadersImpl(final MultivaluedArrayMap<String,Object> headers) {
     this();
-    final MirrorMultivaluedMap<String,Object,String> mirrorMap = getMirrorMap();
+    final MirrorMultivaluedArrayMap<String,Object,String> mirrorMap = getMirrorMap();
     if (assertNotNull(headers).size() > 0)
       for (final Map.Entry<String,List<Object>> entry : headers.entrySet()) // [S]
       mirrorMap.addAll(entry.getKey(), entry.getValue());

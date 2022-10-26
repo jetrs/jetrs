@@ -38,7 +38,6 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.Link.Builder;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.MessageBodyReader;
@@ -307,17 +306,17 @@ class ResponseImpl extends Response {
 
   @Override
   @Deprecated
-  public MultivaluedMap<String,Object> getMetadata() {
+  public MultivaluedArrayMap<String,Object> getMetadata() {
     return getHeaders();
   }
 
   @Override
-  public MultivaluedMap<String,Object> getHeaders() {
+  public MultivaluedArrayMap<String,Object> getHeaders() {
     return headers.getMirrorMap();
   }
 
   @Override
-  public MultivaluedMap<String,String> getStringHeaders() {
+  public MultivaluedArrayMap<String,String> getStringHeaders() {
     return headers;
   }
 

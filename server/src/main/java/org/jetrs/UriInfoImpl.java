@@ -24,11 +24,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.RandomAccess;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
@@ -119,6 +116,10 @@ class UriInfoImpl implements UriInfo {
 
   @Override
   public ArrayList<PathSegment> getPathSegments(final boolean decode) {
+    return getPathSegmentImpls(decode);
+  }
+
+  ArrayList getPathSegmentImpls(final boolean decode) {
     if (decode) {
       if (pathSegmentsDecoded != null)
         return pathSegmentsDecoded;
@@ -185,16 +186,16 @@ class UriInfoImpl implements UriInfo {
     return UriBuilder.fromUri(getBaseUri());
   }
 
-  private MultivaluedMap<String,String> pathParametersDecoded;
-  private MultivaluedMap<String,String> pathParametersEncoded;
+  private MultivaluedArrayMap<String,String> pathParametersDecoded;
+  private MultivaluedArrayMap<String,String> pathParametersEncoded;
 
   @Override
-  public MultivaluedMap<String,String> getPathParameters() {
+  public MultivaluedArrayMap<String,String> getPathParameters() {
     return getPathParameters(true);
   }
 
   @Override
-  public MultivaluedMap<String,String> getPathParameters(final boolean decode) {
+  public MultivaluedArrayMap<String,String> getPathParameters(final boolean decode) {
     final ResourceMatches resourceMatches = requestContext.getResourceMatches();
     if (resourceMatches == null)
       return EntityUtil.EMPTY_MAP;
@@ -214,32 +215,28 @@ class UriInfoImpl implements UriInfo {
         return pathParametersDecoded = EntityUtil.EMPTY_MAP;
 
       // FIXME: What's the deal with Charset vs URL encoding?
-      pathParametersDecoded = new MultivaluedHashMap<>(size);
+      pathParametersDecoded = new MultivaluedArrayHashMap<>(size);
       for (final Map.Entry<String,List<String>> entry : pathParametersEncoded.entrySet()) { // [S]
         final String key = entry.getKey();
         final List<String> values = entry.getValue();
-        if (values instanceof RandomAccess)
-          for (int i = 0, i$ = values.size(); i < i$; ++i) // [RA]
-            addDecoded(pathParametersDecoded, key, values.get(i));
-        else
-          for (final String value : values) // [L]
-            addDecoded(pathParametersDecoded, key, value);
+        for (int i = 0, i$ = values.size(); i < i$; ++i) // [RA]
+          addDecoded(pathParametersDecoded, key, values.get(i));
       }
     }
 
     return pathParametersDecoded;
   }
 
-  private MultivaluedMap<String,String> queryParametersDecoded;
-  private MultivaluedMap<String,String> queryParametersEncoded;
+  private MultivaluedArrayMap<String,String> queryParametersDecoded;
+  private MultivaluedArrayMap<String,String> queryParametersEncoded;
 
   @Override
-  public MultivaluedMap<String,String> getQueryParameters() {
+  public MultivaluedArrayMap<String,String> getQueryParameters() {
     return getQueryParameters(true); // FIXME: Make this unmodifiable
   }
 
   @Override
-  public MultivaluedMap<String,String> getQueryParameters(final boolean decode) {
+  public MultivaluedArrayMap<String,String> getQueryParameters(final boolean decode) {
     if (queryParametersEncoded == null)
       queryParametersEncoded = EntityUtil.readQueryString(httpServletRequest.getQueryString(), null);
 
@@ -252,21 +249,18 @@ class UriInfoImpl implements UriInfo {
         return queryParametersDecoded = EntityUtil.EMPTY_MAP;
 
       // FIXME: What's the deal with Charset vs URL encoding?
-      queryParametersDecoded = new MultivaluedHashMap<>(size);
+      queryParametersDecoded = new MultivaluedArrayHashMap<>(size);
       for (final Map.Entry<String,List<String>> entry : queryParametersEncoded.entrySet()) { // [S]
         final List<String> values = entry.getValue();
         String key = entry.getKey();
         key = UrlEncoded.decodeString(key, 0, key.length(), StandardCharsets.UTF_8);
-        if (values.size() == 0) {
+        final int i$ = values.size();
+        if (i$ == 0) {
           queryParametersDecoded.put(key, values);
         }
         else {
-          if (values instanceof RandomAccess)
-            for (int i = 0, i$ = values.size(); i < i$; ++i) // [RA]
-              addDecoded(queryParametersDecoded, key, values.get(i));
-          else
-            for (final String value : values) // [L]
-              addDecoded(queryParametersDecoded, key, value);
+          for (int i = 0; i < i$; ++i) // [RA]
+            addDecoded(queryParametersDecoded, key, values.get(i));
         }
       }
     }
@@ -274,7 +268,7 @@ class UriInfoImpl implements UriInfo {
     return queryParametersDecoded;
   }
 
-  private static void addDecoded(final MultivaluedMap<String,String> map, final String key, final String value) {
+  private static void addDecoded(final MultivaluedArrayMap<String,String> map, final String key, final String value) {
     map.add(key, UrlEncoded.decodeString(value, 0, value.length(), StandardCharsets.UTF_8));
   }
 

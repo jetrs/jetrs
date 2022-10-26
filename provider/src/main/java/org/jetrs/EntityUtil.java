@@ -32,19 +32,19 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.RandomAccess;
 
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Encoded;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 
-import org.eclipse.jetty.util.MultiMap;
 import org.eclipse.jetty.util.UrlEncoded;
+import org.libj.io.Streams;
 import org.libj.net.URIs;
 
-public class EntityUtil {
+public final class EntityUtil {
   // NOTE: This was copy+pasted from jetty-server `ContextHandler`
   private static final String MAX_FORM_KEYS_KEY = "org.eclipse.jetty.server.Request.maxFormKeys";
   private static final String MAX_FORM_CONTENT_SIZE_KEY = "org.eclipse.jetty.server.Request.maxFormContentSize";
@@ -54,41 +54,7 @@ public class EntityUtil {
   private static final int _maxFormKeys = Integer.getInteger(MAX_FORM_KEYS_KEY, DEFAULT_MAX_FORM_KEYS);
   private static final int _maxFormContentSize = Integer.getInteger(MAX_FORM_CONTENT_SIZE_KEY, DEFAULT_MAX_FORM_CONTENT_SIZE);
 
-  static final MultivaluedMap<String,String> EMPTY_MAP = new MultivaluedHashMap<>(0); // FIXME: Make this unmodifiable
-
-  static class MultivaluedLinkedHashMap<V> extends MultiMap<V> implements MultivaluedMap<String,V> {
-    @Override
-    public void putSingle(final String key, final V value) {
-      super.put(key, value);
-    }
-
-    @Override
-    public V getFirst(final String key) {
-      final List<V> values = super.get(key);
-      return values == null ? null : values.get(0);
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public void addAll(final String key, final V ... newValues) {
-      super.addValues(key, newValues);
-    }
-
-    @Override
-    public void addAll(final String key, final List<V> valueList) {
-      super.addValues(key, valueList);
-    }
-
-    @Override
-    public void addFirst(final String key, final V value) {
-      super.add(key, value);
-    }
-
-    @Override
-    public boolean equalsIgnoreValueOrder(final MultivaluedMap<String,V> otherMap) {
-      return otherMap != null && otherMap.equalsIgnoreValueOrder(this);
-    }
-  }
+  static final MultivaluedArrayMap<String,String> EMPTY_MAP = new MultivaluedArrayHashMap<>(0); // FIXME: Make this unmodifiable
 
   public static Map<String,String[]> toStringArrayMap(final Map<String,List<String>> multiMap) {
     final Map<String,String[]> map = new LinkedHashMap<String,String[]>(multiMap.size() * 3 / 2) {
@@ -143,10 +109,10 @@ public class EntityUtil {
     return true;
   }
 
-  static MultivaluedHashMap<String,String> readFormParamsEncoded(final InputStream in, final Charset encoding) throws IOException {
+  static MultivaluedArrayHashMap<String,String> readFormParamsEncoded(final InputStream in, final Charset encoding) throws IOException {
     final StringBuilder b = new StringBuilder();
     String name = null;
-    final MultivaluedHashMap<String,String> map = new MultivaluedHashMap<>();
+    final MultivaluedArrayHashMap<String,String> map = new MultivaluedArrayHashMap<>();
     final Reader r = new InputStreamReader(in, encoding);
     try {
       for (int ch; (ch = r.read()) != -1;) { // [ST]
@@ -171,7 +137,7 @@ public class EntityUtil {
     }
   }
 
-  public static MultivaluedMap<String,String> readFormParams(final InputStream in, final Charset encoding, final boolean decode) throws IOException {
+  public static MultivaluedArrayMap<String,String> readFormParams(final InputStream in, final Charset encoding, final boolean decode) throws IOException {
     if (in instanceof FormServletInputStream)
       return ((FormServletInputStream)in).getFormParameterMap(decode);
 
@@ -183,12 +149,12 @@ public class EntityUtil {
     return params;
   }
 
-  static MultivaluedMap<String,String> readQueryString(final String queryString, final Charset encoding) {
+  static MultivaluedArrayMap<String,String> readQueryString(final String queryString, final Charset encoding) {
     if (queryString == null || queryString.length() == 0)
       return EMPTY_MAP;
 
     if (encoding == null) {
-      final MultivaluedHashMap<String,String> parameters = new MultivaluedHashMap<>();
+      final MultivaluedArrayHashMap<String,String> parameters = new MultivaluedArrayHashMap<>();
       URIs.parseParameters(parameters, queryString);
       return parameters;
     }
@@ -212,26 +178,40 @@ public class EntityUtil {
     for (int i = 0; i1.hasNext();) { // [I]
       final Map.Entry<String,List<String>> entity = i1.next();
       final String key = entity.getKey();
-      final List<String> values = entity.getValue();
-      if (values.size() == 0)
+      if (key == null)
         continue;
 
-      final Iterator<String> i2 = values.iterator();
-      do {
-        if (i++ > 0)
-          writer.write('&');
+      final List<String> values = entity.getValue();
+      final int size = values.size();
+      if (size == 0)
+        continue;
 
-        writer.write(UrlEncoded.encodeString(key, charset));
-        final String value = i2.next();
-        if (value != null && value.length() > 0) {
-          writer.write('=');
-          writer.write(UrlEncoded.encodeString(value, charset));
+      if (values instanceof RandomAccess) {
+        for (int j = 0; j < size; ++j) { // [RA]
+          write(writer, key, values.get(j), charset, i++);
         }
       }
-      while (i2.hasNext());
+      else {
+        final Iterator<String> i2 = values.iterator();
+        do {
+          write(writer, key, i2.next(), charset, i++);
+        }
+        while (i2.hasNext());
+      }
     }
 
     writer.flush();
+  }
+
+  private static void write(final OutputStreamWriter writer, final String key, final String value, final Charset charset, final int i) throws IOException {
+    if (i > 0)
+      writer.write('&');
+
+    writer.write(UrlEncoded.encodeString(key, charset));
+    if (value != null && value.length() > 0) {
+      writer.write('=');
+      writer.write(UrlEncoded.encodeString(value, charset));
+    }
   }
 
   private static void consumeAndClose(final InputStream in) throws IOException {
@@ -261,17 +241,17 @@ public class EntityUtil {
     }
 
     @Override
+    public boolean isConsumed() {
+      return isConsumed;
+    }
+
+    @Override
     public int read() throws IOException {
       final int r = super.read();
       if (r == -1)
         isConsumed = true;
 
       return r;
-    }
-
-    @Override
-    public boolean isConsumed() {
-      return isConsumed;
     }
 
     @Override
@@ -288,17 +268,17 @@ public class EntityUtil {
     }
 
     @Override
+    public boolean isConsumed() {
+      return isConsumed;
+    }
+
+    @Override
     public synchronized int read() throws IOException {
       final int r = super.read();
       if (r == -1)
         isConsumed = true;
 
       return r;
-    }
-
-    @Override
-    public boolean isConsumed() {
-      return isConsumed;
     }
 
     @Override
@@ -345,14 +325,14 @@ public class EntityUtil {
     return true;
   }
 
-  static InputStream makeReadAwareNonEmptyOrNull(InputStream in, final boolean readAware) throws IOException {
+  static InputStream makeConsumableNonEmptyOrNull(InputStream in, final boolean consumable) throws IOException {
     final boolean hasAvailable = in.available() > 0;
-    if (readAware) {
+    if (consumable) {
       if (hasAvailable) {
         return new ConsumableFilterInputStream(in);
       }
       else if (!in.markSupported()) {
-        in = new ConsumableBufferedInputStream(in, 1);
+        in = new ConsumableBufferedInputStream(in, Streams.DEFAULT_SOCKET_BUFFER_SIZE);
       }
       else if (!hasData(in)) {
         return null;
@@ -369,5 +349,8 @@ public class EntityUtil {
     }
 
     return hasData(in) ? in : null;
+  }
+
+  private EntityUtil() {
   }
 }

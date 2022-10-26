@@ -51,10 +51,7 @@ class ConfigurationImpl implements Cloneable, Configuration, Serializable {
 
   @Override
   public Map<String,Object> getProperties() {
-    if (properties == null)
-      properties = new HashMap<>();
-
-    return Collections.unmodifiableMap(properties);
+    return properties == null ? properties = new HashMap<>() : properties;
   }
 
   @Override
@@ -70,10 +67,7 @@ class ConfigurationImpl implements Cloneable, Configuration, Serializable {
   private Set<Feature> features;
 
   Set<Feature> features() {
-    if (features == null)
-      features = new HashSet<>();
-
-    return features;
+    return features == null ? features = new HashSet<>() : features;
   }
 
   @Override

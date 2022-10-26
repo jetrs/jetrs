@@ -23,15 +23,14 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Comparator;
 
 import javax.servlet.ServletException;
-import javax.ws.rs.core.MultivaluedMap;
 
 import org.libj.net.URLs;
 import org.libj.util.ArrayUtil;
 
 class ResourceMatch implements Comparable<ResourceMatch> {
-  private static final Comparator<MultivaluedMap<String,String>> PATH_PARAMETERS_COMPARATOR = new Comparator<MultivaluedMap<String,String>>() {
+  private static final Comparator<MultivaluedArrayMap<String,String>> PATH_PARAMETERS_COMPARATOR = new Comparator<MultivaluedArrayMap<String,String>>() {
     @Override
-    public int compare(final MultivaluedMap<String,String> o1, final MultivaluedMap<String,String> o2) {
+    public int compare(final MultivaluedArrayMap<String,String> o1, final MultivaluedArrayMap<String,String> o2) {
       int s1 = o1.size();
       int s2 = o2.size();
       if (s1 > s2)
@@ -60,10 +59,10 @@ class ResourceMatch implements Comparable<ResourceMatch> {
   private String uriDecoded;
   private final CompatibleMediaType[] producedMediaTypess;
   private final String[] pathSegmentParamNames;
-  private final MultivaluedMap<String,String> pathParameters;
+  private final MultivaluedArrayMap<String,String> pathParameters;
   private final long[] regionStartEnds;
 
-  ResourceMatch(final ResourceInfoImpl resourceInfo, final String uriEncoded, final CompatibleMediaType[] producedMediaTypes, final String[] pathSegmentParamNames, final long[] regionStartEnds, final MultivaluedMap<String,String> pathParameters) {
+  ResourceMatch(final ResourceInfoImpl resourceInfo, final String uriEncoded, final CompatibleMediaType[] producedMediaTypes, final String[] pathSegmentParamNames, final long[] regionStartEnds, final MultivaluedArrayMap<String,String> pathParameters) {
     this.resourceInfo = assertNotNull(resourceInfo);
     this.resourceClass = resourceInfo.getResourceClass();
     this.instance = resourceInfo.getSingleton();
@@ -104,7 +103,7 @@ class ResourceMatch implements Comparable<ResourceMatch> {
     return instance == null ? instance = requestContext.newResourceInstance(resourceClass) : instance;
   }
 
-  MultivaluedMap<String,String> getPathParameters() {
+  MultivaluedArrayMap<String,String> getPathParameters() {
     return pathParameters;
   }
 

@@ -33,7 +33,7 @@ import org.libj.util.MirrorMap;
  * @param <V> The type of value elements in this map.
  * @param <R> The type of reflected value elements in the mirror map.
  */
-class MirrorMultivaluedMap<K,V,R> extends MirrorMap<K,List<V>,List<R>> implements MultivaluedMap<K,V>, Cloneable {
+class MirrorMultivaluedArrayMap<K,V,R> extends MirrorMap<K,List<V>,List<R>> implements MultivaluedArrayMap<K,V>, Cloneable {
   /**
    * Interface providing methods for the reflection of one type of object to another, and vice-versa.
    *
@@ -84,11 +84,11 @@ class MirrorMultivaluedMap<K,V,R> extends MirrorMap<K,List<V>,List<R>> implement
   protected Mirror<K,R,V> reverse;
 
   /**
-   * Creates a new {@link MirrorMultivaluedMap} with the specified target maps and {@link Mirror}. The specified target maps are
-   * meant to be empty, as they become the underlying maps of the new {@link MirrorMultivaluedMap} instance. The specified
+   * Creates a new {@link MirrorMultivaluedArrayMap} with the specified target maps and {@link Mirror}. The specified target maps are
+   * meant to be empty, as they become the underlying maps of the new {@link MirrorMultivaluedArrayMap} instance. The specified
    * {@link Mirror} provides the {@link Mirror#valueToReflection(Object,List) V -&gt; R} and
    * {@link Mirror#reflectionToValue(Object,List) R -&gt; V} methods, which are used to reflect object values from one
-   * {@link MirrorMultivaluedMap} to the other.
+   * {@link MirrorMultivaluedArrayMap} to the other.
    *
    * @param <CloneableValues> The type parameter constraining the {@code values} argument to {@link Map Map&lt;K,V&gt;} &amp;
    *          {@link Cloneable}.
@@ -100,37 +100,37 @@ class MirrorMultivaluedMap<K,V,R> extends MirrorMap<K,List<V>,List<R>> implement
    *          {@link Mirror#reflectionToValue(Object,List) R -&gt; V} methods.
    * @throws IllegalArgumentException If any of the specified parameters is null.
    */
-  <CloneableValues extends Map<K,List<V>> & Cloneable,CloneableReflections extends Map<K,List<R>> & Cloneable>MirrorMultivaluedMap(final CloneableValues values, final CloneableReflections reflections, final Mirror<K,V,R> mirror) {
+  <CloneableValues extends Map<K,List<V>> & Cloneable,CloneableReflections extends Map<K,List<R>> & Cloneable>MirrorMultivaluedArrayMap(final CloneableValues values, final CloneableReflections reflections, final Mirror<K,V,R> mirror) {
     super(values, reflections, mirror);
   }
 
   /**
-   * Creates a new {@link MirrorMultivaluedMap} with the specified maps and mirror. This method is specific for the construction of
-   * a reflected {@link MirrorMultivaluedMap} instance.
+   * Creates a new {@link MirrorMultivaluedArrayMap} with the specified maps and mirror. This method is specific for the construction of
+   * a reflected {@link MirrorMultivaluedArrayMap} instance.
    *
-   * @param mirrorMap The {@link MirrorMultivaluedMap} for which {@code this} map will be a reflection. Likewise, {@code this} map
+   * @param mirrorMap The {@link MirrorMultivaluedArrayMap} for which {@code this} map will be a reflection. Likewise, {@code this} map
    *          will be a reflection for {@code mirrorMap}.
    * @param values The underlying map of type {@code <K,List<V>>}, which is implicitly assumed to also be {@link Cloneable}.
    * @param mirror The {@link Mirror} specifying the {@link Mirror#valueToReflection(Object,List) V -&gt; R} and
    *          {@link Mirror#reflectionToValue(Object,List) R -&gt; V} methods.
    */
-  protected MirrorMultivaluedMap(final MirrorMultivaluedMap<K,R,V> mirrorMap, final Map<K,List<V>> values, final Mirror<K,V,R> mirror) {
+  protected MirrorMultivaluedArrayMap(final MirrorMultivaluedArrayMap<K,R,V> mirrorMap, final Map<K,List<V>> values, final Mirror<K,V,R> mirror) {
     super(mirrorMap, values, mirror);
   }
 
   @Override
   protected MirrorMap<K,List<V>,List<R>> newInstance(final Map<K,List<V>> values, final Map<K,List<R>> reflections) {
-    return new MirrorMultivaluedMap<>(toCloneable(values), toCloneable(reflections), getMirror());
+    return new MirrorMultivaluedArrayMap<>(toCloneable(values), toCloneable(reflections), getMirror());
   }
 
   @Override
   protected MirrorMap<K,List<R>,List<V>> newMirrorInstance(final Map<K,List<R>> values) {
-    return new MirrorMultivaluedMap<>(this, values, getReverseMirror());
+    return new MirrorMultivaluedArrayMap<>(this, values, getReverseMirror());
   }
 
   @Override
-  public MirrorMultivaluedMap<K,R,V> getMirrorMap() {
-    return (MirrorMultivaluedMap<K,R,V>)super.getMirrorMap();
+  public MirrorMultivaluedArrayMap<K,R,V> getMirrorMap() {
+    return (MirrorMultivaluedArrayMap<K,R,V>)super.getMirrorMap();
   }
 
   @Override
@@ -186,7 +186,8 @@ class MirrorMultivaluedMap<K,V,R> extends MirrorMap<K,List<V>,List<R>> implement
    * @return The list associated to the specified key, creating one via {@link Mirror#reflectionToValue(Object,List)} if a list does
    *         not exist.
    */
-  protected final MirrorList<V,List<V>,R,List<R>> getValues(final K key) {
+  @Override
+  public final MirrorList<V,List<V>,R,List<R>> getValues(final K key) {
     MirrorList<V,List<V>,R,List<R>> values = get(key);
     if (values == null)
       put(key, values, values = getMirror().reflectionToValue(key, null));
@@ -260,9 +261,9 @@ class MirrorMultivaluedMap<K,V,R> extends MirrorMap<K,List<V>,List<R>> implement
   }
 
   @SuppressWarnings("unchecked")
-  private MirrorMultivaluedMap<K,V,R> superClone() {
+  private MirrorMultivaluedArrayMap<K,V,R> superClone() {
     try {
-      final MirrorMultivaluedMap<K,V,R> clone = (MirrorMultivaluedMap<K,V,R>)super.clone();
+      final MirrorMultivaluedArrayMap<K,V,R> clone = (MirrorMultivaluedArrayMap<K,V,R>)super.clone();
       clone.entrySet = null;
       clone.keySet = null;
       clone.values = null;
@@ -275,8 +276,8 @@ class MirrorMultivaluedMap<K,V,R> extends MirrorMap<K,List<V>,List<R>> implement
   }
 
   @Override
-  public MirrorMultivaluedMap<K,V,R> clone() {
-    final MirrorMultivaluedMap<K,V,R> clone = superClone();
+  public MirrorMultivaluedArrayMap<K,V,R> clone() {
+    final MirrorMultivaluedArrayMap<K,V,R> clone = superClone();
     clone.mirrorMap = getMirrorMap().superClone();
     clone.getMirrorMap().mirrorMap = clone;
     return clone;

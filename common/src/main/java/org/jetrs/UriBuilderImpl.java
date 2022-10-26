@@ -26,12 +26,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.RandomAccess;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.ws.rs.Path;
-import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriBuilderException;
 
@@ -499,26 +497,17 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
 
     final int matrixIndex = path.indexOf(';', start);
     if (matrixIndex > -1) {
-      final MultivaluedHashMap<String,String> map = new MultivaluedHashMap<>();
-      PathSegmentImpl.parseMatrixParams(map, path, matrixIndex);
-      map.remove(name);
+      final MultivaluedArrayHashMap<String,String> params = new MultivaluedArrayHashMap<>();
+      PathSegmentImpl.parseMatrixParams(params, path, matrixIndex);
+      params.remove(name);
 
       final StringBuilder path = new StringBuilder(this.path);
       path.delete(matrixIndex, path.length());
-      if (map.size() > 0) {
-        for (final String paramName : map.keySet()) { // [S]
-          final List<String> paramValues = map.get(paramName);
-          final int size = paramValues.size();
-          if (size > 0) {
-            if (paramValues instanceof RandomAccess) {
-              for (int i = 0; i < size; ++i) // [RA]
-                appendParam(path, paramName, paramValues.get(i));
-            }
-            else {
-              for (final String paramValue : paramValues) // [L]
-                appendParam(path, paramName, paramValue);
-            }
-          }
+      if (params.size() > 0) {
+        for (final String paramName : params.keySet()) { // [S]
+          final List<String> paramValues = params.get(paramName);
+          for (int i = 0, i$ = paramValues.size(); i < i$; ++i) // [RA]
+            appendParam(path, paramName, paramValues.get(i));
         }
       }
 

@@ -16,18 +16,16 @@
 
 package org.jetrs;
 
-import javax.ws.rs.core.PathSegment;
-
 import org.libj.lang.WrappedArrayList;
 
-class PathSegmentList extends WrappedArrayList<PathSegment> {
-  private static PathSegment[] parseSegments(final String pathEncoded, final int i, final int depth, final boolean decode) {
+class PathSegmentList extends WrappedArrayList<PathSegmentImpl> {
+  private static PathSegmentImpl[] parseSegments(final String pathEncoded, final int i, final int depth, final boolean decode) {
     final String segment;
     final int j = pathEncoded.indexOf('/', i);
-    final PathSegment[] pathSegments;
+    final PathSegmentImpl[] pathSegments;
     if (j < 0) {
       segment = pathEncoded.substring(i);
-      pathSegments = new PathSegment[depth + 1];
+      pathSegments = new PathSegmentImpl[depth + 1];
     }
     else {
       segment = pathEncoded.substring(i, j);
@@ -43,8 +41,8 @@ class PathSegmentList extends WrappedArrayList<PathSegment> {
   }
 
   PathSegmentList(final PathSegmentList pathSegmentList, final boolean decode) {
-    super(new PathSegment[pathSegmentList.elementData.length]);
-    final PathSegmentImpl[] pathSegments = (PathSegmentImpl[])pathSegmentList.elementData;
+    super(new PathSegmentImpl[pathSegmentList.elementData.length]);
+    final PathSegmentImpl[] pathSegments = pathSegmentList.elementData;
     for (int i = 0, i$ = elementData.length; i < i$; ++i) // [A]
       elementData[i] = new PathSegmentImpl(pathSegments[i].getPathEncoded(), decode);
   }

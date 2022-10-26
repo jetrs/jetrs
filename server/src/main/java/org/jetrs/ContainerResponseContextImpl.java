@@ -34,7 +34,6 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.Link.Builder;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.MessageBodyWriter;
@@ -93,7 +92,7 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
   }
 
   @Override
-  public MultivaluedMap<String,Object> getHeaders() {
+  public MultivaluedArrayMap<String,Object> getHeaders() {
     return getStringHeaders().getMirrorMap();
   }
 

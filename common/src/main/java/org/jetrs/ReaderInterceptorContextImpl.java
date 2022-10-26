@@ -21,7 +21,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 
-import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.ReaderInterceptorContext;
 
 abstract class ReaderInterceptorContextImpl extends InterceptorContextImpl<HashMap<String,Object>> implements ReaderInterceptorContext {
@@ -47,7 +46,7 @@ abstract class ReaderInterceptorContextImpl extends InterceptorContextImpl<HashM
   }
 
   @Override
-  public MultivaluedMap<String,String> getHeaders() {
+  public MultivaluedArrayMap<String,String> getHeaders() {
     return headers;
   }
 

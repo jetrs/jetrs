@@ -36,10 +36,10 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.Response;
 
 import org.jetrs.HttpHeaders;
+import org.jetrs.MultivaluedArrayHashMap;
 import org.jetrs.provider.ext.BytesProvider;
 import org.jetrs.provider.ext.CharacterProvider;
 import org.jetrs.provider.ext.FormMultivaluedMapProvider;
@@ -93,7 +93,7 @@ public class ApplicationServerTest {
   }
 
   private static Response post(final Class<?> cls, final Object a, final Object b, final Object c) {
-    final MultivaluedHashMap<String,String> form = new MultivaluedHashMap<>(3);
+    final MultivaluedArrayHashMap<String,String> form = new MultivaluedArrayHashMap<>(3);
     if (a != null) {
       form.add("p", String.valueOf(a));
       form.add("q", String.valueOf(a));

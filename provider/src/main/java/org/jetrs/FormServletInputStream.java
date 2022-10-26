@@ -25,8 +25,6 @@ import java.util.List;
 import java.util.Map;
 
 import javax.servlet.ServletInputStream;
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
 
 import org.eclipse.jetty.util.UrlEncoded;
 import org.libj.net.FilterServletInputStream;
@@ -34,8 +32,8 @@ import org.libj.net.FilterServletInputStream;
 class FormServletInputStream extends FilterServletInputStream {
   private final String characterEncoding;
   private Charset charset;
-  private MultivaluedHashMap<String,String> formParameterEncodedMap;
-  private MultivaluedHashMap<String,String> formParameterDecodedMap;
+  private MultivaluedArrayHashMap<String,String> formParameterEncodedMap;
+  private MultivaluedArrayHashMap<String,String> formParameterDecodedMap;
 
   FormServletInputStream(final ServletInputStream in, final String characterEncoding) {
     super(in);
@@ -46,8 +44,8 @@ class FormServletInputStream extends FilterServletInputStream {
     return charset == null ? charset = characterEncoding != null ? Charset.forName(characterEncoding) : StandardCharsets.ISO_8859_1 : charset;
   }
 
-  @SuppressWarnings({"cast", "rawtypes", "unchecked"})
-  MultivaluedHashMap<String,String> getFormParameterMap(final boolean decoded) {
+  @SuppressWarnings({"rawtypes", "unchecked"})
+  MultivaluedArrayHashMap<String,String> getFormParameterMap(final boolean decoded) {
     if (formParameterEncodedMap == null) {
       try {
         formParameterEncodedMap = EntityUtil.readFormParamsEncoded(in, getCharacterEncoding());
@@ -61,8 +59,11 @@ class FormServletInputStream extends FilterServletInputStream {
       return formParameterEncodedMap;
 
     if (formParameterDecodedMap == null) {
-      formParameterDecodedMap = new MultivaluedHashMap((MultivaluedMap<?,?>)formParameterEncodedMap);
-      if (formParameterDecodedMap.size() > 0) {
+      if (formParameterEncodedMap.size() == 0) {
+        formParameterDecodedMap = new MultivaluedArrayHashMap();
+      }
+      else {
+        formParameterDecodedMap = new MultivaluedArrayHashMap(formParameterEncodedMap);
         final Charset charset = getCharacterEncoding();
         for (final Map.Entry<String,List<String>> entry : formParameterDecodedMap.entrySet()) {
           final ArrayList<String> values = (ArrayList<String>)entry.getValue();

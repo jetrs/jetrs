@@ -79,6 +79,8 @@ public class CharacterProvider extends MessageBodyProvider<Character> {
 
   @Override
   public void writeTo(final Character t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,Object> httpHeaders, final OutputStream entityStream) throws IOException, WebApplicationException {
-    entityStream.write(MessageBodyProvider.toBytes(t, mediaType));
+    final byte[] bytes = MessageBodyProvider.toBytes(t, mediaType);
+    httpHeaders.putSingle(HttpHeaders.CONTENT_LENGTH, bytes.length);
+    entityStream.write(bytes);
   }
 }

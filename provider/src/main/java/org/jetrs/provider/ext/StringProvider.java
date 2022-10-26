@@ -28,6 +28,7 @@ import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.Provider;
@@ -66,7 +67,8 @@ public class StringProvider extends MessageBodyProvider<String> {
 
   @Override
   public void writeTo(final String t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,Object> httpHeaders, final OutputStream entityStream) throws IOException, WebApplicationException {
-    final Charset charset = MessageBodyProvider.getCharset(mediaType);
-    entityStream.write(t.getBytes(charset));
+    final byte[] bytes = t.getBytes(MessageBodyProvider.getCharset(mediaType));
+    httpHeaders.putSingle(HttpHeaders.CONTENT_LENGTH, bytes.length);
+    entityStream.write(bytes);
   }
 }

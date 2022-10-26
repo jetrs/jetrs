@@ -161,6 +161,6 @@ public class FileProvider extends MessageBodyProvider<File> {
   public void writeTo(final File t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,Object> httpHeaders, final OutputStream entityStream) throws IOException {
     final String range = requestHeaders.getRequestHeaders().getFirst("Range");
     final long contentLength = writeTo(range, t, entityStream, consumer);
-    httpHeaders.addFirst(HttpHeaders.CONTENT_LENGTH, String.valueOf(contentLength));
+    httpHeaders.putSingle(HttpHeaders.CONTENT_LENGTH, contentLength);
   }
 }
