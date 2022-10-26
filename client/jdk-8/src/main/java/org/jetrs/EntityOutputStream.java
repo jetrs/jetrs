@@ -20,39 +20,39 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 abstract class EntityOutputStream extends OutputStream {
-  OutputStream out;
+  OutputStream entityOutputStream;
 
-  abstract void onWrite() throws IOException;
+  abstract void onWrite(byte[] bs, int off, int len, int b) throws IOException;
 
   @Override
   public void write(final int b) throws IOException {
-    onWrite();
-    out.write(b);
+    onWrite(null, -1, -1, b);
+    entityOutputStream.write(b);
   }
 
   @Override
   public void write(final byte[] b) throws IOException {
-    onWrite();
-    out.write(b);
+    onWrite(b, 0, -1, -1);
+    entityOutputStream.write(b);
   }
 
   @Override
   public void write(final byte[] b, final int off, final int len) throws IOException {
-    onWrite();
-    out.write(b, off, len);
+    onWrite(b, off, len, -1);
+    entityOutputStream.write(b, off, len);
   }
 
   @Override
   public void flush() throws IOException {
-    if (out != null)
-      out.flush();
+    if (entityOutputStream != null)
+      entityOutputStream.flush();
   }
 
   @Override
   public void close() throws IOException {
-    if (out != null) {
-      out.flush();
-      out.close();
+    if (entityOutputStream != null) {
+      entityOutputStream.flush();
+      entityOutputStream.close();
     }
   }
 }

@@ -50,7 +50,6 @@ import org.jetrs.provider.ext.FormProvider;
 import org.jetrs.provider.ext.InputStreamProvider;
 import org.jetrs.provider.ext.StringProvider;
 import org.junit.AfterClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.libj.io.Streams;
 import org.libj.lang.Classes;
@@ -81,7 +80,7 @@ public class Jdk8ClientTest {
     .register(new FormMultivaluedMapProvider())
     .build();
 
-  private static int tests = 10;
+  private static int tests = 20;
 
   private abstract static class Trial {
     private Trial(final String method) throws InterruptedException, IOException {
@@ -103,8 +102,10 @@ public class Jdk8ClientTest {
         executor.submit(() -> {
           try {
             final AsyncInvoker invoker = builder.async();
-            assertResponse((entity != null ? invoker.method(method, entity.get()) : invoker.method(method)).get());
-            latch.countDown();
+            try (final Response response = (entity != null ? invoker.method(method, entity.get()) : invoker.method(method)).get()) {
+              assertResponse(response);
+            }
+
             return true;
           }
           catch (final Exception e) {
@@ -113,6 +114,9 @@ public class Jdk8ClientTest {
               System.exit(1);
               return false;
             }
+          }
+          finally {
+            latch.countDown();
           }
         });
       }

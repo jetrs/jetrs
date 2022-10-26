@@ -16,10 +16,10 @@
 
 package org.jetrs;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
+import java.io.OutputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,13 +29,16 @@ import java.util.RandomAccess;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.net.ssl.SSLContext;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.CacheControl;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.StatusType;
@@ -49,10 +52,9 @@ import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
-import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.Header;
 import org.apache.hc.core5.http.HttpEntity;
-import org.apache.hc.core5.http.io.entity.InputStreamEntity;
+import org.apache.hc.core5.http.io.entity.AbstractHttpEntity;
 import org.apache.hc.core5.util.TimeValue;
 import org.apache.hc.core5.util.Timeout;
 import org.libj.util.CollectionUtil;
@@ -62,7 +64,7 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
   private static final BasicCookieStore cookieStore = new BasicCookieStore();
 
   static {
-    poolingConnManager.setDefaultMaxPerRoute(64); // FIXME: Put into config
+    poolingConnManager.setDefaultMaxPerRoute(100); // FIXME: Put into config
     poolingConnManager.setMaxTotal(320);          // FIXME: Put into config
   }
 
@@ -116,7 +118,7 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
       }
 
       @Override
-      @SuppressWarnings({"rawtypes", "resource"})
+      @SuppressWarnings("rawtypes")
       public Response invoke() {
         try {
           $telemetry(Span.TOTAL, Span.INIT);
@@ -148,18 +150,138 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
             if (messageBodyWriter == null)
               throw new ProcessingException("Provider not found for " + entityClass.getName());
 
-            writeContentAsync(messageBodyWriter, entityClass, () -> {
-              flushHeaders(request);
-              final PipedInputStream in = new PipedInputStream();
-              request.setEntity(new InputStreamEntity(in, ContentType.parse(requestHeaders.getFirst(HttpHeaders.CONTENT_TYPE))));
-              final PipedOutputStream out = new PipedOutputStream(in);
-              $telemetry(Span.ENTITY_INIT, Span.ENTITY_WRITE);
-              return out;
-            }, () -> $telemetry(Span.ENTITY_WRITE));
+            final ReentrantLock lock = new ReentrantLock();
+            final Condition condition = lock.newCondition();
+
+            // This convoluted approach allows MessageBodyWriter#writeTo() to be called (which may set headers), and upon its first OutputStream#write(),
+            // the actual request is executed. Before it is executed, the request sets an AbstractHttpEntity. When AbstractHttpEntity#writeTo() is called,
+            // this approach sets the OutputStream from AbstractHttpEntity#writeTo() to the call thread waiting to continue MessageBodyWriter#writeTo().
+            final AtomicReference<CloseableHttpResponse> ref = new AtomicReference<>();
+            try (final EntityOutputStream entityOutputStream = new EntityOutputStream() {
+              private final AtomicReference<ByteArrayOutputStream> temp = new AtomicReference<>();
+              private final AtomicBoolean executed = new AtomicBoolean();
+
+              @Override
+              void onWrite(final byte[] bs, final int off, final int len, final int b) throws IOException {
+                if (temp.get() != null) {
+                  request.setEntity(new AbstractHttpEntity((String)null, null) {
+                    @Override
+                    public boolean isRepeatable() {
+                      return false;
+                    }
+
+                    @Override
+                    public long getContentLength() {
+                      return -1;
+                    }
+
+                    @Override
+                    public boolean isStreaming() {
+                      return false;
+                    }
+
+                    @Override
+                    public InputStream getContent() throws IOException {
+                      throw new UnsupportedOperationException();
+                    }
+
+                    @Override
+                    public void writeTo(final OutputStream outStream) throws IOException {
+                      lock.lock();
+                      entityOutputStream = outStream;
+                      condition.signal();
+                      try {
+                        condition.await();
+                      }
+                      catch (final InterruptedException e) {
+                        throw new IOException(e);
+                      }
+                      finally {
+                        lock.unlock();
+                      }
+                    }
+
+                    @Override
+                    public void close() throws IOException {
+                    }
+                  });
+
+                  executorService.submit(() -> {
+                    execute();
+                    return true;
+                  });
+
+                  lock.lock();
+                  try {
+                    condition.await();
+                  }
+                  catch (final InterruptedException e) {
+                    throw new IOException(e);
+                  }
+                  finally {
+                    lock.unlock();
+                  }
+
+                  entityOutputStream.write(temp.get().toByteArray());
+                  temp.set(null);
+                }
+                else if (entityOutputStream == null) {
+                  flushHeaders(request);
+                  final ByteArrayOutputStream out = bs != null ? new ByteArrayOutputStream(len != -1 ? len : bs.length) : new ByteArrayOutputStream(1);
+                  temp.set(out);
+                  this.entityOutputStream = out;
+                  $telemetry(Span.ENTITY_INIT, Span.ENTITY_WRITE);
+                }
+              }
+
+              void execute() throws IOException {
+                executed.set(true);
+                try {
+                  ref.set(httpClient.execute(request));
+                }
+                finally {
+                  lock.lock();
+                  condition.signal();
+                  lock.unlock();
+                }
+              }
+
+              @Override
+              public void close() throws IOException {
+                try {
+                  super.close();
+                }
+                finally {
+                  if (!executed.get()) {
+                    execute();
+                  }
+                  else {
+                    lock.lock();
+                    condition.signal();
+                    lock.unlock();
+                  }
+
+                  $telemetry(Span.ENTITY_WRITE);
+                }
+              }
+            }) {
+              messageBodyWriter.writeTo(entity.getEntity(), entityClass, null, entity.getAnnotations(), entity.getMediaType(), requestHeaders.getMirrorMap(), entityOutputStream);
+            }
 
             $telemetry(Span.RESPONSE_WAIT);
 
-            response = httpClient.execute(request);
+            if (ref.get() == null) {
+              lock.lock();
+              try {
+                if (ref.get() == null)
+                  condition.await();
+              }
+              finally {
+                lock.unlock();
+              }
+            }
+
+            response = ref.get();
           }
 
           $telemetry(Span.RESPONSE_WAIT, Span.RESPONSE_READ);

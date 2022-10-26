@@ -84,12 +84,12 @@ abstract class InvocationImpl implements Invocation {
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
-  void writeContentSync(final MessageBodyWriter messageBodyWriter, final Class<?> entityClass, final ThrowingSupplier<OutputStream,IOException> onFirstWrite, final Runnable onClose) throws InterruptedException, IOException, TimeoutException {
+  void writeContentSync(final MessageBodyWriter messageBodyWriter, final Class<?> entityClass, final ThrowingSupplier<OutputStream,IOException> onFirstWrite, final Runnable onClose) throws IOException {
     try (final EntityOutputStream entityStream = new EntityOutputStream() {
       @Override
-      void onWrite() throws IOException {
-        if (out == null)
-          out = onFirstWrite.get();
+      void onWrite(final byte[] bs, final int off, final int len, final int b) throws IOException {
+        if (entityOutputStream == null)
+          entityOutputStream = onFirstWrite.get();
       }
 
       @Override
@@ -103,7 +103,7 @@ abstract class InvocationImpl implements Invocation {
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
-  void writeContentAsync(final MessageBodyWriter messageBodyWriter, final Class<?> entityClass, final ThrowingSupplier<OutputStream,IOException> onFirstWrite, final Runnable onClose) throws InterruptedException, IOException, TimeoutException {
+  void writeContentAsync(final MessageBodyWriter messageBodyWriter, final Class<?> entityClass, final ThrowingSupplier<OutputStream,IOException> onFirstWrite, final Runnable onClose) throws InterruptedException, TimeoutException {
     final AtomicBoolean ready = new AtomicBoolean();
     final ReentrantLock lock = new ReentrantLock();
     final Condition condition = lock.newCondition();
@@ -113,9 +113,9 @@ abstract class InvocationImpl implements Invocation {
       public void runThrows() throws Exception {
         try (final EntityOutputStream entityStream = new EntityOutputStream() {
           @Override
-          void onWrite() throws IOException {
-            if (out == null) {
-              out = onFirstWrite.get();
+          void onWrite(final byte[] bs, final int off, final int len, final int b) throws IOException {
+            if (entityOutputStream == null) {
+              entityOutputStream = onFirstWrite.get();
               ready.set(true);
               lock.lock();
               condition.signal();

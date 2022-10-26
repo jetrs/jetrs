@@ -87,11 +87,11 @@ abstract class Invoker<R> {
     }
   }
 
-  static ExecutorService getDefaultExecutorService() {
+  private static ExecutorService getDefaultExecutorService() {
     return Executors.newCachedThreadPool(); // FIXME: Make configurable
   }
 
-  static ScheduledExecutorService getDefaultScheduledExecutorService() {
+  private static ScheduledExecutorService getDefaultScheduledExecutorService() {
     return Executors.newSingleThreadScheduledExecutor(); // FIXME: Make configurable
   }
 
