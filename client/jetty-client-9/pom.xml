@@ -51,21 +51,23 @@
   </build>
   <dependencies>
     <dependency>
-      <groupId>org.jetrs.client</groupId>
-      <artifactId>jdk-8</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-client</artifactId>
       <version>9.4.49.v20220914</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.eclipse.jetty.http2</groupId>
       <artifactId>http2-http-client-transport</artifactId>
       <version>9.4.49.v20220914</version>
+      <scope>provided</scope>
     </dependency>
 
+    <dependency>
+      <groupId>org.jetrs.client</groupId>
+      <artifactId>jdk-8</artifactId>
+      <version>${project.version}</version>
+    </dependency>
     <dependency>
       <groupId>org.jetrs.client</groupId>
       <artifactId>jdk-8</artifactId>

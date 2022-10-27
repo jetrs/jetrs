@@ -66,8 +66,8 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
   private static final BasicCookieStore cookieStore = new BasicCookieStore();
 
   static {
-    poolingConnManager.setDefaultMaxPerRoute(100); // FIXME: Put into config
-    poolingConnManager.setMaxTotal(320);          // FIXME: Put into config
+    poolingConnManager.setDefaultMaxPerRoute(256); // FIXME: Put into config
+    poolingConnManager.setMaxTotal(1024);          // FIXME: Put into config
   }
 
   static void addCookie(final Map<String,NewCookie> cookies, final Cookie cookie) {

@@ -84,9 +84,8 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
       }
     });
 
-//    httpClient.getDestination(JETRS_CLIENT_DRIVER_PROPERTY, JETRS_CLIENT_DRIVER_PROPERTY, 0)
     httpClient.setStopTimeout(0); // FIXME: Put in config
-    httpClient.setMaxConnectionsPerDestination(64);  // FIXME: Put into config
+    httpClient.setMaxConnectionsPerDestination(256);  // FIXME: Put into config
     httpClient.setCookieStore(Jdk8ClientDriver.cookieStore);
     try {
       httpClient.start();

@@ -52,6 +52,7 @@
       <artifactId>cert</artifactId>
       <version>0.3.4-SNAPSHOT</version>
     </dependency>
+    <!-- FIXME: This is direct coupling to Jetty. Should the requisite utils simply be copied? -->
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-util</artifactId>
