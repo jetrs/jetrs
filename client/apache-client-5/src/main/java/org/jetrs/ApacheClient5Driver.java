@@ -30,6 +30,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -58,6 +59,7 @@ import org.apache.hc.core5.http.io.entity.AbstractHttpEntity;
 import org.apache.hc.core5.util.TimeValue;
 import org.apache.hc.core5.util.Timeout;
 import org.libj.util.CollectionUtil;
+import org.libj.util.function.Throwing;
 
 public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient> {
   private static final PoolingHttpClientConnectionManager poolingConnManager = new PoolingHttpClientConnectionManager();
@@ -117,11 +119,35 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
         }
       }
 
+      Object getResult(final AtomicReference<Object> resultRef) throws ProcessingException {
+        final Object result = resultRef.get();
+        if (result instanceof Exception)
+          throw new ProcessingException((Exception)result);
+
+        if (result instanceof Throwable)
+          Throwing.rethrow((Throwable)result);
+
+        return result;
+      }
+
+      void await(final Condition condition, final AtomicLong timeout) throws IOException {
+        final long ts = System.currentTimeMillis();
+        try {
+          if (!condition.await(timeout.get(), TimeUnit.MILLISECONDS))
+            throw new IOException("Elapsed timeout of " + readTimeout + "ms");
+        }
+        catch (final InterruptedException e) {
+          throw new IOException(e);
+        }
+
+        timeout.addAndGet(ts - System.currentTimeMillis());
+      }
+
       @Override
-      @SuppressWarnings("rawtypes")
+      @SuppressWarnings({"rawtypes", "resource", "unchecked"})
       public Response invoke() {
         try {
-          $telemetry(Span.TOTAL, Span.INIT);
+          $span(Span.TOTAL, Span.INIT);
           final HttpUriRequestBase request = new HttpUriRequestBase(method, url.toURI());
           request.setConfig(RequestConfig.custom()
             .setConnectionKeepAlive(TimeValue.MAX_VALUE) // FIXME: Put into config
@@ -135,7 +161,7 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
          if (cacheControl != null)
            request.setHeader(HttpHeaders.CACHE_CONTROL, cacheControl.toString());
 
-          $telemetry(Span.INIT);
+          $span(Span.INIT);
 
           final CloseableHttpResponse response;
           if (entity == null) {
@@ -143,27 +169,28 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
             response = httpClient.execute(request);
           }
           else {
-            $telemetry(Span.ENTITY_INIT);
+            $span(Span.ENTITY_INIT);
 
             final Class<?> entityClass = entity.getEntity().getClass();
             final MessageBodyWriter messageBodyWriter = requestContext.getProviders().getMessageBodyWriter(entityClass, null, entity.getAnnotations(), entity.getMediaType());
             if (messageBodyWriter == null)
               throw new ProcessingException("Provider not found for " + entityClass.getName());
 
+            final AtomicLong timeout = new AtomicLong(readTimeout);
             final ReentrantLock lock = new ReentrantLock();
             final Condition condition = lock.newCondition();
 
             // This convoluted approach allows MessageBodyWriter#writeTo() to be called (which may set headers), and upon its first OutputStream#write(),
             // the actual request is executed. Before it is executed, the request sets an AbstractHttpEntity. When AbstractHttpEntity#writeTo() is called,
             // this approach sets the OutputStream from AbstractHttpEntity#writeTo() to the call thread waiting to continue MessageBodyWriter#writeTo().
-            final AtomicReference<CloseableHttpResponse> ref = new AtomicReference<>();
+            final AtomicReference<Object> resultRef = new AtomicReference<>();
             try (final EntityOutputStream entityOutputStream = new EntityOutputStream() {
-              private final AtomicReference<ByteArrayOutputStream> temp = new AtomicReference<>();
+              private final AtomicReference<ByteArrayOutputStream> tempOutputStream = new AtomicReference<>();
               private final AtomicBoolean executed = new AtomicBoolean();
 
               @Override
               void onWrite(final byte[] bs, final int off, final int len, final int b) throws IOException {
-                if (temp.get() != null) {
+                if (tempOutputStream.get() != null) {
                   request.setEntity(new AbstractHttpEntity((String)null, null) {
                     @Override
                     public boolean isRepeatable() {
@@ -191,10 +218,7 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
                       entityOutputStream = outStream;
                       condition.signal();
                       try {
-                        condition.await();
-                      }
-                      catch (final InterruptedException e) {
-                        throw new IOException(e);
+                        await(condition, timeout);
                       }
                       finally {
                         lock.unlock();
@@ -206,43 +230,41 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
                     }
                   });
 
-                  executorService.submit(() -> {
-                    execute();
-                    return true;
+                  executorService.execute(() -> {
+                    executeRequest();
+                    lock.lock();
+                    condition.signal();
+                    lock.unlock();
                   });
 
                   lock.lock();
                   try {
-                    condition.await();
-                  }
-                  catch (final InterruptedException e) {
-                    throw new IOException(e);
+                    await(condition, timeout);
                   }
                   finally {
                     lock.unlock();
                   }
 
-                  entityOutputStream.write(temp.get().toByteArray());
-                  temp.set(null);
+                  getResult(resultRef);
+                  entityOutputStream.write(tempOutputStream.get().toByteArray());
+                  tempOutputStream.set(null);
                 }
                 else if (entityOutputStream == null) {
                   flushHeaders(request);
                   final ByteArrayOutputStream out = bs != null ? new ByteArrayOutputStream(len != -1 ? len : bs.length) : new ByteArrayOutputStream(1);
-                  temp.set(out);
-                  this.entityOutputStream = out;
-                  $telemetry(Span.ENTITY_INIT, Span.ENTITY_WRITE);
+                  tempOutputStream.set(out);
+                  entityOutputStream = out;
+                  $span(Span.ENTITY_INIT, Span.ENTITY_WRITE);
                 }
               }
 
-              void execute() throws IOException {
+              void executeRequest() {
                 executed.set(true);
                 try {
-                  ref.set(httpClient.execute(request));
+                  resultRef.set(httpClient.execute(request));
                 }
-                finally {
-                  lock.lock();
-                  condition.signal();
-                  lock.unlock();
+                catch (final Throwable t) {
+                  resultRef.set(t);
                 }
               }
 
@@ -253,38 +275,39 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
                 }
                 finally {
                   if (!executed.get()) {
-                    execute();
-                  }
-                  else {
-                    lock.lock();
-                    condition.signal();
-                    lock.unlock();
+                    executeRequest();
+                    getResult(resultRef);
                   }
 
-                  $telemetry(Span.ENTITY_WRITE);
+                  lock.lock();
+                  condition.signal();
+                  lock.unlock();
+
+                  $span(Span.ENTITY_WRITE);
                 }
               }
             }) {
               messageBodyWriter.writeTo(entity.getEntity(), entityClass, null, entity.getAnnotations(), entity.getMediaType(), requestHeaders.getMirrorMap(), entityOutputStream);
             }
 
-            $telemetry(Span.RESPONSE_WAIT);
+            $span(Span.RESPONSE_WAIT);
 
-            if (ref.get() == null) {
+            if (resultRef.get() == null) {
               lock.lock();
               try {
-                if (ref.get() == null)
-                  condition.await();
+                if (resultRef.get() == null) {
+                  await(condition, timeout);
+                }
               }
               finally {
                 lock.unlock();
               }
             }
 
-            response = ref.get();
+            response = (CloseableHttpResponse)getResult(resultRef);
           }
 
-          $telemetry(Span.RESPONSE_WAIT, Span.RESPONSE_READ);
+          $span(Span.RESPONSE_WAIT, Span.RESPONSE_READ);
 
           final int statusCode = response.getCode();
           final String reasonPhrase = response.getReasonPhrase();
@@ -311,12 +334,12 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
             }
           }
 
-          $telemetry(Span.RESPONSE_READ);
+          $span(Span.RESPONSE_READ);
 
           final HttpEntity entity = response.getEntity();
           final InputStream entityStream = entity == null ? null : EntityUtil.makeConsumableNonEmptyOrNull(entity.getContent(), true);
           if (entityStream != null)
-            $telemetry(Span.ENTITY_READ);
+            $span(Span.ENTITY_READ);
 
           return new ResponseImpl(requestContext, statusCode, statusInfo, responseHeaders, cookies, entityStream, null) {
             @Override
@@ -330,7 +353,7 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
               }
 
               if (entityStream != null) {
-                $telemetry(Span.ENTITY_READ, Span.TOTAL);
+                $span(Span.ENTITY_READ, Span.TOTAL);
                 try {
                   entityStream.close();
                 }

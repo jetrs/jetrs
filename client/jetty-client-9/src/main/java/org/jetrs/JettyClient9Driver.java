@@ -123,7 +123,7 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
       @SuppressWarnings("rawtypes")
       public Response invoke() {
         try {
-          $telemetry(Span.TOTAL, Span.INIT);
+          $span(Span.TOTAL, Span.INIT);
 
           final Request request = httpClient.newRequest(url.toURI())
             .method(method)
@@ -137,13 +137,13 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
 
           final InputStreamResponseListener listener = async ? new InputStreamResponseListener() : null;
 
-          $telemetry(Span.INIT);
+          $span(Span.INIT);
 
           if (entity == null) {
             flushHeaders(request);
           }
           else {
-            $telemetry(Span.ENTITY_INIT);
+            $span(Span.ENTITY_INIT);
 
             final Class<?> entityClass = entity.getEntity().getClass();
             final MessageBodyWriter messageBodyWriter = requestContext.getProviders().getMessageBodyWriter(entityClass, null, entity.getAnnotations(), entity.getMediaType());
@@ -158,11 +158,11 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
               final OutputStreamContentProvider provider = new OutputStreamContentProvider();
               request.content(provider);
               final OutputStream out = provider.getOutputStream();
-              $telemetry(Span.ENTITY_INIT, Span.ENTITY_WRITE);
+              $span(Span.ENTITY_INIT, Span.ENTITY_WRITE);
               return out;
-            }, () -> $telemetry(Span.ENTITY_WRITE));
+            }, $isSpanEnabled() ? () -> $span(Span.ENTITY_WRITE) : null);
 
-            $telemetry(Span.RESPONSE_WAIT);
+            $span(Span.RESPONSE_WAIT);
           }
 
           final InputStream in;
@@ -180,7 +180,7 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
 
           // System.err.println(request.getHeaders().toString());
 
-          $telemetry(Span.RESPONSE_WAIT, Span.RESPONSE_READ);
+          $span(Span.RESPONSE_WAIT, Span.RESPONSE_READ);
 
           final int statusCode = response.getStatus();
           final StatusType statusInfo = Responses.from(statusCode, response.getReason());
@@ -207,10 +207,10 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
             }
           }
 
-          $telemetry(Span.RESPONSE_READ);
+          $span(Span.RESPONSE_READ);
           final InputStream entityStream = EntityUtil.makeConsumableNonEmptyOrNull(in, true);
           if (entityStream != null)
-            $telemetry(Span.ENTITY_READ);
+            $span(Span.ENTITY_READ);
 
           return new ResponseImpl(requestContext, statusCode, statusInfo, responseHeaders, cookies, entityStream, null) {
             @Override
@@ -224,7 +224,7 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
               }
 
               if (entityStream != null) {
-                $telemetry(Span.ENTITY_READ, Span.TOTAL);
+                $span(Span.ENTITY_READ, Span.TOTAL);
                 try {
                   entityStream.close();
                 }

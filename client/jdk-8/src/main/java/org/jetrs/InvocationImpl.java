@@ -25,12 +25,13 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.RandomAccess;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -51,7 +52,6 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.MessageBodyWriter;
 
-import org.libj.util.function.ThrowingRunnable;
 import org.libj.util.function.ThrowingSupplier;
 
 abstract class InvocationImpl implements Invocation {
@@ -94,7 +94,9 @@ abstract class InvocationImpl implements Invocation {
 
       @Override
       public void close() throws IOException {
-        onClose.run();
+        if (onClose != null)
+          onClose.run();
+
         super.close();
       }
     }) {
@@ -103,44 +105,68 @@ abstract class InvocationImpl implements Invocation {
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
-  void writeContentAsync(final MessageBodyWriter messageBodyWriter, final Class<?> entityClass, final ThrowingSupplier<OutputStream,IOException> onFirstWrite, final Runnable onClose) throws InterruptedException, TimeoutException {
-    final AtomicBoolean ready = new AtomicBoolean();
+  void writeContentAsync(final MessageBodyWriter messageBodyWriter, final Class<?> entityClass, final ThrowingSupplier<OutputStream,IOException> onFirstWrite, final Runnable onClose) throws ExecutionException, InterruptedException, TimeoutException {
+    final AtomicReference<Object> resultRef = new AtomicReference<>();
     final ReentrantLock lock = new ReentrantLock();
     final Condition condition = lock.newCondition();
 
-    executorService.execute(new ThrowingRunnable() { // FIXME: Need to configure the executor!
-      @Override
-      public void runThrows() throws Exception {
-        try (final EntityOutputStream entityStream = new EntityOutputStream() {
-          @Override
-          void onWrite(final byte[] bs, final int off, final int len, final int b) throws IOException {
-            if (entityOutputStream == null) {
+    executorService.execute(() -> {
+      try (final EntityOutputStream entityStream = new EntityOutputStream() {
+        void unlock() {
+          lock.lock();
+          condition.signal();
+          lock.unlock();
+        }
+
+        @Override
+        void onWrite(final byte[] bs, final int off, final int len, final int b) throws IOException {
+          if (entityOutputStream == null) {
+            try {
               entityOutputStream = onFirstWrite.get();
-              ready.set(true);
-              lock.lock();
-              condition.signal();
-              lock.unlock();
+              resultRef.set(Boolean.TRUE);
+            }
+            finally {
+              unlock();
             }
           }
-
-          @Override
-          public void close() throws IOException {
-            super.close();
-            onClose.run();
-          }
-        }) {
-          messageBodyWriter.writeTo(entity.getEntity(), entityClass, null, entity.getAnnotations(), entity.getMediaType(), requestHeaders.getMirrorMap(), entityStream);
         }
+
+        @Override
+        public void close() throws IOException {
+          try {
+            super.close();
+            if (onClose != null)
+              onClose.run();
+          }
+          finally {
+            if (resultRef.get() == null)
+              unlock();
+          }
+        }
+      }) {
+        messageBodyWriter.writeTo(entity.getEntity(), entityClass, null, entity.getAnnotations(), entity.getMediaType(), requestHeaders.getMirrorMap(), entityStream);
+      }
+      catch (final Throwable t) {
+        resultRef.set(t);
       }
     });
 
-    if (!ready.get()) {
+    Object result = resultRef.get();
+    if (result == null) {
       lock.lock();
-      if (!ready.get() && !condition.await(connectTimeout + readTimeout, TimeUnit.MILLISECONDS))
+      result = resultRef.get();
+      if (result == null && !condition.await(connectTimeout + readTimeout, TimeUnit.MILLISECONDS))
         throw new TimeoutException();
+
+      result = resultRef.get();
+      if (result == null)
+        throw new IllegalStateException();
 
       lock.unlock();
     }
+
+    if (result instanceof Throwable)
+      throw new ExecutionException((Throwable)result);
   }
 
   @Override

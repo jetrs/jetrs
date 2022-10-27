@@ -92,8 +92,12 @@ public abstract class ClientDriver {
       System.err.println(telemetry);
   }
 
-  void $telemetry(final Span ... tags) {
-    if (telemetry != null) {
+  boolean $isSpanEnabled() {
+    return telemetry != null;
+  }
+
+  void $span(final Span ... tags) {
+    if ($isSpanEnabled()) {
       final long ts = System.nanoTime() / 1000; // in microseconds
       for (final Span tag : tags) {
         final Statistics s = telemetry.get(getClass()).get(tag);

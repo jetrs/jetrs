@@ -95,7 +95,7 @@ public class Jdk8ClientDriver extends ClientDriver {
       @SuppressWarnings("rawtypes")
       public Response invoke() {
         try {
-          $telemetry(Span.TOTAL, Span.INIT);
+          $span(Span.TOTAL, Span.INIT);
 
           final HttpURLConnection connection = (HttpURLConnection)url.openConnection();
           if (connection instanceof HttpsURLConnection)
@@ -113,13 +113,13 @@ public class Jdk8ClientDriver extends ClientDriver {
           else
             connection.setUseCaches(false);
 
-          $telemetry(Span.INIT);
+          $span(Span.INIT);
 
           if (entity == null) {
             flushHeaders(connection);
           }
           else {
-            $telemetry(Span.ENTITY_INIT);
+            $span(Span.ENTITY_INIT);
 
             connection.setDoOutput(true);
             final Class<?> entityClass = entity.getEntity().getClass();
@@ -135,16 +135,16 @@ public class Jdk8ClientDriver extends ClientDriver {
                 connection.setFixedLengthStreamingMode(contentLength.longValue());
 
               final OutputStream out = connection.getOutputStream();
-              $telemetry(Span.ENTITY_INIT, Span.ENTITY_WRITE);
+              $span(Span.ENTITY_INIT, Span.ENTITY_WRITE);
               return out;
-            }, () -> $telemetry(Span.ENTITY_WRITE));
+            }, $isSpanEnabled() ? () -> $span(Span.ENTITY_WRITE) : null);
           }
 
-          $telemetry(Span.RESPONSE_WAIT);
+          $span(Span.RESPONSE_WAIT);
 
           final int statusCode = connection.getResponseCode();
 
-          $telemetry(Span.RESPONSE_WAIT, Span.RESPONSE_READ);
+          $span(Span.RESPONSE_WAIT, Span.RESPONSE_READ);
 
           final String reasonPhrase = connection.getResponseMessage();
           final StatusType statusInfo = reasonPhrase != null ? Responses.from(statusCode, reasonPhrase) : Responses.from(statusCode);
@@ -169,10 +169,10 @@ public class Jdk8ClientDriver extends ClientDriver {
             }
           }
 
-          $telemetry(Span.RESPONSE_READ);
+          $span(Span.RESPONSE_READ);
           final InputStream entityStream = EntityUtil.makeConsumableNonEmptyOrNull(statusCode < 400 ? connection.getInputStream() : connection.getErrorStream(), true);
           if (entityStream != null)
-            $telemetry(Span.ENTITY_READ);
+            $span(Span.ENTITY_READ);
 
           return new ResponseImpl(requestContext, statusCode, statusInfo, responseHeaders, cookies, entityStream, null) {
             @Override
@@ -186,7 +186,7 @@ public class Jdk8ClientDriver extends ClientDriver {
               }
 
               if (entityStream != null) {
-                $telemetry(Span.ENTITY_READ, Span.TOTAL);
+                $span(Span.ENTITY_READ, Span.TOTAL);
                 try {
                   entityStream.close();
                 }
