@@ -449,7 +449,7 @@ abstract class InvocationImpl implements Invocation {
 
     @Override
     public Invocation build(final String method, final Entity<?> entity) {
-      return build(method, entity, requestHeaders, cookies, cacheControl, false);
+      return build(method, entity, requestHeaders, cookies, cacheControl);
     }
 
     @Override

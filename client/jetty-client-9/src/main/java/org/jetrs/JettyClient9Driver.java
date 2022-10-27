@@ -18,7 +18,6 @@ package org.jetrs;
 
 import static org.eclipse.jetty.http.HttpHeader.*;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -46,7 +45,6 @@ import javax.ws.rs.core.Response.StatusType;
 import javax.ws.rs.ext.MessageBodyWriter;
 
 import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.util.OutputStreamContentProvider;
 import org.eclipse.jetty.http.HttpField;
@@ -100,7 +98,7 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
   }
 
   @Override
-  Invocation build(final HttpClient httpClient, final ClientImpl client, final ClientRuntimeContext runtimeContext, final URL url, final String method, final Entity<?> entity, final HttpHeadersMap<String,Object> requestHeaders, final ArrayList<Cookie> cookies, final CacheControl cacheControl, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final long connectTimeout, final long readTimeout, final boolean async) throws Exception {
+  Invocation build(final HttpClient httpClient, final ClientImpl client, final ClientRuntimeContext runtimeContext, final URL url, final String method, final Entity<?> entity, final HttpHeadersMap<String,Object> requestHeaders, final ArrayList<Cookie> cookies, final CacheControl cacheControl, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final long connectTimeout, final long readTimeout) throws Exception {
     connectTimeoutLocal.set(connectTimeout);
     return new InvocationImpl(client, runtimeContext, url, method, entity, requestHeaders, cookies, cacheControl, executorService, scheduledExecutorService, connectTimeout, readTimeout) {
       private void flushHeaders(final Request request) {
@@ -123,6 +121,7 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
       @SuppressWarnings("rawtypes")
       public Response invoke() {
         try {
+          final long ts = System.currentTimeMillis();
           $span(Span.TOTAL, Span.INIT);
 
           final Request request = httpClient.newRequest(url.toURI())
@@ -135,7 +134,7 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
           if (cacheControl != null)
             request.header(HttpHeaders.CACHE_CONTROL, cacheControl.toString());
 
-          final InputStreamResponseListener listener = async ? new InputStreamResponseListener() : null;
+          final InputStreamResponseListener listener = new InputStreamResponseListener();
 
           $span(Span.INIT);
 
@@ -165,18 +164,8 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
             $span(Span.RESPONSE_WAIT);
           }
 
-          final InputStream in;
-          final org.eclipse.jetty.client.api.Response response;
-          if (async) {
-            request.send(listener);
-            response = listener.get(readTimeout, TimeUnit.MILLISECONDS);
-            in = listener.getInputStream();
-          }
-          else {
-            final ContentResponse contentResponse = request.send();
-            response = contentResponse;
-            in = new ByteArrayInputStream(contentResponse.getContent());
-          }
+          request.send(listener);
+          final org.eclipse.jetty.client.api.Response response = listener.get(readTimeout + ts - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
 
           // System.err.println(request.getHeaders().toString());
 
@@ -208,7 +197,7 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
           }
 
           $span(Span.RESPONSE_READ);
-          final InputStream entityStream = EntityUtil.makeConsumableNonEmptyOrNull(in, true);
+          final InputStream entityStream = EntityUtil.makeConsumableNonEmptyOrNull(listener.getInputStream(), true);
           if (entityStream != null)
             $span(Span.ENTITY_READ);
 

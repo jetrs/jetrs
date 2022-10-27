@@ -145,14 +145,14 @@ abstract class Invoker<R> {
 
   public abstract R method(String name, Entity<?> entity);
 
-  final Invocation build(final String method, final Entity<?> entity, final HttpHeadersImpl requestHeaders, final ArrayList<Cookie> cookies, final CacheControl cacheControl, final boolean async) {
+  final Invocation build(final String method, final Entity<?> entity, final HttpHeadersImpl requestHeaders, final ArrayList<Cookie> cookies, final CacheControl cacheControl) {
     client.assertNotClosed();
     final HttpHeadersImpl headers = requestHeaders != null ? requestHeaders.clone() : new HttpHeadersImpl();
     if (entity != null && entity.getMediaType() != null && headers.getMediaType() == null)
       headers.setMediaType(entity.getMediaType());
 
     try {
-      return driver.build(client, runtimeContext, url, method, entity, headers, cookies, cacheControl, executorService, scheduledExecutorService, connectTimeout, readTimeout, async);
+      return driver.build(client, runtimeContext, url, method, entity, headers, cookies, cacheControl, executorService, scheduledExecutorService, connectTimeout, readTimeout);
     }
     catch (final Exception e) {
       throw new ProcessingException(e);

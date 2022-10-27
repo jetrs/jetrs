@@ -168,7 +168,7 @@ class AsyncInvokerImpl extends Invoker<Future<Response>> implements AsyncInvoker
   @SuppressWarnings("unchecked")
   public <T>Future<T> method(final String name, final Entity<?> entity, final Class<T> responseType) {
     client.assertNotClosed();
-    final Invocation invocation = build(name, entity, requestHeaders, cookies, cacheControl, true);
+    final Invocation invocation = build(name, entity, requestHeaders, cookies, cacheControl);
     return executorService.submit(() -> {
       final Response response = invocation.invoke();
       if (Response.class.isAssignableFrom(responseType))
@@ -186,7 +186,7 @@ class AsyncInvokerImpl extends Invoker<Future<Response>> implements AsyncInvoker
   @Override
   public <T>Future<T> method(final String name, final Entity<?> entity, final GenericType<T> responseType) {
     client.assertNotClosed();
-    final Invocation invocation = build(name, entity, requestHeaders, cookies, cacheControl, true);
+    final Invocation invocation = build(name, entity, requestHeaders, cookies, cacheControl);
     return executorService.submit(() -> {
       try (final Response response = invocation.invoke()) {
         return response.readEntity(responseType);
@@ -198,7 +198,7 @@ class AsyncInvokerImpl extends Invoker<Future<Response>> implements AsyncInvoker
   @SuppressWarnings("unchecked")
   public <T>Future<T> method(final String name, final Entity<?> entity, final InvocationCallback<T> callback) {
     client.assertNotClosed();
-    final Invocation invocation = build(name, entity, requestHeaders, cookies, cacheControl, true);
+    final Invocation invocation = build(name, entity, requestHeaders, cookies, cacheControl);
     return executorService.submit(() -> {
       try (final Response response = invocation.invoke()) {
         final T message = (T)response.getEntity();
