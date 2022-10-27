@@ -22,6 +22,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Array;
@@ -1011,14 +1012,15 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
     return outputStream;
   }
 
-  void commitResponse(final ByteArrayOutputStream outputStream) throws IOException {
+  @SuppressWarnings("resource")
+  void commitResponse(final ByteArrayOutputStream entityStream) throws IOException {
     if (httpServletResponse.isCommitted())
       return;
 
     try {
-      if (outputStream != null) {
-        final byte[] bytes = outputStream.toByteArray();
-        httpServletResponse.addHeader(CONTENT_LENGTH, String.valueOf(bytes.length));
+      if (entityStream != null) {
+        final byte[] bytes = entityStream.toByteArray();
+        httpServletResponse.setHeader(CONTENT_LENGTH, String.valueOf(bytes.length));
         httpServletResponse.getOutputStream().write(bytes);
       }
 
@@ -1037,9 +1039,10 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
         }
       }
 
-      if (containerResponseContext.getOutputStream() != null) {
+      final OutputStream outputStream = containerResponseContext.getOutputStream();
+      if (outputStream != null) {
         try {
-          containerResponseContext.getOutputStream().close();
+          outputStream.close();
         }
         catch (final Throwable t) {
           if (logger.isErrorEnabled())
