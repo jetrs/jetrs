@@ -80,7 +80,7 @@ public class Jdk8ClientTest {
     .register(new FormMultivaluedMapProvider())
     .build();
 
-  private static int tests = 20;
+  private static int tests = 10;
 
   private abstract static class Trial {
     private Trial(final String method) throws InterruptedException, IOException {
