@@ -45,6 +45,7 @@ import javax.ws.rs.core.Response.StatusType;
 import javax.ws.rs.ext.MessageBodyWriter;
 
 import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.client.WWWAuthenticationProtocolHandler;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.util.OutputStreamContentProvider;
 import org.eclipse.jetty.http.HttpField;
@@ -94,6 +95,7 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
       throw new ExceptionInInitializerError(e);
     }
 
+    httpClient.getProtocolHandlers().remove(WWWAuthenticationProtocolHandler.NAME);
     return httpClient;
   }
 
