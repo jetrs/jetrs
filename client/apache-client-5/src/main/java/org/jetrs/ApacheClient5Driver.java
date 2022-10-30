@@ -230,15 +230,15 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
                     }
                   });
 
-                  executorService.execute(() -> {
-                    executeRequest();
-                    lock.lock();
-                    condition.signal();
-                    lock.unlock();
-                  });
-
                   lock.lock();
                   try {
+                    executorService.execute(() -> {
+                      executeRequest();
+                      lock.lock();
+                      condition.signal();
+                      lock.unlock();
+                    });
+
                     await(condition, timeout);
                   }
                   finally {

@@ -53,7 +53,6 @@ import org.junit.AfterClass;
 import org.junit.Test;
 import org.libj.io.Streams;
 import org.libj.lang.Classes;
-import org.libj.net.Sockets;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 
@@ -80,7 +79,7 @@ public class Jdk8ClientTest {
     .register(new FormMultivaluedMapProvider())
     .build();
 
-  private static int tests = 10;
+  private static int tests = 50;
 
   private abstract static class Trial {
     private Trial(final String method) throws InterruptedException, IOException {
@@ -88,7 +87,7 @@ public class Jdk8ClientTest {
     }
 
     private Trial(final String method, final Supplier<Entity<?>> entity) throws InterruptedException, IOException {
-      final WireMockRule server = new WireMockRule(Sockets.findRandomOpenPort());
+      final WireMockRule server = new WireMockRule(0);
       server.start();
       configServer(server);
 

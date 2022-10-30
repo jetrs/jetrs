@@ -35,6 +35,7 @@ import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Cookie;
 
+import org.libj.util.concurrent.ThreadFactoryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -88,11 +89,11 @@ abstract class Invoker<R> {
   }
 
   private static ExecutorService getDefaultExecutorService() {
-    return Executors.newCachedThreadPool(); // FIXME: Make configurable
+    return Executors.newCachedThreadPool(new ThreadFactoryBuilder().withNamePrefix("JetRS-Client-DefaultExecutor").build()); // FIXME: Make configurable
   }
 
   private static ScheduledExecutorService getDefaultScheduledExecutorService() {
-    return Executors.newSingleThreadScheduledExecutor(); // FIXME: Make configurable
+    return Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().withNamePrefix("JetRS-Client-DefaultScheduledExecutor").build()); // FIXME: Make configurable
   }
 
   private final ClientDriver driver;
