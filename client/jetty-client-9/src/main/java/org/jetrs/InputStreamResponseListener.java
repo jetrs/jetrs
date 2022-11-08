@@ -71,7 +71,7 @@ import org.eclipse.jetty.util.log.Logger;
  * If the consumer is slower than the producer, final then the producer will block until the client consumes.
  */
 public class InputStreamResponseListener extends Listener.Adapter {
-  private static final Logger LOG = Log.getLogger(InputStreamResponseListener.class);
+  private static final Logger LOG = Log.getLogger(org.eclipse.jetty.client.util.InputStreamResponseListener.class);
   private static final DeferredContentProvider.Chunk EOF = new DeferredContentProvider.Chunk(BufferUtil.EMPTY_BUFFER, Callback.NOOP);
   private final Object lock = this;
   private final CountDownLatch responseLatch = new CountDownLatch(1);
