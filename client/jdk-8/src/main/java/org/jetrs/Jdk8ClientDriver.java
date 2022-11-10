@@ -102,8 +102,19 @@ public class Jdk8ClientDriver extends ClientDriver {
             ((HttpsURLConnection)connection).setSSLSocketFactory(sslContext.getSocketFactory());
 
           connection.setRequestMethod(method);
-          connection.setConnectTimeout((int)connectTimeout);
-          connection.setReadTimeout((int)readTimeout);
+          if (connectTimeout > 0) {
+            if ((int)connectTimeout <= 0)
+              throw new IllegalArgumentException("connectTimeout (" + connectTimeout + ") overflows (int)connectTimeout (" + (int)connectTimeout + ")");
+
+            connection.setConnectTimeout((int)connectTimeout);
+          }
+
+          if (readTimeout > 0) {
+            if ((int)readTimeout <= 0)
+              throw new IllegalArgumentException("readTimeout (" + readTimeout + ") overflows (int)readTimeout (" + (int)readTimeout + ")");
+
+            connection.setReadTimeout((int)readTimeout);
+          }
 
           if (cookies != null)
             connection.setRequestProperty(HttpHeaders.COOKIE, CollectionUtil.toString(cookies, ';'));

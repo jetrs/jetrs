@@ -54,21 +54,19 @@ import org.eclipse.jetty.util.log.Logger;
  *
  * // Wait for the response headers to arrive
  * Response response = listener.get(5, TimeUnit.SECONDS);
- * if (response.getStatus() == 200)
- * {
- *     // Obtain the input stream on the response content
- *     try (final InputStream input = listener.getInputStream())
- *     {
- *         // Read the response content
- *     }
+ * if (response.getStatus() == 200) {
+ *   // Obtain the input stream on the response content
+ *   try (final InputStream input = listener.getInputStream()) {
+ *     // Read the response content
+ *   }
  * }
  * </pre>
- * <p>
+ *
  * The {@link HttpClient} implementation (final the producer) will feed the input stream asynchronously while the application (the
  * consumer) is reading from it.
  * <p>
- * If the consumer is faster than the producer, final then the consumer will block with the typical {@link InputStream#read()} semantic.
- * If the consumer is slower than the producer, final then the producer will block until the client consumes.
+ * If the consumer is faster than the producer, final then the consumer will block with the typical {@link InputStream#read()}
+ * semantic. If the consumer is slower than the producer, final then the producer will block until the client consumes.
  */
 public class InputStreamResponseListener extends Listener.Adapter {
   private static final Logger LOG = Log.getLogger(org.eclipse.jetty.client.util.InputStreamResponseListener.class);
@@ -201,7 +199,7 @@ public class InputStreamResponseListener extends Listener.Adapter {
   public Response get(final long timeout, final TimeUnit unit) throws InterruptedException, TimeoutException, ExecutionException {
     final boolean expired = !responseLatch.await(timeout, unit);
     if (expired)
-      throw new TimeoutException();
+      throw new TimeoutException(unit.compareTo(TimeUnit.MILLISECONDS) + "ms");
 
     synchronized (lock) {
       // If the request failed there is no response.
@@ -214,7 +212,6 @@ public class InputStreamResponseListener extends Listener.Adapter {
 
   /**
    * Waits for the given timeout for the whole request/response cycle to be finished, final then returns the corresponding result.
-   * <p>
    *
    * @param timeout the time to wait
    * @param unit the timeout unit
@@ -226,7 +223,7 @@ public class InputStreamResponseListener extends Listener.Adapter {
   public Result await(final long timeout, final TimeUnit unit) throws InterruptedException, TimeoutException {
     final boolean expired = !resultLatch.await(timeout, unit);
     if (expired)
-      throw new TimeoutException();
+      throw new TimeoutException(unit.compareTo(TimeUnit.MILLISECONDS) + "ms");
 
     synchronized (lock) {
       return result;

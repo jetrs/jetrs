@@ -95,8 +95,8 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
   @Override
   Invocation build(final CloseableHttpClient httpClient, final ClientImpl client, final ClientRuntimeContext runtimeContext, final URL url, final String method, final Entity<?> entity, final HttpHeadersMap<String,Object> requestHeaders, final ArrayList<javax.ws.rs.core.Cookie> cookies, final CacheControl cacheControl, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final long connectTimeout, final long readTimeout) throws Exception {
     return new InvocationImpl(client, runtimeContext, url, method, entity, requestHeaders, cookies, cacheControl, executorService, scheduledExecutorService, connectTimeout, readTimeout) {
-      private final Timeout connectTimeoutObj = Timeout.of(connectTimeout, TimeUnit.MILLISECONDS);
-      private final Timeout readTimeoutObj = Timeout.of(readTimeout, TimeUnit.MILLISECONDS);
+      private final Timeout connectTimeoutObj = connectTimeout > 0 ? Timeout.of(connectTimeout, TimeUnit.MILLISECONDS) : null;
+      private final Timeout readTimeoutObj = readTimeout > 0 ? Timeout.of(readTimeout, TimeUnit.MILLISECONDS) : null;
 
       private void flushHeaders(final HttpUriRequestBase request) {
         if (requestHeaders.size() > 0) {
@@ -148,18 +148,25 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
       public Response invoke() {
         try {
           $span(Span.TOTAL, Span.INIT);
+
+          final RequestConfig.Builder config = RequestConfig.custom()
+            .setConnectionKeepAlive(TimeValue.MAX_VALUE); // FIXME: Put into config
+
+          if (connectTimeoutObj != null)
+            config.setConnectTimeout(connectTimeoutObj);
+
+          if (readTimeoutObj != null)
+            config.setResponseTimeout(readTimeoutObj);
+
+          final RequestConfig c = config.build();
           final HttpUriRequestBase request = new HttpUriRequestBase(method, url.toURI());
-          request.setConfig(RequestConfig.custom()
-            .setConnectionKeepAlive(TimeValue.MAX_VALUE) // FIXME: Put into config
-            .setConnectTimeout(connectTimeoutObj)
-            .setResponseTimeout(readTimeoutObj)
-            .build());
+          request.setConfig(c);
 
-         if (cookies != null)
-           request.setHeader(HttpHeaders.COOKIE, CollectionUtil.toString(cookies, ';'));
+          if (cookies != null)
+            request.setHeader(HttpHeaders.COOKIE, CollectionUtil.toString(cookies, ';'));
 
-         if (cacheControl != null)
-           request.setHeader(HttpHeaders.CACHE_CONTROL, cacheControl.toString());
+          if (cacheControl != null)
+            request.setHeader(HttpHeaders.CACHE_CONTROL, cacheControl.toString());
 
           $span(Span.INIT);
 
@@ -176,7 +183,7 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
             if (messageBodyWriter == null)
               throw new ProcessingException("Provider not found for " + entityClass.getName());
 
-            final AtomicLong timeout = new AtomicLong(readTimeout);
+            final AtomicLong timeout = new AtomicLong(readTimeout > 0 ? readTimeout : Long.MAX_VALUE);
             final ReentrantLock lock = new ReentrantLock();
             final Condition condition = lock.newCondition();
 

@@ -100,7 +100,9 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
 
   @Override
   Invocation build(final HttpClient httpClient, final ClientImpl client, final ClientRuntimeContext runtimeContext, final URL url, final String method, final Entity<?> entity, final HttpHeadersMap<String,Object> requestHeaders, final ArrayList<Cookie> cookies, final CacheControl cacheControl, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final long connectTimeout, final long readTimeout) throws Exception {
-    connectTimeoutLocal.set(connectTimeout);
+    if (connectTimeout > 0)
+      connectTimeoutLocal.set(connectTimeout);
+
     return new InvocationImpl(client, runtimeContext, url, method, entity, requestHeaders, cookies, cacheControl, executorService, scheduledExecutorService, connectTimeout, readTimeout) {
       private void flushHeaders(final Request request) {
         // Remove headers that are set by default (unsolicited).
@@ -166,7 +168,7 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
           }
 
           request.send(listener);
-          final org.eclipse.jetty.client.api.Response response = listener.get(readTimeout + ts - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
+          final org.eclipse.jetty.client.api.Response response = listener.get((readTimeout > 0 ? readTimeout : Long.MAX_VALUE) + ts - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
 
           // System.err.println(request.getHeaders().toString());
 

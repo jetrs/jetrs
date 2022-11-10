@@ -155,8 +155,13 @@ abstract class InvocationImpl implements Invocation {
     if (result == null) {
       lock.lock();
       result = resultRef.get();
-      if (result == null && !condition.await(connectTimeout + readTimeout, TimeUnit.MILLISECONDS))
-        throw new TimeoutException();
+
+      long timeout = connectTimeout + readTimeout;
+      if (timeout == 0)
+        timeout = Long.MAX_VALUE;
+
+      if (result == null && !condition.await(timeout, TimeUnit.MILLISECONDS))
+        throw new TimeoutException(timeout + "ms");
 
       result = resultRef.get();
       if (result == null)
