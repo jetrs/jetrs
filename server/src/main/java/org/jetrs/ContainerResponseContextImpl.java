@@ -330,12 +330,12 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
     if (containerResponseHeaders.size() > 0) {
       for (final Map.Entry<String,List<String>> entry : containerResponseHeaders.entrySet()) { // [S]
         final List<String> values = entry.getValue();
-        final int i$ = values.size();
-        if (i$ == 0)
+        final int size = values.size();
+        if (size == 0)
           continue;
 
         final String name = entry.getKey();
-        if (i$ > 1) {
+        if (size > 1) {
           final AbstractMap.SimpleEntry<HttpHeader<?>,HeaderDelegateImpl<?>> headerDelegate = HeaderDelegateImpl.lookup(name);
           final char[] delimiters = headerDelegate.getKey().getDelimiters();
           if (delimiters.length > 0) {
@@ -348,7 +348,7 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
         if (httpServletResponse.containsHeader(name))
           httpServletResponse.setHeader(name, values.get(++i));
 
-        while (++i < i$)
+        while (++i < size)
           httpServletResponse.addHeader(entry.getKey(), values.get(i));
       }
     }
