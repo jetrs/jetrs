@@ -28,8 +28,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-@Path("root1/")
 @Singleton
+@Path("root1/")
 @SuppressWarnings("unused")
 public class RootService1 {
   @GET

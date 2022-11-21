@@ -16,7 +16,6 @@
 
 package org.jetrs;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -59,6 +58,7 @@ import org.apache.hc.core5.http.io.entity.AbstractHttpEntity;
 import org.apache.hc.core5.util.TimeValue;
 import org.apache.hc.core5.util.Timeout;
 import org.libj.util.CollectionUtil;
+import org.libj.util.UnsynchronizedByteArrayOutputStream;
 import org.libj.util.function.Throwing;
 
 public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient> {
@@ -192,11 +192,11 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
             // this approach sets the OutputStream from AbstractHttpEntity#writeTo() to the call thread waiting to continue MessageBodyWriter#writeTo().
             final AtomicReference<Object> resultRef = new AtomicReference<>();
             try (final EntityOutputStream entityOutputStream = new EntityOutputStream() {
-              private final AtomicReference<ByteArrayOutputStream> tempOutputStream = new AtomicReference<>();
+              private final AtomicReference<UnsynchronizedByteArrayOutputStream> tempOutputStream = new AtomicReference<>();
               private final AtomicBoolean executed = new AtomicBoolean();
 
               @Override
-              void onWrite(final byte[] bs, final int off, final int len, final int b) throws IOException {
+              void onWrite(final int b, final byte[] bs, final int off, final int len) throws IOException {
                 if (tempOutputStream.get() != null) {
                   request.setEntity(new AbstractHttpEntity((String)null, null) {
                     @Override
@@ -222,7 +222,7 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
                     @Override
                     public void writeTo(final OutputStream outStream) throws IOException {
                       lock.lock();
-                      entityOutputStream = outStream;
+                      socketOutputStream = outStream;
                       condition.signal();
                       try {
                         await(condition, timeout);
@@ -253,14 +253,14 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
                   }
 
                   getResult(resultRef);
-                  entityOutputStream.write(tempOutputStream.get().toByteArray());
+                  socketOutputStream.write(tempOutputStream.get().toByteArray());
                   tempOutputStream.set(null);
                 }
-                else if (entityOutputStream == null) {
+                else if (socketOutputStream == null) {
                   flushHeaders(request);
-                  final ByteArrayOutputStream out = bs != null ? new ByteArrayOutputStream(len != -1 ? len : bs.length) : new ByteArrayOutputStream(1);
+                  final UnsynchronizedByteArrayOutputStream out = bs != null ? new UnsynchronizedByteArrayOutputStream(len != -1 ? len : bs.length) : new UnsynchronizedByteArrayOutputStream(1);
                   tempOutputStream.set(out);
-                  entityOutputStream = out;
+                  socketOutputStream = out;
                   $span(Span.ENTITY_INIT, Span.ENTITY_WRITE);
                 }
               }

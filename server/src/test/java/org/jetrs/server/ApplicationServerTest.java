@@ -17,6 +17,7 @@
 package org.jetrs.server;
 
 import static org.junit.Assert.*;
+import static org.jetrs.server.AssertServer.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -234,84 +235,104 @@ public class ApplicationServerTest {
     }
   }
 
+  private static Invocation.Builder request(final String path) {
+    return client.target(serviceUrl + path).request();
+  }
+
   @Test
   public void testBookService0() throws Exception {
-    final Response response = client.target(serviceUrl + "/books/aaabb;a=b/xxx;x=x/some;c=d/amazingly/cool/stuff")
-      .request()
-      .get();
+    final Invocation.Builder request = request("/books/aaabb;a=b/xxx;x=x/some;c=d/amazingly/cool/stuff");
+    final Response getResponse = request.get();
 
-    final String data = assertResponse(200, response, String.class);
+    final String data = assertResponse(200, getResponse, String.class);
     assertEquals("aaabb:bb:xxx:xxx|some|amazingly|cool", data);
+
+    final Response headResponse = request.head();
+    assertGetHead(getResponse, headResponse);
   }
 
   @Test
   public void testBookService01() throws Exception {
-    final Response response = client.target(serviceUrl + "/books/aaab/xxx;x=x/a/lot;r=r/of/stuff")
-      .request()
-      .get();
+    final Invocation.Builder request = request("/books/aaab/xxx;x=x/a/lot;r=r/of/stuff");
+    final Response getResponse = request.get();
 
-    final String data = assertResponse(200, response, String.class);
+    final String data = assertResponse(200, getResponse, String.class);
     assertEquals("aaab:b:xxx:xxx|a|lot|of", data);
+
+    final Response headResponse = request.head();
+    assertGetHead(getResponse, headResponse);
   }
 
   @Test
   public void testBookService1() throws Exception {
-    final Response response = client.target(serviceUrl + "/books/2011;author=jim/bla;country=th")
-      .request()
-      .get();
+    final Invocation.Builder request = request("/books/2011;author=jim/bla;country=th");
+    final Response getResponse = request.get();
 
-    final String data = assertResponse(200, response, String.class);
+    final String data = assertResponse(200, getResponse, String.class);
     assertEquals("getBooks is called, years: [2011], segs: [2011;author=jim], author: jim, country: th", data);
+
+    final Response headResponse = request.head();
+    assertGetHead(getResponse, headResponse);
   }
 
   @Test
   public void testBookService12() throws Exception {
-    final Response response = client.target(serviceUrl + "/books/2011;author=bob/2012;author=joe;country=fr/2013")
-      .request()
-      .get();
+    final Invocation.Builder request = request("/books/2011;author=bob/2012;author=joe;country=fr/2013");
+    final Response getResponse = request.get();
 
-    final String data = assertResponse(200, response, String.class);
+    final String data = assertResponse(200, getResponse, String.class);
     assertEquals("getBooks is called, years: [2011/2012/2013], segs: [2011;author=bob, 2012;country=fr;author=joe, 2013], author: bob, country: fr", data);
+
+    final Response headResponse = request.head();
+    assertGetHead(getResponse, headResponse);
   }
 
   @Test
   public void testBookService2() throws Exception {
-    final Response response = client.target(serviceUrl + "/books/2011;country=usa/2012/2013;author=mkyong")
-      .request()
-      .get();
+    final Invocation.Builder request = request("/books/2011;country=usa/2012/2013;author=mkyong");
+    final Response getResponse = request.get();
 
-    final String data = assertResponse(200, response, String.class);
+    final String data = assertResponse(200, getResponse, String.class);
     assertEquals("getBooks is called, years: [2011/2012/2013], segs: [2011;country=usa, 2012, 2013;author=mkyong], author: mkyong, country: usa", data);
+
+    final Response headResponse = request.head();
+    assertGetHead(getResponse, headResponse);
   }
 
   @Test
   public void testBookService3() throws Exception {
-    final Response response = client.target(serviceUrl + "/books/2011;author=mkyong;country=malaysia")
-      .request()
-      .get();
+    final Invocation.Builder request = request("/books/2011;author=mkyong;country=malaysia");
+    final Response getResponse = request.get();
 
-    final String data = assertResponse(200, response, String.class);
+    final String data = assertResponse(200, getResponse, String.class);
     assertEquals("getBooks is called, years: [2011], segs: [2011;country=malaysia;author=mkyong], author: mkyong, country: malaysia", data);
+
+    final Response headResponse = request.head();
+    assertGetHead(getResponse, headResponse);
   }
 
   @Test
   public void testBookService4() throws Exception {
-    final Response response = client.target(serviceUrl + "/books/query/aA/BaCb/cDc/ba///////foo/bar/hi/hello/good/bye")
-      .request()
-      .get();
+    final Invocation.Builder request = request("/books/query/aA/BaCb/cDc/ba///////foo/bar/hi/hello/good/bye");
+    final Response getResponse = request.get();
 
-    final String data = assertResponse(200, response, String.class);
+    final String data = assertResponse(200, getResponse, String.class);
     assertEquals("List of Books order by: [aA, BaCb] :: [BaCb, ba, , , , , , , foo, bar, hi, hello, good, bye] :: []", data);
+
+    final Response headResponse = request.head();
+    assertGetHead(getResponse, headResponse);
   }
 
   @Test
   public void testBookService6() throws Exception {
-    final Response response = client.target(serviceUrl + "/books/categories1;name=cat;name=bla;cat=hemi/static;stat=foo/objects1;name=green;value=ok")
-      .request()
-      .get();
+    final Invocation.Builder request = request("/books/categories1;name=cat;name=bla;cat=hemi/static;stat=foo/objects1;name=green;value=ok");
+    final Response getResponse = request.get();
 
-    final String data = assertResponse(200, response, String.class);
+    final String data = assertResponse(200, getResponse, String.class);
     assertEquals("{books}: [] | {categories1}: [cat:[hemi], name:[cat, bla]] | {static}: [stat:[foo]] | {objects1}: [name:[green], value:[ok]] | {categories1}: [cat:[hemi], name:[cat, bla]] | {objects1}: [name:[green], value:[ok]] | cat | cat | bla | green", data);
+
+    final Response headResponse = request.head();
+    assertGetHead(getResponse, headResponse);
   }
 
   @Test
@@ -325,53 +346,60 @@ public class ApplicationServerTest {
 
   @Test
   public void testMatchGet1() throws Exception {
-    final Response response = client.target(serviceUrl + "/root1/1")
-      .request()
-      .get();
+    final Invocation.Builder request = request("/root1/1");
+    final Response getResponse = request.get();
 
-    final String data = assertResponse(200, response, String.class);
+    final String data = assertResponse(200, getResponse, String.class);
     // FIXME: Is the client supposed to automatically return a String due to "text/plain" MediaType?!
     assertEquals("GET", data);
+
+    final Response headResponse = request.head();
+    assertGetHead(getResponse, headResponse);
   }
 
   @Test
   public void testMatchGet2() throws Exception {
-    final Response response = client.target(serviceUrl + "/root2/2")
-      .request()
-      .get();
+    final Invocation.Builder request = request("/root2/2");
+    final Response getResponse = request.get();
 
-    final String data = assertResponse(200, response, String.class);
+    final String data = assertResponse(200, getResponse, String.class);
     // FIXME: Is the client supposed to automatically return a String due to "text/plain" MediaType?!
     assertEquals("[" + ApplicationServer.applicationPath + "/root2/2]\norg.jetrs.server.app.service.RootService2\n{}", data);
+
+    final Response headResponse = request.head();
+    assertGetHead(getResponse, headResponse);
   }
 
   @Test
   public void testMatchGet2Id1() throws Exception {
-    final Response response = client.target(serviceUrl + "/root2/2/123")
-      .request()
-      .get();
+    final Invocation.Builder request = request("/root2/2/123");
+    final Response getResponse = request.get();
 
-    final String data = assertResponse(200, response, String.class);
+    final String data = assertResponse(200, getResponse, String.class);
     // FIXME: Is the client supposed to automatically return a String due to "text/plain" MediaType?!
     assertEquals("[" + ApplicationServer.applicationPath + "/root2/2/123, " + ApplicationServer.applicationPath + "/root2/2/123]\norg.jetrs.server.app.service.RootService2, org.jetrs.server.app.service.RootService2\n{id=[123]}", data);
+
+    final Response headResponse = request.head();
+    assertGetHead(getResponse, headResponse);
   }
 
   @Test
   public void testMatchGet2Id2() throws Exception {
-    final Response response = client.target(serviceUrl + "/root2/2/123/456")
-      .request()
-      .get();
+    final Invocation.Builder request = request("/root2/2/123/456");
+    final Response getResponse = request.get();
 
-    final String data = assertResponse(200, response, String.class);
+    final String data = assertResponse(200, getResponse, String.class);
     // FIXME: Is the client supposed to automatically return a String due to "text/plain" MediaType?!
     assertEquals("[" + ApplicationServer.applicationPath + "/root2/2/123/456, " + ApplicationServer.applicationPath + "/root2/2/123/456, " + ApplicationServer.applicationPath + "/root2/2/123/456]\norg.jetrs.server.app.service.RootService2, org.jetrs.server.app.service.RootService2, org.jetrs.server.app.service.RootService2\n{id2=[456], id1=[123]}", data);
+
+    final Response headResponse = request.head();
+    assertGetHead(getResponse, headResponse);
   }
 
   @Test
   public void testMatchOptions1() throws Exception {
-    final Response response = client.target(serviceUrl + "/root1/1")
-      .request()
-      .options();
+    final Invocation.Builder request = request("/root1/1");
+    final Response response = request.options();
 
     assertResponse(204, response, null);
     assertEquals("GET,POST", response.getHeaderString(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS));
@@ -379,9 +407,8 @@ public class ApplicationServerTest {
 
   @Test
   public void testMatchOptions2() throws Exception {
-    final Response response = client.target(serviceUrl + "/root1/2")
-      .request()
-      .options();
+    final Invocation.Builder request = request("/root1/2");
+    final Response response = request.options();
 
     assertResponse(200, response, null);
     assertEquals(new HashSet<>(Arrays.asList("HEAD", "GET")), new HashSet<>(Arrays.asList(Strings.split(response.getHeaderString(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS), ','))));
@@ -404,9 +431,8 @@ public class ApplicationServerTest {
 
   @Test
   public void testMatchPost0() throws Exception {
-    final Response response = client.target(serviceUrl + "/root1/0/Y")
-      .request()
-      .post(Entity.text('Z'));
+    final Invocation.Builder request = request("/root1/0/Y");
+    final Response response = request.post(Entity.text('Z'));
 
     final Character data = assertResponse(200, response, Character.class);
     assertEquals('Z', (char)data);
@@ -431,13 +457,14 @@ public class ApplicationServerTest {
   @Test
   public void testBooksHeader() throws Exception {
     final Date date = Dates.dropMilliseconds(new Date());
-    final Response response = client.target(serviceUrl + "/books/header")
-      .request()
-      .header(HttpHeaders.IF_UNMODIFIED_SINCE, SimpleDateFormats.RFC_1123.get().format(date))
-      .get();
+    final Invocation.Builder request = request("/books/header").header(HttpHeaders.IF_UNMODIFIED_SINCE, SimpleDateFormats.RFC_1123.get().format(date));
+    final Response getResponse = request.get();
 
-    final long data = assertResponse(200, response, long.class);
+    final long data = assertResponse(200, getResponse, long.class);
     assertEquals(date.getTime(), data);
+
+    final Response headResponse = request.head();
+    assertGetHead(getResponse, headResponse);
   }
 
   @AfterClass

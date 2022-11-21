@@ -63,7 +63,7 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
   }
 
   private static Boolean parseBoolean(final String str, final Boolean defaultValue) {
-    return "true".equalsIgnoreCase(str) ? Boolean.TRUE : "false".equalsIgnoreCase(str) ? Boolean.FALSE : defaultValue;
+    return str == null || "true".equalsIgnoreCase(str) ? Boolean.TRUE : "false".equalsIgnoreCase(str) ? Boolean.FALSE : defaultValue;
   }
 
   private static char parseChar(final String str) {
@@ -238,7 +238,7 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
           final boolean[] a = new boolean[size];
 
           if (size == 1) {
-            a[0] = paramConverter != null ? (Boolean)paramConverter.fromString(firstValue) : Boolean.parseBoolean(firstValue);
+            a[0] = firstValue == null || paramConverter != null && (Boolean)paramConverter.fromString(firstValue) || Boolean.parseBoolean(firstValue);
           }
           else if (paramConverter != null) {
             int i = 0;

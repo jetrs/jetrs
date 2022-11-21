@@ -49,7 +49,7 @@ public class NumberProvider extends MessageBodyProvider<Number> {
 
   @Override
   public Number readFrom(final Class<Number> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,String> httpHeaders, final InputStream entityStream) throws IOException, WebApplicationException {
-    final String str = MessageBodyProvider.toString(entityStream, mediaType.getParameters().get(MediaType.CHARSET_PARAMETER));
+    final String str = MessageBodyProvider.toString(entityStream, mediaType == null ? null : mediaType.getParameters().get(MediaType.CHARSET_PARAMETER));
     return Numbers.parseNumber(str, type);
   }
 

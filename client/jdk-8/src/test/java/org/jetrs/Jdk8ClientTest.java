@@ -21,7 +21,6 @@ import static org.junit.Assert.*;
 import static org.libj.util.function.Throwing.*;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
@@ -53,6 +52,7 @@ import org.junit.AfterClass;
 import org.junit.Test;
 import org.libj.io.Streams;
 import org.libj.lang.Classes;
+import org.libj.util.UnsynchronizedByteArrayOutputStream;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 
@@ -219,7 +219,7 @@ public class Jdk8ClientTest {
     form.add(null, "nullKey");
     form.add(null, null);
 
-    final ByteArrayOutputStream entity = new ByteArrayOutputStream();
+    final UnsynchronizedByteArrayOutputStream entity = new UnsynchronizedByteArrayOutputStream();
     EntityUtil.writeFormParams(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE, entity);
 
     new Trial(HttpMethod.POST, () -> Entity.form(form)) {
@@ -241,7 +241,7 @@ public class Jdk8ClientTest {
       @Override
       void assertResponse(final Response response) throws IOException {
         assertEquals(Response.Status.OK, response.getStatusInfo());
-        final ByteArrayOutputStream out = new ByteArrayOutputStream();
+        final UnsynchronizedByteArrayOutputStream out = new UnsynchronizedByteArrayOutputStream();
         EntityUtil.writeFormParams(form, null, out);
         final String message = new String(out.toByteArray());
         assertEquals(message, response.readEntity(String.class));

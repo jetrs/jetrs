@@ -269,7 +269,7 @@ class UriInfoImpl implements UriInfo {
   }
 
   private static void addDecoded(final MultivaluedArrayMap<String,String> map, final String key, final String value) {
-    map.add(key, UrlEncoded.decodeString(value, 0, value.length(), StandardCharsets.UTF_8));
+    map.add(key, value == null ? null : UrlEncoded.decodeString(value, 0, value.length(), StandardCharsets.UTF_8));
   }
 
   @Override

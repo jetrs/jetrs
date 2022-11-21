@@ -543,20 +543,22 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
   @Override
   public UriBuilder queryParam(final String name, final Object ... values) throws IllegalArgumentException {
     assertNotNull(name, "name is null");
-    assertNotNull(values, "values is null");
 
     final StringBuilder builder = new StringBuilder();
     if (query != null)
       builder.append(query).append('&');
 
-    for (int i = 0, i$ = values.length; i < i$; ++i) { // [A]
-      final Object value = values[i];
-      assertNotNull(value, "value is null");
+    if (values == null) {
+      builder.append(UriEncoder.QUERY_PARAM.encode(name));
+    }
+    else {
+      for (int i = 0, i$ = values.length; i < i$; ++i) { // [A]
+        final Object value = assertNotNull(values[i], "value is null");
+        if (i > 0)
+          builder.append('&');
 
-      if (i > 0)
-        builder.append('&');
-
-      builder.append(UriEncoder.QUERY_PARAM.encode(name)).append('=').append(UriEncoder.QUERY_PARAM.encode(value.toString()));
+        builder.append(UriEncoder.QUERY_PARAM.encode(name)).append('=').append(UriEncoder.QUERY_PARAM.encode(value.toString()));
+      }
     }
 
     query = builder.toString();

@@ -106,9 +106,13 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
    */
   HttpHeadersImpl(final Map<String,List<String>> headers) {
     this();
-    if (assertNotNull(headers).size() > 0)
-      for (final Map.Entry<String,List<String>> entry : headers.entrySet()) // [S]
-        addAll(entry.getKey(), entry.getValue());
+    if (assertNotNull(headers).size() > 0) {
+      for (final Map.Entry<String,List<String>> entry : headers.entrySet()) { // [S]
+        final String key = entry.getKey();
+        if (key != null)
+          addAll(key, entry.getValue());
+      }
+    }
   }
 
   /**

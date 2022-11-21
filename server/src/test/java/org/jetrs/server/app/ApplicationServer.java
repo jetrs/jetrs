@@ -32,13 +32,16 @@ import org.jetrs.provider.ext.FormMultivaluedMapProvider;
 import org.jetrs.provider.ext.FormProvider;
 import org.jetrs.provider.ext.InputStreamProvider;
 import org.jetrs.provider.ext.NumberProvider;
+import org.jetrs.provider.ext.StreamingOutputProvider;
 import org.jetrs.provider.ext.StringProvider;
+import org.jetrs.provider.ext.interceptor.GZipCodec;
 import org.jetrs.provider.ext.mapper.WebApplicationExceptionMapper;
 import org.jetrs.server.app.filter.Filter1;
 import org.jetrs.server.app.provider.MyCharacterProvider;
 import org.jetrs.server.app.service.BookService;
 import org.jetrs.server.app.service.CoreTypeService;
 import org.jetrs.server.app.service.FileUploadService;
+import org.jetrs.server.app.service.FlushResponseService;
 import org.jetrs.server.app.service.RootService1;
 import org.jetrs.server.app.service.RootService2;
 import org.openjax.jetty.EmbeddedServletContainer;
@@ -100,6 +103,7 @@ public class ApplicationServer extends Application implements AutoCloseable {
     singletons.add(new StringProvider());
     singletons.add(new FormMultivaluedMapProvider());
     singletons.add(new FormProvider());
+    singletons.add(new StreamingOutputProvider());
     singletons.add(new WebApplicationExceptionMapper(true));
 
     // Specific
@@ -107,6 +111,7 @@ public class ApplicationServer extends Application implements AutoCloseable {
     singletons.add(new RootService2());
     singletons.add(new FileUploadService());
     singletons.add(new BookService());
+    singletons.add(new FlushResponseService());
     return singletons;
   }
 
@@ -114,6 +119,7 @@ public class ApplicationServer extends Application implements AutoCloseable {
   public Set<Class<?>> getClasses() {
     final Set<Class<?>> classes = new HashSet<>();
     classes.add(Filter1.class);
+    classes.add(GZipCodec.class);
     classes.add(CoreTypeService.class);
     classes.add(MyCharacterProvider.class);
     // Must be a class resource, because it has a member @Context reference

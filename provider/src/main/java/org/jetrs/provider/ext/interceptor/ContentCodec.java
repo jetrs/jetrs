@@ -104,12 +104,12 @@ public abstract class ContentCodec implements ReaderInterceptor, WriterIntercept
 
   @Override
   public final void aroundWriteTo(final WriterInterceptorContext context) throws IOException, WebApplicationException {
-    // Must remove Content-Length header since the encoded message will have a different length
     final List<String> acceptEncodings = requestHeaders.getRequestHeader(HttpHeaders.ACCEPT_ENCODING);
-    if (acceptEncodings != null && acceptEncodings.size() > 0) {
+    final int size;
+    if (acceptEncodings != null && (size = acceptEncodings.size()) > 0) {
       final Set<String> supportedEncodings = getSupportedEncodings();
       if (CollectionUtil.isRandomAccess(acceptEncodings)) {
-        for (int i = 0, i$ = acceptEncodings.size(); i < i$; ++i) // [RA]
+        for (int i = 0; i < size; ++i) // [RA]
           if (setEncoding(acceptEncodings.get(i), supportedEncodings, context))
             break;
       }
@@ -123,14 +123,15 @@ public abstract class ContentCodec implements ReaderInterceptor, WriterIntercept
     context.proceed();
   }
 
+  // Must remove Content-Length header since the encoded message will have a different length
   private boolean setEncoding(final String acceptEncoding, final Set<String> supportedEncodings, final WriterInterceptorContext context) throws IOException {
     if (acceptEncoding == null || !supportedEncodings.contains(acceptEncoding))
       return false;
 
-    context.setOutputStream(encode(acceptEncoding, context.getOutputStream()));
     final MultivaluedMap<String,Object> headers = context.getHeaders();
     headers.addFirst(HttpHeaders.CONTENT_ENCODING, acceptEncoding);
     headers.remove(HttpHeaders.CONTENT_LENGTH);
+    context.setOutputStream(encode(acceptEncoding, context.getOutputStream()));
     return true;
   }
 }

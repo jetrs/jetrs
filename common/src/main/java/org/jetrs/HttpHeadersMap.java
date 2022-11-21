@@ -142,8 +142,7 @@ class HttpHeadersMap<V,R> extends MirrorMultivaluedArrayMap<String,V,R> {
    * @see <a href="https://datatracker.ietf.org/doc/html/rfc7230">RFC 7230</a>
    */
   private static String format(final Object headerName) {
-    if (headerName == null)
-      return null;
+    assertNotNull(headerName);
 
     final String str = headerName.toString();
     for (int i = 0, i$ = str.length(), ch; i < i$; ++i) { // [N]

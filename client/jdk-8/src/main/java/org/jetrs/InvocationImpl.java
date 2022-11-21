@@ -87,9 +87,9 @@ abstract class InvocationImpl implements Invocation {
   void writeContentSync(final MessageBodyWriter messageBodyWriter, final Class<?> entityClass, final ThrowingSupplier<OutputStream,IOException> onFirstWrite, final Runnable onClose) throws IOException {
     try (final EntityOutputStream entityStream = new EntityOutputStream() {
       @Override
-      void onWrite(final byte[] bs, final int off, final int len, final int b) throws IOException {
-        if (entityOutputStream == null)
-          entityOutputStream = onFirstWrite.get();
+      void onWrite(final int b, final byte[] bs, final int off, final int len) throws IOException {
+        if (socketOutputStream == null)
+          socketOutputStream = onFirstWrite.get();
       }
 
       @Override
@@ -119,10 +119,10 @@ abstract class InvocationImpl implements Invocation {
         }
 
         @Override
-        void onWrite(final byte[] bs, final int off, final int len, final int b) throws IOException {
-          if (entityOutputStream == null) {
+        void onWrite(final int b, final byte[] bs, final int off, final int len) throws IOException {
+          if (socketOutputStream == null) {
             try {
-              entityOutputStream = onFirstWrite.get();
+              socketOutputStream = onFirstWrite.get();
               resultRef.set(Boolean.TRUE);
             }
             finally {

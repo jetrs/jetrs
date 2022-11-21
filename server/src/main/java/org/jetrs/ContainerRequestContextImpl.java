@@ -18,7 +18,6 @@ package org.jetrs;
 
 import static org.jetrs.HttpHeaders.*;
 
-import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,7 +31,6 @@ import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.security.Principal;
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -81,7 +79,6 @@ import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.MessageBodyReader;
-import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.ParamConverterProvider;
 import javax.ws.rs.ext.Providers;
 import javax.ws.rs.ext.ReaderInterceptor;
@@ -90,7 +87,6 @@ import javax.ws.rs.ext.ReaderInterceptorContext;
 import org.libj.lang.Classes;
 import org.libj.lang.Numbers;
 import org.libj.util.ArrayUtil;
-import org.libj.util.CollectionUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -403,18 +399,18 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
       if (defaultValue.isConverted)
         return defaultValue.convertedValue;
 
-      final String stringValue = defaultValue.annotatedValue;
+      final String firstValue = defaultValue.annotatedValue;
 
       // FIXME: Param types other than `Cookie` still need to be implemented.
-      return DefaultParamConverterProvider.convertParameter(rawType, genericType, annotations, paramPlurality, stringValue, null, false, runtimeContext.getParamConverterProviderFactories(), this);
+      return DefaultParamConverterProvider.convertParameter(rawType, genericType, annotations, paramPlurality, firstValue, null, false, runtimeContext.getParamConverterProviderFactories(), this);
     }
 
     if (annotationType == HeaderParam.class) {
       final String headerName = ((HeaderParam)annotation).value();
-      String stringValue = getHttpHeaders().getString(headerName);
+      String firstValue = getHttpHeaders().getString(headerName);
 
       final ParamPlurality<?> paramPlurality = ParamPlurality.fromClass(rawType);
-      if (stringValue == null) {
+      if (firstValue == null) {
         final DefaultValueImpl defaultValue = getDefaultValue(element, parameterIndex);
         if (defaultValue == null)
           return paramPlurality.getNullValue(rawType);
@@ -422,7 +418,7 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
         if (defaultValue.isConverted)
           return defaultValue.convertedValue;
 
-        stringValue = defaultValue.annotatedValue;
+        firstValue = defaultValue.annotatedValue;
       }
 
       final MirrorQualityList<String,Object> headerStringValues = getHttpHeaders().get(headerName);
@@ -454,7 +450,7 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
       if (rawType.isInstance(obj))
         return obj;
 
-      final Object converted = DefaultParamConverterProvider.convertParameter(rawType, genericType, annotations, paramPlurality, stringValue, null, false, runtimeContext.getParamConverterProviderFactories(), this);
+      final Object converted = DefaultParamConverterProvider.convertParameter(rawType, genericType, annotations, paramPlurality, firstValue, null, false, runtimeContext.getParamConverterProviderFactories(), this);
       if (converted != null)
         return converted;
 
@@ -488,7 +484,7 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
     if (annotationType == QueryParam.class) {
       final boolean decode = EntityUtil.shouldDecode(annotations);
       List<String> values = getUriInfo().getQueryParameters(decode).get(((QueryParam)annotation).value());
-      String stringValue = null;
+      String firstValue = null;
 
       final ParamPlurality<?> paramPlurality = ParamPlurality.fromClass(rawType);
       if (values == null) {
@@ -499,10 +495,10 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
         if (defaultValue.isConverted)
           return defaultValue.convertedValue;
 
-        stringValue = defaultValue.annotatedValue;
+        firstValue = defaultValue.annotatedValue;
       }
 
-      return DefaultParamConverterProvider.convertParameter(rawType, genericType, annotations, paramPlurality, stringValue, values, false, runtimeContext.getParamConverterProviderFactories(), this);
+      return DefaultParamConverterProvider.convertParameter(rawType, genericType, annotations, paramPlurality, firstValue, values, false, runtimeContext.getParamConverterProviderFactories(), this);
     }
 
     if (annotationType == PathParam.class) {
@@ -606,18 +602,18 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
       final ArrayList<PathSegmentImpl> pathSegments = getUriInfo().getPathSegmentImpls(decode);
 
       final int i$ = pathSegments.size();
-      final List<String> matrixParams;
+      final List<String> values;
       if (i$ == 0) {
-        matrixParams = null;
+        values = null;
       }
       else {
-        final String[] values = getMatrixParamValue(((MatrixParam)annotation).value(), pathSegments, i$);
-        matrixParams = values == null ? null : Arrays.asList(values);
+        final String[] matrixParams = getMatrixParamValue(((MatrixParam)annotation).value(), pathSegments, i$);
+        values = matrixParams == null ? null : Arrays.asList(matrixParams);
       }
 
       final ParamPlurality<?> paramPlurality = ParamPlurality.fromClass(rawType);
-      final String stringValue;
-      if (matrixParams == null) {
+      final String firstValue;
+      if (values == null) {
         final DefaultValueImpl defaultValue = getDefaultValue(element, parameterIndex);
         if (defaultValue == null)
           return paramPlurality.getNullValue(rawType);
@@ -625,13 +621,13 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
         if (defaultValue.isConverted)
           return defaultValue.convertedValue;
 
-        stringValue = defaultValue.annotatedValue;
+        firstValue = defaultValue.annotatedValue;
       }
       else {
-        stringValue = matrixParams.get(0);
+        firstValue = values.get(0);
       }
 
-      return DefaultParamConverterProvider.convertParameter(rawType, genericType, annotations, paramPlurality, stringValue, matrixParams, false, runtimeContext.getParamConverterProviderFactories(), this);
+      return DefaultParamConverterProvider.convertParameter(rawType, genericType, annotations, paramPlurality, firstValue, values, false, runtimeContext.getParamConverterProviderFactories(), this);
     }
 
     throw new UnsupportedOperationException("Unsupported param annotation type: " + annotationType);
@@ -877,13 +873,14 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
     return null;
   }
 
-  void sendError(final int scInternalServerError) throws IOException {
-    httpServletResponse.sendError(scInternalServerError);
+  void sendError(final int scInternalServerError, final Exception e) throws IOException {
+    if (httpServletResponse.isCommitted())
+      logger.error("Trying to sendError(" + scInternalServerError + ") for committed response", e);
+    else
+      httpServletResponse.sendError(scInternalServerError);
   }
 
   private Response setResponse(final Response response, final Annotation[] annotations) {
-    containerResponseContext.setEntityStream(null);
-
     final MultivaluedArrayMap<String,String> containerResponseHeaders = containerResponseContext.getStringHeaders();
     containerResponseHeaders.clear();
 
@@ -914,118 +911,17 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
     return response;
   }
 
-  private void writeHeader() {
-    final MultivaluedArrayMap<String,String> containerResponseHeaders = containerResponseContext.getStringHeaders();
-    if (containerResponseHeaders.size() > 0) {
-      for (final Map.Entry<String,List<String>> entry : containerResponseHeaders.entrySet()) { // [S]
-        final List<String> values = entry.getValue();
-        final int i$ = values.size();
-        if (i$ == 0)
-          continue;
-
-        final String name = entry.getKey();
-        if (i$ > 1) {
-          final AbstractMap.SimpleEntry<HttpHeader<?>,HeaderDelegateImpl<?>> headerDelegate = HeaderDelegateImpl.lookup(name);
-          final char[] delimiters = headerDelegate.getKey().getDelimiters();
-          if (delimiters.length > 0) {
-            httpServletResponse.setHeader(name, CollectionUtil.toString(values, delimiters[0]));
-            continue;
-          }
-        }
-
-        int i = -1;
-        if (httpServletResponse.containsHeader(name))
-          httpServletResponse.setHeader(name, values.get(++i));
-
-        while (++i < i$)
-          httpServletResponse.addHeader(entry.getKey(), values.get(i));
-      }
-    }
-
-    httpServletResponse.setStatus(containerResponseContext.getStatus());
-  }
-
-  @SuppressWarnings("rawtypes")
-  private ByteArrayOutputStream writeBody() throws IOException {
-    final Object entity = containerResponseContext.getEntity();
-    if (entity == null)
-      return null;
-
-    final Type methodReturnType;
-    final Annotation[] methodAnnotations;
-    if (resourceInfo != null) {
-      methodReturnType = resourceInfo.getMethodReturnType();
-      methodAnnotations = resourceInfo.getMethodAnnotations();
-    }
-    else {
-      methodReturnType = null;
-      methodAnnotations = null;
-    }
-
-    final MediaType mediaType = containerResponseContext.getMediaType();
-    final MessageBodyWriter messageBodyWriter = getProviders().getMessageBodyWriter(containerResponseContext.getEntityClass(), methodReturnType, methodAnnotations, mediaType != null ? mediaType : MediaType.WILDCARD_TYPE);
-    if (messageBodyWriter == null)
-      throw new InternalServerErrorException("Could not find MessageBodyWriter for type: " + entity.getClass().getName()); // [JAX-RS 4.2.2 7]
-
-    ByteArrayOutputStream outputStream = null;
-    if (containerResponseContext.getOutputStream() == null)
-      containerResponseContext.setEntityStream(outputStream = new ByteArrayOutputStream(1024));
-
-    // Start WriterInterceptor process chain
-    containerResponseContext.writeBody(messageBodyWriter);
-
-    // [JAX-RS 3.5 and 3.8 9]
-    if (containerResponseContext.getMediaType() == null) {
-      MediaType contentType;
-      if (resourceMatch == null) {
-        contentType = MediaType.APPLICATION_OCTET_STREAM_TYPE;
-        if (logger.isWarnEnabled())
-          logger.warn("Content-Type not specified -- setting to " + MediaType.APPLICATION_OCTET_STREAM);
-      }
-      else {
-        contentType = resourceMatch.getProducedMediaTypes()[0];
-        if (contentType.isWildcardSubtype()) {
-          if (!contentType.isWildcardType() && !"application".equals(contentType.getType()))
-            throw new NotAcceptableException();
-
-          contentType = MediaType.APPLICATION_OCTET_STREAM_TYPE;
-          if (logger.isWarnEnabled())
-            logger.warn("Content-Type not specified -- setting to " + MediaType.APPLICATION_OCTET_STREAM);
-        }
-        else if (contentType.getParameters().size() > 0) {
-          contentType = MediaTypes.cloneWithoutParameters(contentType);
-        }
-      }
-
-      containerResponseContext.setMediaType(contentType);
-    }
-
-    return outputStream;
-  }
-
-  ByteArrayOutputStream writeResponse() throws IOException {
-    ByteArrayOutputStream outputStream = null;
-    if (!HttpMethod.HEAD.equals(getMethod()))
-      outputStream = writeBody();
-
-    writeHeader(); // Headers have to be written at the end, because WriteInterceptor(s) may modify the response headers.
-    return outputStream;
+  OutputStream writeResponse() throws IOException {
+    return containerResponseContext.writeResponse(httpServletResponse, resourceInfo);
   }
 
   @SuppressWarnings("resource")
-  void commitResponse(final ByteArrayOutputStream entityStream) throws IOException {
-    if (httpServletResponse.isCommitted())
-      return;
-
+  void closeResponse(final OutputStream entityStream) throws IOException {
     try {
       if (entityStream != null) {
-        final byte[] bytes = entityStream.toByteArray();
-        httpServletResponse.setHeader(CONTENT_LENGTH, String.valueOf(bytes.length));
-        httpServletResponse.getOutputStream().write(bytes);
+        entityStream.flush();
+        entityStream.close();
       }
-
-      // @see ServletResponse#getOutputStream :: "Calling flush() on the ServletOutputStream commits the response."
-      httpServletResponse.getOutputStream().flush();
     }
     finally {
       // Absolutely positively assert that the streams are closed
@@ -1033,9 +929,9 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
         try {
           getEntityStream().close();
         }
-        catch (final Throwable t) {
+        catch (final Exception e) {
           if (logger.isErrorEnabled())
-            logger.error(t.getMessage(), t);
+            logger.error(e.getMessage(), e);
         }
       }
 
@@ -1044,9 +940,9 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
         try {
           outputStream.close();
         }
-        catch (final Throwable t) {
+        catch (final Exception e) {
           if (logger.isErrorEnabled())
-            logger.error(t.getMessage(), t);
+            logger.error(e.getMessage(), e);
         }
       }
     }

@@ -17,8 +17,8 @@
 package org.jetrs;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.UncheckedIOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -50,7 +50,7 @@ abstract class RestApplicationServlet extends RestHttpServlet {
 
   RestApplicationServlet(final Application application) {
     super(application);
-    if (application != null && getClass().getAnnotation(WebServlet.class) == null)
+    if (application != null && !getClass().isAnnotationPresent(WebServlet.class))
       throw new UnsupportedOperationException("@WebServlet annotation is missing");
   }
 
@@ -176,7 +176,7 @@ abstract class RestApplicationServlet extends RestHttpServlet {
         }
       }, httpServletResponse);
 
-      ByteArrayOutputStream entityStream = null;
+      OutputStream entityStream = null;
 
       try {
         // (1) Filter Request (Pre-Match)
@@ -200,7 +200,7 @@ abstract class RestApplicationServlet extends RestHttpServlet {
         requestContext.setStage(Stage.FILTER_RESPONSE);
         requestContext.filterContainerResponse();
 
-        // (6a) Write Response
+        // (6a) Flush Response
         requestContext.setStage(Stage.WRITE_RESPONSE);
         entityStream = requestContext.writeResponse();
       }
@@ -213,15 +213,15 @@ abstract class RestApplicationServlet extends RestHttpServlet {
             response = requestContext.setErrorResponse(e);
           }
           catch (final RuntimeException e1) {
-            if (!(e1 instanceof WebApplicationException))
-              requestContext.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-
             e1.addSuppressed(e);
+            if (!(e1 instanceof WebApplicationException))
+              requestContext.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e1);
+
             throw e1;
           }
 
           if (response == null) {
-            requestContext.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            requestContext.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e);
             throw e;
           }
 
@@ -244,21 +244,21 @@ abstract class RestApplicationServlet extends RestHttpServlet {
         }
 
         try {
-          // (6b) Write Response
+          // (6b) Flush Response
           requestContext.setStage(Stage.WRITE_RESPONSE);
           entityStream = requestContext.writeResponse();
         }
         catch (final IOException | RuntimeException e1) {
-          if (!(e1 instanceof WebApplicationException))
-            requestContext.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-
           e.addSuppressed(e1);
+          if (!(e1 instanceof WebApplicationException))
+            requestContext.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e1);
+
           throw e;
         }
       }
       finally {
-        // (7) Commit Response
-        requestContext.commitResponse(entityStream);
+        // (7) Close Response
+        requestContext.closeResponse(entityStream);
       }
     }
     catch (final ServletException | RuntimeException t) {
