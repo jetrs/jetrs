@@ -28,7 +28,7 @@ abstract class MessageBodyProviderFactory<T> extends TypeProviderFactory<T> {
 
   MessageBodyProviderFactory(final Class<T> clazz, final T singleton, final Class<?> interfaceType) throws IllegalAccessException, InstantiationException, InvocationTargetException {
     super(clazz, singleton, getGenericInterfaceFirstTypeArgument(clazz, interfaceType, Object.class));
-    final Consumes consumes = clazz.getAnnotation(Consumes.class);
+    final Consumes consumes = AnnotationUtil.getAnnotation(clazz, Consumes.class);
     this.allowedTypes = consumes != null ? ServerMediaType.valueOf(consumes.value()) : MediaTypes.WILDCARD_SERVER_TYPE;
   }
 

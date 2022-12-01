@@ -126,7 +126,7 @@ final class EndpointFactory implements BiFunction<Application,Class<?>,HttpServl
       throw new IllegalArgumentException("Only " + HttpServlet.class.getName() + " endpoint type is supported");
 
     final Class<? extends Application> applicationClass = application.getClass();
-    final ApplicationPath applicationPath = applicationClass.getAnnotation(ApplicationPath.class);
+    final ApplicationPath applicationPath = AnnotationUtil.getAnnotation(applicationClass, ApplicationPath.class);
     if (applicationPath == null)
       throw new IllegalArgumentException("Application is missing @ApplicationPath annotation");
 

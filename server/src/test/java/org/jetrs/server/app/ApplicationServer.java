@@ -16,6 +16,7 @@
 
 package org.jetrs.server.app;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -58,14 +59,48 @@ public class ApplicationServer extends Application implements AutoCloseable {
   public static final String mimeType = "application/vnd.jetrs.v1+json";
 
   public static void main(final String[] args) throws Exception {
-    try (final ApplicationServer instance = new ApplicationServer()) {
+    try (final ApplicationServer instance = new ApplicationServer(null, null)) {
       instance.container.join();
     }
   }
 
   private final EmbeddedServletContainer container;
+  private final HashSet<Object> singletons = new HashSet<>();
+  private final Set<Class<?>> classes = new HashSet<>();
 
-  public ApplicationServer() {
+  public ApplicationServer(final Object[] singletons, final Class<?>[] classes) {
+    if (singletons != null) {
+      Collections.addAll(this.singletons, singletons);
+    }
+    else {
+      // General
+      this.singletons.add(new InputStreamProvider());
+      this.singletons.add(new BytesProvider());
+      this.singletons.add(new NumberProvider());
+      this.singletons.add(new StringProvider());
+      this.singletons.add(new FormMultivaluedMapProvider());
+      this.singletons.add(new FormProvider());
+      this.singletons.add(new StreamingOutputProvider());
+      this.singletons.add(new WebApplicationExceptionMapper(true));
+
+      // Specific
+      this.singletons.add(new RootService1());
+      this.singletons.add(new RootService2());
+      this.singletons.add(new FileUploadService());
+      this.singletons.add(new BookService());
+      this.singletons.add(new FlushResponseService());
+    }
+
+    if (classes != null) {
+      Collections.addAll(this.classes, classes);
+    }
+    else {
+      this.classes.add(Filter1.class);
+      this.classes.add(GZipCodec.class);
+      this.classes.add(CoreTypeService.class);
+      this.classes.add(MyCharacterProvider.class);
+    }
+
     try {
       this.container = new EmbeddedServletContainer.Builder()
         .withUncaughtServletExceptionHandler(new UncaughtServletExceptionHandler() {
@@ -94,35 +129,11 @@ public class ApplicationServer extends Application implements AutoCloseable {
 
   @Override
   public Set<Object> getSingletons() {
-    final Set<Object> singletons = new HashSet<>();
-
-    // General
-    singletons.add(new InputStreamProvider());
-    singletons.add(new BytesProvider());
-    singletons.add(new NumberProvider());
-    singletons.add(new StringProvider());
-    singletons.add(new FormMultivaluedMapProvider());
-    singletons.add(new FormProvider());
-    singletons.add(new StreamingOutputProvider());
-    singletons.add(new WebApplicationExceptionMapper(true));
-
-    // Specific
-    singletons.add(new RootService1());
-    singletons.add(new RootService2());
-    singletons.add(new FileUploadService());
-    singletons.add(new BookService());
-    singletons.add(new FlushResponseService());
     return singletons;
   }
 
   @Override
   public Set<Class<?>> getClasses() {
-    final Set<Class<?>> classes = new HashSet<>();
-    classes.add(Filter1.class);
-    classes.add(GZipCodec.class);
-    classes.add(CoreTypeService.class);
-    classes.add(MyCharacterProvider.class);
-    // Must be a class resource, because it has a member @Context reference
     return classes;
   }
 

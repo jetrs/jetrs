@@ -65,7 +65,7 @@ class FormServletInputStream extends FilterServletInputStream {
       else {
         formParameterDecodedMap = new MultivaluedArrayHashMap(formParameterEncodedMap);
         final Charset charset = getCharacterEncoding();
-        for (final Map.Entry<String,List<String>> entry : formParameterDecodedMap.entrySet()) {
+        for (final Map.Entry<String,List<String>> entry : formParameterDecodedMap.entrySet()) { // [S]
           final ArrayList<String> values = (ArrayList<String>)entry.getValue();
           for (int i = 0, i$ = values.size(); i < i$; ++i) { // [RA]
             final String value = values.get(i);

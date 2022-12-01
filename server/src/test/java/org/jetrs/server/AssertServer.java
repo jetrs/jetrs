@@ -26,7 +26,7 @@ import javax.ws.rs.core.Response;
 
 public final class AssertServer {
   private static void assertHeadersEqual(final MultivaluedMap<?,?> expected, final MultivaluedMap<?,?> actual) {
-    for (final Map.Entry<?,?> entry : expected.entrySet())
+    for (final Map.Entry<?,?> entry : expected.entrySet()) // [S]
       if (!HttpHeaders.DATE.equalsIgnoreCase(entry.getKey().toString()))
         assertEquals(entry.getKey().toString(), entry.getValue(), actual.get(entry.getKey()));
   }

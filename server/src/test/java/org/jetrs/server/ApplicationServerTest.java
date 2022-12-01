@@ -16,8 +16,8 @@
 
 package org.jetrs.server;
 
-import static org.junit.Assert.*;
 import static org.jetrs.server.AssertServer.*;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -60,7 +60,7 @@ import org.libj.util.SimpleDateFormats;
 
 public class ApplicationServerTest {
   private static final Random random = new Random();
-  private static final ApplicationServer server = new ApplicationServer();
+  private static final ApplicationServer server = new ApplicationServer(null, null);
   private static final String serviceUrl = "http://localhost:" + server.getContainerPort() + ApplicationServer.applicationPath;
   private static final Client client;
 

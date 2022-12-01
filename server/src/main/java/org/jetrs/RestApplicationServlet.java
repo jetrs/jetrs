@@ -18,7 +18,6 @@ package org.jetrs;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.UncheckedIOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -55,7 +54,6 @@ abstract class RestApplicationServlet extends RestHttpServlet {
   }
 
   @Override
-  @SuppressWarnings("resource")
   protected final void service(final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse) throws IOException, ServletException {
     try (final ContainerRequestContextImpl requestContext = getRuntimeContext().newRequestContext(new RequestImpl(httpServletRequest.getMethod()))) {
       requestContext.init(new HttpServletRequestWrapper(httpServletRequest) {
@@ -176,8 +174,6 @@ abstract class RestApplicationServlet extends RestHttpServlet {
         }
       }, httpServletResponse);
 
-      OutputStream entityStream = null;
-
       try {
         // (1) Filter Request (Pre-Match)
         requestContext.setStage(Stage.FILTER_REQUEST_PRE_MATCH);
@@ -202,7 +198,7 @@ abstract class RestApplicationServlet extends RestHttpServlet {
 
         // (6a) Flush Response
         requestContext.setStage(Stage.WRITE_RESPONSE);
-        entityStream = requestContext.writeResponse();
+        requestContext.writeResponse();
       }
       catch (final IOException | RuntimeException | ServletException e) {
         if (!(e instanceof AbortFilterChainException)) {
@@ -246,7 +242,7 @@ abstract class RestApplicationServlet extends RestHttpServlet {
         try {
           // (6b) Flush Response
           requestContext.setStage(Stage.WRITE_RESPONSE);
-          entityStream = requestContext.writeResponse();
+          requestContext.writeResponse();
         }
         catch (final IOException | RuntimeException e1) {
           e.addSuppressed(e1);
@@ -255,10 +251,6 @@ abstract class RestApplicationServlet extends RestHttpServlet {
 
           throw e;
         }
-      }
-      finally {
-        // (7) Close Response
-        requestContext.closeResponse(entityStream);
       }
     }
     catch (final ServletException | RuntimeException t) {

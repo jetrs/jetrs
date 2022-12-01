@@ -104,7 +104,7 @@ class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImpl> {
     this.securityAnnotation = securityAnnotation != null ? securityAnnotation : permitAll;
     this.resourceMethod = method;
     this.methodName = method.getName();
-    this.methodAnnotations = method.getAnnotations();
+    this.methodAnnotations = AnnotationUtil.getAnnotations(method);
     this.methodParameterAnnotations = method.getParameterAnnotations();
     this.methodParameterCount = method.getParameterCount();
     this.methodParameters = method.getParameters();

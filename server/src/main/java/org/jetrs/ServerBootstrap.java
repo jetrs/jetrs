@@ -17,7 +17,6 @@
 package org.jetrs;
 
 import java.io.IOException;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -70,13 +69,13 @@ class ServerBootstrap extends Bootstrap<ResourceInfos> {
     if (Modifier.isAbstract(cls.getModifiers()) || Modifier.isInterface(cls.getModifiers()))
       return false;
 
-    if (cls.isAnnotationPresent(Path.class))
+    if (AnnotationUtil.isAnnotationPresent(cls, Path.class))
       return true;
 
     try {
       final Method[] methods = cls.getMethods();
       for (final Method method : methods) // [A]
-        if (!Modifier.isAbstract(method.getModifiers()) && !Modifier.isStatic(method.getModifiers()) && !Modifier.isNative(method.getModifiers()) && (method.isAnnotationPresent(Path.class) || method.isAnnotationPresent(GET.class) || method.isAnnotationPresent(POST.class) || method.isAnnotationPresent(PUT.class) || method.isAnnotationPresent(DELETE.class) || method.isAnnotationPresent(HEAD.class)))
+        if (!Modifier.isAbstract(method.getModifiers()) && !Modifier.isStatic(method.getModifiers()) && !Modifier.isNative(method.getModifiers()) && AnnotationUtil.isAnyAnnotationPresent(method, Path.class, GET.class, POST.class, PUT.class, DELETE.class, HEAD.class))
           return true;
 
       return false;
@@ -119,36 +118,19 @@ class ServerBootstrap extends Bootstrap<ResourceInfos> {
     this.containerResponseFilterProviderFactories = containerResponseFilterProviderFactories;
   }
 
-  private static Path digestAnnotations(final Annotation[] annotations, final HashSet<HttpMethod> httpMethodAnnotations) {
-    Path path = null;
-    if (annotations.length > 0) {
-      for (final Annotation annotation : annotations) { // [A]
-        if (annotation instanceof Path)
-          path = (Path)annotation;
-        else {
-          final HttpMethod httpMethodAnnotation = annotation.annotationType().getAnnotation(HttpMethod.class);
-          if (httpMethodAnnotation != null)
-            httpMethodAnnotations.add(httpMethodAnnotation);
-        }
-      }
-    }
-
-    return path;
-  }
-
   @Override
   @SuppressWarnings("unchecked")
   <T>boolean addResourceOrProvider(final ArrayList<Consumer<Set<Class<?>>>> afterAdd, final ResourceInfos resourceInfos, final Class<? extends T> clazz, final T singleton, final boolean scanned) throws IllegalAccessException, InstantiationException, InvocationTargetException {
-    if (clazz.isAnnotationPresent(Provider.class)) {
+    if (AnnotationUtil.isAnnotationPresent(clazz, Provider.class)) {
       if (ParamConverterProvider.class.isAssignableFrom(clazz))
         paramConverterProviderFactories.add(new ParamConverterProviderFactory((Class<ParamConverterProvider>)clazz, (ParamConverterProvider)singleton));
 
       if (ContainerRequestFilter.class.isAssignableFrom(clazz))
-        (clazz.isAnnotationPresent(PreMatching.class) ? preMatchContainerRequestFilterProviderFactories : containerRequestFilterProviderFactories).add(new ContainerRequestFilterProviderFactory((Class<ContainerRequestFilter>)clazz, (ContainerRequestFilter)singleton));
+        (AnnotationUtil.isAnnotationPresent(clazz, PreMatching.class) ? preMatchContainerRequestFilterProviderFactories : containerRequestFilterProviderFactories).add(new ContainerRequestFilterProviderFactory((Class<ContainerRequestFilter>)clazz, (ContainerRequestFilter)singleton));
 
       if (ContainerResponseFilter.class.isAssignableFrom(clazz)) {
         containerResponseFilterProviderFactories.add(new ContainerResponseFilterProviderFactory((Class<ContainerResponseFilter>)clazz, (ContainerResponseFilter)singleton));
-        if (logger.isDebugEnabled() && clazz.isAnnotationPresent(PreMatching.class))
+        if (logger.isDebugEnabled() && AnnotationUtil.isAnnotationPresent(clazz, PreMatching.class))
           logger.debug("@PreMatching annotation is not applicable to ContainerResponseFilter");
       }
     }
@@ -161,8 +143,8 @@ class ServerBootstrap extends Bootstrap<ResourceInfos> {
     if (methods.length > 0) {
       final HashSet<HttpMethod> httpMethodAnnotations = new HashSet<>();
       for (final Method method : clazz.getMethods()) { // [A]
-        final Path methodPath = digestAnnotations(method.getAnnotations(), httpMethodAnnotations);
-        final Path classPath = clazz.getAnnotation(Path.class);
+        final Path methodPath = AnnotationUtil.digestAnnotations(method, httpMethodAnnotations);
+        final Path classPath = AnnotationUtil.getAnnotation(clazz, Path.class);
         if (httpMethodAnnotations.size() > 0) {
           for (final HttpMethod httpMethodAnnotation : httpMethodAnnotations) // [S]
             add(httpMethodAnnotation, method, baseUri, classPath, methodPath, resourceInfos, clazz, singleton);

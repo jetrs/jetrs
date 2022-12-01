@@ -38,10 +38,10 @@ class ResourceInfos extends ArrayList<ResourceInfoImpl> {
   void initDefaultValues(final Class<?> cls, final ArrayList<ProviderFactory<ParamConverterProvider>> paramConverterProviderFactories) {
     if (!classToDefaultValues.containsKey(cls)) {
       HashMap<AnnotatedElement,DefaultValueImpl> defaultValues = null;
-      DefaultValue defaultValue = cls.getAnnotation(DefaultValue.class);
+      DefaultValue defaultValue = AnnotationUtil.getAnnotation(cls, DefaultValue.class);
       if (defaultValue != null) {
         classToDefaultValues.put(cls, defaultValues = new HashMap<>());
-        defaultValues.put(cls, digestDefaultValue(defaultValue, cls, cls.getGenericSuperclass(), cls.getAnnotations(), paramConverterProviderFactories)); // FIXME: Is cls.getGenericSuperclass() correct here?
+        defaultValues.put(cls, digestDefaultValue(defaultValue, cls, cls.getGenericSuperclass(), AnnotationUtil.getAnnotations(cls), paramConverterProviderFactories)); // FIXME: Is cls.getGenericSuperclass() correct here?
       }
 
       for (final Field field : ContainerRequestContextImpl.getContextFields(cls)) { // [A]

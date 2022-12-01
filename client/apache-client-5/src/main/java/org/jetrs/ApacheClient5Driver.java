@@ -58,6 +58,7 @@ import org.apache.hc.core5.http.io.entity.AbstractHttpEntity;
 import org.apache.hc.core5.util.TimeValue;
 import org.apache.hc.core5.util.Timeout;
 import org.libj.util.CollectionUtil;
+import org.libj.util.ObservableOutputStream;
 import org.libj.util.UnsynchronizedByteArrayOutputStream;
 import org.libj.util.function.Throwing;
 
@@ -98,6 +99,16 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
       private final Timeout connectTimeoutObj = connectTimeout > 0 ? Timeout.of(connectTimeout, TimeUnit.MILLISECONDS) : null;
       private final Timeout readTimeoutObj = readTimeout > 0 ? Timeout.of(readTimeout, TimeUnit.MILLISECONDS) : null;
 
+      void executeRequest(final AtomicBoolean executed, final AtomicReference<Object> resultRef, final HttpUriRequestBase request) {
+        executed.set(true);
+        try {
+          resultRef.set(httpClient.execute(request));
+        }
+        catch (final Throwable t) {
+          resultRef.set(t);
+        }
+      }
+
       private void flushHeaders(final HttpUriRequestBase request) {
         if (requestHeaders.size() > 0) {
           int size;
@@ -108,7 +119,7 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
             if ((values = entry.getValue()) != null && (size = values.size()) > 0) {
               name = entry.getKey();
               /** @see org.apache.hc.core5.http.protocol.RequestContent#process(org.apache.hc.core5.http.HttpRequest,org.apache.hc.core5.http.EntityDetails,org.apache.hc.core5.http.protocol.HttpContext) */
-              for (final String excludeHeader : excludeHeaders) {
+              for (final String excludeHeader : excludeHeaders) { // [A]
                 if (name.equalsIgnoreCase(excludeHeader))
                   continue OUT;
 
@@ -191,90 +202,9 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
             // the actual request is executed. Before it is executed, the request sets an AbstractHttpEntity. When AbstractHttpEntity#writeTo() is called,
             // this approach sets the OutputStream from AbstractHttpEntity#writeTo() to the call thread waiting to continue MessageBodyWriter#writeTo().
             final AtomicReference<Object> resultRef = new AtomicReference<>();
-            try (final EntityOutputStream entityOutputStream = new EntityOutputStream() {
-              private final AtomicReference<UnsynchronizedByteArrayOutputStream> tempOutputStream = new AtomicReference<>();
-              private final AtomicBoolean executed = new AtomicBoolean();
-
-              @Override
-              void onWrite(final int b, final byte[] bs, final int off, final int len) throws IOException {
-                if (tempOutputStream.get() != null) {
-                  request.setEntity(new AbstractHttpEntity((String)null, null) {
-                    @Override
-                    public boolean isRepeatable() {
-                      return false;
-                    }
-
-                    @Override
-                    public long getContentLength() {
-                      return -1;
-                    }
-
-                    @Override
-                    public boolean isStreaming() {
-                      return false;
-                    }
-
-                    @Override
-                    public InputStream getContent() throws IOException {
-                      throw new UnsupportedOperationException();
-                    }
-
-                    @Override
-                    public void writeTo(final OutputStream outStream) throws IOException {
-                      lock.lock();
-                      socketOutputStream = outStream;
-                      condition.signal();
-                      try {
-                        await(condition, timeout);
-                      }
-                      finally {
-                        lock.unlock();
-                      }
-                    }
-
-                    @Override
-                    public void close() throws IOException {
-                    }
-                  });
-
-                  lock.lock();
-                  try {
-                    executorService.execute(() -> {
-                      executeRequest();
-                      lock.lock();
-                      condition.signal();
-                      lock.unlock();
-                    });
-
-                    await(condition, timeout);
-                  }
-                  finally {
-                    lock.unlock();
-                  }
-
-                  getResult(resultRef);
-                  socketOutputStream.write(tempOutputStream.get().toByteArray());
-                  tempOutputStream.set(null);
-                }
-                else if (socketOutputStream == null) {
-                  flushHeaders(request);
-                  final UnsynchronizedByteArrayOutputStream out = bs != null ? new UnsynchronizedByteArrayOutputStream(len != -1 ? len : bs.length) : new UnsynchronizedByteArrayOutputStream(1);
-                  tempOutputStream.set(out);
-                  socketOutputStream = out;
-                  $span(Span.ENTITY_INIT, Span.ENTITY_WRITE);
-                }
-              }
-
-              void executeRequest() {
-                executed.set(true);
-                try {
-                  resultRef.set(httpClient.execute(request));
-                }
-                catch (final Throwable t) {
-                  resultRef.set(t);
-                }
-              }
-
+            final AtomicReference<UnsynchronizedByteArrayOutputStream> tempOutputStream = new AtomicReference<>();
+            final AtomicBoolean executed = new AtomicBoolean();
+            try (final RelegateOutputStream relegateEntityStream = new RelegateOutputStream() {
               @Override
               public void close() throws IOException {
                 try {
@@ -282,7 +212,7 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
                 }
                 finally {
                   if (!executed.get()) {
-                    executeRequest();
+                    executeRequest(executed, resultRef, request);
                     getResult(resultRef);
                   }
 
@@ -294,7 +224,86 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
                 }
               }
             }) {
-              messageBodyWriter.writeTo(entity.getEntity(), entityClass, null, entity.getAnnotations(), entity.getMediaType(), requestHeaders.getMirrorMap(), entityOutputStream);
+              relegateEntityStream.setTarget(new ObservableOutputStream() {
+                @Override
+                protected boolean beforeWrite(final int b, final byte[] bs, final int off, final int len) throws IOException {
+                  if (target == null) {
+                    flushHeaders(request);
+                    final UnsynchronizedByteArrayOutputStream out = bs != null ? new UnsynchronizedByteArrayOutputStream(len != -1 ? len : bs.length) : new UnsynchronizedByteArrayOutputStream(1);
+                    tempOutputStream.set(out);
+                    target = out;
+                    $span(Span.ENTITY_INIT, Span.ENTITY_WRITE);
+                  }
+                  else if (tempOutputStream.get() != null) {
+                    request.setEntity(new AbstractHttpEntity((String)null, null) {
+                      @Override
+                      public boolean isRepeatable() {
+                        return false;
+                      }
+
+                      @Override
+                      public long getContentLength() {
+                        return -1;
+                      }
+
+                      @Override
+                      public boolean isStreaming() {
+                        return false;
+                      }
+
+                      @Override
+                      public InputStream getContent() throws IOException {
+                        throw new UnsupportedOperationException();
+                      }
+
+                      @Override
+                      public void writeTo(final OutputStream outStream) throws IOException {
+                        lock.lock();
+                        target = outStream;
+                        condition.signal();
+                        try {
+                          await(condition, timeout);
+                        }
+                        finally {
+                          lock.unlock();
+                        }
+                      }
+
+                      @Override
+                      public void close() throws IOException {
+                      }
+                    });
+
+                    lock.lock();
+                    try {
+                      executorService.execute(() -> {
+                        executeRequest(executed, resultRef, request);
+                        lock.lock();
+                        condition.signal();
+                        lock.unlock();
+                      });
+
+                      await(condition, timeout);
+                    }
+                    finally {
+                      lock.unlock();
+                    }
+
+                    getResult(resultRef);
+                    target.write(tempOutputStream.get().toByteArray());
+                    tempOutputStream.set(null);
+                  }
+
+                  return true;
+                }
+
+                @Override
+                protected void afterWrite(final int b, final byte[] bs, final int off, final int len) throws IOException {
+                  relegateEntityStream.setTarget(target);
+                }
+              });
+
+              messageBodyWriter.writeTo(entity.getEntity(), entityClass, null, entity.getAnnotations(), entity.getMediaType(), requestHeaders.getMirrorMap(), relegateEntityStream);
             }
 
             $span(Span.RESPONSE_WAIT);
@@ -320,7 +329,7 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
           final String reasonPhrase = response.getReasonPhrase();
           final StatusType statusInfo = reasonPhrase != null ? Responses.from(statusCode, reasonPhrase) : Responses.from(statusCode);
           final HttpHeadersImpl responseHeaders = new HttpHeadersImpl();
-          for (final Header header : response.getHeaders())
+          for (final Header header : response.getHeaders()) // [A]
             responseHeaders.add(header.getName(), header.getValue());
 
           final List<Cookie> httpCookies = cookieStore.getCookies();

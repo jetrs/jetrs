@@ -42,7 +42,7 @@ import org.junit.Test;
 import org.libj.lang.Strings;
 
 public class FlushResponseTest {
-  private static final ApplicationServer server = new ApplicationServer();
+  private static final ApplicationServer server = new ApplicationServer(null, null);
   private static final String serviceUrl = "http://localhost:" + server.getContainerPort() + ApplicationServer.applicationPath;
   private static final Client client;
 
@@ -105,7 +105,7 @@ public class FlushResponseTest {
 
   private static long test(final Boolean chunked, final boolean gzip) throws Exception {
     int m = 1;
-    for (; m < 10000000; m *= 2) {
+    for (; m < 10000000; m *= 2) { // [N]
       test(Strings.getRandomAlphaNumeric(3), m, chunked, gzip);
     }
 
@@ -113,7 +113,7 @@ public class FlushResponseTest {
     test(Strings.getRandomAlphaNumeric(3), ContainerResponseContextImpl.bufferSize + 1, chunked, gzip);
 
     long time = 0;
-    for (int i = 0; i < 10; ++i)
+    for (int i = 0; i < 10; ++i) // [N]
       time += test(Strings.getRandomAlphaNumeric(3), m, chunked, gzip);
 
     return time;

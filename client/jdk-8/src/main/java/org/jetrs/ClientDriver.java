@@ -73,11 +73,11 @@ public abstract class ClientDriver {
     @Override
     public String toString() {
       final StringBuilder b = new StringBuilder();
-      for (final Map.Entry<Class<?>,EnumMap<Span,Statistics>> entry : entrySet()) {
+      for (final Map.Entry<Class<?>,EnumMap<Span,Statistics>> entry : entrySet()) { // [S]
         b.append("-- " + entry.getKey().getName() + " ----------------------------\n");
         b.append(String.format("%14s :: [ %10s , %10s ] @ %10s -> %10s ~ %10s", "Tag", "Min", "Max", "Count", "Sum", "Avg\n"));
         b.append("--------------------------------------------------------------------------------------\n");
-        for (final Map.Entry<Span,Statistics> m : entry.getValue().entrySet()) {
+        for (final Map.Entry<Span,Statistics> m : entry.getValue().entrySet()) { // [S]
           final Statistics s = m.getValue();
           b.append(String.format("%14s :: [ %10d , %10d ] @ %10d -> %10d ~ %10d\n", m.getKey(), (int)s.getMin(), (int)s.getMax(), (int)s.getCount(), (int)s.getSum(), (int)s.getAverage()));
         }
@@ -99,7 +99,7 @@ public abstract class ClientDriver {
   void $span(final Span ... tags) {
     if ($isSpanEnabled()) {
       final long ts = System.nanoTime() / 1000; // in microseconds
-      for (final Span tag : tags) {
+      for (final Span tag : tags) { // [A]
         final Statistics s = telemetry.get(getClass()).get(tag);
         synchronized (s) {
           if (s.start == -1) {

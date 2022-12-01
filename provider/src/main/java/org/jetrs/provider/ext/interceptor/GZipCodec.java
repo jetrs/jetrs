@@ -20,12 +20,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
 import javax.annotation.Priority;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.ext.Provider;
+
+import org.libj.util.zip.UnsynchronizedGZIPOutputStream;
 
 /**
  * GZIP codec support. Interceptor that encodes the output or decodes the input if {@link HttpHeaders#CONTENT_ENCODING
@@ -45,6 +46,6 @@ public class GZipCodec extends ContentCodec {
 
   @Override
   public OutputStream encode(final String contentEncoding, final OutputStream entityStream) throws IOException {
-    return new GZIPOutputStream(entityStream);
+    return new UnsynchronizedGZIPOutputStream(entityStream);
   }
 }

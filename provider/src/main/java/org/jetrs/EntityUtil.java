@@ -63,13 +63,13 @@ public final class EntityUtil {
         final StringBuilder b = new StringBuilder();
         b.append('{');
         final Iterator<Map.Entry<String,String[]>> iterator = super.entrySet().iterator();
-        for (int i = 0; iterator.hasNext();) {
+        for (int i = 0; iterator.hasNext();) { // [I]
           final Map.Entry<String,String[]> entry = iterator.next();
           if (i > 0)
             b.append(',');
 
           b.append(entry.getKey()).append("=[");
-          for (final String value : entry.getValue())
+          for (final String value : entry.getValue()) // [A]
             b.append(value).append(',');
 
           b.setCharAt(b.length() - 1, ']');
@@ -80,7 +80,7 @@ public final class EntityUtil {
       }
     };
 
-    for (final Map.Entry<String,List<String>> entry : multiMap.entrySet()) {
+    for (final Map.Entry<String,List<String>> entry : multiMap.entrySet()) { // [S]
       final List<String> value = entry.getValue();
       map.put(entry.getKey(), value == null ? null : value.toArray(new String[value.size()]));
     }

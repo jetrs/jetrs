@@ -21,7 +21,6 @@ import static org.jetrs.HttpHeaders.*;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Array;
@@ -551,7 +550,7 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
             final long regionStartEnd = regionStartEnds[i];
             final int regionStart = Numbers.Composite.decodeInt(regionStartEnd, 0);
             final int regionEnd = Numbers.Composite.decodeInt(regionStartEnd, 1);
-            for (;;) {
+            while (true) {
               final PathSegment pathSegment = pathSegments.get(j);
               final String path = ((PathSegmentImpl)pathSegment).getPathEncoded();
               segEnd = segStart + path.length();
@@ -911,41 +910,8 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
     return response;
   }
 
-  OutputStream writeResponse() throws IOException {
-    return containerResponseContext.writeResponse(httpServletResponse, resourceInfo);
-  }
-
-  @SuppressWarnings("resource")
-  void closeResponse(final OutputStream entityStream) throws IOException {
-    try {
-      if (entityStream != null) {
-        entityStream.flush();
-        entityStream.close();
-      }
-    }
-    finally {
-      // Absolutely positively assert that the streams are closed
-      if (hasEntity() && getEntityStream() != null) {
-        try {
-          getEntityStream().close();
-        }
-        catch (final Exception e) {
-          if (logger.isErrorEnabled())
-            logger.error(e.getMessage(), e);
-        }
-      }
-
-      final OutputStream outputStream = containerResponseContext.getOutputStream();
-      if (outputStream != null) {
-        try {
-          outputStream.close();
-        }
-        catch (final Exception e) {
-          if (logger.isErrorEnabled())
-            logger.error(e.getMessage(), e);
-        }
-      }
-    }
+  void writeResponse() throws IOException {
+    containerResponseContext.writeResponse(httpServletResponse, resourceInfo);
   }
 
   @Override
@@ -1085,7 +1051,17 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
 
   @Override
   public void close() throws IOException {
-    if (entityStream != null)
-      entityStream.close();
+    // Absolutely positively assert that the streams are closed
+    if (hasEntity() && entityStream != null) {
+      try {
+        entityStream.close();
+      }
+      catch (final Exception e) {
+        if (logger.isErrorEnabled())
+          logger.error(e.getMessage(), e);
+      }
+    }
+
+    containerResponseContext.close();
   }
 }

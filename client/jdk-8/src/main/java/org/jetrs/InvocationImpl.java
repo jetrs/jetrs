@@ -52,6 +52,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.MessageBodyWriter;
 
+import org.libj.util.ObservableOutputStream;
 import org.libj.util.function.ThrowingSupplier;
 
 abstract class InvocationImpl implements Invocation {
@@ -85,13 +86,7 @@ abstract class InvocationImpl implements Invocation {
 
   @SuppressWarnings({"rawtypes", "unchecked"})
   void writeContentSync(final MessageBodyWriter messageBodyWriter, final Class<?> entityClass, final ThrowingSupplier<OutputStream,IOException> onFirstWrite, final Runnable onClose) throws IOException {
-    try (final EntityOutputStream entityStream = new EntityOutputStream() {
-      @Override
-      void onWrite(final int b, final byte[] bs, final int off, final int len) throws IOException {
-        if (socketOutputStream == null)
-          socketOutputStream = onFirstWrite.get();
-      }
-
+    try (final RelegateOutputStream relegateEntityStream = new RelegateOutputStream() {
       @Override
       public void close() throws IOException {
         if (onClose != null)
@@ -100,8 +95,33 @@ abstract class InvocationImpl implements Invocation {
         super.close();
       }
     }) {
-      messageBodyWriter.writeTo(entity.getEntity(), entityClass, null, entity.getAnnotations(), entity.getMediaType(), requestHeaders.getMirrorMap(), entityStream);
+      relegateEntityStream.setTarget(new ObservableOutputStream() {
+        @Override
+        protected boolean beforeWrite(final int b, final byte[] bs, final int off, final int len) throws IOException {
+          target = onFirstWrite.get();
+          return true;
+        }
+
+        @Override
+        protected void afterWrite(final int b, final byte[] bs, final int off, final int len) throws IOException {
+          relegateEntityStream.setTarget(target);
+          target = null;
+        }
+
+        @Override
+        public void close() throws IOException {
+          if (target != null)
+            target.close();
+        }
+      });
+      messageBodyWriter.writeTo(entity.getEntity(), entityClass, null, entity.getAnnotations(), entity.getMediaType(), requestHeaders.getMirrorMap(), relegateEntityStream);
     }
+  }
+
+  private static void unlock(final ReentrantLock lock, final Condition condition) {
+    lock.lock();
+    condition.signal();
+    lock.unlock();
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
@@ -111,26 +131,7 @@ abstract class InvocationImpl implements Invocation {
     final Condition condition = lock.newCondition();
 
     executorService.execute(() -> {
-      try (final EntityOutputStream entityStream = new EntityOutputStream() {
-        void unlock() {
-          lock.lock();
-          condition.signal();
-          lock.unlock();
-        }
-
-        @Override
-        void onWrite(final int b, final byte[] bs, final int off, final int len) throws IOException {
-          if (socketOutputStream == null) {
-            try {
-              socketOutputStream = onFirstWrite.get();
-              resultRef.set(Boolean.TRUE);
-            }
-            finally {
-              unlock();
-            }
-          }
-        }
-
+      try (final RelegateOutputStream relegateEntityStream = new RelegateOutputStream() {
         @Override
         public void close() throws IOException {
           try {
@@ -140,11 +141,37 @@ abstract class InvocationImpl implements Invocation {
           }
           finally {
             if (resultRef.get() == null)
-              unlock();
+              unlock(lock, condition);
           }
         }
       }) {
-        messageBodyWriter.writeTo(entity.getEntity(), entityClass, null, entity.getAnnotations(), entity.getMediaType(), requestHeaders.getMirrorMap(), entityStream);
+        relegateEntityStream.setTarget(new ObservableOutputStream() {
+          @Override
+          protected boolean beforeWrite(final int b, final byte[] bs, final int off, final int len) throws IOException {
+            try {
+              target = onFirstWrite.get();
+              resultRef.set(Boolean.TRUE);
+            }
+            finally {
+              unlock(lock, condition);
+            }
+
+            return true;
+          }
+
+          @Override
+          protected void afterWrite(final int b, final byte[] bs, final int off, final int len) throws IOException {
+            relegateEntityStream.setTarget(target);
+            target = null;
+          }
+
+          @Override
+          public void close() throws IOException {
+            if (target != null)
+              target.close();
+          }
+        });
+        messageBodyWriter.writeTo(entity.getEntity(), entityClass, null, entity.getAnnotations(), entity.getMediaType(), requestHeaders.getMirrorMap(), relegateEntityStream);
       }
       catch (final Throwable t) {
         resultRef.set(t);

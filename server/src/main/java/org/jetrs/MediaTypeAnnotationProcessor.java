@@ -30,9 +30,9 @@ import org.libj.lang.IllegalAnnotationException;
 import org.libj.util.ArrayUtil;
 
 class MediaTypeAnnotationProcessor<T extends Annotation> {
-  static <T extends Annotation>T getMethodClassAnnotation(final Class<T> annotationClass, final Method method) {
-    final T annotation = method.getAnnotation(annotationClass);
-    return annotation != null ? annotation : method.getDeclaringClass().getAnnotation(annotationClass);
+  private static <T extends Annotation>T getMethodClassAnnotation(final Method method, final Class<T> annotationClass) {
+    final T annotation = AnnotationUtil.getAnnotation(method, annotationClass);
+    return annotation != null ? annotation : AnnotationUtil.getAnnotation(method.getDeclaringClass(), annotationClass);
   }
 
   /**
@@ -59,7 +59,7 @@ class MediaTypeAnnotationProcessor<T extends Annotation> {
   private final ServerMediaType[] mediaTypes;
 
   MediaTypeAnnotationProcessor(final ResourceInfoImpl resourceInfo, final Class<T> annotationClass) {
-    this.annotation = getMethodClassAnnotation(annotationClass, resourceInfo.getResourceMethod());
+    this.annotation = getMethodClassAnnotation(resourceInfo.getResourceMethod(), annotationClass);
     ServerMediaType[] mediaTypes = MediaTypes.EMPTY_SERVER_TYPE;
     if (annotationClass == Consumes.class) {
       if (annotation != null) {

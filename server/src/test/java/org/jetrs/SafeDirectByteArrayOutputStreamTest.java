@@ -22,17 +22,17 @@ public class SafeDirectByteArrayOutputStreamTest {
       }
     };
 
-    for (int i = 0; i < valid; ++i)
+    for (int i = 0; i < valid; ++i) // [N]
       out.write(i);
 
-    for (int i = valid; i < overflow; ++i)
+    for (int i = valid; i < overflow; ++i) // [N]
       out.write(i);
   }
 
   @Test
   public void testOverflowByteArray() throws IOException {
     final byte[] bytes = new byte[3];
-    for (int i = 0; i < bytes.length; ++i)
+    for (int i = 0; i < bytes.length; ++i) // [N]
       bytes[i] = (byte)i;
 
     final AtomicInteger noOverflows = new AtomicInteger();

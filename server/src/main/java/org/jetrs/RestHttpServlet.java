@@ -52,7 +52,7 @@ abstract class RestHttpServlet extends HttpServlet {
     super.init(config);
     String servletPath;
     // FIXME: URL-Encode baseUri, but don't double-encode %-encoded values
-    final ApplicationPath applicationPath = application.getClass().getAnnotation(ApplicationPath.class);
+    final ApplicationPath applicationPath = AnnotationUtil.getAnnotation(application.getClass(), ApplicationPath.class);
     if (applicationPath != null) {
       servletPath = applicationPath.value();
       if (servletPath.endsWith("/"))

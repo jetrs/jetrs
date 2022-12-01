@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -92,12 +91,12 @@ public class Jdk8ClientTest {
       configServer(server);
 
       final Invocation.Builder builder = buildRequest("http://localhost:" + server.port());
-      for (int i = 0; i < tests; ++i)
+      for (int i = 0; i < tests; ++i) // [N]
         assertResponse(entity != null ? builder.method(method, entity.get()) : builder.method(method));
 
       final ExecutorService executor = Executors.newFixedThreadPool(tests);
       final CountDownLatch latch = new CountDownLatch(tests);
-      for (int i = 0; i < tests; ++i) {
+      for (int i = 0; i < tests; ++i) { // [N]
         executor.submit(() -> {
           try {
             final AsyncInvoker invoker = builder.async();
@@ -280,13 +279,13 @@ public class Jdk8ClientTest {
   @Test
   public void testParallel() throws InterruptedException {
     final int iterations = 5;
-    final List<Throwable> exceptions = new ArrayList<>();
+    final ArrayList<Throwable> exceptions = new ArrayList<>();
     final Method[] methods = Classes.getDeclaredMethodsWithAnnotationDeep(getClass(), Test.class);
     final int threadCount = (methods.length - 1) * iterations;
     final ExecutorService executor = Executors.newFixedThreadPool(threadCount);
     final CountDownLatch latch = new CountDownLatch(threadCount);
     for (int i = 0; i < iterations; ++i) { // [N]
-      for (final Method method : methods) {
+      for (final Method method : methods) { // [A]
         if (!"testParallel".equals(method.getName())) {
           executor.execute(rethrow(() -> {
             try {
@@ -305,8 +304,8 @@ public class Jdk8ClientTest {
 
     latch.await();
     if (exceptions.size() > 0) {
-      for (final Throwable t : exceptions)
-        t.printStackTrace();
+      for (int i = 0, i$ = exceptions.size(); i < i$; ++i) // [RA]
+        exceptions.get(i).printStackTrace();
 
       fail();
     }

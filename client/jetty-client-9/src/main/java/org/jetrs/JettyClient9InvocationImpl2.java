@@ -297,7 +297,7 @@ class JettyClient9InvocationImpl2 extends InvocationImpl {
       final int statusCode = response.getStatus();
       final StatusType statusInfo = Responses.from(statusCode);
       final HttpHeadersImpl responseHeaders = new HttpHeadersImpl();
-      for (final HttpField header : response.getHeaders())
+      for (final HttpField header : response.getHeaders()) // [I]
         responseHeaders.add(header.getName(), header.getValue());
 
       final List<HttpCookie> httpCookies = Jdk8ClientDriver.cookieStore.getCookies();

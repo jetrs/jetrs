@@ -351,7 +351,7 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
   public UriBuilder path(final Class resource) throws IllegalArgumentException {
     assertNotNull(resource, "resource is null");
 
-    final Path annotation = (Path)resource.getAnnotation(Path.class);
+    final Path annotation = AnnotationUtil.getAnnotation(resource, Path.class);
     assertNotNull(annotation, "Path resource not annotated with @Path: %s", resource.getName());
 
     path = appendPath(path, true, annotation.value());
@@ -365,7 +365,7 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
 
     Method theMethod = null;
     for (final Method m : resource.getMethods()) { // [A]
-      if (m.getName().equals(method) && m.isAnnotationPresent(Path.class)) {
+      if (m.getName().equals(method) && AnnotationUtil.isAnnotationPresent(m, Path.class)) {
         if (theMethod != null)
           throw new IllegalArgumentException("Multiple public @Path annotated methods with name \"" + method + "\"");
 
@@ -383,7 +383,7 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
   public UriBuilder path(final Method method) throws IllegalArgumentException {
     assertNotNull(method, "method is null");
 
-    final Path annotation = method.getAnnotation(Path.class);
+    final Path annotation = AnnotationUtil.getAnnotation(method, Path.class);
     if (annotation == null)
       throw new IllegalArgumentException("Method " + method.getDeclaringClass().getName() + "." + method.getName() + "(" + ArrayUtil.toString(method.getParameterTypes(), ',', Class::getName) + ") is not annotated with @Path");
 

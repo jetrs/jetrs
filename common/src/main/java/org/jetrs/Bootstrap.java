@@ -74,7 +74,7 @@ class Bootstrap<R extends ArrayList<? extends Comparable<?>>> {
 
   @SuppressWarnings("unchecked")
   <T>boolean addResourceOrProvider(final ArrayList<Consumer<Set<Class<?>>>> afterAdds, final R resourceInfos, final Class<? extends T> clazz, final T singleton, final boolean scanned) throws IllegalAccessException, InstantiationException, InvocationTargetException {
-    if (clazz.isAnnotationPresent(Provider.class)) {
+    if (AnnotationUtil.isAnnotationPresent(clazz, Provider.class)) {
       if (ReaderInterceptor.class.isAssignableFrom(clazz))
         readerInterceptorProviderFactories.add(new ReaderInterceptorProviderFactory((Class<ReaderInterceptor>)clazz, (ReaderInterceptor)singleton));
 
@@ -100,9 +100,9 @@ class Bootstrap<R extends ArrayList<? extends Comparable<?>>> {
   @SuppressWarnings({"null", "unchecked"})
   void init(final Set<Object> singletons, final Set<Class<?>> classes, final R resourceInfos) throws IllegalAccessException, InstantiationException, InvocationTargetException, PackageNotFoundException, IOException {
     final ArrayList<Consumer<Set<Class<?>>>> afterAdds = new ArrayList<>();
-    final boolean hasSingletons = singletons != null && singletons.size() > 0;
-    final boolean hasClasses = classes != null && classes.size() > 0;
-    if (hasSingletons || hasClasses) {
+    if (singletons != null || classes != null) {
+      final boolean hasSingletons = singletons.size() > 0;
+      final boolean hasClasses = classes.size() > 0;
       if (hasSingletons) {
         for (final Object singleton : singletons) { // [S]
           if (singleton != null) {

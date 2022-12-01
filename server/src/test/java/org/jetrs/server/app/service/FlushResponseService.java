@@ -22,7 +22,7 @@ import org.libj.util.UnsynchronizedByteArrayOutputStream;
 public class FlushResponseService {
   public static byte[] expand(final byte[] bytes, final int mul) {
     final byte[] out = new byte[bytes.length * mul];
-    for (int i = 0; i < mul; ++i)
+    for (int i = 0; i < mul; ++i) // [N]
       System.arraycopy(bytes, 0, out, i * bytes.length, bytes.length);
 
     return out;

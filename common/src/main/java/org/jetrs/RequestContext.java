@@ -257,7 +257,7 @@ abstract class RequestContext<P> extends InterceptorContextImpl<P> {
       contextInsances.put(clazz, new Object[] {instance, uninjectedFields});
       if (clazz.isAnnotationPresent(Singleton.class)) { // Warn if this @Singleton has @Context fields
         StringBuilder builder = null;
-        for (final Field field : fields) {
+        for (final Field field : fields) { // [A]
           if (field.isAnnotationPresent(Context.class)) {
             if (builder == null)
               builder = new StringBuilder();

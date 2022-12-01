@@ -114,7 +114,7 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
     }
 
     ParamConverter<?> paramConverter = lookupParamConverter(paramConverterProviderFactories, requestContext, componentType, genericType, annotations);
-    if (onlyIfEager && paramConverter != null && paramConverter.getClass().isAnnotationPresent(Lazy.class))
+    if (onlyIfEager && paramConverter != null && AnnotationUtil.isAnnotationPresent(paramConverter.getClass(), Lazy.class))
       return null;
 
     if (paramPlurality == ParamPlurality.ARRAY) {
@@ -351,7 +351,7 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
     if (paramConverter == null && componentType.isPrimitive()) {
       componentType = Classes.toWrapper(componentType);
       paramConverter = lookupParamConverter(paramConverterProviderFactories, requestContext, componentType, genericType, annotations);
-      if (onlyIfEager && paramConverter != null && paramConverter.getClass().isAnnotationPresent(Lazy.class))
+      if (onlyIfEager && paramConverter != null && AnnotationUtil.isAnnotationPresent(paramConverter.getClass(), Lazy.class))
         return null;
     }
 
