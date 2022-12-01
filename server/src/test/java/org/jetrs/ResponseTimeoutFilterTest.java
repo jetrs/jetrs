@@ -28,6 +28,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -47,8 +48,8 @@ public class ResponseTimeoutFilterTest {
     }
 
     @Override
-    protected void onTimeout(final RequestTimeout requestTimeout) {
-      timedOut.add(requestTimeout.getPath());
+    protected void onTimeout(final ContainerRequestContext requestTimeout, final long elapsed) {
+      timedOut.add(requestTimeout.getUriInfo().getPath());
     }
   }
 
@@ -84,7 +85,15 @@ public class ResponseTimeoutFilterTest {
   }
 
   @Test
+  @SuppressWarnings("unused")
   public void test() throws Exception {
+    try {
+      new TestFilter(-1);
+      fail("Expected IllegalArgumentException");
+    }
+    catch (final IllegalArgumentException e) {
+    }
+
     assertEquals(result, test(0).get().readEntity(String.class));
     assertEquals(0, timedOut.size());
 
