@@ -311,7 +311,7 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
 
   private void flushHeaders(final HttpServletResponse httpServletResponse) throws IOException {
     // [JAX-RS 3.5 and 3.8 9]
-    if (getMediaType() == null) {
+    if (hasEntity() && getMediaType() == null) {
       final ResourceMatch resourceMatch = requestContext.getResourceMatch();
       MediaType contentType;
       if (resourceMatch == null) {
