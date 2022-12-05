@@ -251,6 +251,11 @@ public final class HttpHeaders {
   public static final String COOKIE = "Cookie";
 
   /**
+   * @see <a href="https://en.wikipedia.org/wiki/List_of_HTTP_header_fields#cite_ref-45">List of HTTP header fields</a>
+   */
+  public static final String CORRELATION_ID = "Correlation-ID";
+
+  /**
    * @see <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Embedder-Policy">MDN Web Docs</a>
    * @see <a href="https://html.spec.whatwg.org/multipage/origin.html#coep">Specification</a>
    */
@@ -756,6 +761,26 @@ public final class HttpHeaders {
    * @see <a href="https://html.spec.whatwg.org/multipage/browsing-the-web.html#the-x-frame-options-header">Specification</a>
    */
   public static final String X_FRAME_OPTIONS = "X-Frame-Options";
+
+  /**
+   * @see <a href="https://en.wikipedia.org/wiki/List_of_HTTP_header_fields#cite_ref-32">List of HTTP header fields</a>
+   */
+  public static final String X_HTTP_METHOD_OVERRIDE = "X-Http-Method-Override";
+
+  /**
+   * @see <a href="https://en.wikipedia.org/wiki/List_of_HTTP_header_fields#cite_ref-39">List of HTTP header fields</a>
+   */
+  public static final String X_CSRF_TOKEN = "X-Csrf-Token";
+
+  /**
+   * @see <a href="https://en.wikipedia.org/wiki/List_of_HTTP_header_fields#cite_ref-43">List of HTTP header fields</a>
+   */
+  public static final String X_REQUEST_ID = "X-Request-ID";
+
+  /**
+   * @see <a href="https://en.wikipedia.org/wiki/List_of_HTTP_header_fields#cite_ref-44">List of HTTP header fields</a>
+   */
+  public static final String X_CORRELATION_ID = "X-Correlation-ID";
 
   /**
    * Mainly used to identify Ajax requests (most JavaScript frameworks send this field with value of XMLHttpRequest); also

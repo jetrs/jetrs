@@ -281,6 +281,10 @@ final class HttpHeader<T> {
    * @see <a href="https://httpwg.org/specs/rfc6265.html#cookie">Specification</a>
    */
   static final HttpHeader<Cookie> COOKIE = new HttpHeader<>(HttpHeaders.COOKIE, semiComma, false, HeaderDelegateImpl.COOKIE);
+  /**
+   * @see <a href="https://en.wikipedia.org/wiki/List_of_HTTP_header_fields#cite_ref-45">List of HTTP header fields</a>
+   */
+  static final HttpHeader<String> CORRELATION_ID = new HttpHeader<>(HttpHeaders.CORRELATION_ID, none, false, HeaderDelegateImpl.STRING);
 
   /**
    * @see <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Embedder-Policy">MDN Web Docs</a>
@@ -788,6 +792,26 @@ final class HttpHeader<T> {
    * @see <a href="https://html.spec.whatwg.org/multipage/browsing-the-web.html#the-x-frame-options-header">Specification</a>
    */
   static final HttpHeader<String> X_FRAME_OPTIONS = new HttpHeader<>(HttpHeaders.X_FRAME_OPTIONS, none, false, HeaderDelegateImpl.STRING); // FIXME: Strong Type Candidate
+
+  /**
+   * @see <a href="https://en.wikipedia.org/wiki/List_of_HTTP_header_fields#cite_ref-32">List of HTTP header fields</a>
+   */
+  static final HttpHeader<String> X_HTTP_METHOD_OVERRIDE = new HttpHeader<>(HttpHeaders.X_HTTP_METHOD_OVERRIDE, none, false, HeaderDelegateImpl.STRING); // FIXME: Strong Type Candidate
+
+  /**
+   * @see <a href="https://en.wikipedia.org/wiki/List_of_HTTP_header_fields#cite_ref-39">List of HTTP header fields</a>
+   */
+  static final HttpHeader<String> X_CSRF_TOKEN = new HttpHeader<>(HttpHeaders.X_CSRF_TOKEN, none, false, HeaderDelegateImpl.STRING);
+
+  /**
+   * @see <a href="https://en.wikipedia.org/wiki/List_of_HTTP_header_fields#cite_ref-43">List of HTTP header fields</a>
+   */
+  static final HttpHeader<String> X_REQUEST_ID = new HttpHeader<>(HttpHeaders.X_REQUEST_ID, none, false, HeaderDelegateImpl.STRING);
+
+  /**
+   * @see <a href="https://en.wikipedia.org/wiki/List_of_HTTP_header_fields#cite_ref-44">List of HTTP header fields</a>
+   */
+  static final HttpHeader<String> X_CORRELATION_ID = new HttpHeader<>(HttpHeaders.X_CORRELATION_ID, none, false, HeaderDelegateImpl.STRING);
 
   /**
    * Mainly used to identify Ajax requests (most JavaScript frameworks send this field with value of XMLHttpRequest); also
