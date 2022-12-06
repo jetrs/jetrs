@@ -20,12 +20,12 @@ import java.io.OutputStream;
 
 import org.libj.util.DelegateOutputStream;
 
-class RelegateOutputStream extends DelegateOutputStream {
-  void setTarget(final OutputStream target) {
+public class RelegateOutputStream extends DelegateOutputStream {
+  public void setTarget(final OutputStream target) {
     this.target = target;
   }
 
-  OutputStream getTarget() {
+  public OutputStream getTarget() {
     return target;
   }
 }

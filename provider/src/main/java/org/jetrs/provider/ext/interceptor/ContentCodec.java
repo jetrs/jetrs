@@ -37,7 +37,9 @@ import javax.ws.rs.ext.ReaderInterceptorContext;
 import javax.ws.rs.ext.WriterInterceptor;
 import javax.ws.rs.ext.WriterInterceptorContext;
 
+import org.jetrs.RelegateOutputStream;
 import org.libj.util.CollectionUtil;
+import org.libj.util.ObservableOutputStream;
 
 /**
  * Provides a standard way of implementing encoding {@link WriterInterceptor} and decoding {@link ReaderInterceptor}. Implementing
@@ -110,12 +112,12 @@ public abstract class ContentCodec implements ReaderInterceptor, WriterIntercept
       final Set<String> supportedEncodings = getSupportedEncodings();
       if (CollectionUtil.isRandomAccess(acceptEncodings)) {
         for (int i = 0; i < size; ++i) // [RA]
-          if (setEncoding(acceptEncodings.get(i), supportedEncodings, context))
+          if (trySetEncoding(acceptEncodings.get(i), supportedEncodings, context))
             break;
       }
       else {
         for (final String acceptEncoding : acceptEncodings) // [L]
-          if (setEncoding(acceptEncoding, supportedEncodings, context))
+          if (trySetEncoding(acceptEncoding, supportedEncodings, context))
             break;
       }
     }
@@ -123,15 +125,38 @@ public abstract class ContentCodec implements ReaderInterceptor, WriterIntercept
     context.proceed();
   }
 
-  // Must remove Content-Length header since the encoded message will have a different length
-  private boolean setEncoding(final String acceptEncoding, final Set<String> supportedEncodings, final WriterInterceptorContext context) throws IOException {
+  private boolean trySetEncoding(final String acceptEncoding, final Set<String> supportedEncodings, final WriterInterceptorContext context) throws IOException {
     if (acceptEncoding == null || !supportedEncodings.contains(acceptEncoding))
       return false;
 
-    final MultivaluedMap<String,Object> headers = context.getHeaders();
-    headers.addFirst(HttpHeaders.CONTENT_ENCODING, acceptEncoding);
-    headers.remove(HttpHeaders.CONTENT_LENGTH);
-    context.setOutputStream(encode(acceptEncoding, context.getOutputStream()));
+    final OutputStream outputStream = encode(acceptEncoding, context.getOutputStream());
+    final RelegateOutputStream relegateOutputStream = new RelegateOutputStream();
+    relegateOutputStream.setTarget(new ObservableOutputStream() {
+      @Override
+      protected boolean beforeWrite(final int b, final byte[] bs, final int off, final int len) throws IOException {
+        if (target == null) {
+          // Must remove Content-Length header since the encoded message will have a different length
+          final MultivaluedMap<String,Object> headers = context.getHeaders();
+          headers.addFirst(HttpHeaders.CONTENT_ENCODING, acceptEncoding);
+          headers.remove(HttpHeaders.CONTENT_LENGTH);
+          target = outputStream;
+        }
+
+        return true;
+      }
+
+      @Override
+      protected void afterWrite(final int b, final byte[] bs, final int off, final int len) throws IOException {
+        relegateOutputStream.setTarget(target);
+      }
+
+      @Override
+      public void close() throws IOException {
+        if (target != null)
+          target.close();
+      }
+    });
+    context.setOutputStream(relegateOutputStream);
     return true;
   }
 }
