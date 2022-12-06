@@ -56,13 +56,13 @@ public abstract class ResponseTimeoutFilter implements ContainerRequestFilter, C
         public void run() {
           while (true) {
             try {
-              if (requestContexts.size() == 0) {
+              final ContainerRequestContext requestContext = requestContexts.peek();
+              if (requestContext == null) {
                 synchronized (reaper) {
                   reaper.wait();
                 }
               }
               else {
-                final ContainerRequestContext requestContext = requestContexts.peek();
                 final long diff = (Long)requestContext.getProperty(EXPIRE_TIME) - System.currentTimeMillis();
                 if (diff > 0) {
                   synchronized (reaper) {
