@@ -137,8 +137,14 @@ public abstract class ContentCodec implements ReaderInterceptor, WriterIntercept
         if (target == null) {
           // Must remove Content-Length header since the encoded message will have a different length
           final MultivaluedMap<String,Object> headers = context.getHeaders();
-          headers.addFirst(HttpHeaders.CONTENT_ENCODING, acceptEncoding);
+          headers.putSingle(HttpHeaders.CONTENT_ENCODING, acceptEncoding);
           headers.remove(HttpHeaders.CONTENT_LENGTH);
+          List<Object> vary = headers.get(HttpHeaders.VARY);
+          if (vary == null)
+            headers.putSingle(HttpHeaders.VARY, HttpHeaders.CONTENT_ENCODING);
+          else if (!vary.contains(HttpHeaders.CONTENT_ENCODING))
+            vary.add(HttpHeaders.CONTENT_ENCODING);
+
           target = outputStream;
         }
 
