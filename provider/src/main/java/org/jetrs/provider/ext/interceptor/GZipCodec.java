@@ -29,8 +29,8 @@ import javax.ws.rs.ext.Provider;
 import org.libj.util.zip.UnsynchronizedGZIPOutputStream;
 
 /**
- * GZIP codec support. Interceptor that encodes the output or decodes the input if {@link HttpHeaders#CONTENT_ENCODING
- * Content-Encoding header} value equals to {@code gzip} or {@code x-gzip}.
+ * GZIP codec support. Interceptor that encodes the output or decodes the input if {@value HttpHeaders#CONTENT_ENCODING} value
+ * equals to {@code gzip} or {@code x-gzip}.
  */
 @Provider
 @Priority(Priorities.ENTITY_CODER)
