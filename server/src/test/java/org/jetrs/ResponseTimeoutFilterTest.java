@@ -100,22 +100,22 @@ public class ResponseTimeoutFilterTest {
     assertEquals(result, test(timeout / 2).get().readEntity(String.class));
     assertEquals(0, timedOut.size());
 
-    for (int i = 0; i < numTests; ++i) {
+    for (int i = 0; i < numTests; ++i) { // [N]
       assertEquals(result, test(timeout + 10).get().readEntity(String.class));
       assertEquals(1, timedOut.size());
       timedOut.clear();
     }
 
     final ArrayList<Future<Response>> responses = new ArrayList<>();
-    for (int i = 0; i < numTests; ++i) {
+    for (int i = 0; i < numTests; ++i) { // [N]
       responses.add(test(timeout * 5));
       responses.add(test(timeout * 3));
       responses.add(test(timeout / 2));
       responses.add(test(timeout / 4));
     }
 
-    for (final Future<Response> response : responses)
-      assertEquals(result, response.get().readEntity(String.class));
+    for (int i = 0, i$ = responses.size(); i < i$; ++i) // [RA]
+      assertEquals(result, responses.get(i).get().readEntity(String.class));
 
     assertEquals(2 * numTests, timedOut.size());
   }

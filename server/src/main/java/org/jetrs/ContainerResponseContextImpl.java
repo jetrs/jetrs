@@ -459,7 +459,7 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
           // Means this is being called a 2nd time
           if (!httpServletResponse.isCommitted()) {
             if (logger.isWarnEnabled())
-              logger.warn("Cannot rewrite committed response");
+              logger.warn("Cannot rewrite committed response in EntityOutputStream");
           }
           else {
             httpServletResponse.reset();
@@ -471,7 +471,7 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
         }
       }
       else if (logger.isWarnEnabled()) {
-        logger.warn("Cannot rewrite committed response");
+        logger.warn("Cannot rewrite committed response in " + relegateOutputStream.getTarget().getClass().getName());
       }
     }
 

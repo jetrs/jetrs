@@ -238,7 +238,7 @@ final class AnnotationUtil {
     do {
       for (final Annotation annotation : method.getAnnotations()) { // [A]
         final Class<? extends Annotation> annotationType = annotation.annotationType();
-        for (final Class<? extends Annotation> annotationClass : annotationClasses)
+        for (final Class<? extends Annotation> annotationClass : annotationClasses) // [A]
           if (annotationClass.isAssignableFrom(annotationType))
             return true;
 
