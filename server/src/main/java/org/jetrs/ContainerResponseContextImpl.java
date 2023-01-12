@@ -316,8 +316,7 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
       MediaType contentType;
       if (resourceMatch == null) {
         contentType = MediaType.APPLICATION_OCTET_STREAM_TYPE;
-        if (logger.isWarnEnabled())
-          logger.warn("Content-Type not specified -- setting to " + MediaType.APPLICATION_OCTET_STREAM);
+        if (logger.isWarnEnabled()) logger.warn("Content-Type not specified -- setting to " + MediaType.APPLICATION_OCTET_STREAM);
       }
       else {
         contentType = resourceMatch.getProducedMediaTypes()[0];
@@ -326,8 +325,7 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
             throw new NotAcceptableException();
 
           contentType = MediaType.APPLICATION_OCTET_STREAM_TYPE;
-          if (logger.isWarnEnabled())
-            logger.warn("Content-Type not specified -- setting to " + MediaType.APPLICATION_OCTET_STREAM);
+          if (logger.isWarnEnabled()) logger.warn("Content-Type not specified -- setting to " + MediaType.APPLICATION_OCTET_STREAM);
         }
         else if (contentType.getParameters().size() > 0) {
           contentType = MediaTypes.cloneWithoutParameters(contentType);
@@ -458,8 +456,7 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
         if (entityOutputStream.getTarget() != null) {
           // Means this is being called a 2nd time
           if (!httpServletResponse.isCommitted()) {
-            if (logger.isWarnEnabled())
-              logger.warn("Cannot rewrite committed response in EntityOutputStream");
+            if (logger.isWarnEnabled()) logger.warn("Cannot rewrite committed response in EntityOutputStream");
           }
           else {
             httpServletResponse.reset();
@@ -470,8 +467,8 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
           }
         }
       }
-      else if (logger.isWarnEnabled()) {
-        logger.warn("Cannot rewrite committed response in " + relegateOutputStream.getTarget().getClass().getName());
+      else {
+        if (logger.isWarnEnabled()) logger.warn("Cannot rewrite committed response in " + relegateOutputStream.getTarget().getClass().getName());
       }
     }
 
@@ -498,8 +495,7 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
         outputStream.close();
       }
       catch (final Exception e) {
-        if (logger.isErrorEnabled())
-          logger.error(e.getMessage(), e);
+        if (logger.isErrorEnabled()) logger.error(e.getMessage(), e);
       }
       finally {
         outputStream = null;

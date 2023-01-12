@@ -269,8 +269,7 @@ abstract class RequestContext<P> extends InterceptorContextImpl<P> {
         if (builder != null) {
           builder.setCharAt(0, ':');
           builder.setCharAt(1, ' ');
-          if (logger.isWarnEnabled())
-            logger.warn("Class " + clazz.getName() + " with @Singleton annotation has @Context fields" + builder);
+          if (logger.isWarnEnabled()) logger.warn("Class " + clazz.getName() + " with @Singleton annotation has @Context fields" + builder);
         }
       }
 
@@ -299,9 +298,7 @@ abstract class RequestContext<P> extends InterceptorContextImpl<P> {
         final Annotation[] annotations = parameterAnnotations[i];
         final Annotation annotation = findInjectableAnnotation(annotations, isResource);
         if (annotation == null) {
-          if (logger.isWarnEnabled())
-            logger.warn("Unsupported parameter type: " + parameter.getName() + " on: " + clazz.getName() + "(" + Arrays.stream(parameters).map(p -> p.getType().getSimpleName()).collect(Collectors.joining(",")) + ")");
-
+          if (logger.isWarnEnabled()) logger.warn("Unsupported parameter type: " + parameter.getName() + " on: " + clazz.getName() + "(" + Arrays.stream(parameters).map(p -> p.getType().getSimpleName()).collect(Collectors.joining(",")) + ")");
           continue OUT;
         }
 

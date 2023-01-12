@@ -64,14 +64,14 @@ public abstract class ClientCertificateFilter implements ContainerRequestFilter 
     try {
       final X509Certificate cert = decodePem(valueValue);
       if (cert == null)
-        logger.warn("Invalid X.509 certificate in header \"" + headerName + "\": " + valueValue);
-      else if (logger.isDebugEnabled())
-        logger.debug("Valid X.509 certificate in header \"" + headerName + "\"");
+        if (logger.isWarnEnabled()) logger.warn("Invalid X.509 certificate in header \"" + headerName + "\": " + valueValue);
+      else
+        if (logger.isDebugEnabled()) logger.debug("Valid X.509 certificate in header \"" + headerName + "\"");
 
       return cert;
     }
     catch (final CertificateException e) {
-      logger.error(e.getMessage(), e);
+      if (logger.isErrorEnabled()) logger.error(e.getMessage(), e);
       return null;
     }
   }
@@ -125,9 +125,7 @@ public abstract class ClientCertificateFilter implements ContainerRequestFilter 
     final X509Certificate[] clientCertChain = getCertificateChain(requestContext, clientCertChainHeaderPrefix, 0, 1);
     clientCertChain[0] = clientCert;
 
-    if (logger.isDebugEnabled())
-      logger.debug("getCertificateChain(): " + Arrays.stream(clientCertChain).map(c -> c.getSubjectDN().toString()).collect(Collectors.joining(",", "{", "}")));
-
+    if (logger.isDebugEnabled()) logger.debug("getCertificateChain(): " + Arrays.stream(clientCertChain).map(c -> c.getSubjectDN().toString()).collect(Collectors.joining(",", "{", "}")));
     return clientCertChain;
   }
 

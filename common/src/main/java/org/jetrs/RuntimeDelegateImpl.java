@@ -55,8 +55,7 @@ public class RuntimeDelegateImpl extends RuntimeDelegate {
       }
     }
 
-    if (logger.isDebugEnabled())
-      logger.debug("cls: " + cls + ", endpointFactory: " + System.identityHashCode(endpointFactory));
+    if (logger.isDebugEnabled()) logger.debug("cls: " + cls + ", endpointFactory: " + System.identityHashCode(endpointFactory));
   }
 
   void setRuntimeContext(final RuntimeContext runtimeContext) {

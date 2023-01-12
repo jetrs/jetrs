@@ -61,7 +61,7 @@ class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImpl> {
   };
 
   private static boolean logMissingHeaderWarning(final HttpHeader<?> httpHeader, final Class<?> type) {
-    logger.warn("Unmatched @" + type.getSimpleName() + " for " + httpHeader.getName());
+    if (logger.isWarnEnabled()) logger.warn("Unmatched @" + type.getSimpleName() + " for " + httpHeader.getName());
     return false;
   }
 
@@ -116,8 +116,7 @@ class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImpl> {
     this.singleton = singleton;
     if (singleton != null) {
       final Field[] fields = ContainerRequestContextImpl.getContextFields(singleton.getClass());
-      if (fields.length > 0)
-        logger.warn("Fields with injectable annotations " + Arrays.toString(fields) + " will not be injected on singleton of class " + resourceClass.getName());
+      if (fields.length > 0 && logger.isWarnEnabled()) logger.warn("Fields with injectable annotations " + Arrays.toString(fields) + " will not be injected on singleton of class " + resourceClass.getName());
     }
 
     this.uriTemplate = new UriTemplate(baseUri, classPath, methodPath);
@@ -230,7 +229,7 @@ class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImpl> {
       if (annotationClass == Consumes.class)
         throw new IllegalStateException(message);
 
-      logger.warn(message);
+      if (logger.isWarnEnabled()) logger.warn(message);
       return true;
     }
 

@@ -91,7 +91,7 @@ class Bootstrap<R extends ArrayList<? extends Comparable<?>>> {
         exceptionMapperProviderFactories.add(new ExceptionMapperProviderFactory((Class<ExceptionMapper<?>>)clazz, (ExceptionMapper<?>)singleton));
     }
     else if (!scanned) {
-      logger.warn("Ignored resource class " + clazz.getName() + " due to absent @Provider annotation");
+      if (logger.isWarnEnabled()) logger.warn("Ignored resource class " + clazz.getName() + " due to absent @Provider annotation");
     }
 
     return false;
@@ -106,9 +106,7 @@ class Bootstrap<R extends ArrayList<? extends Comparable<?>>> {
       if (hasSingletons) {
         for (final Object singleton : singletons) { // [S]
           if (singleton != null) {
-            if (!singleton.getClass().isAnnotationPresent(Singleton.class))
-              logger.warn("Object of class " + singleton.getClass().getName() + " without @Singleton annotation is member of Application.getSingletons()");
-
+            if (logger.isWarnEnabled() && !singleton.getClass().isAnnotationPresent(Singleton.class)) logger.warn("Object of class " + singleton.getClass().getName() + " without @Singleton annotation is member of Application.getSingletons()");
             addResourceOrProvider(afterAdds, resourceInfos, singleton.getClass(), singleton, false);
           }
         }

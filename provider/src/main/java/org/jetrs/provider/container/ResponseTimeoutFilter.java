@@ -76,7 +76,7 @@ public abstract class ResponseTimeoutFilter implements ContainerRequestFilter, C
               }
             }
             catch (final InterruptedException e) {
-              logger.warn(e.getMessage(), e);
+              if (logger.isWarnEnabled()) logger.warn(e.getMessage(), e);
             }
           }
         }

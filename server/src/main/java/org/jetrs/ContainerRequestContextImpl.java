@@ -527,9 +527,7 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
           }
         }
 
-        if (logger.isWarnEnabled())
-          logger.warn("@PathParam(\"" + pathParamNameToMatch + "\") PathSegment not found in URI template of @Path on: " + element);
-
+        if (logger.isWarnEnabled()) if (logger.isWarnEnabled()) logger.warn("@PathParam(\"" + pathParamNameToMatch + "\") PathSegment not found in URI template of @Path on: " + element);
         return null;
       }
 
@@ -581,8 +579,7 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
       // FIXME: Another useful warning would be: notify if more than 1 @PathParam annotations specify the same name
       String value = null;
       if (values == null) {
-        if (logger.isWarnEnabled())
-          logger.warn("@PathParam(\"" + pathParamNameToMatch + "\") not found in URI template of @Path on: " + element);
+        if (logger.isWarnEnabled()) logger.warn("@PathParam(\"" + pathParamNameToMatch + "\") not found in URI template of @Path on: " + element);
 
         final DefaultValueImpl defaultValue = getDefaultValue(element, parameterIndex);
         if (defaultValue != null) {
@@ -679,7 +676,7 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
     if (resourceMatches == null)
       return false;
 
-    if (resourceMatches.size() > 1 && resourceMatches.get(0).compareTo(resourceMatches.get(1)) == 0 && logger.isWarnEnabled()) {
+    if (logger.isWarnEnabled() && resourceMatches.size() > 1 && resourceMatches.get(0).compareTo(resourceMatches.get(1)) == 0) {
       final StringBuilder builder = new StringBuilder("Multiple resources match ambiguously for request to \"" + httpServletRequest.getRequestURI() + "\": {");
       for (int i = 0, i$ = resourceMatches.size(); i < i$; ++i) // [RA]
         builder.append('"').append(resourceMatches.get(i)).append("\", ");
@@ -873,10 +870,10 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
   }
 
   void sendError(final int scInternalServerError, final Exception e) throws IOException {
-    if (httpServletResponse.isCommitted())
-      logger.error("Trying to sendError(" + scInternalServerError + ") for committed response", e);
-    else
+    if (!httpServletResponse.isCommitted())
       httpServletResponse.sendError(scInternalServerError);
+    else
+      if (logger.isErrorEnabled()) logger.error("Trying to sendError(" + scInternalServerError + ") for committed response", e);
   }
 
   private Response setResponse(final Response response, final Annotation[] annotations) {
@@ -1057,8 +1054,7 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
         entityStream.close();
       }
       catch (final Exception e) {
-        if (logger.isErrorEnabled())
-          logger.error(e.getMessage(), e);
+        if (logger.isErrorEnabled()) logger.error(e.getMessage(), e);
       }
     }
 

@@ -107,7 +107,7 @@ public class ApplicationServer extends Application implements AutoCloseable {
           @Override
           public void uncaughtServletException(final ServletRequest request, final ServletResponse response, final Exception e) {
             final HttpServletRequest httpServletRequest = (HttpServletRequest)request;
-            logger.error(httpServletRequest.getMethod() + " " + httpServletRequest.getPathInfo(), e);
+            if (logger.isErrorEnabled()) logger.error(httpServletRequest.getMethod() + " " + httpServletRequest.getPathInfo(), e);
           }
         })
         .withServletInstances(RuntimeDelegate.getInstance().createEndpoint(this, HttpServlet.class))
