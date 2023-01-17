@@ -217,6 +217,7 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
     return getAnnotations();
   }
 
+  private OutputStream firstOutputStream;
   private OutputStream outputStream;
   private NoopOutputStream noopOutputStream;
 
@@ -393,83 +394,85 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
     // Start WriterInterceptor process chain
     final boolean isHead = HttpMethod.HEAD.equals(requestContext.getMethod());
 
-    if (outputStream == null) {
-      if (isHead) {
-        outputStream = noopOutputStream = new NoopOutputStream();
-      }
-      else {
-        final RelegateOutputStream relegateOutputStream = new RelegateOutputStream();
-        relegateOutputStream.setTarget(new EntityOutputStream() {
-          @Override
-          @SuppressWarnings("null")
-          protected boolean beforeWrite(final int b, final byte[] bs, final int off, final int len) throws IOException {
-            if (target == null) {
-              final Object contentLength = getHeaders().getFirst(HttpHeaders.CONTENT_LENGTH);
-              final List<String> transferEncoding = getStringHeaders().get(HttpHeaders.TRANSFER_ENCODING);
-              final int chunkedIndex = transferEncoding == null ? -1 : transferEncoding.indexOf("chunked");
-              if (contentLength != null) {
-                if (chunkedIndex >= 0) // NOTE: This means that if "Content-Length" is present, it overrides "Content-Encoding": "chunked" (if present too)
-                  transferEncoding.remove(chunkedIndex);
-
-                // httpServletResponse.setBufferSize(Streams.DEFAULT_SOCKET_BUFFER_SIZE); // FIXME: Setting this to a low value significantly reduces performance, so leaving this to the servlet container's default
-                flushHeaders(httpServletResponse);
-                target = httpServletResponse.getOutputStream();
-              }
-              else if (chunkedIndex >= 0) {
-                httpServletResponse.setBufferSize(chunkSize);
-                flushHeaders(httpServletResponse);
-                target = httpServletResponse.getOutputStream();
-              }
-              else if (bufferSize < chunkSize) { // Let the servlet container try to detect the Content-Length on its own
-                httpServletResponse.setBufferSize(chunkSize);
-                target = httpServletResponse.getOutputStream();
-              }
-              else {
-                target = new BufferedSocketOutputStream(httpServletResponse, relegateOutputStream, bufferSize);
-              }
+    if (firstOutputStream != null) {
+      outputStream = firstOutputStream;
+      if (outputStream instanceof RelegateOutputStream) {
+        final RelegateOutputStream relegateOutputStream = (RelegateOutputStream)outputStream;
+        final OutputStream target = relegateOutputStream.getTarget();
+        if (target instanceof EntityOutputStream) {
+          final EntityOutputStream entityOutputStream = (EntityOutputStream)target;
+          if (entityOutputStream.getTarget() != null) {
+            // Means this is being called a 2nd time
+            if (!httpServletResponse.isCommitted()) {
+              if (logger.isWarnEnabled()) logger.warn("Cannot rewrite committed response in EntityOutputStream");
             }
-
-            return true;
-          }
-
-          @Override
-          protected void afterWrite(final int b, final byte[] bs, final int off, final int len) throws IOException {
-            if (!(target instanceof BufferedSocketOutputStream)) {
-              relegateOutputStream.setTarget(target);
+            else {
+              httpServletResponse.reset();
+              if (entityOutputStream.getTarget() instanceof BufferedSocketOutputStream)
+                ((BufferedSocketOutputStream)entityOutputStream.getTarget()).reset();
+              else
+                entityOutputStream.setTarget(httpServletResponse.getOutputStream());
             }
-          }
-
-          @Override
-          public void close() throws IOException {
-            if (target != null)
-              target.close();
-          }
-        });
-
-        outputStream = relegateOutputStream;
-      }
-    }
-    else if (outputStream instanceof RelegateOutputStream) {
-      final RelegateOutputStream relegateOutputStream = (RelegateOutputStream)outputStream;
-      if (relegateOutputStream.getTarget() instanceof EntityOutputStream) {
-        final EntityOutputStream entityOutputStream = (EntityOutputStream)outputStream;
-        if (entityOutputStream.getTarget() != null) {
-          // Means this is being called a 2nd time
-          if (!httpServletResponse.isCommitted()) {
-            if (logger.isWarnEnabled()) logger.warn("Cannot rewrite committed response in EntityOutputStream");
-          }
-          else {
-            httpServletResponse.reset();
-            if (entityOutputStream.getTarget() instanceof BufferedSocketOutputStream)
-              ((BufferedSocketOutputStream)entityOutputStream.getTarget()).reset();
-            else
-              entityOutputStream.setTarget(httpServletResponse.getOutputStream());
           }
         }
+        else {
+          if (logger.isWarnEnabled()) logger.warn("Cannot rewrite committed response in " + target.getClass().getName());
+        }
       }
-      else {
-        if (logger.isWarnEnabled()) logger.warn("Cannot rewrite committed response in " + relegateOutputStream.getTarget().getClass().getName());
-      }
+    }
+    else if (isHead) {
+      firstOutputStream = outputStream = noopOutputStream = new NoopOutputStream();
+    }
+    else {
+      final RelegateOutputStream relegateOutputStream = new RelegateOutputStream();
+      relegateOutputStream.setTarget(new EntityOutputStream() {
+        @Override
+        @SuppressWarnings("null")
+        protected boolean beforeWrite(final int b, final byte[] bs, final int off, final int len) throws IOException {
+          if (target == null) {
+            final Object contentLength = getHeaders().getFirst(HttpHeaders.CONTENT_LENGTH);
+            final List<String> transferEncoding = getStringHeaders().get(HttpHeaders.TRANSFER_ENCODING);
+            final int chunkedIndex = transferEncoding == null ? -1 : transferEncoding.indexOf("chunked");
+            if (contentLength != null) {
+              if (chunkedIndex >= 0) // NOTE: This means that if "Content-Length" is present, it overrides "Content-Encoding": "chunked" (if present too)
+                transferEncoding.remove(chunkedIndex);
+
+              // httpServletResponse.setBufferSize(Streams.DEFAULT_SOCKET_BUFFER_SIZE); // FIXME: Setting this to a low value significantly reduces performance, so leaving this to the servlet container's default
+              flushHeaders(httpServletResponse);
+              target = httpServletResponse.getOutputStream();
+            }
+            else if (chunkedIndex >= 0) {
+              httpServletResponse.setBufferSize(chunkSize);
+              flushHeaders(httpServletResponse);
+              target = httpServletResponse.getOutputStream();
+            }
+            else if (bufferSize < chunkSize) { // Let the servlet container try to detect the Content-Length on its own
+              httpServletResponse.setBufferSize(chunkSize);
+              target = httpServletResponse.getOutputStream();
+            }
+            else {
+              target = new BufferedSocketOutputStream(httpServletResponse, relegateOutputStream, bufferSize);
+            }
+          }
+
+          return true;
+        }
+
+        @Override
+        protected void afterWrite(final int b, final byte[] bs, final int off, final int len) throws IOException {
+          if (!(target instanceof BufferedSocketOutputStream)) {
+            relegateOutputStream.setTarget(target);
+          }
+        }
+
+        @Override
+        public void close() throws IOException {
+          if (target != null)
+            target.close();
+        }
+      });
+
+      firstOutputStream = outputStream = relegateOutputStream;
     }
 
     this.messageBodyWriter = messageBodyWriter;
