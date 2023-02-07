@@ -305,7 +305,7 @@ class UriTemplate implements Comparable<UriTemplate> {
     if (i == -1)
       throw new IllegalArgumentException("Expression \"" + uriTemplate + "\" does not match expected format at index " + start);
 
-    regex.append("(?<").append(name).append(">");
+    regex.append("(?<").append(name).append('>');
 
     if (value != null && value.length() > 0) {
       regex.append(value);

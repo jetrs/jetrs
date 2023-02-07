@@ -469,7 +469,7 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
       final StringBuilder builder = new StringBuilder();
       for (final Object value : values) { // [A]
         assertNotNull(value, "value is null");
-        builder.append(';').append(UriEncoder.MATRIX.encode(name)).append("=").append(UriEncoder.MATRIX.encode(value.toString()));
+        builder.append(';').append(UriEncoder.MATRIX.encode(name)).append('=').append(UriEncoder.MATRIX.encode(value.toString()));
       }
 
       path += builder;

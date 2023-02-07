@@ -492,6 +492,7 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
 
   @Override
   public void close() throws IOException {
+    firstOutputStream = null;
     noopOutputStream = null;
     if (outputStream != null) {
       try {
