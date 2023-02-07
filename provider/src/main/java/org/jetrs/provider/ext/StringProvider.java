@@ -20,8 +20,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.Writer;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.nio.channels.Channels;
 import java.nio.charset.Charset;
 
 import javax.inject.Singleton;
@@ -33,6 +35,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.Provider;
 
+import org.jetrs.CommonProperties;
 import org.jetrs.MessageBodyProvider;
 import org.libj.io.Readers;
 
@@ -44,6 +47,8 @@ import org.libj.io.Readers;
 @Consumes({MediaType.TEXT_PLAIN, MediaType.WILDCARD})
 @Produces({MediaType.TEXT_PLAIN, MediaType.WILDCARD})
 public class StringProvider extends MessageBodyProvider<String> {
+  private static final int bufferSize = CommonProperties.getPropertyValue(CommonProperties.CONTENT_LENGTH_BUFFER, CommonProperties.CONTENT_LENGTH_BUFFER_DEFAULT);
+
   @Override
   public boolean isReadable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
     return type == String.class;
@@ -67,8 +72,15 @@ public class StringProvider extends MessageBodyProvider<String> {
 
   @Override
   public void writeTo(final String t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,Object> httpHeaders, final OutputStream entityStream) throws IOException, WebApplicationException {
-    final byte[] bytes = t.getBytes(MessageBodyProvider.getCharset(mediaType));
-    httpHeaders.putSingle(HttpHeaders.CONTENT_LENGTH, bytes.length);
-    entityStream.write(bytes);
+    if (bufferSize < t.length()) {
+      final Writer writer = Channels.newWriter(Channels.newChannel(entityStream), MessageBodyProvider.getCharset(mediaType).newEncoder(), bufferSize);
+      writer.write(t);
+      writer.flush();
+    }
+    else {
+      final byte[] bytes = t.getBytes(MessageBodyProvider.getCharset(mediaType));
+      httpHeaders.putSingle(HttpHeaders.CONTENT_LENGTH, bytes.length);
+      entityStream.write(bytes);
+    }
   }
 }

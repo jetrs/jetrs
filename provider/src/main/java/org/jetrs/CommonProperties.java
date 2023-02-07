@@ -92,19 +92,23 @@ public final class CommonProperties {
    */
   public static final String JAXRS_LOAD_SERVICES = "jakarta.ws.rs.loadServices";
 
-  static int getPropertyValue(final String commonProperty, final String specificProperty, final int defaultValue) {
+  public static int getPropertyValue(final String commonProperty, final String specificProperty, final int defaultValue) {
     String value = System.getProperty(specificProperty);
     if (value != null)
       return Numbers.parseInt(value, defaultValue);
 
-    value = System.getProperty(commonProperty);
+    return getPropertyValue(commonProperty, defaultValue);
+  }
+
+  public static int getPropertyValue(final String commonProperty, final int defaultValue) {
+    String value = System.getProperty(commonProperty);
     if (value != null)
       return Numbers.parseInt(value, defaultValue);
 
     return defaultValue;
   }
 
-  static String getPropertyValue(final String commonProperty, final String specificProperty) {
+  public static String getPropertyValue(final String commonProperty, final String specificProperty) {
     final String value = System.getProperty(specificProperty);
     return value != null ? value : System.getProperty(commonProperty);
   }
