@@ -400,7 +400,8 @@ public class UriBuilderTest extends RuntimeDelegateTest {
     final String[] uris = {"mailto:java-net@java.sun.com", "ftp://ftp.is.co.za/rfc/rfc1808.txt", "news:comp.lang.java", "urn:isbn:096139210x", "http://www.ietf.org/rfc/rfc2396.txt", "ldap://[2001:db8::7]/c=GB?objectClass?one", "tel:+1-816-555-1212", "telnet://192.0.2.16:80/", "foo://example.com:8042/over/there?name=ferret#nose"};
     for (int j = 0, j$ = uris.length; j < j$; ++j) { // [A]
       final URI uri = UriBuilder.fromUri(uris[j]).build();
-      assertEquals("Test failed for expected uri: " + uris[j] + " Got " + uri.toString() + " instead", 0, uri.toString().trim().compareToIgnoreCase(uris[j]));
+      final String str = uri.toString();
+      assertEquals("Test failed for expected uri: " + uris[j] + " Got " + str + " instead", 0, str.trim().compareToIgnoreCase(uris[j]));
     }
   }
 
@@ -590,13 +591,18 @@ public class UriBuilderTest extends RuntimeDelegateTest {
 
   @Test
   public void testFromEncodedTest1() {
-    String expectedValue1 = "http://localhost:8080/a/%25/=/%25G0/%25/=";
-    String expectedValue2 = "http://localhost:8080/xy/%20/%25/xy";
-    URI uri = UriBuilder.fromPath("http://localhost:8080").path("/{v}/{w}/{x}/{y}/{z}/{x}").buildFromEncoded("a", "%25", "=", "%G0", "%", "23");
-    assertTrue("Incorrec URI returned: " + uri.toString() + ", expecting " + expectedValue1, uri.toString().equalsIgnoreCase(expectedValue1));
+    String expectedValue = "http://localhost:8080/a/%25/=/%25G0/%25/=";
+    final URI uri = UriBuilder.fromPath("http://localhost:8080").path("/{v}/{w}/{x}/{y}/{z}/{x}").buildFromEncoded("a", "%25", "=", "%G0", "%", "23");
+    final String str = uri.toString();
+    assertTrue("Incorrec URI returned: " + str + ", expecting " + expectedValue, str.equalsIgnoreCase(expectedValue));
+  }
 
-    uri = UriBuilder.fromPath("http://localhost:8080").path("/{x}/{y}/{z}/{x}").buildFromEncoded("xy", " ", "%");
-    assertTrue("Incorrec URI returned: " + uri.toString() + ", expecting " + expectedValue2, uri.toString().equalsIgnoreCase(expectedValue2));
+  @Test
+  public void testFromEncodedTest2() {
+    String expectedValue = "http://localhost:8080/xy/%20/%25/xy";
+    final URI uri = UriBuilder.fromPath("http://localhost:8080").path("/{x}/{y}/{z}/{x}").buildFromEncoded("xy", " ", "%");
+    final String str = uri.toString();
+    assertTrue("Incorrec URI returned: " + str + ", expecting " + expectedValue, str.equalsIgnoreCase(expectedValue));
   }
 
   @Test
@@ -613,14 +619,16 @@ public class UriBuilderTest extends RuntimeDelegateTest {
   public void testQueryParam() {
     final String expectedValue = "http://localhost:8080?name=x%3D&name=y?&name=x+y&name=%26";
     final URI uri = UriBuilder.fromPath("http://localhost:8080").queryParam("name", "x=", "y?", "x y", "&").build();
-    assertTrue("Incorrec URI returned: " + uri.toString() + ", expecting " + expectedValue + "\n", uri.toString().equalsIgnoreCase(expectedValue));
+    final String str = uri.toString();
+    assertTrue("Incorrec URI returned: " + str + ", expecting " + expectedValue + "\n", str.equalsIgnoreCase(expectedValue));
   }
 
   @Test
   public void testReplaceQueryTest3() {
     final String expectedValue = "http://localhost:8080?name1=x&name2=%20&name3=x+y&name4=23&name5=x%20y";
     final URI uri = UriBuilder.fromPath("http://localhost:8080").queryParam("name", "x=", "y?", "x y", "&").replaceQuery("name1=x&name2=%20&name3=x+y&name4=23&name5=x y").build();
-    assertTrue("Incorrec URI returned: " + uri.toString() + ", expecting " + expectedValue, uri.toString().equalsIgnoreCase(expectedValue));
+    final String str = uri.toString();
+    assertTrue("Incorrec URI returned: " + str + ", expecting " + expectedValue, str.equalsIgnoreCase(expectedValue));
   }
 
   @Test
@@ -631,7 +639,9 @@ public class UriBuilderTest extends RuntimeDelegateTest {
       .fromPath("http://localhost:8080")
       .queryParam(param, "x=", "y?", "x y", "&")
       .replaceQueryParam(param).build();
-    assertTrue("Incorrec URI returned: " + uri.toString() + ", expecting " + expectedValue + "\n", uri.toString().equalsIgnoreCase(expectedValue));
+
+    final String str = uri.toString();
+    assertTrue("Incorrec URI returned: " + str + ", expecting " + expectedValue + "\n", str.equalsIgnoreCase(expectedValue));
   }
 
   @Test

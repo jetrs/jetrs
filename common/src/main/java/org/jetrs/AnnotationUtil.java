@@ -84,7 +84,7 @@ final class AnnotationUtil {
       return depth == 0 ? null : new Annotation[depth];
 
     boolean hasJaxRsAnnotations = false;
-    final Annotation[] annotations = method.getAnnotations();
+    final Annotation[] annotations = Classes.getAnnotations(method);
     for (final Annotation annotation : annotations) // [A]
       if (annotation.annotationType().getPackage().getName().startsWith("javax.ws.rs."))
         hasJaxRsAnnotations = true;
@@ -140,7 +140,7 @@ final class AnnotationUtil {
     boolean hasJaxRsAnnotations = false;
     Class<?> declaringClass;
     do {
-      for (final Annotation annotation : method.getAnnotations()) { // [A]
+      for (final Annotation annotation : Classes.getAnnotations(method)) { // [A]
         final Class<? extends Annotation> annotationType = annotation.annotationType();
         if (annotationClass.isAssignableFrom(annotationType))
           return (A)annotation;
@@ -163,7 +163,7 @@ final class AnnotationUtil {
     Path path = null;
     Class<?> declaringClass;
     do {
-      for (final Annotation annotation : method.getAnnotations()) { // [A]
+      for (final Annotation annotation : Classes.getAnnotations(method)) { // [A]
         if (annotation instanceof Path) {
           path = (Path)annotation;
           hasJaxRsAnnotations = true;
@@ -213,7 +213,7 @@ final class AnnotationUtil {
   static boolean isAnnotationPresent(Method method, final Class<? extends Annotation> annotationClass) {
     boolean hasJaxRsAnnotations = false;
     do {
-      for (final Annotation annotation : method.getAnnotations()) { // [A]
+      for (final Annotation annotation : Classes.getAnnotations(method)) { // [A]
         final Class<? extends Annotation> annotationType = annotation.annotationType();
         if (annotationClass.isAssignableFrom(annotationType))
           return true;
@@ -236,7 +236,7 @@ final class AnnotationUtil {
     boolean hasJaxRsAnnotations = false;
     Class<?> declaringClass;
     do {
-      for (final Annotation annotation : method.getAnnotations()) { // [A]
+      for (final Annotation annotation : Classes.getAnnotations(method)) { // [A]
         final Class<? extends Annotation> annotationType = annotation.annotationType();
         for (final Class<? extends Annotation> annotationClass : annotationClasses) // [A]
           if (annotationClass.isAssignableFrom(annotationType))

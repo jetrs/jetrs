@@ -81,7 +81,7 @@ public class ApplicationServerTest {
 
     final ArrayList<String> list = new ArrayList<>(size);
     for (final Map.Entry<String,?> entry : map.entrySet()) // [S]
-      list.add(entry.getKey() + ":" + String.valueOf(entry.getValue()));
+      list.add(entry.getKey() + ":" + entry.getValue());
 
     list.sort(null);
     return list.toString();

@@ -26,6 +26,8 @@ import java.util.HashMap;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.ext.ParamConverterProvider;
 
+import org.libj.lang.Classes;
+
 class ResourceInfos extends ArrayList<ResourceInfoImpl> {
   private final HashMap<Class<?>,HashMap<AnnotatedElement,DefaultValueImpl>> classToDefaultValues = new HashMap<>();
 
@@ -50,7 +52,7 @@ class ResourceInfos extends ArrayList<ResourceInfoImpl> {
           if (defaultValues == null)
             classToDefaultValues.put(cls, defaultValues = new HashMap<>());
 
-          defaultValues.put(field, digestDefaultValue(defaultValue, field.getType(), field.getGenericType(), field.getAnnotations(), paramConverterProviderFactories));
+          defaultValues.put(field, digestDefaultValue(defaultValue, field.getType(), field.getGenericType(), Classes.getAnnotations(field), paramConverterProviderFactories));
         }
       }
     }

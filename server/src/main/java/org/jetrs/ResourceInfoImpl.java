@@ -47,6 +47,7 @@ import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.ParamConverterProvider;
 
+import org.libj.lang.Classes;
 import org.libj.util.ArrayUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,7 +67,7 @@ class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImpl> {
   }
 
   private static Annotation findSecurityAnnotation(final Method method) {
-    final Annotation annotation = findSecurityAnnotation(method.getAnnotations());
+    final Annotation annotation = findSecurityAnnotation(Classes.getAnnotations(method));
     return annotation != null ? annotation : findSecurityAnnotation(method.getDeclaringClass().getAnnotations());
   }
 

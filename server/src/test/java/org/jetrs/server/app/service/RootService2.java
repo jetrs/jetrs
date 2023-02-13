@@ -32,7 +32,7 @@ import javax.ws.rs.core.UriInfo;
 public class RootService2 {
   private static String toString(final ContainerRequestContext containerRequestContext) {
     final UriInfo uriInfo = containerRequestContext.getUriInfo();
-    return uriInfo.getMatchedURIs().toString() + "\n" + uriInfo.getMatchedResources().stream().map(o -> o.getClass().getName()).collect(Collectors.joining(", ")) + "\n" + uriInfo.getPathParameters();
+    return uriInfo.getMatchedURIs() + "\n" + uriInfo.getMatchedResources().stream().map(o -> o.getClass().getName()).collect(Collectors.joining(", ")) + "\n" + uriInfo.getPathParameters();
   }
 
   @GET

@@ -345,7 +345,7 @@ abstract class RequestContext<P> extends InterceptorContextImpl<P> {
       return depth == 0 ? null : new Field[depth];
 
     final Field field = fields[index];
-    final Object value = findInjectableValueFromCache(field, -1, field.getAnnotations(), field.getType(), field.getGenericType());
+    final Object value = findInjectableValueFromCache(field, -1, Classes.getAnnotations(field), field.getType(), field.getGenericType());
     if (value == null) {
       final Field[] uninjectedFields = injectFields(instance, fields, index + 1, depth + 1);
       uninjectedFields[depth] = field;
@@ -368,7 +368,7 @@ abstract class RequestContext<P> extends InterceptorContextImpl<P> {
     Classes.getDeclaredFieldsDeep(instance.getClass(), Throwing.rethrow((ThrowingPredicate<Field,?>)(final Field field) -> {
       final int modifiers = field.getModifiers();
       if (!Modifier.isStatic(modifiers) && !Modifier.isFinal(modifiers)) {
-        final Object value = findInjectableValueFromCache(field, -1, field.getAnnotations(), field.getType(), field.getGenericType());
+        final Object value = findInjectableValueFromCache(field, -1, Classes.getAnnotations(field), field.getType(), field.getGenericType());
         if (value != null) {
           field.setAccessible(true);
           field.set(instance, value);
