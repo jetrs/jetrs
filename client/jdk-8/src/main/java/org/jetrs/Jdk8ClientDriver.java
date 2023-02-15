@@ -214,6 +214,9 @@ public class Jdk8ClientDriver extends ClientDriver {
           };
         }
         catch (final Exception e) {
+          if (e instanceof ProcessingException)
+            throw (ProcessingException)e;
+
           throw new ProcessingException(e);
         }
       }

@@ -181,7 +181,7 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
             responseHeaders.add(header.getName(), header.getValue());
 
           final List<HttpCookie> httpCookies = Jdk8ClientDriver.cookieStore.getCookies();
-          final Map<String,NewCookie> cookies;
+          final HashMap<String,NewCookie> cookies;
           final int noCookies = httpCookies.size();
           if (noCookies == 0) {
             cookies = null;
@@ -232,6 +232,9 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
           };
         }
         catch (final Exception e) {
+          if (e instanceof ProcessingException)
+            throw (ProcessingException)e;
+
           throw new ProcessingException(e);
         }
       }

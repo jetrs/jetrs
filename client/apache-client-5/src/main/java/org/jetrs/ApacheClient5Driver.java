@@ -393,6 +393,9 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
           };
         }
         catch (final Exception e) {
+          if (e instanceof ProcessingException)
+            throw (ProcessingException)e;
+
           throw new ProcessingException(e);
         }
       }
