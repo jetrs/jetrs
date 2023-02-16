@@ -165,7 +165,7 @@ class ResponseImpl extends Response {
 
       return EntityUtil.checktNotNull((T)(entityObject = readerInterceptorContext.proceed()), readerInterceptorContext.getAnnotations());
     }
-    catch (final IOException e) {
+    catch (final Exception e) {
       throw new ResponseProcessingException(this, e);
     }
     finally {
