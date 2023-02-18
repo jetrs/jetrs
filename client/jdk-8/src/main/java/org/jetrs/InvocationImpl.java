@@ -21,6 +21,7 @@ import java.io.OutputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -351,12 +352,14 @@ abstract class InvocationImpl implements Invocation {
           if (values != null && (size = values.size()) > 0) {
             name = entry.getKey();
             if (values instanceof RandomAccess) {
-              for (int i = 0; i < size; ++i) // [RA]
+              int i = 0; do // [RA]
                 header(name, values.get(i));
+              while (++i < size);
             }
             else {
-              for (final Object value : values) // [L]
-                header(name, value);
+              final Iterator<Object> i = values.iterator(); do // [I]
+                header(name, i.next());
+              while (i.hasNext());
             }
           }
         }

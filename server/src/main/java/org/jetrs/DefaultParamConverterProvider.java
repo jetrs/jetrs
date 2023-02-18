@@ -25,6 +25,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.RandomAccess;
 
@@ -130,21 +131,29 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
           }
           else if (paramConverter != null) {
             int i = 0;
-            if (values instanceof RandomAccess)
-              while (i < size) // [RA]
-                a[i] = (Integer)paramConverter.fromString(values.get(i++));
-            else
-              for (final String value : values) // [L]
-                a[i++] = (Integer)paramConverter.fromString(value);
+            if (values instanceof RandomAccess) {
+              do // [RA]
+                a[i] = (Integer)paramConverter.fromString(values.get(i));
+              while (++i < size);
+            }
+            else {
+              final Iterator<String> it = values.iterator(); do // [I]
+                a[i++] = (Integer)paramConverter.fromString(it.next());
+              while (it.hasNext());
+            }
           }
           else {
             int i = 0;
-            if (values instanceof RandomAccess)
-              while (i < size) // [RA]
-                a[i] = Numbers.parseInt(values.get(i++), 0);
-            else
-              for (final String value : values) // [L]
-                a[i++] = Numbers.parseInt(value, 0);
+            if (values instanceof RandomAccess) {
+              do // [RA]
+                a[i] = Numbers.parseInt(values.get(i), 0);
+              while (++i < size);
+            }
+            else {
+              final Iterator<String> iterator = values.iterator(); do // [I]
+                a[i++] = Numbers.parseInt(iterator.next(), 0);
+              while (iterator.hasNext());
+            }
           }
 
           return a;
@@ -158,21 +167,29 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
           }
           else if (paramConverter != null) {
             int i = 0;
-            if (values instanceof RandomAccess)
-              while (i < size) // [RA]
-                a[i] = (Long)paramConverter.fromString(values.get(i++));
-            else
-              for (final String value : values) // [L]
-                a[i++] = (Long)paramConverter.fromString(value);
+            if (values instanceof RandomAccess) {
+              do // [RA]
+                a[i] = (Long)paramConverter.fromString(values.get(i));
+              while (++i < size);
+            }
+            else {
+              final Iterator<String> it = values.iterator(); do // [I]
+                a[i++] = (Long)paramConverter.fromString(it.next());
+              while (it.hasNext());
+            }
           }
           else {
             int i = 0;
-            if (values instanceof RandomAccess)
-              while (i < size) // [RA]
-                a[i] = Numbers.parseLong(values.get(i++), 0L);
-            else
-              for (final String value : values) // [L]
-                a[i++] = Numbers.parseLong(value, 0L);
+            if (values instanceof RandomAccess) {
+              do // [RA]
+                a[i] = Numbers.parseLong(values.get(i), 0L);
+              while (++i < size);
+            }
+            else {
+              final Iterator<String> iterator = values.iterator(); do // [I]
+                a[i++] = Numbers.parseLong(iterator.next(), 0L);
+              while (iterator.hasNext());
+            }
           }
 
           return a;
@@ -186,21 +203,29 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
           }
           else if (paramConverter != null) {
             int i = 0;
-            if (values instanceof RandomAccess)
-              while (i < size) // [RA]
-                a[i] = (Double)paramConverter.fromString(values.get(i++));
-            else
-              for (final String value : values) // [L]
-                a[i++] = (Double)paramConverter.fromString(value);
+            if (values instanceof RandomAccess) {
+              do // [RA]
+                a[i] = (Double)paramConverter.fromString(values.get(i));
+              while (++i < size);
+            }
+            else {
+              final Iterator<String> it = values.iterator(); do // [I]
+                a[i++] = (Double)paramConverter.fromString(it.next());
+              while (it.hasNext());
+            }
           }
           else {
             int i = 0;
-            if (values instanceof RandomAccess)
-              while (i < size) // [RA]
-                a[i] = Numbers.parseDouble(values.get(i++), 0d);
-            else
-              for (final String value : values) // [L]
-                a[i++] = Numbers.parseDouble(value, 0d);
+            if (values instanceof RandomAccess) {
+              do // [RA]
+                a[i] = Numbers.parseDouble(values.get(i), 0d);
+              while (++i < size);
+            }
+            else {
+              final Iterator<String> iterator = values.iterator(); do // [I]
+                a[i++] = Numbers.parseDouble(iterator.next(), 0d);
+              while (iterator.hasNext());
+            }
           }
 
           return a;
@@ -214,21 +239,29 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
           }
           else if (paramConverter != null) {
             int i = 0;
-            if (values instanceof RandomAccess)
-              while (i < size) // [RA]
-                a[i] = (Float)paramConverter.fromString(values.get(i++));
-            else
-              for (final String value : values) // [L]
-                a[i++] = (Float)paramConverter.fromString(value);
+            if (values instanceof RandomAccess) {
+              do // [RA]
+                a[i] = (Float)paramConverter.fromString(values.get(i));
+              while (++i < size);
+            }
+            else {
+              final Iterator<String> it = values.iterator(); do // [I]
+                a[i++] = (Float)paramConverter.fromString(it.next());
+              while (it.hasNext());
+            }
           }
           else {
             int i = 0;
-            if (values instanceof RandomAccess)
-              while (i < size) // [RA]
-                a[i] = Numbers.parseFloat(values.get(i++), 0f);
-            else
-              for (final String value : values) // [L]
-                a[i++] = Numbers.parseFloat(value, 0f);
+            if (values instanceof RandomAccess) {
+              do // [RA]
+                a[i] = Numbers.parseFloat(values.get(i), 0f);
+              while (++i < size);
+            }
+            else {
+              final Iterator<String> iterator = values.iterator(); do // [I]
+                a[i++] = Numbers.parseFloat(iterator.next(), 0f);
+              while (iterator.hasNext());
+            }
           }
 
           return a;
@@ -242,21 +275,29 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
           }
           else if (paramConverter != null) {
             int i = 0;
-            if (values instanceof RandomAccess)
-              while (i < size) // [RA]
-                a[i] = (Boolean)paramConverter.fromString(values.get(i++));
-            else
-              for (final String value : values) // [L]
-                a[i++] = (Boolean)paramConverter.fromString(value);
+            if (values instanceof RandomAccess) {
+              do // [RA]
+                a[i] = (Boolean)paramConverter.fromString(values.get(i));
+              while (++i < size);
+            }
+            else {
+              final Iterator<String> it = values.iterator(); do // [I]
+                a[i++] = (Boolean)paramConverter.fromString(it.next());
+              while (it.hasNext());
+            }
           }
           else {
             int i = 0;
-            if (values instanceof RandomAccess)
-              while (i < size) // [RA]
-                a[i] = Boolean.parseBoolean(values.get(i++));
-            else
-              for (final String value : values) // [L]
-                a[i++] = Boolean.parseBoolean(value);
+            if (values instanceof RandomAccess) {
+              do // [RA]
+                a[i] = Boolean.parseBoolean(values.get(i));
+              while (++i < size);
+            }
+            else {
+              final Iterator<String> iterator = values.iterator(); do // [I]
+                a[i++] = Boolean.parseBoolean(iterator.next());
+              while (iterator.hasNext());
+            }
           }
 
           return a;
@@ -270,21 +311,29 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
           }
           else if (paramConverter != null) {
             int i = 0;
-            if (values instanceof RandomAccess)
-              while (i < size) // [RA]
-                a[i] = (Byte)paramConverter.fromString(values.get(i++));
-            else
-              for (final String value : values) // [L]
-                a[i++] = (Byte)paramConverter.fromString(value);
+            if (values instanceof RandomAccess) {
+              do // [RA]
+                a[i] = (Byte)paramConverter.fromString(values.get(i));
+              while (++i < size);
+            }
+            else {
+              final Iterator<String> it = values.iterator(); do // [I]
+                a[i++] = (Byte)paramConverter.fromString(it.next());
+              while (it.hasNext());
+            }
           }
           else {
             int i = 0;
-            if (values instanceof RandomAccess)
-              while (i < size) // [RA]
-                a[i] = Numbers.parseByte(values.get(i++), (byte)0);
-            else
-              for (final String value : values) // [L]
-                a[i++] = Numbers.parseByte(value, (byte)0);
+            if (values instanceof RandomAccess) {
+              do // [RA]
+                a[i] = Numbers.parseByte(values.get(i), (byte)0);
+              while (++i < size);
+            }
+            else {
+              final Iterator<String> iterator = values.iterator(); do // [I]
+                a[i++] = Numbers.parseByte(iterator.next(), (byte)0);
+              while (iterator.hasNext());
+            }
           }
 
           return a;
@@ -298,21 +347,29 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
           }
           else if (paramConverter != null) {
             int i = 0;
-            if (values instanceof RandomAccess)
-              while (i < size) // [RA]
-                a[i] = (Character)paramConverter.fromString(values.get(i++));
-            else
-              for (final String value : values) // [L]
-                a[i++] = (Character)paramConverter.fromString(value);
+            if (values instanceof RandomAccess) {
+              do // [RA]
+                a[i] = (Character)paramConverter.fromString(values.get(i));
+              while (++i < size);
+            }
+            else {
+              final Iterator<String> it = values.iterator(); do // [I]
+                a[i++] = (Character)paramConverter.fromString(it.next());
+              while (it.hasNext());
+            }
           }
           else {
             int i = 0;
-            if (values instanceof RandomAccess)
-              while (i < size) // [RA]
-                a[i] = parseChar(values.get(i++));
-            else
-              for (final String value : values) // [L]
-                a[i++] = parseChar(value);
+            if (values instanceof RandomAccess) {
+              do // [RA]
+                a[i] = parseChar(values.get(i));
+              while (++i < size);
+            }
+            else {
+              final Iterator<String> iterator = values.iterator(); do // [I]
+                a[i++] = parseChar(iterator.next());
+              while (iterator.hasNext());
+            }
           }
 
           return a;
@@ -326,21 +383,29 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
           }
           else if (paramConverter != null) {
             int i = 0;
-            if (values instanceof RandomAccess)
-              while (i < size) // [RA]
-                a[i] = (Short)paramConverter.fromString(values.get(i++));
-            else
-              for (final String value : values) // [L]
-                a[i++] = (Short)paramConverter.fromString(value);
+            if (values instanceof RandomAccess) {
+              do // [RA]
+                a[i] = (Short)paramConverter.fromString(values.get(i));
+              while (++i < size);
+            }
+            else {
+              final Iterator<String> it = values.iterator(); do // [I]
+                a[i++] = (Short)paramConverter.fromString(it.next());
+              while (it.hasNext());
+            }
           }
           else {
             int i = 0;
-            if (values instanceof RandomAccess)
-              while (i < size) // [RA]
-                a[i] = Numbers.parseShort(values.get(i++), (short)0);
-            else
-              for (final String value : values) // [L]
-                a[i++] = Numbers.parseShort(value, (short)0);
+            if (values instanceof RandomAccess) {
+              do // [RA]
+                a[i] = Numbers.parseShort(values.get(i), (short)0);
+              while (++i < size);
+            }
+            else {
+              final Iterator<String> it = values.iterator(); do // [I]
+                a[i++] = Numbers.parseShort(it.next(), (short)0);
+              while (it.hasNext());
+            }
           }
 
           return a;
@@ -364,24 +429,32 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
 
       if (paramPlurality == ParamPlurality.COLLECTION) {
         final Collection c = ParamPlurality.COLLECTION.newContainer(rawType, size);
-        if (values instanceof RandomAccess)
-          for (int i = 0; i < size; ++i) // [RA]
+        if (values instanceof RandomAccess) {
+          int i = 0; do // [RA]
             c.add(paramConverter.fromString(values.get(i)));
-        else
-          for (final String value : values) // [L]
-            c.add(paramConverter.fromString(value));
+          while (++i < size);
+        }
+        else {
+          final Iterator<String> it = values.iterator(); do // [I]
+            c.add(paramConverter.fromString(it.next()));
+          while (it.hasNext());
+        }
 
         return c;
       }
 
       final Object[] a = ParamPlurality.ARRAY.newContainer(rawType, size);
       int i = 0;
-      if (values instanceof RandomAccess)
-        while (i < size) // [RA]
-          a[i] = paramConverter.fromString(values.get(i++));
-      else
-        for (final String value : values) // [L]
-          a[i++] = paramConverter.fromString(value);
+      if (values instanceof RandomAccess) {
+        do // [RA]
+          a[i] = paramConverter.fromString(values.get(i));
+        while (++i < size);
+      }
+      else {
+        final Iterator<String> it = values.iterator(); do // [I]
+          a[i++] = paramConverter.fromString(it.next());
+        while (it.hasNext());
+      }
 
       return a;
     }
@@ -396,24 +469,32 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
 
       if (paramPlurality == ParamPlurality.COLLECTION) {
         final Collection c = ParamPlurality.COLLECTION.newContainer(rawType, size);
-        if (values instanceof RandomAccess)
-          for (int i = 0; i < size; ++i) // [RA]
+        if (values instanceof RandomAccess) {
+          int i = 0; do // [RA]
             c.add(Numbers.parseInteger(values.get(i), defaultValue));
-        else
-          for (final String value : values) // [L]
-            c.add(Numbers.parseInteger(value, defaultValue));
+          while (++i < size);
+        }
+        else {
+          final Iterator<String> it = values.iterator(); do // [I]
+            c.add(Numbers.parseInteger(it.next(), defaultValue));
+          while (it.hasNext());
+        }
 
         return c;
       }
 
       final Object[] a = ParamPlurality.ARRAY.newContainer(rawType, size);
       int i = 0;
-      if (values instanceof RandomAccess)
-        while (i < size) // [RA]
-          a[i] = Numbers.parseInteger(values.get(i++), defaultValue);
-      else
-        for (final String value : values) // [L]
-          a[i++] = Numbers.parseInteger(value, defaultValue);
+      if (values instanceof RandomAccess) {
+        do // [RA]
+          a[i] = Numbers.parseInteger(values.get(i), defaultValue);
+        while (++i < size);
+      }
+      else {
+        final Iterator<String> it = values.iterator(); do // [I]
+          a[i++] = Numbers.parseInteger(it.next(), defaultValue);
+        while (it.hasNext());
+      }
 
       return a;
     }
@@ -428,24 +509,32 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
 
       if (paramPlurality == ParamPlurality.COLLECTION) {
         final Collection c = ParamPlurality.COLLECTION.newContainer(rawType, size);
-        if (values instanceof RandomAccess)
-          for (int i = 0; i < size; ++i) // [RA]
+        if (values instanceof RandomAccess) {
+          int i = 0; do // [RA]
             c.add(Numbers.parseLong(values.get(i), defaultValue));
-        else
-          for (final String value : values) // [L]
-            c.add(Numbers.parseLong(value, defaultValue));
+          while (++i < size);
+        }
+        else {
+          final Iterator<String> it = values.iterator(); do // [I]
+            c.add(Numbers.parseLong(it.next(), defaultValue));
+          while (it.hasNext());
+        }
 
         return c;
       }
 
       final Object[] a = ParamPlurality.ARRAY.newContainer(rawType, size);
       int i = 0;
-      if (values instanceof RandomAccess)
-        while (i < size) // [RA]
-          a[i] = Numbers.parseLong(values.get(i++), defaultValue);
-      else
-        for (final String value : values) // [L]
-          a[i++] = Numbers.parseLong(value, defaultValue);
+      if (values instanceof RandomAccess) {
+        do // [RA]
+          a[i] = Numbers.parseLong(values.get(i), defaultValue);
+        while (++i < size);
+      }
+      else {
+        final Iterator<String> it = values.iterator(); do // [I]
+          a[i++] = Numbers.parseLong(it.next(), defaultValue);
+        while (it.hasNext());
+      }
 
       return a;
     }
@@ -460,24 +549,32 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
 
       if (paramPlurality == ParamPlurality.COLLECTION) {
         final Collection c = ParamPlurality.COLLECTION.newContainer(rawType, size);
-        if (values instanceof RandomAccess)
-          for (int i = 0; i < size; ++i) // [RA]
+        if (values instanceof RandomAccess) {
+          int i = 0; do // [RA]
             c.add(Numbers.parseDouble(values.get(i), defaultValue));
-        else
-          for (final String value : values) // [L]
-            c.add(Numbers.parseDouble(value, defaultValue));
+          while (++i < size);
+        }
+        else {
+          final Iterator<String> it = values.iterator(); do // [I]
+            c.add(Numbers.parseDouble(it.next(), defaultValue));
+          while (it.hasNext());
+        }
 
         return c;
       }
 
       final Object[] a = ParamPlurality.ARRAY.newContainer(rawType, size);
       int i = 0;
-      if (values instanceof RandomAccess)
-        while (i < size) // [RA]
-          a[i] = Numbers.parseDouble(values.get(i++), defaultValue);
-      else
-        for (final String value : values) // [L]
-          a[i++] = Numbers.parseDouble(value, defaultValue);
+      if (values instanceof RandomAccess) {
+        do // [RA]
+          a[i] = Numbers.parseDouble(values.get(i), defaultValue);
+        while (++i < size);
+      }
+      else {
+        final Iterator<String> it = values.iterator(); do // [I]
+          a[i++] = Numbers.parseDouble(it.next(), defaultValue);
+        while (it.hasNext());
+      }
 
       return a;
     }
@@ -492,24 +589,32 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
 
       if (paramPlurality == ParamPlurality.COLLECTION) {
         final Collection c = ParamPlurality.COLLECTION.newContainer(rawType, size);
-        if (values instanceof RandomAccess)
-          for (int i = 0; i < size; ++i) // [RA]
+        if (values instanceof RandomAccess) {
+          int i = 0; do // [RA]
             c.add(Numbers.parseFloat(values.get(i), defaultValue));
-        else
-          for (final String value : values) // [L]
-            c.add(Numbers.parseFloat(value, defaultValue));
+          while (++i < size);
+        }
+        else {
+          final Iterator<String> it = values.iterator(); do // [I]
+            c.add(Numbers.parseFloat(it.next(), defaultValue));
+          while (it.hasNext());
+        }
 
         return c;
       }
 
       final Object[] a = ParamPlurality.ARRAY.newContainer(rawType, size);
       int i = 0;
-      if (values instanceof RandomAccess)
-        while (i < size) // [RA]
-          a[i] = Numbers.parseFloat(values.get(i++), defaultValue);
-      else
-        for (final String value : values) // [L]
-          a[i++] = Numbers.parseFloat(value, defaultValue);
+      if (values instanceof RandomAccess) {
+        do // [RA]
+          a[i] = Numbers.parseFloat(values.get(i), defaultValue);
+        while (++i < size);
+      }
+      else {
+        final Iterator<String> it = values.iterator(); do // [I]
+          a[i++] = Numbers.parseFloat(it.next(), defaultValue);
+        while (it.hasNext());
+      }
 
       return a;
     }
@@ -524,24 +629,32 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
 
       if (paramPlurality == ParamPlurality.COLLECTION) {
         final Collection c = ParamPlurality.COLLECTION.newContainer(rawType, size);
-        if (values instanceof RandomAccess)
-          for (int i = 0; i < size; ++i) // [RA]
+        if (values instanceof RandomAccess) {
+          int i = 0; do // [RA]
             c.add(parseBoolean(values.get(i), defaultValue));
-        else
-          for (final String value : values) // [L]
-            c.add(parseBoolean(value, defaultValue));
+          while (++i < size);
+        }
+        else {
+          final Iterator<String> it = values.iterator(); do // [I]
+            c.add(parseBoolean(it.next(), defaultValue));
+          while (it.hasNext());
+        }
 
         return c;
       }
 
       final Object[] a = ParamPlurality.ARRAY.newContainer(rawType, size);
       int i = 0;
-      if (values instanceof RandomAccess)
-        while (i < size) // [RA]
-          a[i] = parseBoolean(values.get(i++), defaultValue);
-      else
-        for (final String value : values) // [L]
-          a[i++] = parseBoolean(value, defaultValue);
+      if (values instanceof RandomAccess) {
+        do // [RA]
+          a[i] = parseBoolean(values.get(i), defaultValue);
+        while (++i < size);
+      }
+      else {
+        final Iterator<String> it = values.iterator(); do // [I]
+          a[i++] = parseBoolean(it.next(), defaultValue);
+        while (it.hasNext());
+      }
 
       return a;
     }
@@ -556,24 +669,32 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
 
       if (paramPlurality == ParamPlurality.COLLECTION) {
         final Collection c = ParamPlurality.COLLECTION.newContainer(rawType, size);
-        if (values instanceof RandomAccess)
-          for (int i = 0; i < size; ++i) // [RA]
+        if (values instanceof RandomAccess) {
+          int i = 0; do // [RA]
             c.add(Numbers.parseByte(values.get(i), defaultValue));
-        else
-          for (final String value : values) // [L]
-            c.add(Numbers.parseByte(value, defaultValue));
+          while (++i < size);
+        }
+        else {
+          final Iterator<String> it = values.iterator(); do // [I]
+            c.add(Numbers.parseByte(it.next(), defaultValue));
+          while (it.hasNext());
+        }
 
         return c;
       }
 
       final Object[] a = ParamPlurality.ARRAY.newContainer(rawType, size);
       int i = 0;
-      if (values instanceof RandomAccess)
-        while (i < size) // [RA]
-          a[i] = Numbers.parseByte(values.get(i++), defaultValue);
-      else
-        for (final String value : values) // [L]
-          a[i++] = Numbers.parseByte(value, defaultValue);
+      if (values instanceof RandomAccess) {
+        do // [RA]
+          a[i] = Numbers.parseByte(values.get(i), defaultValue);
+        while (++i < size);
+      }
+      else {
+        final Iterator<String> it = values.iterator(); do // [I]
+          a[i++] = Numbers.parseByte(it.next(), defaultValue);
+        while (it.hasNext());
+      }
 
       return a;
     }
@@ -588,24 +709,32 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
 
       if (paramPlurality == ParamPlurality.COLLECTION) {
         final Collection c = ParamPlurality.COLLECTION.newContainer(rawType, size);
-        if (values instanceof RandomAccess)
-          for (int i = 0; i < size; ++i) // [RA]
+        if (values instanceof RandomAccess) {
+          int i = 0; do // [RA]
             c.add(parseCharacter(values.get(i), defaultValue));
-        else
-          for (final String value : values) // [L]
-            c.add(parseCharacter(value, defaultValue));
+          while (++i < size);
+        }
+        else {
+          final Iterator<String> it = values.iterator(); do // [I]
+            c.add(parseCharacter(it.next(), defaultValue));
+          while (it.hasNext());
+        }
 
         return c;
       }
 
       final Object[] a = ParamPlurality.ARRAY.newContainer(rawType, size);
       int i = 0;
-      if (values instanceof RandomAccess)
-        while (i < size) // [RA]
-          a[i] = parseCharacter(values.get(i++), defaultValue);
-      else
-        for (final String value : values) // [L]
-          a[i++] = parseCharacter(value, defaultValue);
+      if (values instanceof RandomAccess) {
+        do // [RA]
+          a[i] = parseCharacter(values.get(i), defaultValue);
+        while (++i < size);
+      }
+      else {
+        final Iterator<String> it = values.iterator(); do // [I]
+          a[i++] = parseCharacter(it.next(), defaultValue);
+        while (it.hasNext());
+      }
 
       return a;
     }
@@ -620,24 +749,32 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
 
       if (paramPlurality == ParamPlurality.COLLECTION) {
         final Collection c = ParamPlurality.COLLECTION.newContainer(rawType, size);
-        if (values instanceof RandomAccess)
-          for (int i = 0; i < size; ++i) // [RA]
+        if (values instanceof RandomAccess) {
+          int i = 0; do // [RA]
             c.add(Numbers.parseShort(values.get(i), defaultValue));
-        else
-          for (final String value : values) // [L]
-            c.add(Numbers.parseShort(value, defaultValue));
+          while (++i < size);
+        }
+        else {
+          final Iterator<String> it = values.iterator(); do // [I]
+            c.add(Numbers.parseShort(it.next(), defaultValue));
+          while (it.hasNext());
+        }
 
         return c;
       }
 
       final Object[] a = ParamPlurality.ARRAY.newContainer(rawType, size);
       int i = 0;
-      if (values instanceof RandomAccess)
-        while (i < size) // [RA]
-          a[i] = Numbers.parseShort(values.get(i++), defaultValue);
-      else
-        for (final String value : values) // [L]
-          a[i++] = Numbers.parseShort(value, defaultValue);
+      if (values instanceof RandomAccess) {
+        do // [RA]
+          a[i] = Numbers.parseShort(values.get(i), defaultValue);
+        while (++i < size);
+      }
+      else {
+        final Iterator<String> it = values.iterator(); do // [I]
+          a[i++] = Numbers.parseShort(it.next(), defaultValue);
+        while (it.hasNext());
+      }
 
       return a;
     }

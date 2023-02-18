@@ -85,13 +85,13 @@ final class UriBuilderUtil {
   static String appendPath(final String path, final boolean encode, final String ... segments) {
     final StringBuilder builder = path != null ? new StringBuilder(path) : new StringBuilder();
     for (String segment : segments) { // [A]
-      if ("".equals(segment))
+      if (segment.length() == 0)
         continue;
 
       if (builder.length() > 0 && builder.charAt(builder.length() - 1) == '/') {
         if (segment.startsWith("/")) {
           segment = segment.substring(1);
-          if ("".equals(segment))
+          if (segment.length() == 0)
             continue;
         }
 

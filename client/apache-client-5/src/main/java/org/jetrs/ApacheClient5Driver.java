@@ -22,6 +22,7 @@ import java.io.OutputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.RandomAccess;
@@ -341,12 +342,14 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
           else {
             cookies = new HashMap<>(noCookies);
             if (httpCookies instanceof RandomAccess) {
-              for (int i = 0; i < noCookies; ++i) // [RA]
+              int i = 0; do // [RA]
                 addCookie(cookies, httpCookies.get(i));
+              while (++i < noCookies);
             }
             else {
-              for (final Cookie httpCookie : httpCookies) // [L]
-                addCookie(cookies, httpCookie);
+              final Iterator<Cookie> i = httpCookies.iterator(); do // [I]
+                addCookie(cookies, i.next());
+              while (i.hasNext());
             }
           }
 

@@ -294,21 +294,24 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
   @Override
   public Map<String,Cookie> getCookies() {
     final MirrorQualityList<?,String> cookies = getMirrorMap().get(HttpHeaders.COOKIE);
-    if (cookies == null || cookies.size() == 0)
+    final int i$;
+    if (cookies == null || (i$ = cookies.size()) == 0)
       return Collections.emptyMap();
 
     final Map<String,Cookie> map = new LinkedHashMap<>();
     if (cookies.isRandomAccess()) {
-      for (int i = 0, i$ = cookies.size(); i < i$; ++i) { // [RA]
+      int i = 0; do { // [RA]
         final Cookie cookie = (Cookie)cookies.get(i);
         map.put(cookie.getName(), cookie);
       }
+      while (++i < i$);
     }
     else {
-      for (final Object obj : cookies) { // [L]
-        final Cookie cookie = (Cookie)obj;
+      final Iterator<?> it = cookies.iterator(); do { // [I]
+        final Cookie cookie = (Cookie)it.next();
         map.put(cookie.getName(), cookie);
       }
+      while (it.hasNext());
     }
 
     return map;
@@ -382,21 +385,22 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
 
     final StringBuilder builder = new StringBuilder();
     if (CollectionUtil.isRandomAccess(values)) {
-      for (int i = 0; i < i$; ++i) { // [RA]
+      int i = 0; do { // [RA]
         if (i > 0)
           builder.append(delimiter);
 
         builder.append(values.get(i));
       }
+      while (++i < i$);
     }
     else {
-      final Iterator<String> iterator = values.iterator();
-      for (int i = 0; i < i$; ++i) { // [RA]
-        if (i > 0)
+      int i = -1; final Iterator<String> it = values.iterator(); do { // [RA]
+        if (++i > 0)
           builder.append(delimiter);
 
-        builder.append(iterator.next());
+        builder.append(it.next());
       }
+      while (it.hasNext());
     }
 
     return builder.toString();

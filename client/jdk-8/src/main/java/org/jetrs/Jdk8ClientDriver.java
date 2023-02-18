@@ -29,6 +29,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.RandomAccess;
@@ -171,12 +172,14 @@ public class Jdk8ClientDriver extends ClientDriver {
             final Date date = responseHeaders.getDate();
             cookies = new HashMap<>(noCookies);
             if (httpCookies instanceof RandomAccess) {
-              for (int i = 0; i < noCookies; ++i) // [RA]
+              int i = 0; do // [RA]
                 addCookie(cookies, httpCookies.get(i), date);
+              while (++i < noCookies);
             }
             else {
-              for (final HttpCookie httpCookie : httpCookies) // [L]
-                addCookie(cookies, httpCookie, date);
+              final Iterator<HttpCookie> i = httpCookies.iterator(); do // [I]
+                addCookie(cookies, i.next(), date);
+              while (i.hasNext());
             }
           }
 

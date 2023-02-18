@@ -67,7 +67,10 @@ class ResponseImpl extends Response {
     this.statusInfo = assertNotNull(statusInfo);
     this.headers = assertNotNull(headers);
     this.cookies = cookies != null ? cookies : Collections.EMPTY_MAP;
-    this.entityStream = (this.hasEntity = entity != null) && entity instanceof InputStream ? (InputStream)entity : null;
+
+    if ((this.hasEntity = entity != null) && entity instanceof InputStream)
+      this.entityStream = (InputStream)entity;
+
     this.entityObject = entity;
     this.annotations = annotations;
   }
@@ -94,17 +97,32 @@ class ResponseImpl extends Response {
     return entityObject;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @throws NullPointerException If {@code entityType} is null.
+   */
   @Override
   public <T>T readEntity(final Class<T> entityType) throws IllegalStateException, ResponseProcessingException {
     return readEntity(entityType, null);
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @throws NullPointerException If {@code entityType} is null.
+   */
   @Override
   @SuppressWarnings("unchecked")
   public <T>T readEntity(final GenericType<T> entityType) throws IllegalStateException, ResponseProcessingException {
     return (T)readEntity(entityType.getRawType(), entityType.getType(), null);
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @throws NullPointerException If {@code entityType} is null.
+   */
   @Override
   public <T>T readEntity(final Class<T> entityType, final Annotation[] annotations) throws IllegalStateException, ResponseProcessingException {
     return readEntity(entityType, null, annotations);
@@ -118,7 +136,6 @@ class ResponseImpl extends Response {
 
   @SuppressWarnings({"rawtypes", "unchecked"})
   private <T>T readEntity(final Class<T> rawType, final Type genericType, final Annotation[] annotations) throws IllegalStateException, ResponseProcessingException {
-    assertNotNull(rawType);
     if (providers == null)
       throw new ProcessingException("No providers were registered for required MessageBodyReader for type: " + rawType.getName());
 

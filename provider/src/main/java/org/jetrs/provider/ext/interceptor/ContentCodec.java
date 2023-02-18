@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -111,14 +112,16 @@ public abstract class ContentCodec implements ReaderInterceptor, WriterIntercept
     if (acceptEncodings != null && (size = acceptEncodings.size()) > 0) {
       final Set<String> supportedEncodings = getSupportedEncodings();
       if (CollectionUtil.isRandomAccess(acceptEncodings)) {
-        for (int i = 0; i < size; ++i) // [RA]
+        int i = 0; do // [RA]
           if (trySetEncoding(acceptEncodings.get(i), supportedEncodings, context))
             break;
+        while (++i < size);
       }
       else {
-        for (final String acceptEncoding : acceptEncodings) // [L]
-          if (trySetEncoding(acceptEncoding, supportedEncodings, context))
+        final Iterator<String> it = acceptEncodings.iterator(); do // [I]
+          if (trySetEncoding(it.next(), supportedEncodings, context))
             break;
+        while (it.hasNext());
       }
     }
 

@@ -16,6 +16,7 @@
 
 package org.jetrs;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -48,20 +49,24 @@ class StrictCacheControl extends CacheControl {
 
       @Override
       void toString(final CacheControl cacheControl, final StringBuilder builder) {
-        if (cacheControl.getPrivateFields().size() > 0) {
-          final List<String> fields = cacheControl.getPrivateFields();
+        final List<String> fields = cacheControl.getPrivateFields();
+        final int i$ = fields.size();
+        if (i$ > 0) {
           if (CollectionUtil.isRandomAccess(fields)) {
-            for (int i = 0, i$ = fields.size(); i < i$; ++i) { // [RA]
+            int i = 0; do { // [RA]
               final String field = fields.get(i);
               if (field != null)
                 builder.append("private=").append(fieldToString(field)).append(',');
             }
+            while (++i < i$);
           }
           else {
-            for (final String field : fields) { // [L]
+            final Iterator<String> it = fields.iterator(); do { // [I]
+              final String field = it.next();
               if (field != null)
                 builder.append("private=").append(fieldToString(field)).append(',');
             }
+            while (it.hasNext());
           }
         }
         else if (cacheControl.isPrivate()) {
@@ -86,20 +91,24 @@ class StrictCacheControl extends CacheControl {
 
       @Override
       void toString(final CacheControl cacheControl, final StringBuilder builder) {
-        if (cacheControl.getNoCacheFields().size() > 0) {
-          final List<String> fields = cacheControl.getNoCacheFields();
+        final List<String> fields = cacheControl.getNoCacheFields();
+        final int i$ = fields.size();
+        if (i$ > 0) {
           if (CollectionUtil.isRandomAccess(fields)) {
-            for (int i = 0, i$ = fields.size(); i < i$; ++i) { // [RA]
+            int i = 0; do { // [RA]
               final String field = fields.get(i);
               if (field != null)
                 builder.append("no-cache=").append(fieldToString(field)).append(',');
             }
+            while (++i < i$);
           }
           else {
-            for (final String field : fields) { // [L]
+            final Iterator<String> it = fields.iterator(); do { // [I]
+              final String field = it.next();
               if (field != null)
                 builder.append("no-cache=").append(fieldToString(field)).append(',');
             }
+            while (it.hasNext());
           }
         }
         else if (cacheControl.isNoCache()) {

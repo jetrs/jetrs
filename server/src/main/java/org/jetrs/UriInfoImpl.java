@@ -55,7 +55,7 @@ class UriInfoImpl implements UriInfo {
   private ContainerRequestContextImpl requestContext;
 
   UriInfoImpl(final HttpServletRequest httpServletRequest, final ContainerRequestContextImpl requestContext) {
-    this.httpServletRequest = assertNotNull(httpServletRequest, "httpServletRequest is null");
+    this.httpServletRequest = httpServletRequest;
     this.requestContext = requestContext;
     this.absoluteUri = getAbsoluteUri(httpServletRequest);
     this.contextPath = httpServletRequest.getContextPath() + httpServletRequest.getServletPath();
@@ -125,18 +125,18 @@ class UriInfoImpl implements UriInfo {
         return pathSegmentsDecoded;
 
       if (pathSegmentsEncoded != null)
-        return this.pathSegmentsDecoded = new PathSegmentList(pathSegmentsEncoded, decode);
+        return pathSegmentsDecoded = new PathSegmentList(pathSegmentsEncoded, decode);
 
-      return this.pathSegmentsDecoded = new PathSegmentList(pathEncoded, decode);
+      return pathSegmentsDecoded = new PathSegmentList(pathEncoded, decode);
     }
 
     if (pathSegmentsEncoded != null)
       return pathSegmentsEncoded;
 
     if (pathSegmentsDecoded != null)
-      return this.pathSegmentsEncoded = new PathSegmentList(pathSegmentsDecoded, decode);
+      return pathSegmentsEncoded = new PathSegmentList(pathSegmentsDecoded, decode);
 
-    return this.pathSegmentsEncoded = new PathSegmentList(pathEncoded, decode);
+    return pathSegmentsEncoded = new PathSegmentList(pathEncoded, decode);
   }
 
   private URI requestUri;

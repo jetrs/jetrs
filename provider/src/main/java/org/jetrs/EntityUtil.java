@@ -187,15 +187,13 @@ public final class EntityUtil {
         continue;
 
       if (values instanceof RandomAccess) {
-        for (int j = 0; j < size; ++j) { // [RA]
+        int j = 0; do // [RA]
           write(writer, key, values.get(j), charset, i++);
-        }
+        while (++j < size);
       }
       else {
-        final Iterator<String> i2 = values.iterator();
-        do {
+        final Iterator<String> i2 = values.iterator(); do // [I]
           write(writer, key, i2.next(), charset, i++);
-        }
         while (i2.hasNext());
       }
     }

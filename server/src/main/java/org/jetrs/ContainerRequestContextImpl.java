@@ -740,10 +740,11 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
       if (!matcher.find())
         continue;
 
-      if (resourceInfo.getHttpMethod() == null)
+      final HttpMethod httpMethod = resourceInfo.getHttpMethod();
+      if (httpMethod == null)
         throw new UnsupportedOperationException("JAX-RS 2.1 3.4.1");
 
-      final String resourceMethod = resourceInfo.getHttpMethod().value();
+      final String resourceMethod = httpMethod.value();
       if (!requestMethod.equals(resourceMethod)) {
         if (!isOverride) {
           if (maybeNotAllowed == null)
@@ -883,15 +884,20 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
     final MultivaluedMap<String,String> responseHeaders = response.getStringHeaders();
     if (responseHeaders.size() > 0) {
       for (final Map.Entry<String,List<String>> entry : responseHeaders.entrySet()) { // [S]
-        final String key = entry.getKey();
         final List<String> values = entry.getValue();
-        if (values instanceof RandomAccess) {
-          for (int i = 0, i$ = values.size(); i < i$; ++i) // [RA]
-            containerResponseHeaders.add(key, values.get(i));
-        }
-        else {
-          for (final String value : values) // [L]
-            containerResponseHeaders.add(key, value);
+        final int i$ = values.size();
+        if (i$ > 0) {
+          final String key = entry.getKey();
+          if (values instanceof RandomAccess) {
+            int i = 0; do // [RA]
+              containerResponseHeaders.add(key, values.get(i));
+            while (++i < i$);
+          }
+          else {
+            final Iterator<String> i = values.iterator(); do // [I]
+              containerResponseHeaders.add(key, i.next());
+            while (i.hasNext());
+          }
         }
       }
     }

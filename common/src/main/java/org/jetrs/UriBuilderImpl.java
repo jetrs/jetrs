@@ -60,7 +60,7 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
         return null;
 
       final Object value = parameterValues[index++];
-      put((String)key, value);
+      put((String)key, assertNotNull(value));
       return value;
     }
 
@@ -352,7 +352,8 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
     assertNotNull(resource, "resource is null");
 
     final Path annotation = AnnotationUtil.getAnnotation(resource, Path.class);
-    assertNotNull(annotation, "Path resource not annotated with @Path: %s", resource.getName());
+    if (annotation == null)
+      throw new IllegalArgumentException("Path resource not annotated with @Path: " + resource.getName());
 
     path = appendPath(path, true, annotation.value());
     return this;
@@ -543,22 +544,18 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
   @Override
   public UriBuilder queryParam(final String name, final Object ... values) throws IllegalArgumentException {
     assertNotNull(name, "name is null");
+    assertNotNull(values, "values is null");
 
     final StringBuilder builder = new StringBuilder();
     if (query != null)
       builder.append(query).append('&');
 
-    if (values == null) {
-      builder.append(UriEncoder.QUERY_PARAM.encode(name));
-    }
-    else {
-      for (int i = 0, i$ = values.length; i < i$; ++i) { // [A]
-        final Object value = assertNotNull(values[i], "value is null");
-        if (i > 0)
-          builder.append('&');
+    for (int i = 0, i$ = values.length; i < i$; ++i) { // [A]
+      final Object value = assertNotNull(values[i], "value is null");
+      if (i > 0)
+        builder.append('&');
 
-        builder.append(UriEncoder.QUERY_PARAM.encode(name)).append('=').append(UriEncoder.QUERY_PARAM.encode(value.toString()));
-      }
+      builder.append(UriEncoder.QUERY_PARAM.encode(name)).append('=').append(UriEncoder.QUERY_PARAM.encode(value.toString()));
     }
 
     query = builder.toString();
@@ -600,7 +597,6 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
 
   @Override
   public UriBuilder segment(final String ... segments) throws IllegalArgumentException {
-    assertNotNull(segments, "segments is null");
     if (segments == null)
       throw new IllegalArgumentException(invalidParam("segments", null));
 

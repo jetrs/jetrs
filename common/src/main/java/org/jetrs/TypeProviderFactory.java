@@ -29,6 +29,6 @@ abstract class TypeProviderFactory<T> extends ProviderFactory<T> {
   }
 
   Class<?> getType() {
-    return this.type;
+    return type;
   }
 }

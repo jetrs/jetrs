@@ -16,8 +16,6 @@
 
 package org.jetrs;
 
-import static org.libj.lang.Assertions.*;
-
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
@@ -61,7 +59,7 @@ abstract class ParamPlurality<T> {
     ARRAY = new ParamPlurality<Object[]>() {
       @Override
       Object[] newContainer(final Class<?> rawType, final int size) {
-        return (Object[])Array.newInstance(rawType.getComponentType(), assertPositive(size));
+        return (Object[])Array.newInstance(rawType.getComponentType(), size);
       }
 
       @Override
@@ -90,7 +88,6 @@ abstract class ParamPlurality<T> {
       @Override
       @SuppressWarnings("unchecked")
       Collection<?> newContainer(final Class<?> rawType, final int size) {
-        assertPositive(size);
         final Class<?> cls;
         if (rawType.isAssignableFrom(List.class))
           cls = ArrayList.class;

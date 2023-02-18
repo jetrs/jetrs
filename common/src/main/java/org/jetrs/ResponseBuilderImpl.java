@@ -16,12 +16,11 @@
 
 package org.jetrs;
 
-import static org.libj.lang.Assertions.*;
-
 import java.lang.annotation.Annotation;
 import java.net.URI;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -107,9 +106,14 @@ class ResponseBuilderImpl extends Response.ResponseBuilder implements Cloneable 
     return this;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @throws NullPointerException If {@code methods} is null.
+   */
   @Override
   public Response.ResponseBuilder allow(final Set<String> methods) {
-    if (assertNotNull(methods).size() > 0)
+    if (methods.size() > 0)
       for (final String method : methods) // [S]
         headers.add(HttpHeaders.ALLOW, method);
 
@@ -140,20 +144,29 @@ class ResponseBuilderImpl extends Response.ResponseBuilder implements Cloneable 
     return this;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @throws NullPointerException If {@code headers} is null.
+   */
   @Override
   public Response.ResponseBuilder replaceAll(final MultivaluedMap<String,Object> headers) {
-    assertNotNull(headers);
     this.headers.clear();
     if (headers.size() > 0) {
       for (final Map.Entry<String,List<Object>> entry : headers.entrySet()) { // [S]
         final List<Object> values = entry.getValue();
-        if (values instanceof RandomAccess) {
-          for (int i = 0, i$ = values.size(); i < i$; ++i) // [RA]
-            addHeader(entry.getKey(), values.get(i));
-        }
-        else {
-          for (final Object value : values) // [L]
-            addHeader(entry.getKey(), value);
+        final int i$ = values.size();
+        if (i$ > 0) {
+          if (values instanceof RandomAccess) {
+            int i = 0; do // [RA]
+              addHeader(entry.getKey(), values.get(i));
+            while (++i < i$);
+          }
+          else {
+            final Iterator<Object> i = values.iterator(); do // [I]
+              addHeader(entry.getKey(), i.next());
+            while (i.hasNext());
+          }
         }
       }
     }

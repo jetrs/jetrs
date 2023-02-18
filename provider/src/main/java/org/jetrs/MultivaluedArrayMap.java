@@ -16,9 +16,8 @@
 
 package org.jetrs;
 
-import static org.libj.lang.Assertions.*;
-
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -93,12 +92,11 @@ interface MultivaluedArrayMap<K,V> extends MultivaluedMap<K,V> {
    *
    * @param key The key.
    * @param newValues The values to be added.
-   * @throws IllegalArgumentException If the supplied array of new values is null.
+   * @throws NullPointerException If the supplied array of new values is null.
    */
   @Override
   @SuppressWarnings("unchecked")
   default void addAll(final K key, final V ... newValues) {
-    assertNotNull(newValues, "Supplied array of values must not be null");
     final List<V> values = getValues(key);
     for (final V value : newValues) // [A]
       values.add(value);
@@ -111,11 +109,10 @@ interface MultivaluedArrayMap<K,V> extends MultivaluedMap<K,V> {
    *
    * @param key The key.
    * @param newValues The list of values to be added.
-   * @throws IllegalArgumentException If the supplied value list is null.
+   * @throws NullPointerException If the supplied value list is null.
    */
   @Override
   default void addAll(final K key, final List<V> newValues) {
-    assertNotNull(newValues, "Supplied array of values must not be null");
     CollectionUtil.addAll(getValues(key), newValues);
   }
 
@@ -165,29 +162,71 @@ interface MultivaluedArrayMap<K,V> extends MultivaluedMap<K,V> {
    * @return {@code true} if the method resulted in a change to the map.
    */
   default boolean removeIf(final K key, final Predicate<? super V> test) {
-    final List<V> values = getValues(key);
-    if (values == null)
+    final List<V> values = get(key);
+    final int i$;
+    if (values == null || (i$ = values.size()) == 0)
       return false;
 
     if (values instanceof RandomAccess) {
-      for (int i = 0, i$ = values.size(); i < i$; ++i) { // [RA]
+      int i = 0; do { // [RA]
         if (test.test(values.get(i))) {
           values.remove(i);
           return true;
         }
       }
+      while (++i < i$);
     }
     else {
-      for (final Iterator<V> i = values.iterator(); i.hasNext();) { // [I]
-        final V v = i.next();
-        if (test.test(v)) {
+      final Iterator<V> i = values.iterator(); do { // [I]
+        if (test.test(i.next())) {
           i.remove();
           return true;
         }
       }
+      while (i.hasNext());
     }
 
     return false;
+  }
+
+  /**
+   * Removes the all values in the value {@link Collection} for the given key for which the provided {@link Predicate} returns
+   * {@code true}.
+   *
+   * @param key The key.
+   * @param test The {@link Predicate} to test whether a value is to be removed.
+   * @return {@code true} if the method resulted in a change to the map.
+   * @throws NullPointerException If {@code test} is null.
+   * @throws UnsupportedOperationException If the value {@link Collection} for the given key does not support the {@code remove}
+   *           operation.
+   */
+  default boolean removeAllIf(final K key, final Predicate<? super V> test) {
+    final List<V> values = get(key);
+    final int i$;
+    if (values == null || (i$ = values.size()) == 0)
+      return false;
+
+    boolean changed = false;
+    if (values instanceof RandomAccess) {
+      int i = 0; do { // [RA]
+        if (test.test(values.get(i))) {
+          values.remove(i);
+          changed = true;
+        }
+      }
+      while (++i < i$);
+    }
+    else {
+      final Iterator<V> i = values.iterator(); do { // [I]
+        if (test.test(i.next())) {
+          i.remove();
+          changed = true;
+        }
+      }
+      while (i.hasNext());
+    }
+
+    return changed;
   }
 
   /**
