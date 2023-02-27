@@ -16,6 +16,8 @@
 
 package org.jetrs;
 
+
+
 import static org.libj.lang.Assertions.*;
 
 import java.lang.annotation.Annotation;
@@ -36,6 +38,7 @@ final class AnnotationUtil {
    * @return All annotations on the class itself, and all JaxRs annotations encountered on the first layer of traversing super
    *         classes.
    * @throws IllegalStateException If {@code cls} is null.
+   * @throws IllegalArgumentException If {@code cls} is null.
    */
   static Annotation[] getAnnotations(final Class<?> cls) {
     return getAnnotations(assertNotNull(cls), 0);
@@ -112,8 +115,7 @@ final class AnnotationUtil {
 
   @SuppressWarnings("unchecked")
   static <A extends Annotation>A getAnnotation(final Class<?> cls, final Class<A> annotationClass) {
-    Class<?> parent = assertNotNull(cls);
-    assertNotNull(annotationClass);
+    Class<?> parent = cls;
     boolean hasJaxRsAnnotations = false;
     do {
       for (final Annotation annotation : cls.getAnnotations()) { // [A]
@@ -135,8 +137,6 @@ final class AnnotationUtil {
 
   @SuppressWarnings("unchecked")
   static <A extends Annotation>A getAnnotation(Method method, final Class<A> annotationClass) {
-    assertNotNull(method);
-    assertNotNull(annotationClass);
     boolean hasJaxRsAnnotations = false;
     Class<?> declaringClass;
     do {
@@ -158,7 +158,6 @@ final class AnnotationUtil {
   }
 
   static Path digestAnnotations(Method method, final HashSet<HttpMethod> httpMethodAnnotations) {
-    assertNotNull(method);
     boolean hasJaxRsAnnotations = false;
     Path path = null;
     Class<?> declaringClass;
@@ -190,7 +189,7 @@ final class AnnotationUtil {
   }
 
   static boolean isAnnotationPresent(final Class<?> cls, final Class<? extends Annotation> annotationClass) {
-    Class<?> parent = assertNotNull(cls);
+    Class<?> parent = cls;
     boolean hasJaxRsAnnotations = false;
     do {
       for (final Annotation annotation : parent.getAnnotations()) { // [A]
@@ -232,7 +231,6 @@ final class AnnotationUtil {
 
   @SafeVarargs
   static boolean isAnyAnnotationPresent(Method method, final Class<? extends Annotation> ... annotationClasses) {
-    assertNotNull(method);
     boolean hasJaxRsAnnotations = false;
     Class<?> declaringClass;
     do {

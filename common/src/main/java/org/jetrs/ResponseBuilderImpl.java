@@ -69,20 +69,31 @@ class ResponseBuilderImpl extends Response.ResponseBuilder implements Cloneable 
 
   @Override
   public Response build() {
-    // FIXME: Need to reset the builder to a "blank state", as is documented in the javadocs of this method
+    int statusCode = this.statusCode;
+    if (statusCode == 0)
+      statusCode = entity != null ? Response.Status.OK.getStatusCode() : Response.Status.NO_CONTENT.getStatusCode();
+
     final Response.StatusType statusInfo = Responses.from(statusCode, reasonPhrase);
     return new ResponseImpl(requestContext, statusCode, statusInfo, headers, cookies, entity, annotations);
+    // FIXME: Need to reset the builder to a "blank state", as is documented in the javadocs of this method
+  }
+
+  private static int checkStatus(final int status) {
+    if (status < 100 || status > 599)
+      throw new IllegalArgumentException("Invalid status: " + status);
+
+    return status;
   }
 
   @Override
   public Response.ResponseBuilder status(final int status) {
-    this.statusCode = status;
+    this.statusCode = checkStatus(status);
     return this;
   }
 
   @Override
   public ResponseBuilder status(final int status, final String reasonPhrase) {
-    this.statusCode = status;
+    this.statusCode = checkStatus(status);
     this.reasonPhrase = reasonPhrase;
     return this;
   }

@@ -16,8 +16,6 @@
 
 package org.jetrs;
 
-import static org.libj.lang.Assertions.*;
-
 import java.util.ArrayList;
 
 import javax.ws.rs.core.Configuration;
@@ -45,11 +43,11 @@ abstract class RuntimeContext {
     final ArrayList<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperProviderFactories
   ) {
     this.configuration = configuration;
-    this.readerInterceptorProviderFactories = assertNotNull(readerInterceptorProviderFactories);
-    this.writerInterceptorProviderFactories = assertNotNull(writerInterceptorProviderFactories);
-    this.messageBodyReaderProviderFactories = assertNotNull(messageBodyReaderProviderFactories);
-    this.messageBodyWriterProviderFactories = assertNotNull(messageBodyWriterProviderFactories);
-    this.exceptionMapperProviderFactories = assertNotNull(exceptionMapperProviderFactories);
+    this.readerInterceptorProviderFactories = readerInterceptorProviderFactories;
+    this.writerInterceptorProviderFactories = writerInterceptorProviderFactories;
+    this.messageBodyReaderProviderFactories = messageBodyReaderProviderFactories;
+    this.messageBodyWriterProviderFactories = messageBodyWriterProviderFactories;
+    this.exceptionMapperProviderFactories = exceptionMapperProviderFactories;
   }
 
   abstract RequestContext<?> localRequestContext();
@@ -60,22 +58,22 @@ abstract class RuntimeContext {
   }
 
   ArrayList<MessageBodyProviderFactory<ReaderInterceptor>> getReaderInterceptorProviderFactories() {
-    return this.readerInterceptorProviderFactories;
+    return readerInterceptorProviderFactories;
   }
 
   ArrayList<MessageBodyProviderFactory<WriterInterceptor>> getWriterInterceptorProviderFactories() {
-    return this.writerInterceptorProviderFactories;
+    return writerInterceptorProviderFactories;
   }
 
   ArrayList<MessageBodyProviderFactory<MessageBodyReader<?>>> getMessageBodyReaderProviderFactories() {
-    return this.messageBodyReaderProviderFactories;
+    return messageBodyReaderProviderFactories;
   }
 
   ArrayList<MessageBodyProviderFactory<MessageBodyWriter<?>>> getMessageBodyWriterProviderFactories() {
-    return this.messageBodyWriterProviderFactories;
+    return messageBodyWriterProviderFactories;
   }
 
   ArrayList<TypeProviderFactory<ExceptionMapper<?>>> getExceptionMapperProviderFactories() {
-    return this.exceptionMapperProviderFactories;
+    return exceptionMapperProviderFactories;
   }
 }

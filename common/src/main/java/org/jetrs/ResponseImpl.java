@@ -16,8 +16,6 @@
 
 package org.jetrs;
 
-import static org.libj.lang.Assertions.*;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
@@ -64,8 +62,8 @@ class ResponseImpl extends Response {
     this.requestContext = requestContext;
     this.providers = requestContext.getProviders();
     this.statusCode = statusCode;
-    this.statusInfo = assertNotNull(statusInfo);
-    this.headers = assertNotNull(headers);
+    this.statusInfo = statusInfo;
+    this.headers = headers;
     this.cookies = cookies != null ? cookies : Collections.EMPTY_MAP;
 
     if ((this.hasEntity = entity != null) && entity instanceof InputStream)

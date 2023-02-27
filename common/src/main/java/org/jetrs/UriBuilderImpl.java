@@ -233,49 +233,58 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
   public UriBuilder uri(final URI uri) throws IllegalArgumentException {
     assertNotNull(uri, "uri is null");
 
-    if (uri.getRawFragment() != null)
-      fragment = uri.getRawFragment();
+    final String rawFragment = uri.getRawFragment();
+    if (rawFragment != null)
+      fragment = rawFragment;
 
+    final String scheme = uri.getScheme();
+    final String rawSchemeSpecificPart = uri.getRawSchemeSpecificPart();
     if (uri.isOpaque()) {
-      scheme = uri.getScheme();
-      ssp = uri.getRawSchemeSpecificPart();
+      this.scheme = scheme;
+      ssp = rawSchemeSpecificPart;
       return this;
     }
 
-    if (uri.getScheme() != null) {
-      scheme = uri.getScheme();
+    if (scheme != null) {
+      this.scheme = scheme;
     }
-    else if (ssp != null && uri.getRawSchemeSpecificPart() != null) {
-      ssp = uri.getRawSchemeSpecificPart();
+    else if (ssp != null && rawSchemeSpecificPart != null) {
+      ssp = rawSchemeSpecificPart;
       return this;
     }
 
     ssp = null;
-    if (uri.getRawAuthority() != null) {
-      if (uri.getRawUserInfo() == null && uri.getHost() == null && uri.getPort() == -1) {
-        authority = uri.getRawAuthority();
+    final String rawAuthority = uri.getRawAuthority();
+    if (rawAuthority != null) {
+      final String rawUserInfo = uri.getRawUserInfo();
+      final String host$ = uri.getHost();
+      final int port$ = uri.getPort();
+      if (rawUserInfo == null && host$ == null && port$ == -1) {
+        authority = rawAuthority;
         userInfo = null;
         host = null;
         port = -1;
       }
       else {
         authority = null;
-        if (uri.getRawUserInfo() != null)
-          userInfo = uri.getRawUserInfo();
+        if (rawUserInfo != null)
+          userInfo = rawUserInfo;
 
-        if (uri.getHost() != null)
-          host = uri.getHost();
+        if (host$ != null)
+          host = host$;
 
-        if (uri.getPort() != -1)
-          port = uri.getPort();
+        if (port$ != -1)
+          port = port$;
       }
     }
 
-    if (uri.getRawPath() != null && uri.getRawPath().length() > 0)
-      path = uri.getRawPath();
+    final String rawPath = uri.getRawPath();
+    if (rawPath != null && rawPath.length() > 0)
+      path = rawPath;
 
-    if (uri.getRawQuery() != null && uri.getRawQuery().length() > 0)
-      query = uri.getRawQuery();
+    final String rawQuery = uri.getRawQuery();
+    if (rawQuery != null && rawQuery.length() > 0)
+      query = rawQuery;
 
     return this;
   }
@@ -299,15 +308,17 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
       builder.append('#').append(fragment);
 
     final URI uri = newURI(builder.toString());
-    if (uri.getRawSchemeSpecificPart() != null && uri.getRawPath() == null) {
-      this.ssp = uri.getRawSchemeSpecificPart();
+    final String rawSchemeSpecificPart = uri.getRawSchemeSpecificPart();
+    final String rawPath = uri.getRawPath();
+    if (rawSchemeSpecificPart != null && rawPath == null) {
+      this.ssp = rawSchemeSpecificPart;
     }
     else {
       this.ssp = null;
       userInfo = uri.getRawUserInfo();
       host = uri.getHost();
       port = uri.getPort();
-      path = uri.getRawPath();
+      path = rawPath;
       query = uri.getRawQuery();
     }
 
@@ -502,17 +513,17 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
       PathSegmentImpl.parseMatrixParams(params, path, matrixIndex);
       params.remove(name);
 
-      final StringBuilder path = new StringBuilder(this.path);
-      path.delete(matrixIndex, path.length());
+      final StringBuilder newPath = new StringBuilder(path);
+      newPath.delete(matrixIndex, newPath.length());
       if (params.size() > 0) {
         for (final String paramName : params.keySet()) { // [S]
           final List<String> paramValues = params.get(paramName);
           for (int i = 0, i$ = paramValues.size(); i < i$; ++i) // [RA]
-            appendParam(path, paramName, paramValues.get(i));
+            appendParam(newPath, paramName, paramValues.get(i));
         }
       }
 
-      this.path = path.toString();
+      path = newPath.toString();
     }
 
     if (values != null && values.length > 0)
@@ -524,11 +535,11 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
       final StringBuilder builder = new StringBuilder();
       int from = 0;
       for (int i = 0; matcher.find(); ++i, from = matcher.end()) { // [RA]
-        builder.append(this.path, from, matcher.start());
+        builder.append(path, from, matcher.start());
         builder.append(pathParams.get(i));
       }
 
-      builder.append(this.path, from, this.path.length());
+      builder.append(path, from, path.length());
       path = builder.toString();
     }
 

@@ -16,8 +16,6 @@
 
 package org.jetrs;
 
-import static org.libj.lang.Assertions.*;
-
 import java.net.URI;
 import java.util.AbstractMap;
 import java.util.Arrays;
@@ -102,11 +100,11 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
    * Creates a new {@link HttpHeadersImpl} with the specified map of headers as lists of strings.
    *
    * @param headers The map of headers as lists of strings.
-   * @throws IllegalArgumentException If the specified map is null.
+   * @throws NullPointerException If the specified map is null.
    */
   HttpHeadersImpl(final Map<String,List<String>> headers) {
     this();
-    if (assertNotNull(headers).size() > 0) {
+    if (headers.size() > 0) {
       for (final Map.Entry<String,List<String>> entry : headers.entrySet()) { // [S]
         final String key = entry.getKey();
         if (key != null)
@@ -119,12 +117,12 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
    * Creates a new {@link HttpHeadersImpl} with the specified map of headers as lists of objects.
    *
    * @param headers The map of headers as lists of objects.
-   * @throws IllegalArgumentException If the specified map is null.
+   * @throws NullPointerException If the specified map is null.
    */
   HttpHeadersImpl(final MultivaluedArrayMap<String,Object> headers) {
     this();
     final MirrorMultivaluedArrayMap<String,Object,String> mirrorMap = getMirrorMap();
-    if (assertNotNull(headers).size() > 0)
+    if (headers.size() > 0)
       for (final Map.Entry<String,List<Object>> entry : headers.entrySet()) // [S]
       mirrorMap.addAll(entry.getKey(), entry.getValue());
   }

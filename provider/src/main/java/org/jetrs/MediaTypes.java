@@ -16,8 +16,6 @@
 
 package org.jetrs;
 
-import static org.libj.lang.Assertions.*;
-
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -149,8 +147,6 @@ public final class MediaTypes {
   }
 
   private static CompatibleMediaType[] getCompatible(final ServerMediaType[] serverTypes, final MediaType[] clientTypes, final List<String> acceptCharsets, int index1, final int index2, final int depth) {
-    assertNotNull(serverTypes);
-    assertNotNull(clientTypes);
     if (index2 == clientTypes.length) {
       if (++index1 == serverTypes.length)
         return depth == 0 ? WILDCARD_COMPATIBLE_TYPE : new CompatibleMediaType[depth];
@@ -217,7 +213,7 @@ public final class MediaTypes {
    * @param acceptCharsets Value of "Accept-Charsets" header, or {@code null} if no such header was provided.
    * @return An array of {@link CompatibleMediaType}s by evaluating the provided {@link ServerMediaType}s, {@link MediaType} and
    *         "Accept-Charset" header values for compatibility.
-   * @throws IllegalArgumentException If {@code serverTypes}, any member of {@code serverTypes}, or {@code clientType} is null.
+   * @throws NullPointerException If {@code serverTypes}, any member of {@code serverTypes}, or {@code clientType} is null.
    */
   static CompatibleMediaType[] getCompatible(final ServerMediaType[] serverTypes, final MediaType clientType, final List<String> acceptCharsets) {
     final CompatibleMediaType[] mediaTypes = getCompatible(serverTypes, clientType, acceptCharsets, 0, 0);
@@ -249,7 +245,7 @@ public final class MediaTypes {
    * @param acceptCharsets Value of "Accept-Charsets" header, or {@code null} if no such header was provided.
    * @return An array of {@link CompatibleMediaType}s by evaluating the provided {@link ServerMediaType}s, {@link MediaType} and
    *         "Accept-Charset" header values for compatibility.
-   * @throws IllegalArgumentException If {@code serverTypes}, any member of {@code serverTypes}, or {@code clientType} is null.
+   * @throws NullPointerException If {@code serverTypes}, any member of {@code serverTypes}, or {@code clientType} is null.
    */
   static CompatibleMediaType[] getCompatible(final List<ServerMediaType> serverTypes, final MediaType clientType, final List<String> acceptCharsets) {
     final CompatibleMediaType[] mediaTypes = getCompatible(serverTypes, clientType, acceptCharsets, 0, 0);
@@ -302,11 +298,9 @@ public final class MediaTypes {
    * @param acceptCharsets Value of "Accept-Charsets" header, or {@code null} if no such header was provided.
    * @return A {@link CompatibleMediaType} by evaluating the provided {@link ServerMediaType}, {@link MediaType} and
    *         "Accept-Charset" header values for compatibility, or {@code null} if the arguments are not compatible.
-   * @throws IllegalArgumentException If {@code serverType} or {@code clientType} is null.
+   * @throws NullPointerException If {@code serverType} or {@code clientType} is null.
    */
   static CompatibleMediaType getCompatible(final ServerMediaType serverType, final MediaType clientType, final List<String> acceptCharsets) {
-    assertNotNull(serverType);
-    assertNotNull(clientType);
     if (serverType.isWildcardType()) {
       // {*/?}+{?/?}
       if (clientType.isWildcardType()) {
@@ -714,7 +708,6 @@ public final class MediaTypes {
    * @throws IllegalArgumentException If {@code mediaType} is null.
    */
   static String toString(final MediaType mediaType) {
-    assertNotNull(mediaType);
     final StringBuilder builder = new StringBuilder();
     builder.append(mediaType.getType()).append('/').append(mediaType.getSubtype());
     if (mediaType.getParameters().size() > 0) {

@@ -16,14 +16,13 @@
 
 package org.jetrs.provider.container;
 
-import static org.libj.lang.Assertions.*;
-
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.security.KeyStore;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -55,7 +54,7 @@ public abstract class ClientCertificateFilter implements ContainerRequestFilter 
   }
 
   private X509Certificate getCertificateFromHeader(final ContainerRequestContext requestContext, final String headerName) {
-    String headerValue = requestContext.getHeaders().getFirst(assertNotNull(headerName));
+    String headerValue = requestContext.getHeaders().getFirst(Objects.requireNonNull(headerName));
     return headerValue == null || (headerValue = headerValue.trim()).length() == 0 ? null : getCertificateFromHeader(headerName, headerValue);
   }
 
@@ -112,16 +111,15 @@ public abstract class ClientCertificateFilter implements ContainerRequestFilter 
    *         {@code 0} and is incremented until the first {@code null} header chain entry is encountered) specifying the additional
    *         chain certificates in the provided {@link ContainerRequestContext}, or {@code null} if the specified header does not
    *         exist or the certificate is not valid.
-   * @throws IllegalArgumentException If any parameter is null.
+   * @throws NullPointerException If any parameter is null.
    */
   protected X509Certificate[] getCertificateChain(final ContainerRequestContext requestContext, final String clientCertHeader, final String clientCertChainHeaderPrefix) {
-    assertNotNull(requestContext);
-    assertNotNull(clientCertHeader);
-    assertNotNull(clientCertChainHeaderPrefix);
+    Objects.requireNonNull(clientCertHeader);
     final X509Certificate clientCert = getCertificateFromHeader(requestContext, clientCertHeader);
     if (clientCert == null)
       return null;
 
+    Objects.requireNonNull(clientCertChainHeaderPrefix);
     final X509Certificate[] clientCertChain = getCertificateChain(requestContext, clientCertChainHeaderPrefix, 0, 1);
     clientCertChain[0] = clientCert;
 
@@ -145,7 +143,7 @@ public abstract class ClientCertificateFilter implements ContainerRequestFilter 
    * @return A <b>valid</b> certificate chain from the {@code clientCertHeader} header specifying the client certificate in the
    *         provided {@link ContainerRequestContext} and the {@code trustedRootCerts} and {@code intermediateCerts} specifying the
    *         {@link KeyStore Trust Store}, or {@code null} if the specified header does not exist or the certificate is not valid.
-   * @throws IllegalArgumentException If any parameter is null.
+   * @throws NullPointerException If any parameter is null.
    */
   protected X509Certificate[] getCertificateChain(final ContainerRequestContext requestContext, final String clientCertHeader, final Set<X509Certificate> trustedRootCerts, final Set<X509Certificate> intermediateCerts) {
     final X509Certificate clientCert = getCertificateFromHeader(requestContext, clientCertHeader);

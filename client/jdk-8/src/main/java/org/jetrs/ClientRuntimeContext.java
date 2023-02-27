@@ -26,7 +26,7 @@ import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
 
-public class ClientRuntimeContext extends RuntimeContext {
+class ClientRuntimeContext extends RuntimeContext {
   ClientRuntimeContext(
     final Configuration configuration,
     final ArrayList<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories,

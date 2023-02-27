@@ -63,7 +63,7 @@ class ResourceMatch implements Comparable<ResourceMatch> {
   private final long[] regionStartEnds;
 
   ResourceMatch(final ResourceInfoImpl resourceInfo, final String uriEncoded, final CompatibleMediaType[] producedMediaTypes, final String[] pathSegmentParamNames, final long[] regionStartEnds, final MultivaluedArrayMap<String,String> pathParameters) {
-    this.resourceInfo = assertNotNull(resourceInfo);
+    this.resourceInfo = resourceInfo;
     this.resourceClass = resourceInfo.getResourceClass();
     this.instance = resourceInfo.getSingleton();
 

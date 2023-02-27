@@ -16,8 +16,6 @@
 
 package org.jetrs;
 
-import static org.libj.lang.Assertions.*;
-
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -288,24 +286,13 @@ class UriInfoImpl implements UriInfo {
     return requestContext.getResourceMatches() != null ? requestContext.getResourceMatches().getMatchedResources(requestContext) : Collections.EMPTY_LIST;
   }
 
-  /**
-   * {@inheritDoc}
-   *
-   * @throws IllegalArgumentException If {@code uri} is null.
-   */
   @Override
   public URI resolve(final URI uri) {
-    return getBaseUri().resolve(assertNotNull(uri));
+    return getBaseUri().resolve(uri);
   }
 
-  /**
-   * {@inheritDoc}
-   *
-   * @throws IllegalArgumentException If {@code uri} is null.
-   */
   @Override
   public URI relativize(final URI uri) {
-    assertNotNull(uri);
     return URIs.relativize(getRequestUri(), uri.getScheme() != null || uri.getHost() != null ? uri : getBaseUriBuilder()
       .replaceQuery(null)
       .path(uri.getPath())

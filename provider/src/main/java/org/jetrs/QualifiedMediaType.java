@@ -16,8 +16,6 @@
 
 package org.jetrs;
 
-import static org.libj.lang.Assertions.*;
-
 import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
@@ -62,10 +60,10 @@ class QualifiedMediaType extends MediaType implements Qualified {
    * Creates a new instance of {@link QualifiedMediaType} with the supplied {@link MediaType} parameter.
    *
    * @param mediaType The {@link MediaType}.
-   * @throws IllegalArgumentException If {@code mediaType} is null.
+   * @throws NullPointerException If {@code mediaType} is null.
    */
   QualifiedMediaType(final MediaType mediaType) {
-    super(assertNotNull(mediaType).getType(), mediaType.getSubtype(), mediaType.getParameters());
+    super(mediaType.getType(), mediaType.getSubtype(), mediaType.getParameters());
   }
 
   @Override

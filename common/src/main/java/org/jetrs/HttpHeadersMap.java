@@ -16,8 +16,6 @@
 
 package org.jetrs;
 
-import static org.libj.lang.Assertions.*;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -36,7 +34,7 @@ import org.libj.util.MirrorMap;
  */
 class HttpHeadersMap<V,R> extends MirrorMultivaluedArrayMap<String,V,R> {
   @SuppressWarnings("unchecked")
-  private static <C extends List<T> & Cloneable,T> C ensureCloneable(final List<T> list) {
+  private static <C extends List<T> & Cloneable,T>C ensureCloneable(final List<T> list) {
     if (list == null)
       return (C)new ArrayList<>();
 
@@ -54,7 +52,6 @@ class HttpHeadersMap<V,R> extends MirrorMultivaluedArrayMap<String,V,R> {
    *          {@link org.libj.util.MirrorMap.Mirror#valueToReflection(Object,Object) V -> R} and
    *          {@link org.libj.util.MirrorMap.Mirror#reflectionToValue(Object,Object) R -> V} methods.
    * @param qualifier {@link Qualifier} providing methods for the determination of quality from value objects.
-   * @throws IllegalArgumentException If any of the specified parameters is null.
    */
   HttpHeadersMap(final MirrorMap.Mirror<String,V,R> mirror, final Qualifier<V,R> qualifier) {
     super(new HashMap<>(), new HashMap<>(), new MirrorMultivaluedArrayMap.Mirror<String,V,R>() {
@@ -96,8 +93,6 @@ class HttpHeadersMap<V,R> extends MirrorMultivaluedArrayMap<String,V,R> {
         }, qualifier);
       }
     });
-    assertNotNull(mirror);
-    assertNotNull(qualifier);
   }
 
   /**
@@ -139,11 +134,10 @@ class HttpHeadersMap<V,R> extends MirrorMultivaluedArrayMap<String,V,R> {
    *
    * @param headerName The header name.
    * @return the provided header name in lower-case characters after validating that each character conforms to RFC 7230.
+   * @throws NullPointerException If {@code headerName} is null.
    * @see <a href="https://datatracker.ietf.org/doc/html/rfc7230">RFC 7230</a>
    */
   private static String format(final Object headerName) {
-    assertNotNull(headerName);
-
     final String str = headerName.toString();
     for (int i = 0, i$ = str.length(), ch; i < i$; ++i) { // [N]
       ch = str.charAt(i);
@@ -197,7 +191,7 @@ class HttpHeadersMap<V,R> extends MirrorMultivaluedArrayMap<String,V,R> {
 
   @Override
   public void putAll(final Map<? extends String,? extends List<V>> m) {
-    if (assertNotNull(m).size() > 0)
+    if (m.size() > 0)
       for (final Map.Entry<? extends String,? extends List<V>> entry : m.entrySet()) // [S]
         put(format(entry.getKey()), entry.getValue());
   }
