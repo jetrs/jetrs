@@ -77,7 +77,7 @@ class ServerMediaType extends QualifiedMediaType {
    * Creates a new instance of {@link ServerMediaType} with the supplied {@link MediaType} parameter.
    *
    * @param mediaType The {@link MediaType}.
-   * @throws IllegalArgumentException If {@code mediaType} is null.
+   * @throws NullPointerException If {@code mediaType} is null.
    */
   private ServerMediaType(final MediaType mediaType) {
     super(mediaType);

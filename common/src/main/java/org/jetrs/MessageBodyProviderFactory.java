@@ -43,7 +43,7 @@ abstract class MessageBodyProviderFactory<T> extends TypeProviderFactory<T> {
    * @param mediaType The {@link MediaType} of the entity.
    * @return A compatible {@link MediaType} for the specified {@code provider} and the entity of the given parameters, if one
    *         exists.
-   * @throws IllegalArgumentException If {@code mediaType} is null.
+   * @throws NullPointerException If {@code mediaType} is null.
    */
   CompatibleMediaType[] getCompatibleMediaType(final RequestContext<?> requestContext, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
     return MediaTypes.getCompatible(allowedTypes, mediaType, null);

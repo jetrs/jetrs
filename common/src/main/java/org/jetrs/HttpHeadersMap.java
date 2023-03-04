@@ -123,7 +123,7 @@ class HttpHeadersMap<V,R> extends MirrorMultivaluedArrayMap<String,V,R> {
    * @param mirror The {@link org.jetrs.MirrorMultivaluedArrayMap.Mirror} specifying the
    *          {@link org.jetrs.MirrorMultivaluedArrayMap.Mirror#valueToReflection(Object,List) V -&gt; R} and
    *          {@link org.jetrs.MirrorMultivaluedArrayMap.Mirror#reflectionToValue(Object,List) R -&gt; V} methods.
-   * @throws IllegalArgumentException If any of the specified parameters is null.
+   * @throws NullPointerException If any of the specified parameters is null.
    */
   private HttpHeadersMap(final Map<String,List<V>> values, final Map<String,List<R>> reflections, final Mirror<String,V,R> mirror) {
     super(toCloneable(values), toCloneable(reflections), mirror);
@@ -135,6 +135,7 @@ class HttpHeadersMap<V,R> extends MirrorMultivaluedArrayMap<String,V,R> {
    * @param headerName The header name.
    * @return the provided header name in lower-case characters after validating that each character conforms to RFC 7230.
    * @throws NullPointerException If {@code headerName} is null.
+   * @throws IllegalArgumentException If {@code headerName} is invalid.
    * @see <a href="https://datatracker.ietf.org/doc/html/rfc7230">RFC 7230</a>
    */
   private static String format(final Object headerName) {

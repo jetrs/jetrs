@@ -133,7 +133,7 @@ class MirrorQualityList<V,R> extends MirrorList<V,List<V>,R,List<R>> implements 
    *          {@link org.libj.util.MirrorList.Mirror#reflectionToValue(Object) R -> V} methods.
    * @param qualifier The {@link Qualifier} specifying the {@link Qualifier#valueToQuality(Object,int) V -> quality} and
    *          {@link Qualifier#reflectionToQuality(Object,int) R -> quality} methods.
-   * @throws IllegalArgumentException If {@code values}, {@code reflections}, or {@code mirror} is null.
+   * @throws NullPointerException If {@code values}, {@code reflections}, or {@code mirror} is null.
    */
   <CloneableValues extends List<V> & Cloneable,CloneableReflections extends List<R> & Cloneable>MirrorQualityList(final CloneableValues values, final CloneableReflections reflections, final Mirror<V,R> mirror, final Qualifier<V,R> qualifier) {
     super(values, reflections, mirror);

@@ -137,7 +137,7 @@ public final class MediaTypes {
    * @param acceptCharsets Value of "Accept-Charsets" header, or {@code null} if no such header was provided.
    * @return An array of {@link CompatibleMediaType}s by evaluating the provided {@link ServerMediaType}s, {@link MediaType}s and
    *         "Accept-Charset" header values for compatibility.
-   * @throws IllegalArgumentException If {@code serverTypes}, any member of {@code serverTypes}, {@code clientTypes}, or any member
+   * @throws NullPointerException If {@code serverTypes}, any member of {@code serverTypes}, {@code clientTypes}, or any member
    *           of {@code clientTypes} is null.
    */
   static CompatibleMediaType[] getCompatible(final ServerMediaType[] serverTypes, final MediaType[] clientTypes, final List<String> acceptCharsets) {
@@ -175,7 +175,7 @@ public final class MediaTypes {
    * @param acceptCharsets Value of "Accept-Charsets" header, or {@code null} if no such header was provided.
    * @return An array of {@link CompatibleMediaType}s by evaluating the provided {@link ServerMediaType}s, {@link MediaType}s and
    *         "Accept-Charset" header values for compatibility.
-   * @throws IllegalArgumentException If {@code serverTypes}, any member of {@code serverTypes}, {@code clientTypes}, or any member
+   * @throws NullPointerException If {@code serverTypes}, any member of {@code serverTypes}, {@code clientTypes}, or any member
    *           of {@code clientTypes} is null.
    */
   static CompatibleMediaType[] getCompatible(final ServerMediaType[] serverTypes, final List<MediaType> clientTypes, final List<String> acceptCharsets) {
@@ -637,9 +637,6 @@ public final class MediaTypes {
   // FIXME: What are the legal name and sub-name spec? Need to properly throw IllegalArgumentException!
   @SuppressWarnings("unchecked")
   static <T extends QualifiedMediaType>T parse(final Class<T> cls, String string) {
-    if (string == null)
-      throw new IllegalArgumentException(string);
-
     string = string.trim();
     if (string.length() == 0)
       throw new IllegalArgumentException(string);
@@ -705,7 +702,7 @@ public final class MediaTypes {
    *
    * @param mediaType The {@link MediaType}.
    * @return The string representation of the specified {@link MediaType}.
-   * @throws IllegalArgumentException If {@code mediaType} is null.
+   * @throws NullPointerException If {@code mediaType} is null.
    */
   static String toString(final MediaType mediaType) {
     final StringBuilder builder = new StringBuilder();

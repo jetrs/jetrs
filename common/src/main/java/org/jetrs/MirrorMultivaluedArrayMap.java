@@ -98,7 +98,7 @@ class MirrorMultivaluedArrayMap<K,V,R> extends MirrorMap<K,List<V>,List<R>> impl
    * @param reflections The underlying map of type {@code <K,List<R>> & Cloneable}.
    * @param mirror The {@link Mirror} specifying the {@link Mirror#valueToReflection(Object,List) V -&gt; R} and
    *          {@link Mirror#reflectionToValue(Object,List) R -&gt; V} methods.
-   * @throws IllegalArgumentException If any of the specified parameters is null.
+   * @throws NullPointerException If any of the specified parameters is null.
    */
   <CloneableValues extends Map<K,List<V>> & Cloneable,CloneableReflections extends Map<K,List<R>> & Cloneable>MirrorMultivaluedArrayMap(final CloneableValues values, final CloneableReflections reflections, final Mirror<K,V,R> mirror) {
     super(values, reflections, mirror);
