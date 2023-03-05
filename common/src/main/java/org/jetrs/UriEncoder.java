@@ -193,9 +193,9 @@ final class UriEncoder {
   /**
    * Keep encoded values "%..." and template parameters intact i.e. "{x}"
    *
-   * @param segment value to encode
-   * @param encoding encoding
-   * @return encoded value
+   * @param segment The value to encode.
+   * @param encoding The encoding.
+   * @return encoded The value.
    */
   private static String encodeValue(String segment, final String[] encoding) {
     final StringBuilder newSegment = new StringBuilder();
@@ -230,7 +230,7 @@ final class UriEncoder {
    * Returns the URL-encoded representation of the specified character, via the provided encoding map.
    *
    * @param zhar Integer representation of character.
-   * @param encodingMap Encoding map.
+   * @param encodingMap The encoding map.
    * @return The URL-encoded character.
    */
   private static String encode(final int zhar, final String[] encodingMap) {
@@ -263,8 +263,8 @@ final class UriEncoder {
   /**
    * A cheaper (memory-wise) version of replaceEnclosedCurlyBraces(String str).
    *
-   * @param string input string
-   * @return replaced output
+   * @param string The input string.
+   * @return The replaced output.
    */
   @SuppressWarnings("null")
   static CharSequence replaceBraces(final String string) {
@@ -309,8 +309,8 @@ final class UriEncoder {
   /**
    * Keep encoded values "%..." and template parameters intact.
    *
-   * @param value query string
-   * @return encoded query string
+   * @param value The query string.
+   * @return The encoded query string.
    */
   String encode(final String value) {
     return encodeValue(value, data);
@@ -323,8 +323,8 @@ final class UriEncoder {
   /**
    * Keep any valid encodings from string i.e. keep "%2D" but don't keep "%p"
    *
-   * @param segment value to encode
-   * @return encoded value
+   * @param segment The value to encode.
+   * @return The encoded value.
    */
   String encodeSaveEncodings(final String segment) {
     return encodeNonCodes(encodeFromArray(segment, data, false));

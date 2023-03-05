@@ -24,6 +24,8 @@ import java.util.regex.Pattern;
 
 import javax.ws.rs.core.UriBuilderException;
 
+import org.libj.lang.Strings;
+
 final class UriBuilderUtil {
   private static final String URI_PARAM_NAME_REGEX = "\\w[\\w.-]*";
   private static final String URI_PARAM_REGEX_REGEX = "[^{}][^{}]*";
@@ -89,7 +91,7 @@ final class UriBuilderUtil {
         continue;
 
       if (builder.length() > 0 && builder.charAt(builder.length() - 1) == '/') {
-        if (segment.startsWith("/")) {
+        if (Strings.startsWith(segment, '/')) {
           segment = segment.substring(1);
           if (segment.length() == 0)
             continue;
@@ -101,7 +103,7 @@ final class UriBuilderUtil {
         if (encode)
           segment = UriEncoder.PATH.encode(segment);
 
-        builder.append(builder.length() == 0 || segment.startsWith("/") ? segment : "/" + segment);
+        builder.append(builder.length() == 0 || Strings.startsWith(segment, '/') ? segment : "/" + segment);
       }
     }
 

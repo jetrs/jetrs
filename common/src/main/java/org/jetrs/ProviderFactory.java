@@ -17,6 +17,7 @@
 package org.jetrs;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -73,14 +74,18 @@ class ProviderFactory<T> {
 
       return requestContext.getProviderInstance(clazz);
     }
-    catch (final IllegalAccessException | InstantiationException | IOException e) {
+    catch (final IOException e) {
+      throw new UncheckedIOException(e);
+    }
+    catch (final IllegalAccessException | InstantiationException e) {
       throw new ProviderInstantiationException(e);
     }
     catch (final InvocationTargetException e) {
-      if (e.getCause() instanceof RuntimeException)
-        throw (RuntimeException)e.getCause();
+      final Throwable cause = e.getCause();
+      if (cause instanceof RuntimeException)
+        throw (RuntimeException)cause;
 
-      throw new ProviderInstantiationException(e.getCause());
+      throw new ProviderInstantiationException(cause);
     }
   }
 

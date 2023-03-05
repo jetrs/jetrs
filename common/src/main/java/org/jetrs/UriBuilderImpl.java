@@ -76,6 +76,32 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
     }
   }
 
+  private String host;
+  private String scheme;
+  private int port = -1;
+
+  private String userInfo;
+  private String path;
+  private String query;
+  private String fragment;
+  private String ssp;
+  private String authority;
+
+  UriBuilderImpl() {
+  }
+
+  private UriBuilderImpl(final UriBuilderImpl copy) {
+    this.host = copy.host;
+    this.scheme = copy.scheme;
+    this.port = copy.port;
+    this.userInfo = copy.userInfo;
+    this.path = copy.path;
+    this.query = copy.query;
+    this.fragment = copy.fragment;
+    this.ssp = copy.ssp;
+    this.authority = copy.authority;
+  }
+
   private UriBuilder parseHierarchicalUri(final CharSequence uriTemplate, final Matcher match) {
     final boolean hasScheme = match.group(2) != null;
     if (hasScheme)
@@ -212,17 +238,6 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
 
     return builder;
   }
-
-  private String host;
-  private String scheme;
-  private int port = -1;
-
-  private String userInfo;
-  private String path;
-  private String query;
-  private String fragment;
-  private String ssp;
-  private String authority;
 
   @Override
   public UriBuilder uri(final String uriTemplate) throws IllegalArgumentException {
@@ -676,16 +691,6 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
 
   @Override
   public UriBuilder clone() {
-    final UriBuilderImpl clone = new UriBuilderImpl();
-    clone.host = this.host;
-    clone.scheme = this.scheme;
-    clone.port = this.port;
-    clone.userInfo = this.userInfo;
-    clone.path = this.path;
-    clone.query = this.query;
-    clone.fragment = this.fragment;
-    clone.ssp = this.ssp;
-    clone.authority = this.authority;
-    return clone;
+    return new UriBuilderImpl(this);
   }
 }

@@ -21,9 +21,6 @@ import java.io.OutputStream;
 import org.libj.util.ObservableOutputStream;
 
 abstract class EntityOutputStream extends ObservableOutputStream {
-  EntityOutputStream() {
-  }
-
   void setTarget(final OutputStream target) {
     super.target = target;
   }

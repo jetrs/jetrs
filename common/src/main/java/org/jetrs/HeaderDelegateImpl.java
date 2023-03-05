@@ -339,15 +339,19 @@ abstract class HeaderDelegateImpl<T> implements RuntimeDelegate.HeaderDelegate<T
 
       @Override
       public String toString(final EntityTag value) {
-        if (value == wildcardEntityTag || "*".equals(value.getValue()))
+        if (value == wildcardEntityTag)
           return "*";
 
-        final StringBuilder builder = new StringBuilder((value.isWeak() ? 4 : 2) + value.getValue().length());
+        final String valueValue = value.getValue();
+        if ("*".equals(valueValue))
+          return "*";
+
+        final StringBuilder builder = new StringBuilder((value.isWeak() ? 4 : 2) + valueValue.length());
         if (value.isWeak())
           builder.append("W/");
 
         builder.append('"');
-        builder.append(value.getValue());
+        builder.append(valueValue);
         builder.append('"');
         return builder.toString();
       }

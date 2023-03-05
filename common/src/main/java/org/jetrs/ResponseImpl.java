@@ -126,6 +126,11 @@ class ResponseImpl extends Response {
     return readEntity(entityType, null, annotations);
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @throws NullPointerException If {@code entityType} is null.
+   */
   @Override
   @SuppressWarnings("unchecked")
   public <T>T readEntity(final GenericType<T> entityType, final Annotation[] annotations) throws IllegalStateException, ResponseProcessingException {
@@ -215,15 +220,9 @@ class ResponseImpl extends Response {
     if (entityStream == null || ((Consumable)entityStream).isConsumed())
       return buffered = Boolean.FALSE;
 
-    byte[] data;
+    final byte[] data;
     try {
       data = Streams.readBytes(entityStream);
-    }
-    catch (final IOException e) {
-      throw new ProcessingException(e);
-    }
-
-    try {
       entityStream.close();
     }
     catch (final IOException e) {

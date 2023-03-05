@@ -16,13 +16,10 @@
 
 package org.jetrs;
 
-
-
-import static org.libj.lang.Assertions.*;
-
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.HashSet;
+import java.util.Objects;
 
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Path;
@@ -38,13 +35,13 @@ final class AnnotationUtil {
    * @return All annotations on the class itself, and all JaxRs annotations encountered on the first layer of traversing super
    *         classes.
    * @throws IllegalStateException If {@code cls} is null.
-   * @throws IllegalArgumentException If {@code cls} is null.
+   * @throws NullPointerException If {@code cls} is null.
    */
   static Annotation[] getAnnotations(final Class<?> cls) {
-    return getAnnotations(assertNotNull(cls), 0);
+    return getAnnotations(Objects.requireNonNull(cls), 0);
   }
 
-  private static Annotation[] getAnnotations(Class<?> cls, final int depth) {
+  private static Annotation[] getAnnotations(final Class<?> cls, final int depth) {
     if (cls == null)
       return depth == 0 ? null : new Annotation[depth];
 
@@ -76,13 +73,13 @@ final class AnnotationUtil {
    * @param method The {@link Method}.
    * @return All annotations on the method itself, and all JaxRs annotations encountered on the first layer of traversing super
    *         implementations.
-   * @throws IllegalStateException If {@code method} is null.
+   * @throws NullPointerException If {@code method} is null.
    */
   static Annotation[] getAnnotations(final Method method) {
-    return getAnnotations(assertNotNull(method), 0);
+    return getAnnotations(Objects.requireNonNull(method), 0);
   }
 
-  private static Annotation[] getAnnotations(Method method, final int depth) {
+  private static Annotation[] getAnnotations(final Method method, final int depth) {
     if (method == null)
       return depth == 0 ? null : new Annotation[depth];
 

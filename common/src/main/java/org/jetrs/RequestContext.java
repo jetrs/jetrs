@@ -94,6 +94,7 @@ abstract class RequestContext<P> extends InterceptorContextImpl<P> {
     return request;
   }
 
+  @SuppressWarnings("static-method")
   public final void abortWith(final Response response) {
     throw new AbortFilterChainException(response);
   }

@@ -26,6 +26,7 @@ import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
 import java.net.URI;
@@ -305,8 +306,9 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
   }
 
   final Object invokeMethod(final Object obj) throws IllegalAccessException, InvocationTargetException, IOException {
+    final Method resourceMethod = resourceInfo.getResourceMethod();
     if (resourceInfo.getParameterCount() == 0)
-      return resourceInfo.getResourceMethod().invoke(obj);
+      return resourceMethod.invoke(obj);
 
     final Parameter[] parameters = resourceInfo.getMethodParameters();
     final Class<?>[] parameterTypes = resourceInfo.getMethodParameterTypes();
@@ -319,7 +321,7 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
         throw new BadRequestException((Exception)arg);
     }
 
-    return resourceInfo.getResourceMethod().invoke(obj, arguments);
+    return resourceMethod.invoke(obj, arguments);
   }
 
   @Override
@@ -597,13 +599,13 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
       final boolean decode = EntityUtil.shouldDecode(annotations);
       final ArrayList<PathSegmentImpl> pathSegments = getUriInfo().getPathSegmentImpls(decode);
 
-      final int i$ = pathSegments.size();
+      final int pathSegremntsSize = pathSegments.size();
       final List<String> values;
-      if (i$ == 0) {
+      if (pathSegremntsSize == 0) {
         values = null;
       }
       else {
-        final String[] matrixParams = getMatrixParamValue(((MatrixParam)annotation).value(), pathSegments, i$);
+        final String[] matrixParams = getMatrixParamValue(((MatrixParam)annotation).value(), pathSegments, pathSegremntsSize);
         values = matrixParams == null ? null : Arrays.asList(matrixParams);
       }
 
@@ -694,20 +696,20 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
     return true;
   }
 
-  private static int[] normalizeUri(final StringBuilder requestUriBuilder, final String path, final boolean inMatrix, final int start, final int depth) {
-    for (int i = start, i$ = path.length(); i < i$; ++i) { // [N]
+  private static int[] normalizeUri(final StringBuilder requestUriBuilder, final String path, final int len, final boolean inMatrix, final int start, final int depth) {
+    for (int i = start; i < len; ++i) { // [N]
       final char ch = path.charAt(i);
       if (inMatrix) {
         if (ch != '/')
           continue;
 
         requestUriBuilder.append(ch);
-        final int[] ret = normalizeUri(requestUriBuilder, path, false, i + 1, depth + 1);
+        final int[] ret = normalizeUri(requestUriBuilder, path, len, false, i + 1, depth + 1);
 //        ret[depth] = i;
         return ret;
       }
       else if (ch == ';') {
-        final int[] ret = normalizeUri(requestUriBuilder, path, true, i + 1, depth + 1);
+        final int[] ret = normalizeUri(requestUriBuilder, path, len, true, i + 1, depth + 1);
 //        ret[depth] = i;
         return ret;
       }
@@ -725,7 +727,8 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
     final StringBuilder requestUriBuilder = new StringBuilder(uriInfo.getBaseUri().getRawPath());
     final int baseUriLen = requestUriBuilder.length();
 
-    normalizeUri(requestUriBuilder, uriInfo.getPath(), false, 0, 0);
+    final String path = uriInfo.getPath();
+    normalizeUri(requestUriBuilder, path, path.length(), false, 0, 0);
 
     final String requestUriMatched = requestUriBuilder.toString();
 
@@ -1046,8 +1049,9 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
     if (++interceptorIndex < size)
       return lastProceeded = readerInterceptorProviderFactories.get(interceptorIndex).getSingletonOrFromRequestContext(this).aroundReadFrom(this);
 
-    if (interceptorIndex == size && getInputStream() != null)
-      lastProceeded = messageBodyReader.readFrom(getType(), getGenericType(), getAnnotations(), getMediaType(), getHeaders(), getInputStream());
+    final InputStream inputStream;
+    if (interceptorIndex == size && (inputStream = getInputStream()) != null)
+      lastProceeded = messageBodyReader.readFrom(getType(), getGenericType(), getAnnotations(), getMediaType(), getHeaders(), inputStream);
 
     return lastProceeded;
   }

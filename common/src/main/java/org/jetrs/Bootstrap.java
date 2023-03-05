@@ -142,8 +142,13 @@ class Bootstrap<R extends ArrayList<? extends Comparable<?>>> {
       final Predicate<Class<?>> initialize = cls -> {
         if (!Modifier.isAbstract(cls.getModifiers()) && !initedClasses.contains(cls)) {
           try {
-            if (addResourceOrProvider(afterAdds, resourceInfos, cls, null, true))
-              (resourceClasses[1] == null ? resourceClasses[1] = new HashSet<>() : resourceClasses[1]).add(cls);
+            if (addResourceOrProvider(afterAdds, resourceInfos, cls, null, true)) {
+              Set<Class<?>> resourceClass1 = resourceClasses[1];
+              if (resourceClass1 == null)
+                resourceClass1 = resourceClasses[1] = new HashSet<>(2);
+
+              resourceClass1.add(cls);
+            }
           }
           catch (final IllegalAccessException | InstantiationException e) {
             throw new ProviderInstantiationException(e);
