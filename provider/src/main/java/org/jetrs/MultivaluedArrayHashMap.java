@@ -56,7 +56,7 @@ public class MultivaluedArrayHashMap<K,V> extends HashMap<K,List<V>> implements 
    * instances holding the values of each key are created anew instead of being reused.
    *
    * @param map The multivalued map whose mappings are to be placed in this multivalued map.
-   * @throws NullPointerException If the specified map is {@code null}.
+   * @throws NullPointerException If the specified map is null.
    */
   public MultivaluedArrayHashMap(final Map<? extends K,? extends List<V>> map) {
     super(map);

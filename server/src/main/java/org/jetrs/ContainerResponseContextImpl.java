@@ -359,7 +359,7 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
           httpServletResponse.setHeader(name, values.get(++i));
 
         while (++i < size)
-          httpServletResponse.addHeader(entry.getKey(), values.get(i));
+          httpServletResponse.addHeader(name, values.get(i));
       }
     }
 
