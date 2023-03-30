@@ -29,11 +29,6 @@ abstract class SafeDirectByteArrayOutputStream extends DirectByteArrayOutputStre
     this.size = size;
   }
 
-  SafeDirectByteArrayOutputStream(final byte[] buf) {
-    super(buf);
-    this.size = buf.length;
-  }
-
   protected abstract boolean beforeOverflow(int b, byte[] buf, int off, int len) throws IOException;
 
   @Override

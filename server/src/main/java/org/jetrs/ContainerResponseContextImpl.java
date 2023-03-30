@@ -403,8 +403,8 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
           final EntityOutputStream entityOutputStream = (EntityOutputStream)target;
           if (entityOutputStream.getTarget() != null) {
             // Means this is being called a 2nd time
-            if (!httpServletResponse.isCommitted()) {
-              if (logger.isWarnEnabled()) logger.warn("Cannot rewrite committed response in EntityOutputStream");
+            if (httpServletResponse.isCommitted()) {
+              if (logger.isWarnEnabled()) logger.warn("Cannot rewrite committed response in EntityOutputStream: " + entity);
             }
             else {
               httpServletResponse.reset();
@@ -416,7 +416,7 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
           }
         }
         else {
-          if (logger.isWarnEnabled()) logger.warn("Cannot rewrite committed response in " + target.getClass().getName());
+          if (logger.isWarnEnabled()) logger.warn("Cannot rewrite committed response in " + target.getClass().getName() + ": " + entity);
         }
       }
     }
