@@ -40,12 +40,17 @@ public class FlushResponseService {
   @GET
   @Path("{mul:[\\d]+}")
   @Produces(MediaType.TEXT_PLAIN)
-  public Response get(final @PathParam("mul") int mul, final @QueryParam("d") String data, final @QueryParam("q") Boolean chunked) {
+  public Response get(final @PathParam("mul") int mul, final @QueryParam("d") String data, final @QueryParam("q") Boolean chunked, final @QueryParam("e") boolean exception) {
     final byte[] bytes = expand(data.getBytes(), mul);
     final Response.ResponseBuilder response = Response.ok(new StreamingOutput() {
       @Override
       public void write(final OutputStream output) throws IOException, WebApplicationException {
-        output.write(bytes);
+        final int len = bytes.length - 2;
+        output.write(bytes, 0, len);
+        if (exception)
+          throw new IOException();
+
+        output.write(bytes, len, bytes.length - len);
       }
     });
 

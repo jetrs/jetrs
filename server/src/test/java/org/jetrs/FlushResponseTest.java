@@ -61,11 +61,14 @@ public class FlushResponseTest {
     return obj == null ? "" : obj.toString();
   }
 
-  private static long test(final String data, final int mul, final Boolean chunked, final boolean gzip) throws Exception {
+  private static long test(final String data, final int mul, final Boolean chunked, final boolean gzip, final boolean exception, final boolean expectContentLengthEqualOnError) throws Exception {
     final byte[] expected = FlushResponseService.expand(data.getBytes(), mul);
     final int expectedContentLength = gzip ? FlushResponseService.gzip(expected).length : expected.length;
 
-    WebTarget webTarget = client.target(serviceUrl + "/flush/" + mul).queryParam("d", data);
+    WebTarget webTarget = client.target(serviceUrl + "/flush/" + mul)
+      .queryParam("d", data)
+      .queryParam("e", exception);
+
     if (chunked != null)
       webTarget = webTarget.queryParam("q", chunked);
 
@@ -78,10 +81,20 @@ public class FlushResponseTest {
     time = System.currentTimeMillis() - time;
 
     final byte[] actual = getResponse.readEntity(byte[].class);
+    try {
+      getResponse.readEntity(byte[].class);
+      fail("Expected IllegalStateException");
+    }
+    catch (final IllegalStateException e) {
+    }
+
     if (gzip)
       assertEquals("gzip", getResponse.getHeaderString(HttpHeaders.CONTENT_ENCODING));
 
-    assertArrayEquals(expected, actual);
+    assertEquals(200, getResponse.getStatus());
+    if (!exception)
+      assertArrayEquals(expected, actual);
+
     final MultivaluedMap<String,Object> headers = getResponse.getHeaders();
     final Object contentLength = headers.getFirst(HttpHeaders.CONTENT_LENGTH);
     final List<Object> transferEncoding = headers.get(HttpHeaders.TRANSFER_ENCODING);
@@ -95,46 +108,52 @@ public class FlushResponseTest {
     else {
       assertNotNull("Content-Length: " + contentLength, contentLength);
       assertNull("Transfer-Encoding: " + transferEncoding, transferEncoding);
-      assertEquals("Content-Length: " + contentLength, expectedContentLength, ((Number)contentLength).intValue());
+      if (expectContentLengthEqualOnError)
+        assertEquals("Content-Length: " + contentLength, expectedContentLength, ((Number)contentLength).intValue());
     }
 
     final Response headResponse = request.head();
-    assertGetHead(getResponse, headResponse);
+    assertGetHead(false, getResponse, headResponse);
     return time;
   }
 
-  private static long test(final Boolean chunked, final boolean gzip) throws Exception {
+  private static long test(final Boolean chunked, final boolean gzip, final boolean expectContentLengthEqualOnError) throws Exception {
+    test(chunked, gzip, true, expectContentLengthEqualOnError);
+    return test(chunked, gzip, false, expectContentLengthEqualOnError);
+  }
+
+  private static long test(final Boolean chunked, final boolean gzip, final boolean exception, final boolean expectContentLengthEqualOnError) throws Exception {
     int m = 1;
-    for (; m < 10000000; m *= 2) { // [N]
-      test(Strings.getRandomAlphaNumeric(3), m, chunked, gzip);
+    for (; m <= 8388608; m *= 2) { // [N]
+      test(Strings.getRandomAlphaNumeric(3), m, chunked, gzip, exception, expectContentLengthEqualOnError);
     }
 
-    test(Strings.getRandomAlphaNumeric(3), ContainerResponseContextImpl.bufferSize, chunked, gzip);
-    test(Strings.getRandomAlphaNumeric(3), ContainerResponseContextImpl.bufferSize + 1, chunked, gzip);
+    test(Strings.getRandomAlphaNumeric(3), ContainerResponseContextImpl.bufferSize, chunked, gzip, exception, expectContentLengthEqualOnError);
+    test(Strings.getRandomAlphaNumeric(3), ContainerResponseContextImpl.bufferSize + 1, chunked, gzip, exception, expectContentLengthEqualOnError);
 
     long time = 0;
     for (int i = 0; i < 10; ++i) // [N]
-      time += test(Strings.getRandomAlphaNumeric(3), m, chunked, gzip);
+      time += test(Strings.getRandomAlphaNumeric(3), m, chunked, gzip, exception, expectContentLengthEqualOnError);
 
     return time;
   }
 
   @Test
   public void testBuffered() throws Exception {
-    System.err.println("Buffered: " + test(null, false));
-    System.err.println("Buffered (gzip): " + test(null, true));
+    System.err.println("Buffered: " + test(null, false, false));
+    System.err.println("Buffered (gzip): " + test(null, true, false));
   }
 
   @Test
   public void testChunked() throws Exception {
-    System.err.println("Chunked: " + test(true, false));
-    System.err.println("Chunked (gzip): " + test(true, true));
+    System.err.println("Chunked: " + test(true, false, true));
+    System.err.println("Chunked (gzip): " + test(true, true, true));
   }
 
   @Test
   public void testContentLength() throws Exception {
-    System.err.println("Content-Length: " + test(false, false));
-    System.err.println("Content-Length (gzip): " + test(false, true));
+    System.err.println("Content-Length: " + test(false, false, true));
+    System.err.println("Content-Length (gzip): " + test(false, true, false));
   }
 
   @AfterClass

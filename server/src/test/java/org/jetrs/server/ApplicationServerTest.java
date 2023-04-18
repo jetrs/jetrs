@@ -431,12 +431,15 @@ public class ApplicationServerTest {
 
   @Test
   public void testMatchPost0() throws Exception {
+    final int instanceCount = MyCharacterProvider.instanceCount;
+
     final Invocation.Builder request = request("/root1/0/Y");
     final Response response = request.post(Entity.text('Z'));
 
     final Character data = assertResponse(200, response, Character.class);
     assertEquals('Z', (char)data);
-    assertEquals(1, MyCharacterProvider.instanceCount);
+
+    assertEquals(instanceCount, MyCharacterProvider.instanceCount);
   }
 
   @Test

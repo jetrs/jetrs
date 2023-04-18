@@ -18,6 +18,7 @@ package org.jetrs.server.app.service;
 
 import java.util.stream.Collectors;
 
+import javax.inject.Singleton;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -27,6 +28,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
+@Singleton
 @Path("root2/")
 @SuppressWarnings("unused")
 public class RootService2 {

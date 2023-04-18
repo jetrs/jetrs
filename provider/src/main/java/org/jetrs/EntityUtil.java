@@ -214,12 +214,14 @@ public final class EntityUtil {
 
   private static void consumeAndClose(final InputStream in) throws IOException {
     IOException suppressed = null;
+
     try {
       while (in.read() > 0);
     }
     catch (final IOException e) {
       suppressed = e;
     }
+
     try {
       in.close();
     }
@@ -245,11 +247,14 @@ public final class EntityUtil {
 
     @Override
     public int read() throws IOException {
-      final int r = super.read();
-      if (r == -1)
-        isConsumed = true;
+      isConsumed = true;
+      return super.read();
+    }
 
-      return r;
+    @Override
+    public int read(final byte[] b, final int off, final int len) throws IOException {
+      isConsumed = true;
+      return super.read(b, off, len);
     }
 
     @Override
@@ -272,11 +277,20 @@ public final class EntityUtil {
 
     @Override
     public synchronized int read() throws IOException {
-      final int r = super.read();
-      if (r == -1)
-        isConsumed = true;
+      isConsumed = true;
+      return super.read();
+    }
 
-      return r;
+    @Override
+    public synchronized int read(final byte[] b, final int off, final int len) throws IOException {
+      isConsumed = true;
+      return super.read(b, off, len);
+    }
+
+    @Override
+    public synchronized void reset() throws IOException {
+      super.reset();
+      isConsumed = pos != 0;
     }
 
     @Override
@@ -293,17 +307,17 @@ public final class EntityUtil {
     }
 
     @Override
+    public boolean isConsumed() {
+      return isConsumed;
+    }
+
+    @Override
     public synchronized int read() {
       final int r = super.read();
       if (r == -1)
         isConsumed = true;
 
       return r;
-    }
-
-    @Override
-    public boolean isConsumed() {
-      return isConsumed;
     }
 
     @Override
@@ -324,6 +338,9 @@ public final class EntityUtil {
   }
 
   static InputStream makeConsumableNonEmptyOrNull(InputStream in, final boolean consumable) throws IOException {
+    if (in == null) // Can happen for connection.getErrorStream() for an errored HEAD response
+      return null;
+
     final boolean hasAvailable = in.available() > 0;
     if (consumable) {
       if (hasAvailable) {

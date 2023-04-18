@@ -198,7 +198,7 @@ abstract class RestApplicationServlet extends RestHttpServlet {
 
         // (6a) Flush Response
         requestContext.setStage(Stage.WRITE_RESPONSE);
-        requestContext.writeResponse();
+        requestContext.writeResponse(null);
       }
       catch (final IOException | RuntimeException | ServletException e) {
         if (!(e instanceof AbortFilterChainException)) {
@@ -242,7 +242,7 @@ abstract class RestApplicationServlet extends RestHttpServlet {
         try {
           // (6b) Flush Response
           requestContext.setStage(Stage.WRITE_RESPONSE);
-          requestContext.writeResponse();
+          requestContext.writeResponse(e);
         }
         catch (final IOException | RuntimeException e1) {
           e.addSuppressed(e1);

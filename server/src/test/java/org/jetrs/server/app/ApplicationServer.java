@@ -36,6 +36,7 @@ import org.jetrs.provider.ext.NumberProvider;
 import org.jetrs.provider.ext.StreamingOutputProvider;
 import org.jetrs.provider.ext.StringProvider;
 import org.jetrs.provider.ext.interceptor.GZipCodec;
+import org.jetrs.provider.ext.mapper.ThrowableMapper;
 import org.jetrs.provider.ext.mapper.WebApplicationExceptionMapper;
 import org.jetrs.server.app.filter.Filter1;
 import org.jetrs.server.app.provider.MyCharacterProvider;
@@ -82,6 +83,7 @@ public class ApplicationServer extends Application implements AutoCloseable {
       this.singletons.add(new FormProvider());
       this.singletons.add(new StreamingOutputProvider());
       this.singletons.add(new WebApplicationExceptionMapper(true));
+      this.singletons.add(new ThrowableMapper<>(true));
 
       // Specific
       this.singletons.add(new RootService1());

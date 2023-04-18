@@ -86,6 +86,7 @@ import javax.ws.rs.ext.ReaderInterceptorContext;
 
 import org.libj.lang.Classes;
 import org.libj.lang.Numbers;
+import org.libj.lang.Throwables;
 import org.libj.util.ArrayUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -521,7 +522,7 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
               final PathSegment pathSegment = pathSegments.get(i);
               final String path = ((PathSegmentImpl)pathSegment).getPathEncoded();
               segEnd = segStart + path.length();
-              if (rangeOverlaps(segStart, segEnd, regionStart, regionEnd))
+              if (rangeIntersects(segStart, segEnd, regionStart, regionEnd))
                 return pathSegment;
 
               segStart = segEnd + 1; // add '/' char
@@ -556,12 +557,12 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
               segEnd = segStart + path.length();
 
               if (inRegion) {
-                if (rangeOverlaps(segStart, segEnd, regionStart, regionEnd))
+                if (rangeIntersects(segStart, segEnd, regionStart, regionEnd))
                   matchedSegments.add(pathSegment);
                 else
                   break;
               }
-              else if (inRegion = rangeOverlaps(segStart, segEnd, regionStart, regionEnd)) {
+              else if (inRegion = rangeIntersects(segStart, segEnd, regionStart, regionEnd)) {
                 matchedSegments.add(pathSegment);
               }
 
@@ -665,7 +666,7 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
     return array;
   }
 
-  private static boolean rangeOverlaps(final int startA, final int endA, final int startB, final int endB) {
+  private static boolean rangeIntersects(final int startA, final int endA, final int startB, final int endB) {
     return startA <= endB && startB <= endA;
   }
 
@@ -874,10 +875,12 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
   }
 
   void sendError(final int scInternalServerError, final Exception e) throws IOException {
-    if (!httpServletResponse.isCommitted())
-      httpServletResponse.sendError(scInternalServerError);
-    else
-      if (logger.isErrorEnabled()) logger.error("Trying to sendError(" + scInternalServerError + ") for committed response", e);
+    if (httpServletResponse.isCommitted()) {
+      if (logger.isInfoEnabled()) logger.info("Unable to overwrite committed response [" + httpServletResponse.getStatus() + "] -> [" + scInternalServerError + "]: ", e);
+    }
+    else {
+      httpServletResponse.sendError(scInternalServerError, Throwables.toString(e));
+    }
   }
 
   private Response setResponse(final Response response, final Annotation[] annotations) {
@@ -916,8 +919,13 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
     return response;
   }
 
-  void writeResponse() throws IOException {
-    containerResponseContext.writeResponse(httpServletResponse, resourceInfo);
+  void writeResponse(final Exception e) throws IOException {
+    if (httpServletResponse.isCommitted()) {
+      if (logger.isInfoEnabled()) logger.info("Unable to overwrite committed response [" + httpServletResponse.getStatus() + "] -> [" + containerResponseContext.getStatus() + "]: ", e);
+    }
+    else {
+      containerResponseContext.writeResponse(httpServletResponse, resourceInfo);
+    }
   }
 
   @Override
@@ -1058,15 +1066,8 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
 
   @Override
   public void close() throws IOException {
-    // Absolutely positively assert that the streams are closed
-    if (hasEntity() && entityStream != null) {
-      try {
-        entityStream.close();
-      }
-      catch (final Exception e) {
-        if (logger.isErrorEnabled()) logger.error(e.getMessage(), e);
-      }
-    }
+    if (entityStream != null)
+      entityStream.close();
 
     containerResponseContext.close();
   }

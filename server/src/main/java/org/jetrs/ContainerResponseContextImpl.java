@@ -403,20 +403,15 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
           final EntityOutputStream entityOutputStream = (EntityOutputStream)target;
           if (entityOutputStream.getTarget() != null) {
             // Means this is being called a 2nd time
-            if (httpServletResponse.isCommitted()) {
-              if (logger.isWarnEnabled()) logger.warn("Cannot rewrite committed response in EntityOutputStream: " + entity);
-            }
-            else {
-              httpServletResponse.reset();
-              if (entityOutputStream.getTarget() instanceof BufferedSocketOutputStream)
-                ((BufferedSocketOutputStream)entityOutputStream.getTarget()).reset();
-              else
-                entityOutputStream.setTarget(httpServletResponse.getOutputStream());
-            }
+            httpServletResponse.reset();
+            if (entityOutputStream.getTarget() instanceof BufferedSocketOutputStream)
+              ((BufferedSocketOutputStream)entityOutputStream.getTarget()).reset();
+            else
+              entityOutputStream.setTarget(httpServletResponse.getOutputStream());
           }
         }
         else {
-          if (logger.isWarnEnabled()) logger.warn("Cannot rewrite committed response in " + target.getClass().getName() + ": " + entity);
+          if (logger.isInfoEnabled()) logger.info("Unable to overwrite committed response [" + httpServletResponse.getStatus() + "] -> [" + getStatus() + "]: " + entity);
         }
       }
     }

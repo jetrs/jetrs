@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
 
 class Bootstrap<R extends ArrayList<? extends Comparable<?>>> {
   static final Logger logger = LoggerFactory.getLogger(Bootstrap.class);
-  static final Comparator<TypeProviderFactory<?>> providerResourceComparator = Comparator.nullsFirst((o1, o2) -> o1.getType() == o2.getType() ? Integer.compare(o1.getPriority(), o2.getPriority()) : o1.getType().isAssignableFrom(o2.getType()) ? -1 : 1);
+  static final Comparator<TypeProviderFactory<?>> providerResourceComparator = Comparator.nullsFirst((o1, o2) -> o1.getType() == o2.getType() ? Integer.compare(o1.getPriority(), o2.getPriority()) : o1.getType().isAssignableFrom(o2.getType()) ? 1 : -1);
   private static final String[] excludeStartsWith = {"jdk.", "java.", "javax.", "com.sun.", "sun.", "org.w3c.", "org.xml.", "org.jvnet.", "org.joda.", "org.jcp.", "apple.security."};
 
   static boolean acceptPackage(final Package pkg) {
