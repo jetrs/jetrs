@@ -30,7 +30,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
 import java.net.URI;
-import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -95,12 +94,12 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
   private static final Logger logger = LoggerFactory.getLogger(ContainerRequestContextImpl.class);
 
   enum Stage {
-    FILTER_REQUEST_PRE_MATCH,
-    MATCH,
-    FILTER_REQUEST,
+    REQUEST_FILTER_PRE_MATCH,
+    REQUEST_MATCH,
+    REQUEST_FILTER,
     SERVICE,
-    FILTER_RESPONSE,
-    WRITE_RESPONSE
+    RESPONSE_FILTER,
+    RESPONSE_WRITE
   }
 
   @SuppressWarnings("unchecked")
@@ -994,38 +993,18 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
     }
   }
 
-  private SecurityContext defaultSecurityContext;
   private SecurityContext securityContext;
 
   @Override
   public SecurityContext getSecurityContext() {
-    return securityContext != null ? securityContext : defaultSecurityContext == null ? defaultSecurityContext = new SecurityContext() {
-      private final HttpServletRequest request = getProperties();
-
-      @Override
-      public Principal getUserPrincipal() {
-        return null;
-      }
-
-      @Override
-      public boolean isUserInRole(final String role) {
-        return false;
-      }
-
-      @Override
-      public boolean isSecure() {
-        return request.isSecure();
-      }
-
-      @Override
-      public String getAuthenticationScheme() {
-        return null;
-      }
-    } : defaultSecurityContext;
+    return securityContext;
   }
 
   @Override
   public void setSecurityContext(final SecurityContext context) {
+    if (getStage().ordinal() >= Stage.RESPONSE_FILTER.ordinal())
+      throw new IllegalStateException();
+
     this.securityContext = context;
   }
 

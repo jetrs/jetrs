@@ -37,6 +37,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 
 import org.jetrs.ContainerRequestContextImpl.Stage;
 import org.libj.io.Charsets;
@@ -72,10 +73,16 @@ abstract class RestApplicationServlet extends RestHttpServlet {
           if (contentTypeChecked)
             return;
 
-          if (requestContext.getStage() != Stage.FILTER_REQUEST_PRE_MATCH)
+          if (requestContext.getStage() != Stage.REQUEST_FILTER_PRE_MATCH)
             requestContext.getResourceMatch().getResourceInfo().checkContentHeader(HttpHeader.CONTENT_TYPE, Consumes.class, requestContext);
 
           contentTypeChecked = true;
+        }
+
+        @Override
+        public boolean isUserInRole(final String role) {
+          final SecurityContext securityContext = requestContext.getSecurityContext();
+          return securityContext != null && securityContext.isUserInRole(role);
         }
 
         @Override
@@ -176,16 +183,16 @@ abstract class RestApplicationServlet extends RestHttpServlet {
 
       try {
         // (1) Filter Request (Pre-Match)
-        requestContext.setStage(Stage.FILTER_REQUEST_PRE_MATCH);
+        requestContext.setStage(Stage.REQUEST_FILTER_PRE_MATCH);
         requestContext.filterPreMatchContainerRequest();
 
         // (2) Match
-        requestContext.setStage(Stage.MATCH);
+        requestContext.setStage(Stage.REQUEST_MATCH);
         if (!requestContext.filterAndMatch())
           throw new NotFoundException();
 
         // (3) Filter Request
-        requestContext.setStage(Stage.FILTER_REQUEST);
+        requestContext.setStage(Stage.REQUEST_FILTER);
         requestContext.filterContainerRequest();
 
         // (4a) Service
@@ -193,11 +200,11 @@ abstract class RestApplicationServlet extends RestHttpServlet {
         requestContext.service();
 
         // (5a) Filter Response
-        requestContext.setStage(Stage.FILTER_RESPONSE);
+        requestContext.setStage(Stage.RESPONSE_FILTER);
         requestContext.filterContainerResponse();
 
         // (6a) Flush Response
-        requestContext.setStage(Stage.WRITE_RESPONSE);
+        requestContext.setStage(Stage.RESPONSE_WRITE);
         requestContext.writeResponse(null);
       }
       catch (final IOException | RuntimeException | ServletException e) {
@@ -223,7 +230,7 @@ abstract class RestApplicationServlet extends RestHttpServlet {
 
           if (logger.isInfoEnabled()) logger.info(e.getMessage(), e);
         }
-        else if (requestContext.getStage() == Stage.FILTER_RESPONSE) {
+        else if (requestContext.getStage() == Stage.RESPONSE_FILTER) {
           throw new IllegalStateException("ContainerRequestContext.abortWith(Response) cannot be called from response filter chain");
         }
         else {
@@ -232,7 +239,7 @@ abstract class RestApplicationServlet extends RestHttpServlet {
 
         try {
           // (5b) Filter Response
-          requestContext.setStage(Stage.FILTER_RESPONSE);
+          requestContext.setStage(Stage.RESPONSE_FILTER);
           requestContext.filterContainerResponse();
         }
         catch (final IOException | RuntimeException e1) {
@@ -241,7 +248,7 @@ abstract class RestApplicationServlet extends RestHttpServlet {
 
         try {
           // (6b) Flush Response
-          requestContext.setStage(Stage.WRITE_RESPONSE);
+          requestContext.setStage(Stage.RESPONSE_WRITE);
           requestContext.writeResponse(e);
         }
         catch (final IOException | RuntimeException e1) {

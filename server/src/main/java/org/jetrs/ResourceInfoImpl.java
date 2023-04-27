@@ -45,6 +45,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.ext.ParamConverterProvider;
 
 import org.libj.lang.Classes;
@@ -54,12 +55,6 @@ import org.slf4j.LoggerFactory;
 
 class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImpl> {
   private static final Logger logger = LoggerFactory.getLogger(ResourceInfoImpl.class);
-  private static final PermitAll permitAll = new PermitAll() {
-    @Override
-    public Class<? extends Annotation> annotationType() {
-      return getClass();
-    }
-  };
 
   private static boolean logMissingHeaderWarning(final HttpHeader<?> httpHeader, final Class<?> type) {
     if (logger.isWarnEnabled()) logger.warn("Unmatched @" + type.getSimpleName() + " for " + httpHeader.getName());
@@ -101,8 +96,7 @@ class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImpl> {
   ResourceInfoImpl(final ResourceInfos resourceInfos, final HttpMethod httpMethod, final Method method, final String baseUri, final Path classPath, final Path methodPath, final Object singleton) {
     this.resourceInfos = resourceInfos;
     this.httpMethod = httpMethod;
-    final Annotation securityAnnotation = findSecurityAnnotation(method);
-    this.securityAnnotation = securityAnnotation != null ? securityAnnotation : permitAll;
+    this.securityAnnotation = findSecurityAnnotation(method);
     this.resourceMethod = method;
     this.methodName = method.getName();
     this.methodAnnotations = AnnotationUtil.getAnnotations(method);
@@ -243,65 +237,65 @@ class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImpl> {
     return MediaTypes.getCompatible(required, (List<MediaType>)headerValue, null) != null || logMissingHeaderWarning(httpHeader, annotationClass);
   }
 
-  private void checkAllowed(final ContainerRequestContext containerRequestContext) {
+  private static void checkAuthorized(final Annotation securityAnnotation, final ContainerRequestContext requestContext) {
     if (securityAnnotation instanceof PermitAll)
       return;
 
     if (securityAnnotation instanceof DenyAll)
-      throw new ForbiddenException("@DenyAll");
-
-    if (!(securityAnnotation instanceof RolesAllowed))
-      throw new UnsupportedOperationException("Unsupported security annotation: " + securityAnnotation.getClass().getName());
+      throw new ForbiddenException();
 
     final RolesAllowed rolesAllowed = (RolesAllowed)securityAnnotation;
-    if (containerRequestContext.getSecurityContext().getUserPrincipal() != null)
-      for (final String role : rolesAllowed.value()) // [A]
-        if (containerRequestContext.getSecurityContext().isUserInRole(role))
-          return;
+    final SecurityContext securityContext = requestContext.getSecurityContext();
+    if (securityContext == null) {
+      final StringBuilder b = new StringBuilder();
 
-    final String authenticationScheme = containerRequestContext.getSecurityContext().getAuthenticationScheme();
-    final StringBuilder builder = new StringBuilder();
-    if (authenticationScheme != null)
-      builder.append(authenticationScheme).append(' ');
+      // FIXME: What about "Proxy-Authenticate"?
+      final String[] roles = rolesAllowed.value();
+      b.append("realm=\"").append(roles[0]).append('"');
+      final String challenge = b.toString();
+      if (roles.length == 1)
+        throw new NotAuthorizedException(challenge);
 
-    // FIXME: What about "Proxy-Authenticate"?
-    final String[] roles = rolesAllowed.value();
-    builder.append("realm=\"").append(roles[0]).append('"');
-    final String challenge = builder.toString();
-    if (roles.length == 1)
-      throw new NotAuthorizedException(challenge);
+      final Object[] challenges = new Object[roles.length - 1];
+      for (int i = 1, i$ = roles.length; i < i$; ++i) { // [A]
+        b.setLength(0);
+        b.append("realm=\"").append(roles[i]).append('"');
+        challenges[i - 1] = b.toString();
+      }
 
-    final Object[] challenges = new Object[roles.length - 1];
-    final int resetLen = authenticationScheme != null ? authenticationScheme.length() + 1 : 0;
-    for (int i = 1, i$ = roles.length; i < i$; ++i) { // [A]
-      builder.setLength(resetLen);
-      builder.append("realm=\"").append(roles[i]).append('"');
-      challenges[i - 1] = builder.toString();
+      throw new NotAuthorizedException(challenge, challenges);
     }
 
-    throw new NotAuthorizedException(challenge, challenges);
+    if (securityContext.getUserPrincipal() != null)
+      for (final String role : rolesAllowed.value()) // [A]
+        if (securityContext.isUserInRole(role))
+          return;
+
+    throw new ForbiddenException();
   }
 
   Object service(final ResourceMatch resourceMatch, final ContainerRequestContextImpl requestContext) throws IOException, ServletException {
-    checkAllowed(requestContext);
+    if (securityAnnotation != null)
+      checkAuthorized(securityAnnotation, requestContext);
+
     try {
-      final Object instance = resourceMatch.getResourceInstance(requestContext);
-      return requestContext.invokeMethod(instance);
+      return requestContext.invokeMethod(resourceMatch.getResourceInstance(requestContext));
     }
     catch (final IllegalAccessException | InstantiationException e) {
       throw new ServletException(e);
     }
     catch (final InvocationTargetException e) {
-      if (e.getCause() instanceof RuntimeException)
-        throw (RuntimeException)e.getCause();
+      final Throwable cause = e.getCause();
+      if (cause instanceof RuntimeException)
+        throw (RuntimeException)cause;
 
-      if (e.getCause() instanceof IOException)
-        throw (IOException)e.getCause();
+      if (cause instanceof IOException)
+        throw (IOException)cause;
 
-      if (e.getCause() instanceof ServletException)
-        throw (ServletException)e.getCause();
+      if (cause instanceof ServletException)
+        throw (ServletException)cause;
 
-      throw new ServletException(e.getCause());
+      throw new ServletException(cause);
     }
     catch (final IllegalArgumentException e) {
       throw new BadRequestException(e);
@@ -347,7 +341,7 @@ class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImpl> {
       return false;
 
     final ResourceInfoImpl that = (ResourceInfoImpl)obj;
-    return Objects.equals(httpMethod, that.httpMethod) && securityAnnotation.equals(that.securityAnnotation) && resourceMethod.equals(that.resourceMethod) && resourceClass.equals(that.resourceClass) && uriTemplate.equals(that.uriTemplate);
+    return Objects.equals(httpMethod, that.httpMethod) && Objects.equals(securityAnnotation, that.securityAnnotation) && resourceMethod.equals(that.resourceMethod) && resourceClass.equals(that.resourceClass) && uriTemplate.equals(that.uriTemplate);
   }
 
   @Override
