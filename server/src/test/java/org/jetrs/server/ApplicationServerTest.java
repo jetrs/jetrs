@@ -23,6 +23,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,6 +33,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Random;
 
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -38,6 +41,7 @@ import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
 
 import org.jetrs.HttpHeaders;
 import org.jetrs.MultivaluedArrayHashMap;
@@ -46,6 +50,7 @@ import org.jetrs.provider.ext.CharacterProvider;
 import org.jetrs.provider.ext.FormMultivaluedMapProvider;
 import org.jetrs.provider.ext.FormProvider;
 import org.jetrs.provider.ext.NumberProvider;
+import org.jetrs.provider.ext.StreamingOutputProvider;
 import org.jetrs.provider.ext.StringProvider;
 import org.jetrs.server.app.ApplicationServer;
 import org.jetrs.server.app.filter.Filter1;
@@ -69,6 +74,7 @@ public class ApplicationServerTest {
     client.register(new CharacterProvider());
     client.register(new NumberProvider());
     client.register(new BytesProvider());
+    client.register(new StreamingOutputProvider());
     client.register(new StringProvider());
     client.register(new FormProvider());
     client.register(new FormMultivaluedMapProvider());
@@ -220,7 +226,7 @@ public class ApplicationServerTest {
 
   @Test
   public void testUpload() throws IOException {
-    final int len = Math.abs(random.nextInt() / 100);
+    final int len = Math.abs(random.nextInt(Short.MAX_VALUE));
     final URL url = new URL(serviceUrl + "/upload?len=" + len);
     final HttpURLConnection connection = (HttpURLConnection)url.openConnection();
     connection.setDoOutput(true);
@@ -233,6 +239,24 @@ public class ApplicationServerTest {
       out.close();
       connection.getInputStream();
     }
+  }
+
+  @Test
+  public void testUploadClient() throws URISyntaxException {
+    final int len = Math.abs(random.nextInt(Short.MAX_VALUE));
+    final Response response = client.target(new URI(serviceUrl + "/upload?len=" + len))
+      .request()
+      .put(Entity.entity(new StreamingOutput() {
+        @Override
+        public void write(final OutputStream output) throws IOException, WebApplicationException {
+          for (int i = 0; i < len; ++i) // [N]
+            output.write((byte)random.nextInt());
+
+          output.close();
+        }
+      }, MediaType.APPLICATION_OCTET_STREAM));
+
+    assertEquals(204, response.getStatus());
   }
 
   private static Invocation.Builder request(final String path) {
