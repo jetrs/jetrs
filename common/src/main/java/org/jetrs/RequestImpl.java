@@ -38,31 +38,31 @@ class RequestImpl implements Request {
 
   @Override
   public Variant selectVariant(final List<Variant> variants) {
-    // TODO:
+    // TODO: Implement this.
     throw new UnsupportedOperationException();
   }
 
   @Override
   public ResponseBuilder evaluatePreconditions(final EntityTag eTag) {
-    // TODO:
+    // TODO: Implement this.
     throw new UnsupportedOperationException();
   }
 
   @Override
   public ResponseBuilder evaluatePreconditions(final Date lastModified) {
-    // TODO:
+    // TODO: Implement this.
     throw new UnsupportedOperationException();
   }
 
   @Override
   public ResponseBuilder evaluatePreconditions(final Date lastModified, final EntityTag eTag) {
-    // TODO:
+    // TODO: Implement this.
     throw new UnsupportedOperationException();
   }
 
   @Override
   public ResponseBuilder evaluatePreconditions() {
-    // TODO:
+    // TODO: Implement this.
     throw new UnsupportedOperationException();
   }
 }

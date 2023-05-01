@@ -70,6 +70,7 @@ class ProvidersImpl implements Providers {
 
   @Override
   public <T>ContextResolver<T> getContextResolver(final Class<T> contextType, final MediaType mediaType) {
+    // TODO: Implement this.
     throw new UnsupportedOperationException();
   }
 }

@@ -17,6 +17,7 @@
 package org.jetrs;
 
 import java.io.BufferedReader;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.Charset;
@@ -206,6 +207,9 @@ abstract class RestApplicationServlet extends RestHttpServlet {
         // (6a) Flush Response
         requestContext.setStage(Stage.RESPONSE_WRITE);
         requestContext.writeResponse(null);
+      }
+      catch (final EOFException e) {
+        if (logger.isDebugEnabled()) logger.debug(e.getMessage(), e);
       }
       catch (final IOException | RuntimeException | ServletException e) {
         if (!(e instanceof AbortFilterChainException)) {

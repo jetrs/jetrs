@@ -216,7 +216,7 @@ class ResponseBuilderImpl extends Response.ResponseBuilder implements Cloneable 
 
   @Override
   public Response.ResponseBuilder variant(final Variant variant) {
-    // TODO:
+    // TODO: Implement this.
     throw new UnsupportedOperationException();
   }
 
@@ -257,43 +257,43 @@ class ResponseBuilderImpl extends Response.ResponseBuilder implements Cloneable 
 
   @Override
   public Response.ResponseBuilder tag(final EntityTag tag) {
-    // TODO:
+    // TODO: Implement this.
     throw new UnsupportedOperationException();
   }
 
   @Override
   public Response.ResponseBuilder tag(final String tag) {
-    // TODO:
+    // TODO: Implement this.
     throw new UnsupportedOperationException();
   }
 
   @Override
   public Response.ResponseBuilder variants(final Variant ... variants) {
-    // TODO:
+    // TODO: Implement this.
     throw new UnsupportedOperationException();
   }
 
   @Override
   public Response.ResponseBuilder variants(final List<Variant> variants) {
-    // TODO:
+    // TODO: Implement this.
     throw new UnsupportedOperationException();
   }
 
   @Override
   public Response.ResponseBuilder links(final Link ... links) {
-    // TODO:
+    // TODO: Implement this.
     throw new UnsupportedOperationException();
   }
 
   @Override
   public Response.ResponseBuilder link(final URI uri, final String rel) {
-    // TODO:
+    // TODO: Implement this.
     throw new UnsupportedOperationException();
   }
 
   @Override
   public Response.ResponseBuilder link(final String uri, final String rel) {
-    // TODO:
+    // TODO: Implement this.
     throw new UnsupportedOperationException();
   }
 

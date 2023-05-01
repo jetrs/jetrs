@@ -29,7 +29,7 @@ abstract class SafeDirectByteArrayOutputStream extends DirectByteArrayOutputStre
     this.size = size;
   }
 
-  protected abstract boolean beforeOverflow(int b, byte[] buf, int off, int len) throws IOException;
+  abstract boolean beforeOverflow(int b, byte[] buf, int off, int len) throws IOException;
 
   @Override
   public void write(final int b) throws IOException {

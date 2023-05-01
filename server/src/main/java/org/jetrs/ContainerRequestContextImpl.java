@@ -929,13 +929,13 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
 
   @Override
   public void setRequestUri(final URI requestUri) {
-    // TODO:
+    // TODO: Implement this.
     throw new UnsupportedOperationException();
   }
 
   @Override
   public void setRequestUri(final URI baseUri, final URI requestUri) {
-    // TODO:
+    // TODO: Implement this.
     throw new UnsupportedOperationException();
   }
 

@@ -128,11 +128,13 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
 
   @Override
   public Map<String,NewCookie> getCookies() {
+    // TODO: Implement this.
     throw new UnsupportedOperationException();
   }
 
   @Override
   public EntityTag getEntityTag() {
+    // TODO: Implement this.
     throw new UnsupportedOperationException();
   }
 
@@ -148,21 +150,25 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
 
   @Override
   public Set<Link> getLinks() {
+    // TODO: Implement this.
     throw new UnsupportedOperationException();
   }
 
   @Override
   public boolean hasLink(final String relation) {
+    // TODO: Implement this.
     throw new UnsupportedOperationException();
   }
 
   @Override
   public Link getLink(final String relation) {
+    // TODO: Implement this.
     throw new UnsupportedOperationException();
   }
 
   @Override
   public Builder getLinkBuilder(final String relation) {
+    // TODO: Implement this.
     throw new UnsupportedOperationException();
   }
 
@@ -272,20 +278,22 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
     private final RelegateOutputStream relegateOutputStream;
     private boolean isClosed;
 
-    public BufferedSocketOutputStream(final HttpServletResponse httpServletResponse, final RelegateOutputStream relegateOutputStream, final int size) {
+    BufferedSocketOutputStream(final HttpServletResponse httpServletResponse, final RelegateOutputStream relegateOutputStream, final int size) {
       super(size);
       this.httpServletResponse = httpServletResponse;
       this.relegateOutputStream = relegateOutputStream;
     }
 
     @Override
-    protected boolean beforeOverflow(final int b, final byte[] bs, final int off, final int len) throws IOException {
+    boolean beforeOverflow(final int b, final byte[] bs, final int off, final int len) throws IOException {
+      isClosed = true;
+
       if (totalCount != bufferSize)
         throw new IllegalStateException();
 
-      isClosed = true;
       getStringHeaders().add(HttpHeaders.TRANSFER_ENCODING, "chunked");
       httpServletResponse.setBufferSize(chunkSize);
+
       flushHeaders(httpServletResponse);
       final OutputStream socketOutputStream = httpServletResponse.getOutputStream();
       socketOutputStream.write(buf, 0, count);
@@ -301,6 +309,7 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
         return;
 
       isClosed = true;
+
       getHeaders().putSingle(HttpHeaders.CONTENT_LENGTH, Integer.valueOf(count));
       // httpServletResponse.setBufferSize(Streams.DEFAULT_SOCKET_BUFFER_SIZE); // FIXME: Setting this to a low value significantly reduces performance, so leaving this to the servlet container's default
       flushHeaders(httpServletResponse);

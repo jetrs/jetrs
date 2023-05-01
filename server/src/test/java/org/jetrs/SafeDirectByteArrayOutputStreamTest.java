@@ -16,7 +16,7 @@ public class SafeDirectByteArrayOutputStreamTest {
     final SafeDirectByteArrayOutputStream out = new SafeDirectByteArrayOutputStream(valid) {
       private int oveflowIndex = overflow;
       @Override
-      protected boolean beforeOverflow(final int b, final byte[] buf, final int off, final int len) {
+      boolean beforeOverflow(final int b, final byte[] buf, final int off, final int len) {
         assertEquals(oveflowIndex++, b);
         return false;
       }
@@ -38,7 +38,7 @@ public class SafeDirectByteArrayOutputStreamTest {
     final AtomicInteger noOverflows = new AtomicInteger();
     final SafeDirectByteArrayOutputStream out = new SafeDirectByteArrayOutputStream(10) {
       @Override
-      protected boolean beforeOverflow(final int b, final byte[] buf, final int off, final int len) throws IOException {
+      boolean beforeOverflow(final int b, final byte[] buf, final int off, final int len) throws IOException {
         assertArrayEquals(bytes, buf);
         final int overflows = noOverflows.getAndIncrement();
         if (overflows == 0) {
