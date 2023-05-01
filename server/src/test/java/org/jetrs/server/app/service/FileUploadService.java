@@ -27,13 +27,11 @@ import java.nio.file.StandardCopyOption;
 
 import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.HeaderParam;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.StreamingOutput;
 
@@ -57,7 +55,7 @@ public class FileUploadService {
   @Path("/upload/echo")
   @Consumes(MediaType.WILDCARD)
   @Produces(MediaType.WILDCARD)
-  public StreamingOutput uploadEcho(final InputStream in, @HeaderParam(HttpHeaders.ACCEPT_ENCODING) String acceptEncoding) {
+  public StreamingOutput uploadEcho(final InputStream in) {
     return new StreamingOutput() {
       @Override
       public void write(final OutputStream output) throws IOException, WebApplicationException {
