@@ -138,7 +138,6 @@ class ServerRuntimeContext extends RuntimeContext {
     return threadLocalRequestContext.get();
   }
 
-  @Override
   ContainerRequestContextImpl newRequestContext(final Request request) {
     final ContainerRequestContextImpl requestContext = new ContainerRequestContextImpl(propertiesAdapter, this, request) {
       @Override

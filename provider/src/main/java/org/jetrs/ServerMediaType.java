@@ -24,10 +24,10 @@ import org.libj.lang.Numbers;
 
 class ServerMediaType extends QualifiedMediaType {
   /** A {@link ServerMediaType} constant representing wildcard {@value #WILDCARD} media type. */
-  final static ServerMediaType WILDCARD_TYPE = new ServerMediaType(MediaType.WILDCARD_TYPE);
+  static final ServerMediaType WILDCARD_TYPE = new ServerMediaType(MediaType.WILDCARD_TYPE);
 
   /** A {@link ServerMediaType} constant representing wildcard {@value #APPLICATION_OCTET_STREAM} media type. */
-  final static ServerMediaType APPLICATION_OCTET_STREAM_TYPE = new ServerMediaType(MediaType.APPLICATION_OCTET_STREAM_TYPE);
+  static final ServerMediaType APPLICATION_OCTET_STREAM_TYPE = new ServerMediaType(MediaType.APPLICATION_OCTET_STREAM_TYPE);
 
   public static ServerMediaType valueOf(final String string) {
     return MediaTypes.parse(ServerMediaType.class, string);

@@ -19,7 +19,6 @@ package org.jetrs;
 import java.util.ArrayList;
 
 import javax.ws.rs.core.Configuration;
-import javax.ws.rs.core.Request;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
@@ -50,8 +49,7 @@ abstract class RuntimeContext {
     this.exceptionMapperProviderFactories = exceptionMapperProviderFactories;
   }
 
-  abstract RequestContext<?> localRequestContext();
-  abstract RequestContext<?> newRequestContext(Request request);
+  abstract RequestContext<?,?> localRequestContext();
 
   Configuration getConfiguration() {
     return configuration;

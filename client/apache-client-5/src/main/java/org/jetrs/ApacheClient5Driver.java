@@ -19,7 +19,7 @@ package org.jetrs;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URL;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -95,8 +95,8 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
   private static final String[] excludeHeaders = {HttpHeader.CONTENT_LENGTH.getName(), HttpHeader.TRANSFER_ENCODING.getName()};
 
   @Override
-  Invocation build(final CloseableHttpClient httpClient, final ClientImpl client, final ClientRuntimeContext runtimeContext, final URL url, final String method, final Entity<?> entity, final HttpHeadersMap<String,Object> requestHeaders, final ArrayList<javax.ws.rs.core.Cookie> cookies, final CacheControl cacheControl, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final long connectTimeout, final long readTimeout) throws Exception {
-    return new InvocationImpl(client, runtimeContext, url, method, entity, requestHeaders, cookies, cacheControl, executorService, scheduledExecutorService, connectTimeout, readTimeout) {
+  Invocation build(final CloseableHttpClient httpClient, final ClientImpl client, final ClientRuntimeContext runtimeContext, final URI uri, final String method, final HttpHeadersImpl requestHeaders, final ArrayList<javax.ws.rs.core.Cookie> cookies, final CacheControl cacheControl, final Entity<?> entity, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final HashMap<String,Object> properties, final long connectTimeout, final long readTimeout) throws Exception {
+    return new ClientRequestContextImpl(client, runtimeContext, uri, method, requestHeaders, cookies, cacheControl, entity, executorService, scheduledExecutorService, properties, connectTimeout, readTimeout) {
       private final Timeout connectTimeoutObj = connectTimeout > 0 ? Timeout.of(connectTimeout, TimeUnit.MILLISECONDS) : null;
       private final Timeout readTimeoutObj = readTimeout > 0 ? Timeout.of(readTimeout, TimeUnit.MILLISECONDS) : null;
 
@@ -171,7 +171,7 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
             config.setResponseTimeout(readTimeoutObj);
 
           final RequestConfig c = config.build();
-          final HttpUriRequestBase request = new HttpUriRequestBase(method, url.toURI());
+          final HttpUriRequestBase request = new HttpUriRequestBase(method, uri);
           request.setConfig(c);
 
           if (cookies != null)
@@ -191,7 +191,7 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
             $span(Span.ENTITY_INIT);
 
             final Class<?> entityClass = entity.getEntity().getClass();
-            final MessageBodyWriter messageBodyWriter = requestContext.getProviders().getMessageBodyWriter(entityClass, null, entity.getAnnotations(), entity.getMediaType());
+            final MessageBodyWriter messageBodyWriter = getProviders().getMessageBodyWriter(entityClass, null, entity.getAnnotations(), entity.getMediaType());
             if (messageBodyWriter == null)
               throw new ProcessingException("Provider not found for " + entityClass.getName());
 
@@ -360,7 +360,7 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
           if (entityStream != null)
             $span(Span.ENTITY_READ);
 
-          return new ResponseImpl(requestContext, statusCode, statusInfo, responseHeaders, cookies, entityStream, null) {
+          return new ResponseImpl(this, statusCode, statusInfo, responseHeaders, cookies, entityStream, null) {
             @Override
             public void close() throws ProcessingException {
               ProcessingException pe = null;
@@ -399,7 +399,7 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
           if (e instanceof ProcessingException)
             throw (ProcessingException)e;
 
-          throw new ProcessingException(e);
+          throw new ProcessingException(uri.toString(), e);
         }
       }
     };

@@ -49,9 +49,11 @@ import org.jetrs.provider.ext.BytesProvider;
 import org.jetrs.provider.ext.CharacterProvider;
 import org.jetrs.provider.ext.FormMultivaluedMapProvider;
 import org.jetrs.provider.ext.FormProvider;
+import org.jetrs.provider.ext.InputStreamProvider;
 import org.jetrs.provider.ext.NumberProvider;
 import org.jetrs.provider.ext.StreamingOutputProvider;
 import org.jetrs.provider.ext.StringProvider;
+import org.jetrs.provider.ext.interceptor.GZipCodec;
 import org.jetrs.server.app.ApplicationServer;
 import org.jetrs.server.app.filter.Filter1;
 import org.jetrs.server.app.provider.MyCharacterProvider;
@@ -77,7 +79,9 @@ public class ApplicationServerTest {
     client.register(new StreamingOutputProvider());
     client.register(new StringProvider());
     client.register(new FormProvider());
+    client.register(new InputStreamProvider());
     client.register(new FormMultivaluedMapProvider());
+    client.register(GZipCodec.class);
   }
 
   public static String encodeLexicographically(final Map<String,?> map) {
@@ -242,21 +246,27 @@ public class ApplicationServerTest {
   }
 
   @Test
-  public void testUploadClient() throws URISyntaxException {
+  public void testUploadEcho() throws IOException, URISyntaxException {
     final int len = Math.abs(random.nextInt(Short.MAX_VALUE));
-    final Response response = client.target(new URI(serviceUrl + "/upload?len=" + len))
+    final Response response = client.target(new URI(serviceUrl + "/upload/echo"))
       .request()
+      .header(HttpHeaders.CONTENT_ENCODING, "gzip")
+      .header(HttpHeaders.ACCEPT_ENCODING, "gzip")
       .put(Entity.entity(new StreamingOutput() {
         @Override
         public void write(final OutputStream output) throws IOException, WebApplicationException {
           for (int i = 0; i < len; ++i) // [N]
             output.write((byte)random.nextInt());
-
-          output.close();
         }
       }, MediaType.APPLICATION_OCTET_STREAM));
 
-    assertEquals(204, response.getStatus());
+    final InputStream in = (InputStream)response.getEntity();
+    int i = 0;
+    while (in.read() != -1)
+      ++i;
+
+    assertEquals(len, i);
+    assertEquals(200, response.getStatus());
   }
 
   private static Invocation.Builder request(final String path) {
@@ -463,7 +473,7 @@ public class ApplicationServerTest {
     final Character data = assertResponse(200, response, Character.class);
     assertEquals('Z', (char)data);
 
-    assertEquals(instanceCount, MyCharacterProvider.instanceCount);
+    assertEquals(instanceCount + 1, MyCharacterProvider.instanceCount);
   }
 
   @Test

@@ -18,13 +18,11 @@ package org.jetrs;
 
 import static org.libj.lang.Assertions.*;
 
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 
-import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Configuration;
@@ -126,33 +124,18 @@ class WebTargetImpl implements ConfigurableImpl<WebTarget>, WebTarget {
   @Override
   public Invocation.Builder request() {
     client.assertNotClosed();
-    try {
-      return new InvocationImpl.BuilderImpl(client, runtimeContext, getUri().toURL(), executorService, scheduledExecutorService, connectTimeout, readTimeout);
-    }
-    catch (final MalformedURLException e) {
-      throw new ProcessingException(e);
-    }
+    return new ClientRequestContextImpl.BuilderImpl(client, runtimeContext, getUri(), executorService, scheduledExecutorService, connectTimeout, readTimeout);
   }
 
   @Override
   public Invocation.Builder request(final String ... acceptedResponseTypes) {
     client.assertNotClosed();
-    try {
-      return new InvocationImpl.BuilderImpl(client, runtimeContext, getUri().toURL(), executorService, scheduledExecutorService, connectTimeout, readTimeout, acceptedResponseTypes);
-    }
-    catch (final MalformedURLException e) {
-      throw new ProcessingException(e);
-    }
+    return new ClientRequestContextImpl.BuilderImpl(client, runtimeContext, getUri(), executorService, scheduledExecutorService, connectTimeout, readTimeout, acceptedResponseTypes);
   }
 
   @Override
   public Invocation.Builder request(final MediaType ... acceptedResponseTypes) {
     client.assertNotClosed();
-    try {
-      return new InvocationImpl.BuilderImpl(client, runtimeContext, getUri().toURL(), executorService, scheduledExecutorService, connectTimeout, readTimeout, acceptedResponseTypes);
-    }
-    catch (final MalformedURLException e) {
-      throw new ProcessingException(e);
-    }
+    return new ClientRequestContextImpl.BuilderImpl(client, runtimeContext, getUri(), executorService, scheduledExecutorService, connectTimeout, readTimeout, acceptedResponseTypes);
   }
 }

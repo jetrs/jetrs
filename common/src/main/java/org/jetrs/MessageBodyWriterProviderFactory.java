@@ -29,7 +29,7 @@ final class MessageBodyWriterProviderFactory extends MessageBodyProviderFactory<
   }
 
   @Override
-  public CompatibleMediaType[] getCompatibleMediaType(final RequestContext<?> requestContext, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
+  public CompatibleMediaType[] getCompatibleMediaType(final RequestContext<?,?> requestContext, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
     final CompatibleMediaType[] mediaTypes = super.getCompatibleMediaType(requestContext, type, genericType, annotations, mediaType);
     if (mediaTypes == null)
       return null;

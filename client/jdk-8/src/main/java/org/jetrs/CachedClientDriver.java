@@ -16,9 +16,10 @@
 
 package org.jetrs;
 
-import java.net.URL;
+import java.net.URI;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
@@ -61,9 +62,9 @@ public abstract class CachedClientDriver<C> extends ClientDriver {
   abstract C newClient(final SSLContext sslContext);
 
   @Override
-  final Invocation build(final ClientImpl client, final ClientRuntimeContext runtimeContext, final URL url, final String method, final Entity<?> entity, HttpHeadersMap<String,Object> requestHeaders, final ArrayList<Cookie> cookies, final CacheControl cacheControl, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final long connectTimeout, final long readTimeout) throws Exception {
-    return build(sslContextToClient.get(client.getSslContext()), client, runtimeContext, url, method, entity, requestHeaders, cookies, cacheControl, executorService, scheduledExecutorService, connectTimeout, readTimeout);
+  final Invocation build(final ClientImpl client, final ClientRuntimeContext runtimeContext, final URI uri, final String method, final HttpHeadersImpl requestHeaders, final ArrayList<Cookie> cookies, final CacheControl cacheControl, final Entity<?> entity, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final HashMap<String,Object> properties, final long connectTimeout, final long readTimeout) throws Exception {
+    return build(sslContextToClient.get(client.getSslContext()), client, runtimeContext, uri, method, requestHeaders, cookies, cacheControl, entity, executorService, scheduledExecutorService, properties, connectTimeout, readTimeout);
   }
 
-  abstract Invocation build(C httpClient, ClientImpl client, ClientRuntimeContext runtimeContext, URL url, String method, Entity<?> entity, HttpHeadersMap<String,Object> requestHeaders, ArrayList<Cookie> cookies, CacheControl cacheControl, ExecutorService executorService, ScheduledExecutorService scheduledExecutorService, long connectTimeout, long readTimeout) throws Exception;
+  abstract Invocation build(C httpClient, ClientImpl client, ClientRuntimeContext runtimeContext, URI uri, String method, HttpHeadersImpl requestHeaders, ArrayList<Cookie> cookies, CacheControl cacheControl, Entity<?> entity, ExecutorService executorService, ScheduledExecutorService scheduledExecutorService, HashMap<String,Object> properties, long connectTimeout, long readTimeout) throws Exception;
 }

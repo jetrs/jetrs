@@ -22,7 +22,7 @@ import javax.ws.rs.core.MediaType;
 
 class CompatibleMediaType extends MediaType {
   /** A {@link CompatibleMediaType} constant representing wildcard {@value #WILDCARD} media type. */
-  final static CompatibleMediaType WILDCARD_TYPE = new CompatibleMediaType(MediaType.WILDCARD_TYPE, null, 0);
+  static final CompatibleMediaType WILDCARD_TYPE = new CompatibleMediaType(MediaType.WILDCARD_TYPE, null, 0);
 
   private final int distance;
 

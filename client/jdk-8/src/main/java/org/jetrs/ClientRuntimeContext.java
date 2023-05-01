@@ -19,7 +19,6 @@ package org.jetrs;
 import java.util.ArrayList;
 
 import javax.ws.rs.core.Configuration;
-import javax.ws.rs.core.Request;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
@@ -41,10 +40,5 @@ class ClientRuntimeContext extends RuntimeContext {
   @Override
   ClientRequestContextImpl localRequestContext() {
     throw new UnsupportedOperationException();
-  }
-
-  @Override
-  ClientRequestContextImpl newRequestContext(final Request request) {
-    return new ClientRequestContextImpl(PropertiesAdapter.MAP_ADAPTER, this, request);
   }
 }

@@ -17,8 +17,9 @@
 package org.jetrs;
 
 import java.lang.reflect.InvocationTargetException;
-import java.net.URL;
+import java.net.URI;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.ServiceConfigurationError;
 import java.util.ServiceLoader;
@@ -99,17 +100,17 @@ abstract class Invoker<R> {
   private final ClientDriver driver;
   final ClientImpl client;
   final ClientRuntimeContext runtimeContext;
-  final URL url;
+  final URI uri;
   final ExecutorService executorService;
   final ScheduledExecutorService scheduledExecutorService;
   final long connectTimeout;
   final long readTimeout;
 
-  Invoker(final ClientImpl client, final ClientRuntimeContext runtimeContext, final URL url, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final long connectTimeout, final long readTimeout) {
+  Invoker(final ClientImpl client, final ClientRuntimeContext runtimeContext, final URI uri, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final long connectTimeout, final long readTimeout) {
     this.driver = loadService(ClientDriver.JETRS_CLIENT_DRIVER_PROPERTY, Jdk8ClientDriver::new);
     this.client = client;
     this.runtimeContext = runtimeContext;
-    this.url = url;
+    this.uri = uri;
     this.executorService = executorService != null ? executorService : getDefaultExecutorService();
     this.scheduledExecutorService = scheduledExecutorService != null ? scheduledExecutorService : getDefaultScheduledExecutorService();
     this.connectTimeout = connectTimeout;
@@ -146,14 +147,16 @@ abstract class Invoker<R> {
 
   public abstract R method(String name, Entity<?> entity);
 
-  final Invocation build(final String method, final Entity<?> entity, final HttpHeadersImpl requestHeaders, final ArrayList<Cookie> cookies, final CacheControl cacheControl) {
+  abstract HashMap<String,Object> getProperties();
+
+  final Invocation build(final String method, final HttpHeadersImpl requestHeaders, final ArrayList<Cookie> cookies, final CacheControl cacheControl, final Entity<?> entity) {
     client.assertNotClosed();
     final HttpHeadersImpl headers = requestHeaders != null ? requestHeaders.clone() : new HttpHeadersImpl();
     if (entity != null && entity.getMediaType() != null && headers.getMediaType() == null)
       headers.setMediaType(entity.getMediaType());
 
     try {
-      return driver.build(client, runtimeContext, url, method, entity, headers, cookies, cacheControl, executorService, scheduledExecutorService, connectTimeout, readTimeout);
+      return driver.build(client, runtimeContext, uri, method, headers, cookies, cacheControl, entity, executorService, scheduledExecutorService, getProperties(), connectTimeout, readTimeout);
     }
     catch (final Exception e) {
       throw new ProcessingException(e);

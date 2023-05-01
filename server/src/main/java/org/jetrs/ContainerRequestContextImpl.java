@@ -90,7 +90,7 @@ import org.libj.util.ArrayUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> implements Closeable, ContainerRequestContext, ReaderInterceptorContext {
+class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext,HttpServletRequest> implements Closeable, ContainerRequestContext, ReaderInterceptorContext {
   private static final Logger logger = LoggerFactory.getLogger(ContainerRequestContextImpl.class);
 
   enum Stage {
@@ -108,7 +108,7 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
 
   private static Field[] EMPTY_FIELDS = {};
 
-  final static Field[] getContextFields(final Class<?> cls) {
+  static final Field[] getContextFields(final Class<?> cls) {
     return getContextFields(Classes.getDeclaredFieldsDeep(cls), 0, 0);
   }
 
@@ -132,7 +132,6 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
   }
 
   private final ArrayList<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories;
-  private final ServerRuntimeContext runtimeContext;
 
   private HttpServletRequest httpServletRequest;
   private HttpServletResponse httpServletResponse;
@@ -150,7 +149,6 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
   ContainerRequestContextImpl(final PropertiesAdapter<HttpServletRequest> propertiesAdapter, final ServerRuntimeContext runtimeContext, final Request request) {
     super(propertiesAdapter, runtimeContext, request);
     this.readerInterceptorProviderFactories = getReaderInterceptorFactoryList();
-    this.runtimeContext = runtimeContext;
   }
 
   void init(final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse) {
@@ -1045,9 +1043,8 @@ class ContainerRequestContextImpl extends RequestContext<HttpServletRequest> imp
 
   @Override
   public void close() throws IOException {
+    containerResponseContext.close();
     if (entityStream != null)
       entityStream.close();
-
-    containerResponseContext.close();
   }
 }

@@ -22,7 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpCookie;
-import java.net.URL;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -100,11 +100,11 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
   }
 
   @Override
-  Invocation build(final HttpClient httpClient, final ClientImpl client, final ClientRuntimeContext runtimeContext, final URL url, final String method, final Entity<?> entity, final HttpHeadersMap<String,Object> requestHeaders, final ArrayList<Cookie> cookies, final CacheControl cacheControl, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final long connectTimeout, final long readTimeout) throws Exception {
+  Invocation build(final HttpClient httpClient, final ClientImpl client, final ClientRuntimeContext runtimeContext, final URI uri, final String method, final HttpHeadersImpl requestHeaders, final ArrayList<Cookie> cookies, final CacheControl cacheControl, final Entity<?> entity, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final HashMap<String,Object> properties, final long connectTimeout, final long readTimeout) throws Exception {
     if (connectTimeout > 0)
       connectTimeoutLocal.set(connectTimeout);
 
-    return new InvocationImpl(client, runtimeContext, url, method, entity, requestHeaders, cookies, cacheControl, executorService, scheduledExecutorService, connectTimeout, readTimeout) {
+    return new ClientRequestContextImpl(client, runtimeContext, uri, method, requestHeaders, cookies, cacheControl, entity, executorService, scheduledExecutorService, properties, connectTimeout, readTimeout) {
       private void flushHeaders(final Request request) {
         // Remove headers that are set by default (unsolicited).
         final HttpFields headers = request.getHeaders();
@@ -128,7 +128,7 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
           final long ts = System.currentTimeMillis();
           $span(Span.TOTAL, Span.INIT);
 
-          final Request request = httpClient.newRequest(url.toURI())
+          final Request request = httpClient.newRequest(uri)
             .method(method)
             .timeout(connectTimeout + readTimeout, TimeUnit.MILLISECONDS);
 
@@ -149,11 +149,11 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
             $span(Span.ENTITY_INIT);
 
             final Class<?> entityClass = entity.getEntity().getClass();
-            final MessageBodyWriter messageBodyWriter = requestContext.getProviders().getMessageBodyWriter(entityClass, null, entity.getAnnotations(), entity.getMediaType());
+            final MessageBodyWriter messageBodyWriter = getProviders().getMessageBodyWriter(entityClass, null, entity.getAnnotations(), entity.getMediaType());
             if (messageBodyWriter == null)
               throw new ProcessingException("Provider not found for " + entityClass.getName());
 
-            writeContentAsync(messageBodyWriter, entityClass, () -> {
+            writeContentAsync(messageBodyWriter, () -> {
               flushHeaders(request);
               // final PipedInputStream in = new PipedInputStream();
               // out = new PipedOutputStream(in);
@@ -207,7 +207,7 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
           if (entityStream != null)
             $span(Span.ENTITY_READ);
 
-          return new ResponseImpl(requestContext, statusCode, statusInfo, responseHeaders, cookies, entityStream, null) {
+          return new ResponseImpl(this, statusCode, statusInfo, responseHeaders, cookies, entityStream, null) {
             @Override
             public void close() throws ProcessingException {
               ProcessingException pe = null;
@@ -238,7 +238,7 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
           if (e instanceof ProcessingException)
             throw (ProcessingException)e;
 
-          throw new ProcessingException(e);
+          throw new ProcessingException(uri.toString(), e);
         }
       }
     };

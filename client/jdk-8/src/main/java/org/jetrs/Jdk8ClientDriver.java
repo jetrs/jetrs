@@ -25,7 +25,7 @@ import java.net.CookiePolicy;
 import java.net.CookieStore;
 import java.net.HttpCookie;
 import java.net.HttpURLConnection;
-import java.net.URL;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -69,8 +69,8 @@ public class Jdk8ClientDriver extends ClientDriver {
   }
 
   @Override
-  Invocation build(final ClientImpl client, final ClientRuntimeContext runtimeContext, final URL url, final String method, final Entity<?> entity, final HttpHeadersMap<String,Object> requestHeaders, final ArrayList<Cookie> cookies, final CacheControl cacheControl, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final long connectTimeout, final long readTimeout) throws Exception {
-    return new InvocationImpl(client, runtimeContext, url, method, entity, requestHeaders, cookies, cacheControl, executorService, scheduledExecutorService, connectTimeout, readTimeout) {
+  Invocation build(final ClientImpl client, final ClientRuntimeContext runtimeContext, final URI uri, final String method, final HttpHeadersImpl requestHeaders, final ArrayList<Cookie> cookies, final CacheControl cacheControl, final Entity<?> entity, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final HashMap<String,Object> properties, final long connectTimeout, final long readTimeout) throws Exception {
+    return new ClientRequestContextImpl(client, runtimeContext, uri, method, requestHeaders, cookies, cacheControl, entity, executorService, scheduledExecutorService, properties, connectTimeout, readTimeout) {
       private final SSLContext sslContext;
 
       {
@@ -98,7 +98,7 @@ public class Jdk8ClientDriver extends ClientDriver {
         try {
           $span(Span.TOTAL, Span.INIT);
 
-          final HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+          final HttpURLConnection connection = (HttpURLConnection)uri.toURL().openConnection();
           if (connection instanceof HttpsURLConnection)
             ((HttpsURLConnection)connection).setSSLSocketFactory(sslContext.getSocketFactory());
 
@@ -135,11 +135,11 @@ public class Jdk8ClientDriver extends ClientDriver {
 
             connection.setDoOutput(true);
             final Class<?> entityClass = entity.getEntity().getClass();
-            final MessageBodyWriter messageBodyWriter = requestContext.getProviders().getMessageBodyWriter(entityClass, null, entity.getAnnotations(), entity.getMediaType());
+            final MessageBodyWriter messageBodyWriter = getProviders().getMessageBodyWriter(entityClass, null, entity.getAnnotations(), entity.getMediaType());
             if (messageBodyWriter == null)
               throw new ProcessingException("Provider not found for " + entityClass.getName());
 
-            writeContentSync(messageBodyWriter, entityClass, () -> {
+            writeContentSync(messageBodyWriter, () -> {
               flushHeaders(connection);
               final HttpHeadersMap<Object,String> mirrorMap = requestHeaders.getMirrorMap();
               final Number contentLength = (Number)mirrorMap.getFirst(HttpHeaders.CONTENT_LENGTH);
@@ -188,7 +188,7 @@ public class Jdk8ClientDriver extends ClientDriver {
           if (entityStream != null)
             $span(Span.ENTITY_READ);
 
-          return new ResponseImpl(requestContext, statusCode, statusInfo, responseHeaders, cookies, entityStream, null) {
+          return new ResponseImpl(this, statusCode, statusInfo, responseHeaders, cookies, entityStream, null) {
             @Override
             public void close() throws ProcessingException {
               ProcessingException pe = null;
@@ -220,7 +220,7 @@ public class Jdk8ClientDriver extends ClientDriver {
           if (e instanceof ProcessingException)
             throw (ProcessingException)e;
 
-          throw new ProcessingException(e);
+          throw new ProcessingException(uri.toString(), e);
         }
       }
     };

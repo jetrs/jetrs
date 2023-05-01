@@ -18,7 +18,6 @@ package org.jetrs;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Set;
@@ -158,11 +157,6 @@ class ClientImpl implements Client, ConfigurableImpl<Client> {
   @Override
   public Invocation.Builder invocation(final Link link) {
     assertNotClosed();
-    try {
-      return new InvocationImpl.BuilderImpl(this, buildProviders(), link.getUri().toURL(), executorService, scheduledExecutorService, connectTimeout, readTimeout);
-    }
-    catch (final MalformedURLException e) {
-      throw new IllegalArgumentException(e);
-    }
+    return new ClientRequestContextImpl.BuilderImpl(this, buildProviders(), link.getUri(), executorService, scheduledExecutorService, connectTimeout, readTimeout);
   }
 }

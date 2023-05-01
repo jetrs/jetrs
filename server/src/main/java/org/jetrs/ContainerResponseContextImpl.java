@@ -184,30 +184,31 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
     return entity;
   }
 
-  private Class<?> type;
+  private Class<?> entityClass;
 
   @Override
   public Class<?> getEntityClass() {
-    return type;
+    return entityClass;
   }
 
-  private Type genericType;
+  private Type entityType;
 
   @Override
   public Type getEntityType() {
-    return genericType;
+    return entityType;
   }
 
   @Override
   public void setEntity(final Object entity) {
     if (entity instanceof GenericEntity) {
-      this.entity = ((GenericEntity<?>)entity).getEntity();
-      this.genericType = ((GenericEntity<?>)entity).getType();
-      this.type = ((GenericEntity<?>)entity).getRawType();
+      final GenericEntity<?> genericEntity = (GenericEntity<?>)entity;
+      this.entity = genericEntity.getEntity();
+      this.entityType = genericEntity.getType();
+      this.entityClass = genericEntity.getRawType();
     }
     else {
       this.entity = entity;
-      this.type = entity == null ? null : entity.getClass();
+      this.entityClass = entity == null ? null : entity.getClass();
     }
   }
 
@@ -238,11 +239,6 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
   }
 
   @Override
-  public int getLength() {
-    return getStringHeaders().getLength();
-  }
-
-  @Override
   public OutputStream getOutputStream() {
     return outputStream;
   }
@@ -253,13 +249,22 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
   }
 
   @Override
+  public int getLength() {
+    return getStringHeaders().getLength();
+  }
+
+  private int interceptorIndex = -1;
+  @SuppressWarnings("rawtypes")
+  private MessageBodyWriter messageBodyWriter;
+
+  @Override
   @SuppressWarnings("unchecked")
   public void proceed() throws IOException {
     if (++interceptorIndex < writerInterceptorProviderFactories.size()) {
       writerInterceptorProviderFactories.get(interceptorIndex).getSingletonOrFromRequestContext(requestContext).aroundWriteTo(this);
     }
     else if (interceptorIndex == writerInterceptorProviderFactories.size()) {
-      try (final OutputStream entityStream = getEntityStream()) {
+      try (final OutputStream entityStream = getOutputStream()) {
         messageBodyWriter.writeTo(getEntity(), getEntityClass(), getEntityType(), getEntityAnnotations(), getMediaType(), getHeaders(), entityStream);
       }
     }
@@ -267,11 +272,6 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
       throw new IllegalStateException();
     }
   }
-
-  private int interceptorIndex = -1;
-
-  @SuppressWarnings("rawtypes")
-  private MessageBodyWriter messageBodyWriter;
 
   private class BufferedSocketOutputStream extends SafeDirectByteArrayOutputStream {
     private final HttpServletResponse httpServletResponse;

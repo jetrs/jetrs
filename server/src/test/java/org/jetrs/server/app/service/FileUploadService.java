@@ -21,15 +21,23 @@ import static org.junit.Assert.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
 import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.StreamingOutput;
+
+import org.libj.io.Streams;
 
 @Singleton
 public class FileUploadService {
@@ -37,9 +45,24 @@ public class FileUploadService {
   @Path("/upload")
   @Consumes(MediaType.WILDCARD)
   public void upload(final InputStream in, @QueryParam("len") final int len) throws IOException {
-    final File file = Files.createTempFile("jetrs", null).toFile();
-    Files.copy(in, file.toPath(), StandardCopyOption.REPLACE_EXISTING);
+    final java.nio.file.Path path = Files.createTempFile("jetrs", null);
+    Files.copy(in, path, StandardCopyOption.REPLACE_EXISTING);
+
+    final File file = path.toFile();
     assertEquals(len, file.length());
     file.deleteOnExit();
+  }
+
+  @PUT
+  @Path("/upload/echo")
+  @Consumes(MediaType.WILDCARD)
+  @Produces(MediaType.WILDCARD)
+  public StreamingOutput uploadEcho(final InputStream in, @HeaderParam(HttpHeaders.ACCEPT_ENCODING) String acceptEncoding) {
+    return new StreamingOutput() {
+      @Override
+      public void write(final OutputStream output) throws IOException, WebApplicationException {
+        Streams.pipe(in, output);
+      }
+    };
   }
 }

@@ -46,7 +46,7 @@ import org.jetrs.EntityUtil.ConsumableByteArrayInputStream;
 import org.libj.io.Streams;
 
 class ResponseImpl extends Response {
-  private final RequestContext<?> requestContext;
+  private final RequestContext<?,?> requestContext;
   private final Providers providers;
   private final int statusCode;
   private final Response.StatusType statusInfo;
@@ -58,7 +58,7 @@ class ResponseImpl extends Response {
   final Annotation[] annotations; // FIXME: annotations are not being used, but they need to be used by the MessageBodyWriter.. there's no API to get them out of this class
   private boolean closed;
 
-  ResponseImpl(final RequestContext<?> requestContext, final int statusCode, final Response.StatusType statusInfo, final HttpHeadersImpl headers, final Map<String,NewCookie> cookies, final Object entity, final Annotation[] annotations) {
+  ResponseImpl(final RequestContext<?,?> requestContext, final int statusCode, final Response.StatusType statusInfo, final HttpHeadersImpl headers, final Map<String,NewCookie> cookies, final Object entity, final Annotation[] annotations) {
     this.requestContext = requestContext;
     this.providers = requestContext.getProviders();
     this.statusCode = statusCode;
@@ -66,10 +66,13 @@ class ResponseImpl extends Response {
     this.headers = headers;
     this.cookies = cookies != null ? cookies : Collections.EMPTY_MAP;
 
-    if ((this.hasEntity = entity != null) && entity instanceof InputStream)
-      this.entityStream = (InputStream)entity;
+    if (this.hasEntity = entity != null) {
+      if (entity instanceof InputStream)
+        this.entityStream = (InputStream)entity;
+      else
+        this.entityObject = entity;
+    }
 
-    this.entityObject = entity;
     this.annotations = annotations;
   }
 
@@ -89,10 +92,13 @@ class ResponseImpl extends Response {
 
   @Override
   public Object getEntity() {
+    if (entityObject != null)
+      return entityObject;
+
     if (closed && wasEntityConsumed())
       throw new IllegalStateException("Response has been closed");
 
-    return entityObject;
+    return readEntity(InputStream.class);
   }
 
   /**
@@ -102,7 +108,7 @@ class ResponseImpl extends Response {
    */
   @Override
   public <T>T readEntity(final Class<T> entityType) throws IllegalStateException, ResponseProcessingException {
-    return readEntity(entityType, null);
+    return readEntity(entityType, null, null);
   }
 
   /**
@@ -164,7 +170,7 @@ class ResponseImpl extends Response {
     try {
       final ArrayList<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories = requestContext.getReaderInterceptorFactoryList();
       if (readerInterceptorProviderFactories == null)
-        return (T)(entityObject = messageBodyReader.readFrom(rawType, genericType, annotations, mediaType, headers, entityStream));
+        return (messageBodyReader.readFrom(rawType, genericType, annotations, mediaType, headers, entityStream));
 
       final ReaderInterceptorContextImpl readerInterceptorContext = new ReaderInterceptorContextImpl(rawType, genericType, annotations, headers, entityStream) {
         private int interceptorIndex = -1;
@@ -183,7 +189,7 @@ class ResponseImpl extends Response {
         }
       };
 
-      return EntityUtil.checktNotNull((T)(entityObject = readerInterceptorContext.proceed()), readerInterceptorContext.getAnnotations());
+      return EntityUtil.checktNotNull((T)readerInterceptorContext.proceed(), readerInterceptorContext.getAnnotations());
     }
     catch (final Exception e) {
       throw new ResponseProcessingException(this, e);
@@ -192,7 +198,7 @@ class ResponseImpl extends Response {
       try {
         if (wasBuffered)
           entityStream.reset();
-        else
+        else if (!InputStream.class.isAssignableFrom(rawType))
           entityStream.close();
       }
       catch (final IOException e) {
@@ -238,9 +244,9 @@ class ResponseImpl extends Response {
   @Override
   public void close() throws ProcessingException {
     this.closed = true;
-    if (entityObject instanceof InputStream) {
+    if (entityStream != null) {
       try {
-        ((InputStream)entityObject).close();
+        entityStream.close();
       }
       catch (final IOException e) {
         throw new ProcessingException(e);

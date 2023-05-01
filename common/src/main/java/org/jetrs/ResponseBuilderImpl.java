@@ -40,7 +40,7 @@ import javax.ws.rs.core.Variant;
 
 // FIXME: It is implied that a ResponseBuilderImpl instance only exists in Server Runtime. Is this correct?
 class ResponseBuilderImpl extends Response.ResponseBuilder implements Cloneable {
-  private final RequestContext<?> requestContext;
+  private final RequestContext<?,?> requestContext;
   private final HttpHeadersImpl headers;
 
   private int statusCode;
@@ -49,7 +49,7 @@ class ResponseBuilderImpl extends Response.ResponseBuilder implements Cloneable 
   private Annotation[] annotations;
   private HashMap<String,NewCookie> cookies;
 
-  ResponseBuilderImpl(final RequestContext<?> requestContext) {
+  ResponseBuilderImpl(final RequestContext<?,?> requestContext) {
     this.requestContext = requestContext;
     this.headers = new HttpHeadersImpl();
   }

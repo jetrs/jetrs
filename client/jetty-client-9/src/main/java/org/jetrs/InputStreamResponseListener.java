@@ -199,7 +199,7 @@ public class InputStreamResponseListener extends Listener.Adapter {
   public Response get(final long timeout, final TimeUnit unit) throws InterruptedException, TimeoutException, ExecutionException {
     final boolean expired = !responseLatch.await(timeout, unit);
     if (expired)
-      throw new TimeoutException(unit.compareTo(TimeUnit.MILLISECONDS) + "ms");
+      throw new TimeoutException(unit.convert(timeout, TimeUnit.MILLISECONDS) + "ms");
 
     synchronized (lock) {
       // If the request failed there is no response.

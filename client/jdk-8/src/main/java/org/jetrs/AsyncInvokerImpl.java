@@ -16,8 +16,9 @@
 
 package org.jetrs;
 
-import java.net.URL;
+import java.net.URI;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
@@ -36,12 +37,19 @@ class AsyncInvokerImpl extends Invoker<Future<Response>> implements AsyncInvoker
   private final HttpHeadersImpl requestHeaders;
   private final ArrayList<Cookie> cookies;
   private final CacheControl cacheControl;
+  private final HashMap<String,Object> properties;
 
-  AsyncInvokerImpl(final ClientImpl client, final ClientRuntimeContext runtimeContext, final URL url, final HttpHeadersImpl requestHeaders, final ArrayList<Cookie> cookies, final CacheControl cacheControl, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final long connectTimeout, final long readTimeout) {
-    super(client, runtimeContext, url, executorService, scheduledExecutorService, connectTimeout, readTimeout);
+  AsyncInvokerImpl(final ClientImpl client, final ClientRuntimeContext runtimeContext, final URI uri, final HttpHeadersImpl requestHeaders, final ArrayList<Cookie> cookies, final CacheControl cacheControl, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final HashMap<String,Object> properties, final long connectTimeout, final long readTimeout) {
+    super(client, runtimeContext, uri, executorService, scheduledExecutorService, connectTimeout, readTimeout);
     this.requestHeaders = requestHeaders;
     this.cookies = cookies;
     this.cacheControl = cacheControl;
+    this.properties = properties;
+  }
+
+  @Override
+  HashMap<String,Object> getProperties() {
+    return properties;
   }
 
   @Override
@@ -168,7 +176,7 @@ class AsyncInvokerImpl extends Invoker<Future<Response>> implements AsyncInvoker
   @SuppressWarnings("unchecked")
   public <T>Future<T> method(final String name, final Entity<?> entity, final Class<T> responseType) {
     client.assertNotClosed();
-    final Invocation invocation = build(name, entity, requestHeaders, cookies, cacheControl);
+    final Invocation invocation = build(name, requestHeaders, cookies, cacheControl, entity);
     return executorService.submit(() -> {
       final Response response = invocation.invoke();
       if (Response.class.isAssignableFrom(responseType))
@@ -186,7 +194,7 @@ class AsyncInvokerImpl extends Invoker<Future<Response>> implements AsyncInvoker
   @Override
   public <T>Future<T> method(final String name, final Entity<?> entity, final GenericType<T> responseType) {
     client.assertNotClosed();
-    final Invocation invocation = build(name, entity, requestHeaders, cookies, cacheControl);
+    final Invocation invocation = build(name, requestHeaders, cookies, cacheControl, entity);
     return executorService.submit(() -> {
       try (final Response response = invocation.invoke()) {
         return response.readEntity(responseType);
@@ -198,7 +206,7 @@ class AsyncInvokerImpl extends Invoker<Future<Response>> implements AsyncInvoker
   @SuppressWarnings("unchecked")
   public <T>Future<T> method(final String name, final Entity<?> entity, final InvocationCallback<T> callback) {
     client.assertNotClosed();
-    final Invocation invocation = build(name, entity, requestHeaders, cookies, cacheControl);
+    final Invocation invocation = build(name, requestHeaders, cookies, cacheControl, entity);
     return executorService.submit(() -> {
       try (final Response response = invocation.invoke()) {
         final T message = (T)response.getEntity();

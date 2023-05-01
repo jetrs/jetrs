@@ -54,7 +54,7 @@ class ProviderFactory<T> {
     return priority;
   }
 
-  final T getSingletonOrFromRequestContext(final RequestContext<?> requestContext) {
+  final T getSingletonOrFromRequestContext(final RequestContext<?,?> requestContext) {
     if (singleton != null || requestContext == null)
       return singleton;
 

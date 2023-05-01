@@ -16,7 +16,7 @@
 
 package org.jetrs;
 
-import java.net.URL;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -114,5 +114,5 @@ public abstract class ClientDriver {
     }
   }
 
-  abstract Invocation build(ClientImpl client, ClientRuntimeContext runtimeContext, URL url, String method, Entity<?> entity, HttpHeadersMap<String,Object> requestHeaders, ArrayList<Cookie> cookies, CacheControl cacheControl, ExecutorService executorService, ScheduledExecutorService scheduledExecutorService, long connectTimeout, long readTimeout) throws Exception;
+  abstract Invocation build(ClientImpl client, ClientRuntimeContext runtimeContext, URI uri, String method, HttpHeadersImpl requestHeaders, ArrayList<Cookie> cookies, CacheControl cacheControl, Entity<?> entity, ExecutorService executorService, ScheduledExecutorService scheduledExecutorService, HashMap<String,Object> properties, long connectTimeout, long readTimeout) throws Exception;
 }
