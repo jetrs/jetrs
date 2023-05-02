@@ -61,7 +61,7 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
     int count = 0;
 
     @Override
-    public void write(final int b) throws IOException {
+    public void write(final int b) {
       ++count;
     }
   }
@@ -463,7 +463,7 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
         }
 
         @Override
-        protected void afterWrite(final int b, final byte[] bs, final int off, final int len) throws IOException {
+        protected void afterWrite(final int b, final byte[] bs, final int off, final int len) {
           if (!(target instanceof BufferedSocketOutputStream)) {
             relegateOutputStream.setTarget(target);
           }
@@ -495,7 +495,7 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
   }
 
   @Override
-  public void close() throws IOException {
+  public void close() {
     firstOutputStream = null;
     noopOutputStream = null;
     if (outputStream != null) {
@@ -503,7 +503,7 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
         outputStream.close();
       }
       catch (final Exception e) {
-        if (logger.isErrorEnabled()) logger.error(e.getMessage(), e);
+        if (logger.isDebugEnabled()) logger.debug(e.getMessage(), e);
       }
       finally {
         outputStream = null;

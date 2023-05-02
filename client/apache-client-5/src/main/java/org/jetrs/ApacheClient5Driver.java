@@ -131,7 +131,7 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
         }
       }
 
-      Object getResult(final AtomicReference<Object> resultRef) throws ProcessingException {
+      Object getResult(final AtomicReference<Object> resultRef) {
         final Object result = resultRef.get();
         if (result instanceof Exception)
           throw new ProcessingException((Exception)result);
@@ -253,7 +253,7 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
                       }
 
                       @Override
-                      public InputStream getContent() throws IOException {
+                      public InputStream getContent() {
                         throw new UnsupportedOperationException();
                       }
 
@@ -271,7 +271,7 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
                       }
 
                       @Override
-                      public void close() throws IOException {
+                      public void close() {
                       }
                     });
 
@@ -299,7 +299,7 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
                 }
 
                 @Override
-                protected void afterWrite(final int b, final byte[] bs, final int off, final int len) throws IOException {
+                protected void afterWrite(final int b, final byte[] bs, final int off, final int len) {
                   relegateEntityStream.setTarget(target);
                 }
               });

@@ -321,7 +321,7 @@ public final class EntityUtil {
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
       pos = count;
     }
   }

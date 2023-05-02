@@ -136,7 +136,7 @@ public abstract class ContentCodec implements ReaderInterceptor, WriterIntercept
     final RelegateOutputStream relegateOutputStream = new RelegateOutputStream();
     relegateOutputStream.setTarget(new ObservableOutputStream() {
       @Override
-      protected boolean beforeWrite(final int b, final byte[] bs, final int off, final int len) throws IOException {
+      protected boolean beforeWrite(final int b, final byte[] bs, final int off, final int len) {
         if (target == null) {
           // Must remove Content-Length header since the encoded message will have a different length
           final MultivaluedMap<String,Object> headers = context.getHeaders();
@@ -155,7 +155,7 @@ public abstract class ContentCodec implements ReaderInterceptor, WriterIntercept
       }
 
       @Override
-      protected void afterWrite(final int b, final byte[] bs, final int off, final int len) throws IOException {
+      protected void afterWrite(final int b, final byte[] bs, final int off, final int len) {
         relegateOutputStream.setTarget(target);
       }
 

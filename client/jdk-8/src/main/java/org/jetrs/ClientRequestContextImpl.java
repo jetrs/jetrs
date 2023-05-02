@@ -267,13 +267,13 @@ abstract class ClientRequestContextImpl extends RequestContext<ClientRuntimeCont
     }) {
       relegateEntityStream.setTarget(new ObservableOutputStream() {
         @Override
-        protected boolean beforeWrite(final int b, final byte[] bs, final int off, final int len) throws IOException {
+        protected boolean beforeWrite(final int b, final byte[] bs, final int off, final int len) {
           target = onFirstWrite.get();
           return true;
         }
 
         @Override
-        protected void afterWrite(final int b, final byte[] bs, final int off, final int len) throws IOException {
+        protected void afterWrite(final int b, final byte[] bs, final int off, final int len) {
           relegateEntityStream.setTarget(target);
           target = null;
         }
@@ -321,7 +321,7 @@ abstract class ClientRequestContextImpl extends RequestContext<ClientRuntimeCont
       }) {
         relegateEntityStream.setTarget(new ObservableOutputStream() {
           @Override
-          protected boolean beforeWrite(final int b, final byte[] bs, final int off, final int len) throws IOException {
+          protected boolean beforeWrite(final int b, final byte[] bs, final int off, final int len) {
             try {
               target = onFirstWrite.get();
               resultRef.set(Boolean.TRUE);
@@ -334,7 +334,7 @@ abstract class ClientRequestContextImpl extends RequestContext<ClientRuntimeCont
           }
 
           @Override
-          protected void afterWrite(final int b, final byte[] bs, final int off, final int len) throws IOException {
+          protected void afterWrite(final int b, final byte[] bs, final int off, final int len) {
             relegateEntityStream.setTarget(target);
             target = null;
           }
