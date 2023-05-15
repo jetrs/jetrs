@@ -109,11 +109,12 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext,Ht
   private static Field[] EMPTY_FIELDS = {};
 
   static final Field[] getContextFields(final Class<?> cls) {
-    return getContextFields(Classes.getDeclaredFieldsDeep(cls), 0, 0);
+    final Field[] fields = Classes.getDeclaredFieldsDeep(cls);
+    return getContextFields(fields, fields.length, 0, 0);
   }
 
-  private static Field[] getContextFields(final Field[] fields, final int index, final int depth) {
-    if (index == fields.length)
+  private static Field[] getContextFields(final Field[] fields, final int length, final int index, final int depth) {
+    if (index == length)
       return depth == 0 ? EMPTY_FIELDS : new Field[depth];
 
     final Field field = fields[index];
@@ -124,10 +125,11 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext,Ht
 
     hasContext |= field.isAnnotationPresent(Context.class);
 
-    final Field[] result = getContextFields(fields, index + 1, hasContext ? depth + 1 : depth);
-    if (hasContext)
-      result[depth] = field;
+    if (!hasContext)
+      return getContextFields(fields, length, index + 1, depth);
 
+    final Field[] result = getContextFields(fields, length, index + 1, depth + 1);
+    result[depth] = field;
     return result;
   }
 

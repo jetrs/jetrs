@@ -328,7 +328,7 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
 
           final int statusCode = response.getCode();
           final String reasonPhrase = response.getReasonPhrase();
-          final StatusType statusInfo = reasonPhrase != null ? Responses.from(statusCode, reasonPhrase) : Responses.from(statusCode);
+          final StatusType statusInfo = Responses.from(statusCode, reasonPhrase);
           final HttpHeadersImpl responseHeaders = new HttpHeadersImpl();
           for (final Header header : response.getHeaders()) // [A]
             responseHeaders.add(header.getName(), header.getValue());

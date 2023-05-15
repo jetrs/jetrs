@@ -194,7 +194,7 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
           return null;
 
         final Object reflection = HeaderDelegateImpl.lookup(key).getValue().fromString(value);
-        if (reflection == null && logger.isWarnEnabled()) logger.warn("Got null reflection for header name: \"" + key + "\"");
+        if (reflection == null && logger.isWarnEnabled()) logger.warn("Got null reflection for header: \"" + key + ": " + value + "\"");
         return reflection;
       }
 

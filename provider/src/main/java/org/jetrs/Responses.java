@@ -25,13 +25,15 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.Response.Status.Family;
 import javax.ws.rs.core.Response.StatusType;
 
+import org.libj.lang.WrappedArrayList;
+
 /**
  * Utility functions for operations pertaining to {@link Response}.
  */
 final class Responses {
   private static final Status[] statuses = Status.values();
   private static final int[] statusCodes = new int[statuses.length];
-  private static final ConcurrentHashMap<String,StatusType> codeReasonToStatus = new ConcurrentHashMap<>();
+  private static final ConcurrentHashMap<WrappedArrayList<Object>,StatusType> codeReasonToStatus = new ConcurrentHashMap<>();
 
   static {
     for (int i = 0, i$ = statuses.length; i < i$; ++i) // [A]
@@ -61,7 +63,14 @@ final class Responses {
    * @throws IllegalArgumentException If {@code statusCode < -1}.
    */
   static StatusType from(final int statusCode) {
-    return from(statusCode, null);
+    if (statusCode < -1)
+      throw new IllegalArgumentException("statusCode = " + statusCode);
+
+    if (statusCode == -1)
+      return null;
+
+    final int index = Arrays.binarySearch(statusCodes, statusCode);
+    return index < 0 ? fromMap(statusCode, null) : statuses[index];
   }
 
   /**
@@ -86,7 +95,11 @@ final class Responses {
         return status;
     }
 
-    final String codeReason = statusCode + reasonPhrase;
+    return fromMap(statusCode, reasonPhrase);
+  }
+
+  private static StatusType fromMap(final int statusCode, final String reasonPhrase) {
+    final WrappedArrayList<Object> codeReason = new WrappedArrayList<>(statusCode, reasonPhrase);
     StatusType status = codeReasonToStatus.get(codeReason);
     if (status == null) {
       codeReasonToStatus.put(codeReason, status = new StatusType() {
@@ -103,6 +116,12 @@ final class Responses {
         @Override
         public Family getFamily() {
           return Family.familyOf(statusCode);
+        }
+
+        @Override
+        public Status toEnum() {
+          final int index = Arrays.binarySearch(statusCodes, statusCode);
+          return index < 0 ? null : statuses[index];
         }
 
         @Override

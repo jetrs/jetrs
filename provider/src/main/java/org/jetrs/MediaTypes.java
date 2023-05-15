@@ -157,10 +157,11 @@ public final class MediaTypes {
     final ServerMediaType serverType = serverTypes[index1];
     final MediaType clientType = clientTypes[index2];
     final CompatibleMediaType compatibleType = getCompatible(serverType, clientType, acceptCharsets);
-    final CompatibleMediaType[] compatibleTypes = getCompatible(serverTypes, clientTypes, acceptCharsets, index1, index2 + 1, compatibleType != null ? depth + 1 : depth);
-    if (compatibleType != null)
-      compatibleTypes[depth] = compatibleType;
+    if (compatibleType == null)
+      return getCompatible(serverTypes, clientTypes, acceptCharsets, index1, index2 + 1, depth);
 
+    final CompatibleMediaType[] compatibleTypes = getCompatible(serverTypes, clientTypes, acceptCharsets, index1, index2 + 1, depth + 1);
+    compatibleTypes[depth] = compatibleType;
     return compatibleTypes;
   }
 
@@ -195,10 +196,11 @@ public final class MediaTypes {
     final ServerMediaType serverType = serverTypes[index1];
     final MediaType clientType = clientTypes.get(index2);
     final CompatibleMediaType compatibleType = getCompatible(serverType, clientType, acceptCharsets);
-    final CompatibleMediaType[] compatibleTypes = getCompatible(serverTypes, clientTypes, acceptCharsets, index1, index2 + 1, compatibleType != null ? depth + 1 : depth);
-    if (compatibleType != null)
-      compatibleTypes[depth] = compatibleType;
+    if (compatibleType == null)
+      return getCompatible(serverTypes, clientTypes, acceptCharsets, index1, index2 + 1, depth);
 
+    final CompatibleMediaType[] compatibleTypes = getCompatible(serverTypes, clientTypes, acceptCharsets, index1, index2 + 1, depth + 1);
+    compatibleTypes[depth] = compatibleType;
     return compatibleTypes;
   }
 
@@ -216,21 +218,22 @@ public final class MediaTypes {
    * @throws NullPointerException If {@code serverTypes}, any member of {@code serverTypes}, or {@code clientType} is null.
    */
   static CompatibleMediaType[] getCompatible(final ServerMediaType[] serverTypes, final MediaType clientType, final List<String> acceptCharsets) {
-    final CompatibleMediaType[] mediaTypes = getCompatible(serverTypes, clientType, acceptCharsets, 0, 0);
+    final CompatibleMediaType[] mediaTypes = getCompatible(serverTypes, clientType, acceptCharsets, serverTypes.length, 0, 0);
     Arrays.sort(mediaTypes, QUALITY_COMPARATOR);
     return mediaTypes;
   }
 
-  private static CompatibleMediaType[] getCompatible(final ServerMediaType[] serverTypes, final MediaType clientType, final List<String> acceptCharsets, final int index, final int depth) {
-    if (index == serverTypes.length)
+  private static CompatibleMediaType[] getCompatible(final ServerMediaType[] serverTypes, final MediaType clientType, final List<String> acceptCharsets, final int length, final int index, final int depth) {
+    if (index == length)
       return depth == 0 ? WILDCARD_COMPATIBLE_TYPE : new CompatibleMediaType[depth];
 
     final ServerMediaType serverType = serverTypes[index];
     final CompatibleMediaType compatibleType = getCompatible(serverType, clientType, acceptCharsets);
-    final CompatibleMediaType[] compatibleTypes = getCompatible(serverTypes, clientType, acceptCharsets, index + 1, compatibleType != null ? depth + 1 : depth);
-    if (compatibleType != null)
-      compatibleTypes[depth] = compatibleType;
+    if (compatibleType == null)
+      return getCompatible(serverTypes, clientType, acceptCharsets, length, index + 1, depth);
 
+    final CompatibleMediaType[] compatibleTypes = getCompatible(serverTypes, clientType, acceptCharsets, length, index + 1, depth + 1);
+    compatibleTypes[depth] = compatibleType;
     return compatibleTypes;
   }
 
@@ -248,21 +251,22 @@ public final class MediaTypes {
    * @throws NullPointerException If {@code serverTypes}, any member of {@code serverTypes}, or {@code clientType} is null.
    */
   static CompatibleMediaType[] getCompatible(final List<ServerMediaType> serverTypes, final MediaType clientType, final List<String> acceptCharsets) {
-    final CompatibleMediaType[] mediaTypes = getCompatible(serverTypes, clientType, acceptCharsets, 0, 0);
+    final CompatibleMediaType[] mediaTypes = getCompatible(serverTypes, clientType, acceptCharsets, serverTypes.size(), 0, 0);
     Arrays.sort(mediaTypes, QUALITY_COMPARATOR);
     return mediaTypes;
   }
 
-  private static CompatibleMediaType[] getCompatible(final List<ServerMediaType> serverTypes, final MediaType clientType, final List<String> acceptCharsets, final int index, final int depth) {
-    if (index == serverTypes.size())
+  private static CompatibleMediaType[] getCompatible(final List<ServerMediaType> serverTypes, final MediaType clientType, final List<String> acceptCharsets, final int length, final int index, final int depth) {
+    if (index == length)
       return depth == 0 ? WILDCARD_COMPATIBLE_TYPE : new CompatibleMediaType[depth];
 
     final ServerMediaType serverType = serverTypes.get(index);
     final CompatibleMediaType compatibleType = getCompatible(serverType, clientType, acceptCharsets);
-    final CompatibleMediaType[] compatibleTypes = getCompatible(serverTypes, clientType, acceptCharsets, index + 1, compatibleType != null ? depth + 1 : depth);
-    if (compatibleType != null)
-      compatibleTypes[depth] = compatibleType;
+    if (compatibleType == null)
+      return getCompatible(serverTypes, clientType, acceptCharsets, length, index + 1, depth);
 
+    final CompatibleMediaType[] compatibleTypes = getCompatible(serverTypes, clientType, acceptCharsets, length, index + 1, depth + 1);
+    compatibleTypes[depth] = compatibleType;
     return compatibleTypes;
   }
 

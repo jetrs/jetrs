@@ -339,24 +339,24 @@ abstract class RequestContext<R extends RuntimeContext,P> extends InterceptorCon
   }
 
   private Field[] injectFields(final Object instance, final Field[] fields) throws IllegalAccessException, IOException {
-    return injectFields(instance, fields, 0, 0);
+    return injectFields(instance, fields, fields.length, 0, 0);
   }
 
-  private Field[] injectFields(final Object instance, final Field[] fields, final int index, final int depth) throws IllegalAccessException, IOException {
-    if (index == fields.length)
+  private Field[] injectFields(final Object instance, final Field[] fields, final int length, final int index, final int depth) throws IllegalAccessException, IOException {
+    if (index == length)
       return depth == 0 ? null : new Field[depth];
 
     final Field field = fields[index];
     final Object value = findInjectableValueFromCache(field, -1, Classes.getAnnotations(field), field.getType(), field.getGenericType());
     if (value == null) {
-      final Field[] uninjectedFields = injectFields(instance, fields, index + 1, depth + 1);
+      final Field[] uninjectedFields = injectFields(instance, fields, length, index + 1, depth + 1);
       uninjectedFields[depth] = field;
       return uninjectedFields;
     }
 
     field.setAccessible(true);
     field.set(instance, value);
-    return injectFields(instance, fields, index + 1, depth);
+    return injectFields(instance, fields, length, index + 1, depth);
   }
 
   /**

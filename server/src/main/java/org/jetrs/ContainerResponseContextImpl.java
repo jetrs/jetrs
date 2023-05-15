@@ -76,7 +76,7 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
     super(propertiesAdapter);
     this.httpServletRequest = httpServletRequest;
     this.headers = new HttpHeadersImpl(httpServletResponse);
-    this.status = Response.Status.fromStatusCode(httpServletResponse.getStatus());
+    this.status = Responses.from(httpServletResponse.getStatus());
     this.requestContext = requestContext;
     this.writerInterceptorProviderFactories = requestContext.getWriterInterceptorFactoryList();
   }
@@ -103,7 +103,7 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
 
   @Override
   public void setStatus(final int code) {
-    this.status = Response.Status.fromStatusCode(code);
+    this.status = Responses.from(code);
   }
 
   @Override

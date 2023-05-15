@@ -159,7 +159,7 @@ public class Jdk8ClientDriver extends ClientDriver {
           $span(Span.RESPONSE_WAIT, Span.RESPONSE_READ);
 
           final String reasonPhrase = connection.getResponseMessage();
-          final StatusType statusInfo = reasonPhrase != null ? Responses.from(statusCode, reasonPhrase) : Responses.from(statusCode);
+          final StatusType statusInfo = Responses.from(statusCode, reasonPhrase);
           final HttpHeadersImpl responseHeaders = new HttpHeadersImpl(connection.getHeaderFields());
 
           final List<HttpCookie> httpCookies = cookieStore.getCookies();
