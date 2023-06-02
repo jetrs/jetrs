@@ -30,7 +30,6 @@ import javax.inject.Singleton;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
-import javax.ws.rs.ext.Provider;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
 
@@ -74,25 +73,20 @@ class Bootstrap<R extends ArrayList<? extends Comparable<?>>> {
 
   @SuppressWarnings("unchecked")
   <T>boolean addResourceOrProvider(final ArrayList<Consumer<Set<Class<?>>>> afterAdds, final R resourceInfos, final Class<? extends T> clazz, final T singleton, final boolean scanned) throws IllegalAccessException, InstantiationException, InvocationTargetException {
-    if (AnnotationUtil.isAnnotationPresent(clazz, Provider.class)) {
-      if (ReaderInterceptor.class.isAssignableFrom(clazz))
-        readerInterceptorProviderFactories.add(new ReaderInterceptorProviderFactory((Class<ReaderInterceptor>)clazz, (ReaderInterceptor)singleton));
+    if (ReaderInterceptor.class.isAssignableFrom(clazz))
+      readerInterceptorProviderFactories.add(new ReaderInterceptorProviderFactory((Class<ReaderInterceptor>)clazz, (ReaderInterceptor)singleton));
 
-      if (WriterInterceptor.class.isAssignableFrom(clazz))
-        writerInterceptorProviderFactories.add(new WriterInterceptorProviderFactory((Class<WriterInterceptor>)clazz, (WriterInterceptor)singleton));
+    if (WriterInterceptor.class.isAssignableFrom(clazz))
+      writerInterceptorProviderFactories.add(new WriterInterceptorProviderFactory((Class<WriterInterceptor>)clazz, (WriterInterceptor)singleton));
 
-      if (MessageBodyReader.class.isAssignableFrom(clazz))
-        messageBodyReaderProviderFactories.add(new MessageBodyReaderProviderFactory((Class<MessageBodyReader<?>>)clazz, (MessageBodyReader<?>)singleton));
+    if (MessageBodyReader.class.isAssignableFrom(clazz))
+      messageBodyReaderProviderFactories.add(new MessageBodyReaderProviderFactory((Class<MessageBodyReader<?>>)clazz, (MessageBodyReader<?>)singleton));
 
-      if (MessageBodyWriter.class.isAssignableFrom(clazz))
-        messageBodyWriterProviderFactories.add(new MessageBodyWriterProviderFactory((Class<MessageBodyWriter<?>>)clazz, (MessageBodyWriter<?>)singleton));
+    if (MessageBodyWriter.class.isAssignableFrom(clazz))
+      messageBodyWriterProviderFactories.add(new MessageBodyWriterProviderFactory((Class<MessageBodyWriter<?>>)clazz, (MessageBodyWriter<?>)singleton));
 
-      if (ExceptionMapper.class.isAssignableFrom(clazz))
-        exceptionMapperProviderFactories.add(new ExceptionMapperProviderFactory((Class<ExceptionMapper<?>>)clazz, (ExceptionMapper<?>)singleton));
-    }
-    else if (!scanned) {
-      if (logger.isWarnEnabled()) logger.warn("Ignored resource class " + clazz.getName() + " due to absent @Provider annotation");
-    }
+    if (ExceptionMapper.class.isAssignableFrom(clazz))
+      exceptionMapperProviderFactories.add(new ExceptionMapperProviderFactory((Class<ExceptionMapper<?>>)clazz, (ExceptionMapper<?>)singleton));
 
     return false;
   }

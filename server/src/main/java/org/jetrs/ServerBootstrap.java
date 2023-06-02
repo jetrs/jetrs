@@ -119,17 +119,15 @@ class ServerBootstrap extends Bootstrap<ResourceInfos> {
   @Override
   @SuppressWarnings("unchecked")
   <T>boolean addResourceOrProvider(final ArrayList<Consumer<Set<Class<?>>>> afterAdd, final ResourceInfos resourceInfos, final Class<? extends T> clazz, final T singleton, final boolean scanned) throws IllegalAccessException, InstantiationException, InvocationTargetException {
-    if (AnnotationUtil.isAnnotationPresent(clazz, Provider.class)) {
-      if (ParamConverterProvider.class.isAssignableFrom(clazz))
-        paramConverterProviderFactories.add(new ParamConverterProviderFactory((Class<ParamConverterProvider>)clazz, (ParamConverterProvider)singleton));
+    if (ParamConverterProvider.class.isAssignableFrom(clazz))
+      paramConverterProviderFactories.add(new ParamConverterProviderFactory((Class<ParamConverterProvider>)clazz, (ParamConverterProvider)singleton));
 
-      if (ContainerRequestFilter.class.isAssignableFrom(clazz))
-        (AnnotationUtil.isAnnotationPresent(clazz, PreMatching.class) ? preMatchContainerRequestFilterProviderFactories : containerRequestFilterProviderFactories).add(new ContainerRequestFilterProviderFactory((Class<ContainerRequestFilter>)clazz, (ContainerRequestFilter)singleton));
+    if (ContainerRequestFilter.class.isAssignableFrom(clazz))
+      (AnnotationUtil.isAnnotationPresent(clazz, PreMatching.class) ? preMatchContainerRequestFilterProviderFactories : containerRequestFilterProviderFactories).add(new ContainerRequestFilterProviderFactory((Class<ContainerRequestFilter>)clazz, (ContainerRequestFilter)singleton));
 
-      if (ContainerResponseFilter.class.isAssignableFrom(clazz)) {
-        containerResponseFilterProviderFactories.add(new ContainerResponseFilterProviderFactory((Class<ContainerResponseFilter>)clazz, (ContainerResponseFilter)singleton));
-        if (logger.isDebugEnabled() && AnnotationUtil.isAnnotationPresent(clazz, PreMatching.class)) logger.debug("@PreMatching annotation is not applicable to ContainerResponseFilter");
-      }
+    if (ContainerResponseFilter.class.isAssignableFrom(clazz)) {
+      containerResponseFilterProviderFactories.add(new ContainerResponseFilterProviderFactory((Class<ContainerResponseFilter>)clazz, (ContainerResponseFilter)singleton));
+      if (logger.isDebugEnabled() && AnnotationUtil.isAnnotationPresent(clazz, PreMatching.class)) logger.debug("@PreMatching annotation is not applicable to ContainerResponseFilter");
     }
 
     if (!isRootResource(clazz))
