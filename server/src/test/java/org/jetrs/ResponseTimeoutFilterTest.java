@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.concurrent.Future;
 
 import javax.inject.Singleton;
+import javax.servlet.ServletException;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -31,6 +32,7 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.ExceptionMapper;
 
 import org.jetrs.provider.container.ResponseTimeoutFilter;
 import org.jetrs.provider.ext.StringProvider;
@@ -39,7 +41,8 @@ import org.junit.AfterClass;
 import org.junit.Test;
 
 public class ResponseTimeoutFilterTest {
-  private static final String result = "Done";
+  private static final String success = "Success";
+  private static final String failure = "Failure";
 
   @Singleton
   public static class TestFilter extends ResponseTimeoutFilter {
@@ -48,8 +51,9 @@ public class ResponseTimeoutFilterTest {
     }
 
     @Override
-    protected void onTimeout(final ContainerRequestContext requestTimeout, final long elapsed) {
-      timedOut.add(requestTimeout.getUriInfo().getPath());
+    protected boolean onTimeout(final ContainerRequestContext requestContext, final long elapsed) {
+      timedOut.add(requestContext.getUriInfo().getPath());
+      return true;
     }
   }
 
@@ -59,8 +63,13 @@ public class ResponseTimeoutFilterTest {
     @Path("{delay:\\d+}")
     @Produces(MediaType.TEXT_PLAIN)
     public String getByte(@PathParam("delay") final long delay) throws InterruptedException {
-      Thread.sleep(delay);
-      return result;
+      try {
+        Thread.sleep(delay);
+        return success;
+      }
+      catch (final InterruptedException e) {
+        throw e;
+      }
     }
   }
 
@@ -69,7 +78,16 @@ public class ResponseTimeoutFilterTest {
   private static final ApplicationServer server = new ApplicationServer(new Object[] {
     new TestFilter(timeout),
     new DelayService(),
-    new StringProvider()
+    new StringProvider(),
+    new ExceptionMapper<Throwable>() {
+      @Override
+      public Response toResponse(final Throwable exception) {
+        if (exception instanceof ServletException && exception.getCause() instanceof InterruptedException)
+          return Response.status(504).entity(failure).build();
+
+        throw new AssertionError();
+      }
+    }
   }, new Class[0]);
   private static final String serviceUrl = "http://localhost:" + server.getContainerPort() + ApplicationServer.applicationPath;
   private static final Client client;
@@ -94,30 +112,30 @@ public class ResponseTimeoutFilterTest {
     catch (final IllegalArgumentException e) {
     }
 
-    assertEquals(result, test(0).get().readEntity(String.class));
+    assertEquals(success, test(0).get().readEntity(String.class));
     assertEquals(0, timedOut.size());
 
-    assertEquals(result, test(timeout / 2).get().readEntity(String.class));
+    assertEquals(success, test(timeout / 2).get().readEntity(String.class));
     assertEquals(0, timedOut.size());
 
     for (int i = 0; i < numTests; ++i) { // [N]
-      assertEquals(result, test(timeout + 10).get().readEntity(String.class));
-      assertEquals(1, timedOut.size());
+      assertEquals(failure, test(timeout + 10).get().readEntity(String.class));
+      assertEquals(timedOut.toString(), 1, timedOut.size());
       timedOut.clear();
     }
 
     final ArrayList<Future<Response>> responses = new ArrayList<>();
     for (int i = 0; i < numTests; ++i) { // [N]
-      responses.add(test(timeout * 5));
-      responses.add(test(timeout * 3));
+      responses.add(test(timeout / 5));
+      responses.add(test(timeout / 3));
       responses.add(test(timeout / 2));
       responses.add(test(timeout / 4));
     }
 
     for (int i = 0, i$ = responses.size(); i < i$; ++i) // [RA]
-      assertEquals(result, responses.get(i).get().readEntity(String.class));
+      assertEquals(success, responses.get(i).get().readEntity(String.class));
 
-    assertEquals(2 * numTests, timedOut.size());
+    assertEquals(0, timedOut.size());
   }
 
   @AfterClass
