@@ -51,9 +51,9 @@ public class ResponseTimeoutFilterTest {
     }
 
     @Override
-    protected boolean onTimeout(final ContainerRequestContext requestContext, final long elapsed) {
+    protected void onTimeout(final ContainerRequestContext requestContext, final Thread thread, final long elapsed) {
       timedOut.add(requestContext.getUriInfo().getPath());
-      return true;
+      thread.interrupt();
     }
   }
 

@@ -30,18 +30,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A {@link ContainerRequestFilter} and {@link ContainerResponseFilter} that enforces an explicit maximum run time for all
- * {@link ContainerRequestContext}s.
+ * A {@link ContainerRequestFilter} and {@link ContainerResponseFilter} that invokes a callback upon the expiration of an explicit
+ * maximum run time for all {@link ContainerRequestContext}s.
  * <p>
  * The {@link ResponseTimeoutFilter#ResponseTimeoutFilter(long)} constructor accepts an int value representing the timeout in
- * milliseconds. The {@link #onTimeout(ContainerRequestContext,long)} method is call for every {@link ContainerRequestContext} that
- * has not finished after the {@code timeout} elapses.
+ * milliseconds. The {@link #onTimeout(ContainerRequestContext,Thread,long)} method is call after the {@code timeout} elapses for
+ * every {@link ContainerRequestContext} that has not completed the Filter Response Chain (i.e. the {@link ContainerResponseFilter}s
+ * have not been invoked for the {@link ContainerRequestContext}).
  * <p>
- * The {@code boolean} value returned from {@link #onTimeout(ContainerRequestContext,long)} dictates whether the thread serving the
- * specified {@link ContainerRequestContext} is to be {@linkplain Thread#interrupt() interrupted}.
- * <p>
- * An {@link javax.ws.rs.ext.ExceptionMapper} can be used to map the {@link InterruptedException} to specify the desired code or
- * content to return to the caller.
+ * The {@link #onTimeout(ContainerRequestContext,Thread,long)} method can be overridden to close the underlying connection, or to
+ * interrupt the thread if the business logic serving the {@link ContainerRequestContext} is checking {@link Thread#interrupt()}.
  */
 public abstract class ResponseTimeoutFilter implements ContainerRequestFilter, ContainerResponseFilter {
   private static final Logger logger = LoggerFactory.getLogger(ResponseTimeoutFilter.class);
@@ -63,8 +61,8 @@ public abstract class ResponseTimeoutFilter implements ContainerRequestFilter, C
   /**
    * Creates a new {@link ResponseTimeoutFilter} with the provided expire {@code timeout}.
    *
-   * @param timeout The time in milliseconds after which the {@link #onTimeout(ContainerRequestContext,long)} method it so be called
-   *          for all {@link ContainerRequestContext}s.
+   * @param timeout The time in milliseconds after which the {@link #onTimeout(ContainerRequestContext,Thread,long)} method it so be
+   *          called.
    * @throws IllegalArgumentException If {@code timeout} is negative.
    * @implNote A {@code timeout} of {@code 0} creates a noop {@link ResponseTimeoutFilter}.
    */
@@ -89,7 +87,7 @@ public abstract class ResponseTimeoutFilter implements ContainerRequestFilter, C
                 final Object expireTime = requestContext.getProperty(EXPIRE_TIME);
                 if (expireTime == null) {
                   requestContexts.pop();
-                  if (logger.isWarnEnabled()) logger.warn("ResponseTimeoutFilter: Unable to check expire time: " + ObjectUtil.simpleIdentityString(requestContext) + ".getProperty(" + EXPIRE_TIME + ") = null");
+                  if (logger.isErrorEnabled()) logger.error("ResponseTimeoutFilter: Unable to check expire time: " + ObjectUtil.simpleIdentityString(requestContext) + ".getProperty(" + EXPIRE_TIME + ") = null");
                 }
                 else {
                   final long diff = (Long)expireTime - System.currentTimeMillis();
@@ -102,10 +100,10 @@ public abstract class ResponseTimeoutFilter implements ContainerRequestFilter, C
                     requestContexts.pop();
                     final Thread thread = (Thread)requestContext.getProperty(THREAD);
                     if (thread == null) {
-                      if (logger.isWarnEnabled()) logger.warn("ResponseTimeoutFilter: Unable to enforce expire time: " + ObjectUtil.simpleIdentityString(requestContext) + ".getProperty(" + THREAD + ") = null");
+                      if (logger.isErrorEnabled()) logger.error("ResponseTimeoutFilter: Unable to enforce expire time: " + ObjectUtil.simpleIdentityString(requestContext) + ".getProperty(" + THREAD + ") = null");
                     }
-                    else if (onTimeout(requestContext, timeout - diff)) {
-                      thread.interrupt();
+                    else {
+                      onTimeout(requestContext, thread, timeout - diff);
                     }
                   }
                 }
@@ -127,12 +125,10 @@ public abstract class ResponseTimeoutFilter implements ContainerRequestFilter, C
    * Callback method that is called when the expire {@link #timeout} elapses for the specified {@link ContainerRequestContext}.
    *
    * @param requestContext The {@link ContainerRequestContext} for which the expire {@link #timeout} has elapsed.
+   * @param thread The {@link Thread} serving the {@link ContainerRequestContext}.
    * @param elapsed The elapsed time of the specified {@link ContainerRequestContext}.
-   * @return {@code true} for the {@link ResponseTimeoutFilter} to {@linkplain Thread#interrupt() interrupt} the thread serving the
-   *         specified {@link ContainerRequestContext}, or {@code false} to allow the thread to continue execution until its
-   *         uninterrupted completion.
    */
-  protected abstract boolean onTimeout(ContainerRequestContext requestContext, long elapsed);
+  protected abstract void onTimeout(ContainerRequestContext requestContext, Thread thread, long elapsed);
 
   @Override
   public void filter(final ContainerRequestContext requestContext) {

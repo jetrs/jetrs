@@ -102,34 +102,34 @@ abstract class RestApplicationServlet extends RestHttpServlet {
         }
 
         private Map<String,String[]> getQueryParameterMap() {
-          if (this.queryParameterMap == null) {
+          if (queryParameterMap == null) {
             final String queryString = httpServletRequest.getQueryString();
-            this.queryParameterMap = queryString != null ? EntityUtil.toStringArrayMap(EntityUtil.readQueryString(queryString, queryCharset)) : Collections.EMPTY_MAP;
+            queryParameterMap = queryString != null ? EntityUtil.toStringArrayMap(EntityUtil.readQueryString(queryString, queryCharset)) : Collections.EMPTY_MAP;
           }
 
-          return this.queryParameterMap;
+          return queryParameterMap;
         }
 
         private Map<String,String[]> getFormParameterMap() {
-          if (this.formParameterMap == null) {
+          if (formParameterMap == null) {
             try {
               final ServletInputStream in = getInputStream();
               if (in instanceof FormServletInputStream)
-                this.formParameterMap = EntityUtil.toStringArrayMap(((FormServletInputStream)in).getFormParameterMap(true));
+                formParameterMap = EntityUtil.toStringArrayMap(((FormServletInputStream)in).getFormParameterMap(true));
               else
-                this.formParameterMap = Collections.EMPTY_MAP;
+                formParameterMap = Collections.EMPTY_MAP;
             }
             catch (final IOException e) {
               throw new UncheckedIOException(e);
             }
           }
 
-          return this.formParameterMap;
+          return formParameterMap;
         }
 
         @Override
         public Map<String,String[]> getParameterMap() {
-          if (this.parameterMap == null) {
+          if (parameterMap == null) {
             final Map<String,String[]> parameterMap = getFormParameterMap();
             final Map<String,String[]> queryParameterMap = getQueryParameterMap();
             if (queryParameterMap.size() > 0) {
@@ -143,7 +143,7 @@ abstract class RestApplicationServlet extends RestHttpServlet {
             this.parameterMap = parameterMap;
           }
 
-          return this.parameterMap;
+          return parameterMap;
         }
 
         @Override
@@ -162,7 +162,7 @@ abstract class RestApplicationServlet extends RestHttpServlet {
 
         @Override
         public ServletInputStream getInputStream() throws IOException {
-          if (this.in == null) {
+          if (in == null) {
             if (getContentLengthLong() != -1)
               checkContentType();
 
@@ -173,7 +173,7 @@ abstract class RestApplicationServlet extends RestHttpServlet {
             this.in = in;
           }
 
-          return this.in;
+          return in;
         }
 
         @Override
