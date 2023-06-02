@@ -593,7 +593,7 @@ public final class HttpHeaders {
 
   /**
    * @see <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Server-Timing">MDN Web Docs</a>
-   * @see <a href="XXX">Specification</a>
+   * @see <a href="https://www.w3.org/TR/server-timing/">Specification</a>
    */
   public static final String SERVER_TIMING = "Server-Timing";
 

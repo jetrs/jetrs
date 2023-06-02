@@ -624,7 +624,7 @@ final class HttpHeader<T> {
 
   /**
    * @see <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Server-Timing">MDN Web Docs</a>
-   * @see <a href="XXX">Specification</a>
+   * @see <a href="https://www.w3.org/TR/server-timing/">Specification</a>
    */
   static final HttpHeader<String> SERVER_TIMING = new HttpHeader<>(HttpHeaders.SERVER_TIMING, none, false, HeaderDelegateImpl.STRING); // FIXME: Strong Type Candidate
 
