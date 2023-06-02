@@ -50,7 +50,7 @@ public abstract class ResponseTimeoutFilter implements ContainerRequestFilter, C
 
   private final ConcurrentLinkedDeque<ContainerRequestContext> requestContexts = new ConcurrentLinkedDeque<>();
 
-  private final long timeout;
+  protected final long timeout;
   private final Thread reaper;
 
   /**
