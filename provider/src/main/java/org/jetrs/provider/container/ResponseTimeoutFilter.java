@@ -52,7 +52,7 @@ public abstract class ResponseTimeoutFilter implements ContainerRequestFilter, C
   private final Thread reaper;
 
   /**
-   * Creates a new {@link ResponseTimeoutFilter} with a expire {@code timeout} of 30s.
+   * Creates a new {@link ResponseTimeoutFilter} with an expire {@code timeout} of 30s.
    */
   public ResponseTimeoutFilter() {
     this(30000);

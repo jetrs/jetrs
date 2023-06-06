@@ -245,7 +245,7 @@ interface MultivaluedArrayMap<K,V> extends MultivaluedMap<K,V> {
       return false;
 
     if (size() > 0) {
-      for (final Entry<K,List<V>> entry : entrySet()) { // [S]
+      for (final Map.Entry<K,List<V>> entry : entrySet()) { // [S]
         final List<V> olist = otherMap.get(entry.getKey());
         final List<V> value = entry.getValue();
         final int size = value.size();

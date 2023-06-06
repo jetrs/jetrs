@@ -145,10 +145,10 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
 
     if (match.group(5) != null) {
       final String group = match.group(5);
-      if (!hasScheme && !group.isEmpty() && !group.startsWith("/") && group.indexOf(':') > -1 && group.indexOf('/') > -1 && group.indexOf(':') < group.indexOf('/'))
+      if (!hasScheme && group.length() > 0 && !group.startsWith("/") && group.indexOf(':') > -1 && group.indexOf('/') > -1 && group.indexOf(':') < group.indexOf('/'))
         throw new IllegalArgumentException(invalid("uri template", uriTemplate));
 
-      if (!group.isEmpty())
+      if (group.length() > 0)
         replacePath(group);
     }
 
@@ -203,7 +203,7 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
       }
 
       if (host != null) {
-        if (host.isEmpty())
+        if (host.length() == 0)
           throw new UriBuilderException(invalid("host", "\"\""));
 
         replaceParameter(parameters, fromEncodedMap, isTemplate, host, builder, uriEncoder);
@@ -348,7 +348,7 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
 
   @Override
   public UriBuilder host(final String host) throws IllegalArgumentException {
-    if (host != null && host.isEmpty())
+    if (host != null && host.length() == 0)
       throw new IllegalArgumentException(invalidParam("host", "\"" + host + "\""));
 
     this.host = host;
@@ -592,7 +592,7 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
   public UriBuilder replaceQueryParam(final String name, final Object ... values) throws IllegalArgumentException {
     assertNotNull(name, "name is null");
 
-    if (query == null || query.isEmpty())
+    if (query == null || query.length() == 0)
       return values == null || values.length == 0 ? this : queryParam(name, values);
 
     final String[] params = Strings.split(query, '&');
