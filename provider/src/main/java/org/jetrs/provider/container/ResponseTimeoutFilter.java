@@ -18,7 +18,7 @@ package org.jetrs.provider.container;
 
 import static org.libj.lang.Assertions.*;
 
-import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
@@ -46,7 +46,7 @@ public abstract class ResponseTimeoutFilter implements ContainerRequestFilter, C
   private static final String EXPIRE_TIME = ResponseTimeoutFilter.class.getName() + ".EXPIRE_TIME";
   private static final String THREAD = ResponseTimeoutFilter.class.getName() + ".THREAD";
 
-  private final ConcurrentLinkedDeque<ContainerRequestContext> requestContexts = new ConcurrentLinkedDeque<>();
+  private final ConcurrentLinkedQueue<ContainerRequestContext> requestContexts = new ConcurrentLinkedQueue<>();
 
   protected final long timeout;
   private final Thread reaper;
@@ -75,7 +75,7 @@ public abstract class ResponseTimeoutFilter implements ContainerRequestFilter, C
       this.reaper = new Thread("RequestTimeoutFilterReaper") {
         @Override
         public void run() {
-          while (true) {
+          do {
             try {
               final ContainerRequestContext requestContext = requestContexts.peek();
               if (requestContext == null) {
@@ -86,8 +86,8 @@ public abstract class ResponseTimeoutFilter implements ContainerRequestFilter, C
               else {
                 final Object expireTime = requestContext.getProperty(EXPIRE_TIME);
                 if (expireTime == null) {
-                  requestContexts.pop();
-                  if (logger.isErrorEnabled()) logger.error("ResponseTimeoutFilter: Unable to check expire time: " + ObjectUtil.simpleIdentityString(requestContext) + ".getProperty(" + EXPIRE_TIME + ") = null");
+                  requestContexts.poll();
+                  if (logger.isErrorEnabled()) logger.error("ResponseTimeoutFilter: Unable to check expire time: " + ObjectUtil.simpleIdentityString(requestContext) + ".getProperty(" + EXPIRE_TIME + ") = null: " + requestContext.getUriInfo().getPath());
                 }
                 else {
                   final long diff = (Long)expireTime - System.currentTimeMillis();
@@ -97,10 +97,10 @@ public abstract class ResponseTimeoutFilter implements ContainerRequestFilter, C
                     }
                   }
                   else {
-                    requestContexts.pop();
+                    requestContexts.poll();
                     final Thread thread = (Thread)requestContext.getProperty(THREAD);
                     if (thread == null) {
-                      if (logger.isErrorEnabled()) logger.error("ResponseTimeoutFilter: Unable to enforce expire time: " + ObjectUtil.simpleIdentityString(requestContext) + ".getProperty(" + THREAD + ") = null");
+                      if (logger.isErrorEnabled()) logger.error("ResponseTimeoutFilter: Unable to enforce expire time: " + ObjectUtil.simpleIdentityString(requestContext) + ".getProperty(" + THREAD + ") = null: " + requestContext.getUriInfo().getPath());
                     }
                     else {
                       onTimeout(requestContext, thread, timeout - diff);
@@ -112,7 +112,11 @@ public abstract class ResponseTimeoutFilter implements ContainerRequestFilter, C
             catch (final InterruptedException e) {
               if (logger.isWarnEnabled()) logger.warn(e.getMessage(), e);
             }
+            catch (final Exception e) {
+              if (logger.isErrorEnabled()) logger.error(e.getMessage(), e);
+            }
           }
+          while (true);
         }
       };
 
