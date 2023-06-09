@@ -16,8 +16,6 @@
 
 package org.jetrs;
 
-import org.libj.lang.Numbers;
-
 public final class CommonProperties {
   /**
    * The size of chunks in bytes for HTTP chunk-encoded messages.
@@ -46,11 +44,9 @@ public final class CommonProperties {
    * If the entity size exceeds the configured buffer size, buffering would be cancelled and the transfer would switch to chunked
    * encoding. A value less than or equal to zero disables the buffering of the entity.
    * <p>
-   * The default value is {@value #CONTENT_LENGTH_BUFFER_DEFAULT}.
-   * </p>
+   * Default: {@value #CONTENT_LENGTH_BUFFER_DEFAULT}.
    * <p>
-   * The name of the configuration property is <tt>{@value}</tt>.
-   * </p>
+   * Configuration property: <tt>{@value}</tt>
    *
    * @implNote This property is irrelevant for all messages that specify {@code "chunked"} in the
    *           {@value HttpHeaders#TRANSFER_ENCODING} header.
@@ -91,27 +87,6 @@ public final class CommonProperties {
    * of {@link javax.ws.rs.core.Feature} or {@link javax.ws.rs.container.DynamicFeature} is enabled.
    */
   public static final String JAXRS_LOAD_SERVICES = "jakarta.ws.rs.loadServices";
-
-  public static int getPropertyValue(final String commonProperty, final String specificProperty, final int defaultValue) {
-    String value = System.getProperty(specificProperty);
-    if (value != null)
-      return Numbers.parseInt(value, defaultValue);
-
-    return getPropertyValue(commonProperty, defaultValue);
-  }
-
-  public static int getPropertyValue(final String commonProperty, final int defaultValue) {
-    String value = System.getProperty(commonProperty);
-    if (value != null)
-      return Numbers.parseInt(value, defaultValue);
-
-    return defaultValue;
-  }
-
-  public static String getPropertyValue(final String commonProperty, final String specificProperty) {
-    final String value = System.getProperty(specificProperty);
-    return value != null ? value : System.getProperty(commonProperty);
-  }
 
   private CommonProperties() {
   }

@@ -32,13 +32,36 @@ public final class ClientProperties {
   /**
    * Follow redirects to the URI declared in 3xx responses.
    * <p>
-   * Default: enabled.
+   * Default: {@value #FOLLOW_REDIRECTS_DEFAULT}.
    * <p>
    * To disable, set the property to {@code "false"}.
    * <p>
    * Configuration property: <tt>{@value}</tt>
    */
   public static final String FOLLOW_REDIRECTS = "jetrs.client.followRedirects";
+
+  /**
+   * Default value for {@link #FOLLOW_REDIRECTS} property.
+   */
+  public static final boolean FOLLOW_REDIRECTS_DEFAULT = true;
+
+  /**
+   * Sets the maximum number of redirects to be followed.
+   * <p>
+   * Default: {@value #MAX_REDIRECTS_DEFAULT}.
+   * <p>
+   * To disable, set the property to {@code "false"}.
+   * <p>
+   * Configuration property: <tt>{@value}</tt>
+   *
+   * @implNote This property is irrelevant {@value #FOLLOW_REDIRECTS} is set to {@code "false"}.
+   */
+  public static final String MAX_REDIRECTS = "jetrs.client.maxRedirects";
+
+  /**
+   * Default value for {@link #MAX_REDIRECTS} property.
+   */
+  public static final int MAX_REDIRECTS_DEFAULT = 5;
 
   /**
    * The size of the thread pool for the executor service to be used if an explicit executor is not provided via

@@ -815,7 +815,7 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
         return new BigDecimal(value);
       }
     }
-  };;
+  };
 
   @Override
   @SuppressWarnings("unchecked")

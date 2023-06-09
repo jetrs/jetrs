@@ -54,8 +54,8 @@ import org.slf4j.LoggerFactory;
 
 class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletRequest> implements Closeable, ContainerResponseContext, WriterInterceptorContext {
   private static final Logger logger = LoggerFactory.getLogger(ContainerResponseContextImpl.class);
-  static final int chunkSize = assertPositive(CommonProperties.getPropertyValue(CommonProperties.CHUNKED_ENCODING_SIZE, ServerProperties.CHUNKED_ENCODING_SIZE_SERVER, CommonProperties.CHUNKED_ENCODING_SIZE_DEFAULT));
-  static final int bufferSize = CommonProperties.getPropertyValue(CommonProperties.CONTENT_LENGTH_BUFFER, ServerProperties.CONTENT_LENGTH_BUFFER_SERVER, CommonProperties.CONTENT_LENGTH_BUFFER_DEFAULT);
+  static final int chunkSize = assertPositive(Properties.getPropertyValue(CommonProperties.CHUNKED_ENCODING_SIZE, ServerProperties.CHUNKED_ENCODING_SIZE_SERVER, CommonProperties.CHUNKED_ENCODING_SIZE_DEFAULT));
+  static final int bufferSize = Properties.getPropertyValue(CommonProperties.CONTENT_LENGTH_BUFFER, ServerProperties.CONTENT_LENGTH_BUFFER_SERVER, CommonProperties.CONTENT_LENGTH_BUFFER_DEFAULT);
 
   private static class NoopOutputStream extends OutputStream {
     int count = 0;

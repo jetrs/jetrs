@@ -170,9 +170,17 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
           if (readTimeoutObj != null)
             config.setResponseTimeout(readTimeoutObj);
 
-          final RequestConfig c = config.build();
+          if (Properties.getPropertyValue(ClientProperties.FOLLOW_REDIRECTS, ClientProperties.FOLLOW_REDIRECTS_DEFAULT)) {
+            config.setRedirectsEnabled(true);
+            config.setMaxRedirects(Properties.getPropertyValue(ClientProperties.MAX_REDIRECTS, ClientProperties.MAX_REDIRECTS_DEFAULT));
+          }
+          else {
+            config.setRedirectsEnabled(false);
+          }
+
+          final RequestConfig requestConfig = config.build();
           final HttpUriRequestBase request = new HttpUriRequestBase(method, uri);
-          request.setConfig(c);
+          request.setConfig(requestConfig);
 
           if (cookies != null)
             request.setHeader(HttpHeaders.COOKIE, CollectionUtil.toString(cookies, ';'));

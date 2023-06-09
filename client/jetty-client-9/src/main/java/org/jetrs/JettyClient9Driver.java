@@ -105,7 +105,7 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
       connectTimeoutLocal.set(connectTimeout);
 
     return new ClientRequestContextImpl(client, runtimeContext, uri, method, requestHeaders, cookies, cacheControl, entity, executorService, scheduledExecutorService, properties, connectTimeout, readTimeout) {
-      private void flushHeaders(final Request request) {
+      private void setHeaders(final Request request) {
         // Remove headers that are set by default (unsolicited).
         final HttpFields headers = request.getHeaders();
         headers.remove(ACCEPT_ENCODING);
@@ -130,7 +130,8 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
 
           final Request request = httpClient.newRequest(uri)
             .method(method)
-            .timeout(connectTimeout + readTimeout, TimeUnit.MILLISECONDS);
+            .timeout(connectTimeout + readTimeout, TimeUnit.MILLISECONDS)
+            .followRedirects(Properties.getPropertyValue(ClientProperties.FOLLOW_REDIRECTS, ClientProperties.FOLLOW_REDIRECTS_DEFAULT));
 
           if (cookies != null)
             request.header(HttpHeaders.COOKIE, CollectionUtil.toString(cookies, ';'));
@@ -143,7 +144,7 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
           $span(Span.INIT);
 
           if (entity == null) {
-            flushHeaders(request);
+            setHeaders(request);
           }
           else {
             $span(Span.ENTITY_INIT);
@@ -154,7 +155,7 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
               throw new ProcessingException("Provider not found for " + entityClass.getName());
 
             writeContentAsync(messageBodyWriter, () -> {
-              flushHeaders(request);
+              setHeaders(request);
               // final PipedInputStream in = new PipedInputStream();
               // out = new PipedOutputStream(in);
               // final InputStreamContentProvider provider = new InputStreamContentProvider(in, 8192);

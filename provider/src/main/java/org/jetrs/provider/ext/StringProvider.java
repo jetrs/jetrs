@@ -37,6 +37,7 @@ import javax.ws.rs.ext.Provider;
 
 import org.jetrs.CommonProperties;
 import org.jetrs.MessageBodyProvider;
+import org.jetrs.Properties;
 import org.libj.io.Readers;
 
 /**
@@ -47,7 +48,7 @@ import org.libj.io.Readers;
 @Consumes({MediaType.TEXT_PLAIN, MediaType.WILDCARD})
 @Produces({MediaType.TEXT_PLAIN, MediaType.WILDCARD})
 public class StringProvider extends MessageBodyProvider<String> {
-  private static final int bufferSize = CommonProperties.getPropertyValue(CommonProperties.CONTENT_LENGTH_BUFFER, CommonProperties.CONTENT_LENGTH_BUFFER_DEFAULT);
+  private static final int bufferSize = Properties.getPropertyValue(CommonProperties.CONTENT_LENGTH_BUFFER, CommonProperties.CONTENT_LENGTH_BUFFER_DEFAULT);
 
   @Override
   public boolean isReadable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {

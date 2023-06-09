@@ -76,7 +76,7 @@ public class RootService1 {
   }
 
   @POST
-  @Path("1/{id:[\\d]+}/")
+  @Path("1/{id:\\d+}/")
   @Consumes(MediaType.TEXT_PLAIN)
   @Produces(MediaType.TEXT_PLAIN)
   public Response post1(@PathParam("id") final int id, final String data) {
@@ -84,7 +84,7 @@ public class RootService1 {
   }
 
   @POST
-  @Path("/1/{id:[\\d]+}/")
+  @Path("/1/{id:\\d+}/")
   @Consumes(MediaType.TEXT_PLAIN)
   @Produces(MediaType.TEXT_PLAIN)
   public Response post1(@PathParam("id") final long id, final String data) {

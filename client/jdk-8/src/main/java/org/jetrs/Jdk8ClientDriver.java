@@ -49,6 +49,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.StatusType;
 import javax.ws.rs.ext.MessageBodyWriter;
 
+import org.libj.net.URLConnections;
 import org.libj.util.CollectionUtil;
 import org.libj.util.Dates;
 
@@ -81,7 +82,7 @@ public class Jdk8ClientDriver extends ClientDriver {
         this.sslContext = sslContext;
       }
 
-      private void flushHeaders(final HttpURLConnection connection) {
+      private void setHeaders(final HttpURLConnection connection) {
         if (requestHeaders.size() > 0) {
           int size;
           String name;
@@ -92,67 +93,79 @@ public class Jdk8ClientDriver extends ClientDriver {
         }
       }
 
-      @Override
       @SuppressWarnings("rawtypes")
+      private void beforeConnect(final HttpURLConnection connection) throws IOException {
+        if (connection instanceof HttpsURLConnection)
+          ((HttpsURLConnection)connection).setSSLSocketFactory(sslContext.getSocketFactory());
+
+        connection.setRequestMethod(method);
+        if (connectTimeout > 0) {
+          if ((int)connectTimeout <= 0)
+            throw new IllegalArgumentException("connectTimeout (" + connectTimeout + ") overflows (int)connectTimeout (" + (int)connectTimeout + ")");
+
+          connection.setConnectTimeout((int)connectTimeout);
+        }
+
+        if (readTimeout > 0) {
+          if ((int)readTimeout <= 0)
+            throw new IllegalArgumentException("readTimeout (" + readTimeout + ") overflows (int)readTimeout (" + (int)readTimeout + ")");
+
+          connection.setReadTimeout((int)readTimeout);
+        }
+
+        if (cookies != null)
+          connection.setRequestProperty(HttpHeaders.COOKIE, CollectionUtil.toString(cookies, ';'));
+
+        if (cacheControl != null)
+          connection.setRequestProperty(HttpHeaders.CACHE_CONTROL, cacheControl.toString());
+        else
+          connection.setUseCaches(false);
+
+        $span(Span.INIT);
+
+        if (entity == null) {
+          setHeaders(connection);
+        }
+        else {
+          $span(Span.ENTITY_INIT);
+
+          connection.setDoOutput(true);
+          final Class<?> entityClass = entity.getEntity().getClass();
+          final MessageBodyWriter messageBodyWriter = getProviders().getMessageBodyWriter(entityClass, null, entity.getAnnotations(), entity.getMediaType());
+          if (messageBodyWriter == null)
+            throw new ProcessingException("MessageBodyWriter not found for " + entityClass.getName());
+
+          writeContentSync(messageBodyWriter, () -> {
+            setHeaders(connection);
+            final HttpHeadersMap<Object,String> mirrorMap = requestHeaders.getMirrorMap();
+            final Number contentLength = (Number)mirrorMap.getFirst(HttpHeaders.CONTENT_LENGTH);
+            if (contentLength != null)
+              connection.setFixedLengthStreamingMode(contentLength.longValue());
+
+            final OutputStream out = connection.getOutputStream();
+            $span(Span.ENTITY_INIT, Span.ENTITY_WRITE);
+            return out;
+          }, $isSpanEnabled() ? () -> $span(Span.ENTITY_WRITE) : null);
+        }
+
+        $span(Span.RESPONSE_WAIT);
+      }
+
+      @Override
       public Response invoke() {
         try {
           $span(Span.TOTAL, Span.INIT);
 
-          final HttpURLConnection connection = (HttpURLConnection)uri.toURL().openConnection();
-          if (connection instanceof HttpsURLConnection)
-            ((HttpsURLConnection)connection).setSSLSocketFactory(sslContext.getSocketFactory());
-
-          connection.setRequestMethod(method);
-          if (connectTimeout > 0) {
-            if ((int)connectTimeout <= 0)
-              throw new IllegalArgumentException("connectTimeout (" + connectTimeout + ") overflows (int)connectTimeout (" + (int)connectTimeout + ")");
-
-            connection.setConnectTimeout((int)connectTimeout);
-          }
-
-          if (readTimeout > 0) {
-            if ((int)readTimeout <= 0)
-              throw new IllegalArgumentException("readTimeout (" + readTimeout + ") overflows (int)readTimeout (" + (int)readTimeout + ")");
-
-            connection.setReadTimeout((int)readTimeout);
-          }
-
-          if (cookies != null)
-            connection.setRequestProperty(HttpHeaders.COOKIE, CollectionUtil.toString(cookies, ';'));
-
-          if (cacheControl != null)
-            connection.setRequestProperty(HttpHeaders.CACHE_CONTROL, cacheControl.toString());
-          else
-            connection.setUseCaches(false);
-
-          $span(Span.INIT);
-
-          if (entity == null) {
-            flushHeaders(connection);
+          final HttpURLConnection connection;
+          if (Properties.getPropertyValue(ClientProperties.FOLLOW_REDIRECTS, ClientProperties.FOLLOW_REDIRECTS_DEFAULT)) {
+            final int maxRedirects = Properties.getPropertyValue(ClientProperties.MAX_REDIRECTS, ClientProperties.MAX_REDIRECTS_DEFAULT);
+            connection = (HttpURLConnection)URLConnections.checkFollowRedirect(uri.toURL().openConnection(), maxRedirects, this::beforeConnect);
           }
           else {
-            $span(Span.ENTITY_INIT);
-
-            connection.setDoOutput(true);
-            final Class<?> entityClass = entity.getEntity().getClass();
-            final MessageBodyWriter messageBodyWriter = getProviders().getMessageBodyWriter(entityClass, null, entity.getAnnotations(), entity.getMediaType());
-            if (messageBodyWriter == null)
-              throw new ProcessingException("Provider not found for " + entityClass.getName());
-
-            writeContentSync(messageBodyWriter, () -> {
-              flushHeaders(connection);
-              final HttpHeadersMap<Object,String> mirrorMap = requestHeaders.getMirrorMap();
-              final Number contentLength = (Number)mirrorMap.getFirst(HttpHeaders.CONTENT_LENGTH);
-              if (contentLength != null)
-                connection.setFixedLengthStreamingMode(contentLength.longValue());
-
-              final OutputStream out = connection.getOutputStream();
-              $span(Span.ENTITY_INIT, Span.ENTITY_WRITE);
-              return out;
-            }, $isSpanEnabled() ? () -> $span(Span.ENTITY_WRITE) : null);
+            connection = (HttpURLConnection)uri.toURL().openConnection();
+            connection.setInstanceFollowRedirects(false);
+            beforeConnect(connection);
           }
-
-          $span(Span.RESPONSE_WAIT);
 
           final int statusCode = connection.getResponseCode();
 
