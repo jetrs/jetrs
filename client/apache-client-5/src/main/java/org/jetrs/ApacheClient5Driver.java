@@ -58,6 +58,7 @@ import org.apache.hc.core5.http.HttpEntity;
 import org.apache.hc.core5.http.io.entity.AbstractHttpEntity;
 import org.apache.hc.core5.util.TimeValue;
 import org.apache.hc.core5.util.Timeout;
+import org.libj.lang.Systems;
 import org.libj.util.CollectionUtil;
 import org.libj.util.ObservableOutputStream;
 import org.libj.util.UnsynchronizedByteArrayOutputStream;
@@ -170,9 +171,9 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
           if (readTimeoutObj != null)
             config.setResponseTimeout(readTimeoutObj);
 
-          if (Properties.getPropertyValue(ClientProperties.FOLLOW_REDIRECTS, ClientProperties.FOLLOW_REDIRECTS_DEFAULT)) {
+          if (Systems.getProperty(ClientProperties.FOLLOW_REDIRECTS, ClientProperties.FOLLOW_REDIRECTS_DEFAULT)) {
             config.setRedirectsEnabled(true);
-            config.setMaxRedirects(Properties.getPropertyValue(ClientProperties.MAX_REDIRECTS, ClientProperties.MAX_REDIRECTS_DEFAULT));
+            config.setMaxRedirects(Systems.getProperty(ClientProperties.MAX_REDIRECTS, ClientProperties.MAX_REDIRECTS_DEFAULT));
           }
           else {
             config.setRedirectsEnabled(false);

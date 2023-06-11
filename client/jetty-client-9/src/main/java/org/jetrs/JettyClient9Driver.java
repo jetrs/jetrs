@@ -52,6 +52,7 @@ import org.eclipse.jetty.client.util.OutputStreamContentProvider;
 import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.libj.lang.Systems;
 import org.libj.util.CollectionUtil;
 
 public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
@@ -131,7 +132,7 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
           final Request request = httpClient.newRequest(uri)
             .method(method)
             .timeout(connectTimeout + readTimeout, TimeUnit.MILLISECONDS)
-            .followRedirects(Properties.getPropertyValue(ClientProperties.FOLLOW_REDIRECTS, ClientProperties.FOLLOW_REDIRECTS_DEFAULT));
+            .followRedirects(Systems.getProperty(ClientProperties.FOLLOW_REDIRECTS, ClientProperties.FOLLOW_REDIRECTS_DEFAULT));
 
           if (cookies != null)
             request.header(HttpHeaders.COOKIE, CollectionUtil.toString(cookies, ';'));

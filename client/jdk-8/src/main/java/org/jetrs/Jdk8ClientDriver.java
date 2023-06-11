@@ -49,6 +49,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.StatusType;
 import javax.ws.rs.ext.MessageBodyWriter;
 
+import org.libj.lang.Systems;
 import org.libj.net.URLConnections;
 import org.libj.util.CollectionUtil;
 import org.libj.util.Dates;
@@ -157,8 +158,8 @@ public class Jdk8ClientDriver extends ClientDriver {
           $span(Span.TOTAL, Span.INIT);
 
           final HttpURLConnection connection;
-          if (Properties.getPropertyValue(ClientProperties.FOLLOW_REDIRECTS, ClientProperties.FOLLOW_REDIRECTS_DEFAULT)) {
-            final int maxRedirects = Properties.getPropertyValue(ClientProperties.MAX_REDIRECTS, ClientProperties.MAX_REDIRECTS_DEFAULT);
+          if (Systems.getProperty(ClientProperties.FOLLOW_REDIRECTS, ClientProperties.FOLLOW_REDIRECTS_DEFAULT)) {
+            final int maxRedirects = Systems.getProperty(ClientProperties.MAX_REDIRECTS, ClientProperties.MAX_REDIRECTS_DEFAULT);
             connection = (HttpURLConnection)URLConnections.checkFollowRedirect(uri.toURL().openConnection(), maxRedirects, this::beforeConnect);
           }
           else {

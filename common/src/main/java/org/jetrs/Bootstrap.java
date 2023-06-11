@@ -21,6 +21,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.ServiceConfigurationError;
@@ -40,6 +41,7 @@ import org.libj.lang.Classes;
 import org.libj.lang.PackageLoader;
 import org.libj.lang.PackageNotFoundException;
 import org.libj.lang.ServiceLoaders;
+import org.libj.lang.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -104,11 +106,25 @@ class Bootstrap<R extends ArrayList<? extends Comparable<?>>> {
     return false;
   }
 
-  private static void loadStandardProviders(final Set<Object> singletons, final Set<Class<?>> classes) throws IOException {
+  private static void loadDefaultProviders(final Set<Object> singletons, final Set<Class<?>> classes) throws IOException {
+    final String disableDefaultProviders = System.getProperty(CommonProperties.DISABLE_DEFAULT_PROVIDER);
+    final Set<String> disabledProviderClassNames;
+    if (disableDefaultProviders != null) {
+      final String[] classNames = Strings.split(disableDefaultProviders, ',');
+      disabledProviderClassNames = new HashSet<>(classNames.length);
+      Collections.addAll(disabledProviderClassNames, classNames);
+    }
+    else {
+      disabledProviderClassNames = Collections.EMPTY_SET;
+    }
+
     final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
     final HashSet<Class<?>> providerClasses = new HashSet<Class<?>>() {
       @Override
       public boolean add(final Class<?> e) {
+        if (disabledProviderClassNames.contains(e.getName()))
+          return false;
+
         // Don't add the class if a subclass instance of it is already present in `singletons`
         for (final Object singleton : singletons) // [S]
           if (singleton != null)
@@ -145,7 +161,7 @@ class Bootstrap<R extends ArrayList<? extends Comparable<?>>> {
   void init(final Set<Object> singletons, final Set<Class<?>> classes, final R resourceInfos) throws IllegalAccessException, InstantiationException, InvocationTargetException, PackageNotFoundException, IOException {
     final ArrayList<Consumer<Set<Class<?>>>> afterAdds = new ArrayList<>();
     if (singletons != null || classes != null) {
-      loadStandardProviders(singletons, classes);
+      loadDefaultProviders(singletons, classes);
 
       final int noSingletons = singletons.size();
       final int noClasses = classes.size();
