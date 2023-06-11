@@ -106,13 +106,28 @@ class Bootstrap<R extends ArrayList<? extends Comparable<?>>> {
     return false;
   }
 
+  private static boolean contains(final Set<String> disabledProviderClassNames, final Class<?> providerClass, final Class<?> interfaceClass) {
+    if (disabledProviderClassNames.size() == 0)
+      return false;
+
+    Class<?> type = (Class<?>)Classes.getGenericInterfaceTypeArguments(providerClass, interfaceClass)[0];
+    do {
+      if (disabledProviderClassNames.contains(type.getCanonicalName()))
+        return true;
+    }
+    while ((type = type.getSuperclass()) != null);
+    return false;
+  }
+
   private static void loadDefaultProviders(final Set<Object> singletons, final Set<Class<?>> classes) throws IOException {
-    final String disableDefaultProviders = System.getProperty(CommonProperties.DISABLE_DEFAULT_PROVIDER);
+    final String disableDefaultProviders = System.getProperty(CommonProperties.DISABLE_STANDARD_PROVIDER);
     final Set<String> disabledProviderClassNames;
     if (disableDefaultProviders != null) {
       final String[] classNames = Strings.split(disableDefaultProviders, ',');
       disabledProviderClassNames = new HashSet<>(classNames.length);
       Collections.addAll(disabledProviderClassNames, classNames);
+      if (disabledProviderClassNames.contains("*"))
+        return;
     }
     else {
       disabledProviderClassNames = Collections.EMPTY_SET;
@@ -122,9 +137,6 @@ class Bootstrap<R extends ArrayList<? extends Comparable<?>>> {
     final HashSet<Class<?>> providerClasses = new HashSet<Class<?>>() {
       @Override
       public boolean add(final Class<?> e) {
-        if (disabledProviderClassNames.contains(e.getName()))
-          return false;
-
         // Don't add the class if a subclass instance of it is already present in `singletons`
         for (final Object singleton : singletons) // [S]
           if (singleton != null)
@@ -141,9 +153,19 @@ class Bootstrap<R extends ArrayList<? extends Comparable<?>>> {
       }
     };
 
-    ServiceLoaders.load(ExceptionMapper.class, classLoader, providerClasses::add);
-    ServiceLoaders.load(MessageBodyReader.class, classLoader, providerClasses::add);
-    ServiceLoaders.load(MessageBodyWriter.class, classLoader, providerClasses::add);
+    ServiceLoaders.load(ExceptionMapper.class, classLoader, e -> {
+      if (!contains(disabledProviderClassNames, e, ExceptionMapper.class))
+        providerClasses.add(e);
+    });
+    ServiceLoaders.load(MessageBodyReader.class, classLoader, e -> {
+      if (!contains(disabledProviderClassNames, e, MessageBodyReader.class))
+        providerClasses.add(e);
+    });
+    ServiceLoaders.load(MessageBodyWriter.class, classLoader, e -> {
+      if (!contains(disabledProviderClassNames, e, MessageBodyWriter.class))
+        providerClasses.add(e);
+    });
+
     for (final Class<?> providerClass : providerClasses) { // [S]
       try {
         if (hasContextFields(providerClass))

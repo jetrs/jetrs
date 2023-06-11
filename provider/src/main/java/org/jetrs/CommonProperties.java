@@ -61,26 +61,32 @@ public final class CommonProperties {
   public static final int CONTENT_LENGTH_BUFFER_DEFAULT = 8192;
 
   /**
-   * Disable specified default providers from automatically loading during startup. Certain providers extend the application's
-   * footprint with dependencies (such as XML and AWT), that may possibly be not available in certain runtimes.
+   * Disable standard providers for specified entity classes from automatically loading during startup.
    *
    * <blockquote>
    * <table>
-   * <caption>Default Providers</caption>
-   * <tr><td><b>Key</b></td><td><b>Provider</b></td></tr>
-   * <tr><td><code>DATASOURCE</code></td><td><code>javax.activation.DataSource</code></td></tr>
-   * <tr><td><code>RENDEREDIMAGE</code></td><td><code>java.awt.image.RenderedImage</code></td></tr>
-   * <tr><td><code>SOURCE</code></td><td><code>javax.xml.transform.Source</code></td></tr>
-   * <tr><td><code>DOMSOURCE</code></td><td><code>javax.xml.transform.dom.DOMSource</code></td></tr>
-   * <tr><td><code>SAXSOURCE</code></td><td><code>javax.xml.transform.sax.SAXSource</code></td></tr>
-   * <tr><td><code>STREAMSOURCE</code></td><td><code>javax.xml.transform.stream.StreamSource</code></td></tr>
+   * <caption>Standard Providers</caption>
+   * <tr><td><code>java.io.File</code></td></tr>
+   * <tr><td><code>java.io.InputStream</code></td></tr>
+   * <tr><td><code>java.io.Reader</code></td></tr>
+   * <tr><td><code>java.lang.Boolean</code></td></tr>
+   * <tr><td><code>java.lang.Character</code></td></tr>
+   * <tr><td><code>java.lang.Number</code></td></tr>
+   * <tr><td><code>javax.activation.DataSource</code></td></tr>
+   * <tr><td><code>javax.ws.rs.core.MultivaluedMap</code></td></tr>
+   * <tr><td><code>javax.ws.rs.core.StreamingOutput</code></td></tr>
+   * <tr><td><code>javax.xml.bind.JAXBElement</code></td></tr>
+   * <tr><td><code>javax.xml.transform.Source</code></td></tr>
    * </table>
    * </blockquote>
    *
-   * Multiple default providers can be disabled with comma separated keys, or {@code ALL} can be specified to disable all default
-   * providers
+   * Multiple default providers can be disabled with comma separated keys, or {@code "*"} can be specified to disable all default
+   * providers.
+   *
+   * @implNote A provider will be disabled if the name of its declared entity class or each superclass matches one of the provided
+   *           class names set for this property.
    */
-  public static final String DISABLE_DEFAULT_PROVIDER = "jetrs.disableDefaultProvider";
+  public static final String DISABLE_STANDARD_PROVIDER = "jetrs.disableStandardProvider";
 
   /**
    * Specifies whether JAX-RS Services Loading (via SPI) is enabled. If absent or {@code "true"}, JAX-RS Services Loading (via SPI)
