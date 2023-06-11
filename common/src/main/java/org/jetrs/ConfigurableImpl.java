@@ -30,13 +30,13 @@ interface ConfigurableImpl<C extends Configurable<? super C>> extends Configurab
 
   @Override
   default C register(final Object component) {
-    ((ConfigurationImpl)getConfiguration()).components().add(new Component(null, component));
+    ((ConfigurationImpl)getConfiguration()).components().add(new Component(component.getClass(), component));
     return (C)this;
   }
 
   @Override
   default C register(final Object component, final int priority) {
-    ((ConfigurationImpl)getConfiguration()).components().add(new Component(null, component, priority));
+    ((ConfigurationImpl)getConfiguration()).components().add(new Component(component.getClass(), component, priority));
     return (C)this;
   }
 

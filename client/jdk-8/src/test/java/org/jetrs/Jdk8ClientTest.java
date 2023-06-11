@@ -42,11 +42,6 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.jetrs.provider.ext.BytesProvider;
-import org.jetrs.provider.ext.FormMultivaluedMapProvider;
-import org.jetrs.provider.ext.FormProvider;
-import org.jetrs.provider.ext.InputStreamProvider;
-import org.jetrs.provider.ext.StringProvider;
 import org.junit.AfterClass;
 import org.junit.Test;
 import org.libj.io.Streams;
@@ -71,11 +66,6 @@ public class Jdk8ClientTest {
     .newBuilder()
     .connectTimeout(25000, TimeUnit.MILLISECONDS)
     .readTimeout(25000, TimeUnit.MILLISECONDS)
-    .register(new StringProvider())
-    .register(new BytesProvider())
-    .register(new FormProvider())
-    .register(new InputStreamProvider())
-    .register(new FormMultivaluedMapProvider())
     .build();
 
   private static int tests = 50;

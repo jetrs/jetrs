@@ -40,8 +40,8 @@ import org.jetrs.MessageBodyProvider;
  */
 @Provider
 @Singleton
-@Produces({MediaType.APPLICATION_FORM_URLENCODED, MediaType.WILDCARD})
-@Consumes({MediaType.APPLICATION_FORM_URLENCODED, MediaType.WILDCARD})
+@Produces(MediaType.APPLICATION_FORM_URLENCODED)
+@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 public class FormProvider extends MessageBodyProvider<Form> {
   @Override
   public boolean isReadable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {

@@ -39,8 +39,8 @@ import org.libj.lang.Numbers;
  */
 @Provider
 @Singleton
-@Consumes({MediaType.TEXT_PLAIN, MediaType.WILDCARD})
-@Produces({MediaType.TEXT_PLAIN, MediaType.WILDCARD})
+@Consumes(MediaType.TEXT_PLAIN)
+@Produces(MediaType.TEXT_PLAIN)
 public class NumberProvider extends MessageBodyProvider<Number> {
   @Override
   public boolean isReadable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {

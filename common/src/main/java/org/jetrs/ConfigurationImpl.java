@@ -122,7 +122,7 @@ class ConfigurationImpl implements Cloneable, Configuration, Serializable {
   }
 
   @Override
-  public Configuration clone() {
+  public ConfigurationImpl clone() {
     try {
       final ConfigurationImpl clone = (ConfigurationImpl)super.clone();
       clone.components = components.clone();

@@ -152,7 +152,7 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
             final Class<?> entityClass = entity.getEntity().getClass();
             final MessageBodyWriter messageBodyWriter = getProviders().getMessageBodyWriter(entityClass, null, entity.getAnnotations(), entity.getMediaType());
             if (messageBodyWriter == null)
-              throw new ProcessingException("Provider not found for " + entityClass.getName());
+              throw new ProcessingException("MessageBodyWriter not found for " + entityClass.getName());
 
             writeContentAsync(messageBodyWriter, () -> {
               setHeaders(request);

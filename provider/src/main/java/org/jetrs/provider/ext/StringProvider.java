@@ -45,8 +45,8 @@ import org.libj.io.Readers;
  */
 @Provider
 @Singleton
-@Consumes({MediaType.TEXT_PLAIN, MediaType.WILDCARD})
-@Produces({MediaType.TEXT_PLAIN, MediaType.WILDCARD})
+@Consumes
+@Produces
 public class StringProvider extends MessageBodyProvider<String> {
   private static final int bufferSize = Properties.getPropertyValue(CommonProperties.CONTENT_LENGTH_BUFFER, CommonProperties.CONTENT_LENGTH_BUFFER_DEFAULT);
 

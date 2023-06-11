@@ -38,8 +38,8 @@ import org.libj.io.Streams;
  */
 @Provider
 @Singleton
-@Consumes({MediaType.APPLICATION_OCTET_STREAM, MediaType.WILDCARD})
-@Produces({MediaType.APPLICATION_OCTET_STREAM, MediaType.WILDCARD})
+@Consumes
+@Produces
 public class InputStreamProvider extends MessageBodyProvider<InputStream> {
   @Override
   public boolean isReadable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {

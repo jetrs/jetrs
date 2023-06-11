@@ -398,7 +398,7 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
     final MediaType mediaType = getMediaType();
     final MessageBodyWriter messageBodyWriter = requestContext.getProviders().getMessageBodyWriter(getEntityClass(), methodReturnType, methodAnnotations, mediaType != null ? mediaType : MediaType.WILDCARD_TYPE);
     if (messageBodyWriter == null)
-      throw new InternalServerErrorException("Could not find MessageBodyWriter for type: " + entity.getClass().getName()); // [JAX-RS 4.2.2 7]
+      throw new InternalServerErrorException("MessageBodyWriter not found for " + getEntityClass().getName()); // [JAX-RS 4.2.2 7]
 
     // Start WriterInterceptor process chain
     final boolean isHead = HttpMethod.HEAD.equals(requestContext.getMethod());

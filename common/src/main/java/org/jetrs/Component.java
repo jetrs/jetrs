@@ -19,6 +19,7 @@ package org.jetrs;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.annotation.Priority;
 import javax.ws.rs.Priorities;
@@ -35,11 +36,11 @@ class Component {
   final Map<Class<?>,Integer> contracts;
 
   Component(final Class<?> cls, final Object instance) {
-    this(cls, instance, getPriority(cls != null ? cls : instance.getClass()));
+    this(cls, instance, getPriority(cls));
   }
 
   Component(final Class<?> cls, final Object instance, final int priority) {
-    this.cls = cls;
+    this.cls = Objects.requireNonNull(cls);
     this.instance = instance;
     this.priority = priority;
     this.contracts = null;
@@ -48,7 +49,7 @@ class Component {
   Component(final Class<?> cls, final Object instance, final Map<Class<?>,Integer> contracts) {
     this.cls = cls;
     this.instance = instance;
-    this.priority = getPriority(cls != null ? cls : instance.getClass());
+    this.priority = getPriority(cls);
     this.contracts = contracts == null ? null : Collections.unmodifiableMap(contracts);
   }
 

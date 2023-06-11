@@ -35,7 +35,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 
 import org.jetrs.provider.container.ResponseTimeoutFilter;
-import org.jetrs.provider.ext.StringProvider;
 import org.jetrs.server.app.ApplicationServer;
 import org.junit.AfterClass;
 import org.junit.Test;
@@ -78,7 +77,6 @@ public class ResponseTimeoutFilterTest {
   private static final ApplicationServer server = new ApplicationServer(new Object[] {
     new TestFilter(timeout),
     new DelayService(),
-    new StringProvider(),
     new ExceptionMapper<Throwable>() {
       @Override
       public Response toResponse(final Throwable exception) {
@@ -95,7 +93,7 @@ public class ResponseTimeoutFilterTest {
   private static ArrayList<String> timedOut = new ArrayList<>();
 
   static {
-    client = ClientBuilder.newBuilder().register(new StringProvider()).build();
+    client = ClientBuilder.newBuilder().build();
   }
 
   private static Future<Response> test(final long delay) {

@@ -201,7 +201,7 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
             final Class<?> entityClass = entity.getEntity().getClass();
             final MessageBodyWriter messageBodyWriter = getProviders().getMessageBodyWriter(entityClass, null, entity.getAnnotations(), entity.getMediaType());
             if (messageBodyWriter == null)
-              throw new ProcessingException("Provider not found for " + entityClass.getName());
+              throw new ProcessingException("MessageBodyWriter not found for " + entityClass.getName());
 
             final AtomicLong timeout = new AtomicLong(readTimeout > 0 ? readTimeout : Long.MAX_VALUE);
             final ReentrantLock lock = new ReentrantLock();

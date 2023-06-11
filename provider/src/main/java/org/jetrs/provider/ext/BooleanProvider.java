@@ -38,8 +38,8 @@ import org.jetrs.MessageBodyProvider;
  */
 @Provider
 @Singleton
-@Consumes({MediaType.TEXT_PLAIN, MediaType.WILDCARD})
-@Produces({MediaType.TEXT_PLAIN, MediaType.WILDCARD})
+@Consumes(MediaType.TEXT_PLAIN)
+@Produces(MediaType.TEXT_PLAIN)
 public class BooleanProvider extends MessageBodyProvider<Boolean> {
   @Override
   public boolean isReadable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {

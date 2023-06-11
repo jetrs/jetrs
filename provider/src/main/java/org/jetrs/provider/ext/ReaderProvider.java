@@ -41,8 +41,8 @@ import org.libj.io.ReaderInputStream;
  */
 @Provider
 @Singleton
-@Consumes({MediaType.TEXT_PLAIN, MediaType.WILDCARD})
-@Produces({MediaType.TEXT_PLAIN, MediaType.WILDCARD})
+@Consumes
+@Produces
 public class ReaderProvider extends MessageBodyProvider<Reader> {
   @Override
   public boolean isReadable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {

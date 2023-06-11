@@ -48,8 +48,8 @@ import org.libj.lang.ObjectUtil;
  */
 @Provider
 @Singleton
-@Consumes({MediaType.APPLICATION_OCTET_STREAM, MediaType.WILDCARD})
-@Produces({MediaType.APPLICATION_OCTET_STREAM, MediaType.WILDCARD})
+@Consumes
+@Produces
 public class DataSourceProvider extends MessageBodyProvider<DataSource> {
   private static final int DEFAULT_BUFFER_SIZE = 65536;
 

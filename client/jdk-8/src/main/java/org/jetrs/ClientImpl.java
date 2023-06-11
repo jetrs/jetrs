@@ -40,9 +40,10 @@ import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
 
 import org.libj.lang.PackageNotFoundException;
+import org.libj.util.ConcurrentHashSet;
 
 class ClientImpl implements Client, ConfigurableImpl<Client> {
-  private final Configuration configuration;
+  private final ConfigurationImpl configuration;
   private final SSLContext sslContext;
   private final HostnameVerifier verifier;
   private final ExecutorService executorService;
@@ -50,7 +51,7 @@ class ClientImpl implements Client, ConfigurableImpl<Client> {
   private final long connectTimeout;
   private final long readTimeout;
 
-  ClientImpl(final Configuration configuration, final SSLContext sslContext, final HostnameVerifier verifier, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final long connectTimeout, final long readTimeout) {
+  ClientImpl(final ConfigurationImpl configuration, final SSLContext sslContext, final HostnameVerifier verifier, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final long connectTimeout, final long readTimeout) {
     this.configuration = configuration;
     this.sslContext = sslContext;
     this.verifier = verifier;
@@ -60,14 +61,10 @@ class ClientImpl implements Client, ConfigurableImpl<Client> {
     this.readTimeout = readTimeout;
   }
 
-  private ClientRuntimeContext runtimeContext;
-  private Set<?> singletons;
+  private Set<Object> singletons;
   private Set<Class<?>> classes;
 
   private ClientRuntimeContext buildProviders() {
-    if (runtimeContext != null && (singletons != null ? singletons.equals(configuration.getInstances()) : configuration.getInstances() == null) && (classes != null ? classes.equals(configuration.getClasses()) : configuration.getClasses() == null))
-      return runtimeContext;
-
     try {
       final ArrayList<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories = new ArrayList<>();
       final ArrayList<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorProviderFactories = new ArrayList<>();
@@ -83,9 +80,9 @@ class ClientImpl implements Client, ConfigurableImpl<Client> {
         exceptionMapperProviderFactories
       );
 
-      bootstrap.init(configuration.getInstances(), configuration.getClasses(), null);
-      this.singletons = configuration.getInstances();
-      this.classes = configuration.getClasses();
+      this.singletons = new ConcurrentHashSet<>(configuration.components().instances());
+      this.classes = new ConcurrentHashSet<>(configuration.components().classes());
+      bootstrap.init(singletons, classes, null);
       return new ClientRuntimeContext(configuration, readerInterceptorProviderFactories, writerInterceptorProviderFactories, messageBodyReaderProviderFactories, messageBodyWriterProviderFactories, exceptionMapperProviderFactories);
     }
     catch (final IllegalAccessException | PackageNotFoundException e) {

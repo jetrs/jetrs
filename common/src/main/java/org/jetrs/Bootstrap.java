@@ -17,24 +17,29 @@
 package org.jetrs;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.ServiceConfigurationError;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import javax.inject.Singleton;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
 
+import org.libj.lang.Classes;
 import org.libj.lang.PackageLoader;
 import org.libj.lang.PackageNotFoundException;
+import org.libj.lang.ServiceLoaders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,6 +54,14 @@ class Bootstrap<R extends ArrayList<? extends Comparable<?>>> {
         return false;
 
     return true;
+  }
+
+  private static final boolean hasContextFields(final Class<?> cls) {
+    for (final Field field : Classes.getDeclaredFieldsDeep(cls))
+      if (field.isAnnotationPresent(Context.class))
+        return true;
+
+    return false;
   }
 
   private final ArrayList<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories;
@@ -91,17 +104,60 @@ class Bootstrap<R extends ArrayList<? extends Comparable<?>>> {
     return false;
   }
 
+  private static void loadStandardProviders(final Set<Object> singletons, final Set<Class<?>> classes) throws IOException {
+    final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+    final HashSet<Class<?>> providerClasses = new HashSet<Class<?>>() {
+      @Override
+      public boolean add(final Class<?> e) {
+        // Don't add the class if a subclass instance of it is already present in `singletons`
+        for (final Object singleton : singletons) // [S]
+          if (singleton != null)
+            if (e.isAssignableFrom(singleton.getClass()))
+              return false;
+
+        // Don't add the class if a subclass of it is already present in `classes`
+        for (final Class<?> cls : classes) // [S]
+          if (cls != null)
+            if (e.isAssignableFrom(cls))
+              return false;
+
+        return super.add(e);
+      }
+    };
+
+    ServiceLoaders.load(ExceptionMapper.class, classLoader, providerClasses::add);
+    ServiceLoaders.load(MessageBodyReader.class, classLoader, providerClasses::add);
+    ServiceLoaders.load(MessageBodyWriter.class, classLoader, providerClasses::add);
+    for (final Class<?> providerClass : providerClasses) { // [S]
+      try {
+        if (hasContextFields(providerClass))
+          classes.add(providerClass);
+        else
+          singletons.add(providerClass.getDeclaredConstructor().newInstance());
+      }
+      catch (final Exception | ServiceConfigurationError e) {
+        if (logger.isWarnEnabled()) logger.warn("Failed to load provider " + providerClass + ".", e);
+      }
+    }
+  }
+
   @SuppressWarnings({"null", "unchecked"})
   void init(final Set<Object> singletons, final Set<Class<?>> classes, final R resourceInfos) throws IllegalAccessException, InstantiationException, InvocationTargetException, PackageNotFoundException, IOException {
     final ArrayList<Consumer<Set<Class<?>>>> afterAdds = new ArrayList<>();
     if (singletons != null || classes != null) {
-      final boolean hasSingletons = singletons.size() > 0;
-      final boolean hasClasses = classes.size() > 0;
+      loadStandardProviders(singletons, classes);
+
+      final int noSingletons = singletons.size();
+      final int noClasses = classes.size();
+
+      final boolean hasSingletons = noSingletons > 0;
+      final boolean hasClasses = noClasses > 0;
       if (hasSingletons) {
         for (final Object singleton : singletons) { // [S]
           if (singleton != null) {
-            if (logger.isWarnEnabled() && !singleton.getClass().isAnnotationPresent(Singleton.class)) logger.warn("Object of class " + singleton.getClass().getName() + " without @Singleton annotation is member of Application.getSingletons()");
-            addResourceOrProvider(afterAdds, resourceInfos, singleton.getClass(), singleton, false);
+            final Class<? extends Object> cls = singleton.getClass();
+            if (logger.isWarnEnabled() && !cls.isAnnotationPresent(Singleton.class)) logger.warn("Object of class " + cls.getName() + " without @Singleton annotation is member of Application.getSingletons()");
+            addResourceOrProvider(afterAdds, resourceInfos, cls, singleton, false);
           }
         }
       }
@@ -117,7 +173,7 @@ class Bootstrap<R extends ArrayList<? extends Comparable<?>>> {
           resourceClasses = classes;
         }
         else if (hasClasses) {
-          resourceClasses = new HashSet<>(classes.size() + singletons.size());
+          resourceClasses = new HashSet<>(noClasses + noSingletons);
           resourceClasses.addAll(classes);
           for (final Object singleton : singletons) // [S]
             resourceClasses.add(singleton.getClass());

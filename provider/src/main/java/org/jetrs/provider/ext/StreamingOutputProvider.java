@@ -35,7 +35,7 @@ import javax.ws.rs.ext.Provider;
  */
 @Provider
 @Singleton
-@Produces({MediaType.APPLICATION_OCTET_STREAM, MediaType.WILDCARD})
+@Produces
 public class StreamingOutputProvider implements MessageBodyWriter<StreamingOutput> {
   @Override
   public boolean isWriteable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {

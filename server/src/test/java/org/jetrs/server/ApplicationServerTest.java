@@ -45,14 +45,6 @@ import javax.ws.rs.core.StreamingOutput;
 
 import org.jetrs.HttpHeaders;
 import org.jetrs.MultivaluedArrayHashMap;
-import org.jetrs.provider.ext.BytesProvider;
-import org.jetrs.provider.ext.CharacterProvider;
-import org.jetrs.provider.ext.FormMultivaluedMapProvider;
-import org.jetrs.provider.ext.FormProvider;
-import org.jetrs.provider.ext.InputStreamProvider;
-import org.jetrs.provider.ext.NumberProvider;
-import org.jetrs.provider.ext.StreamingOutputProvider;
-import org.jetrs.provider.ext.StringProvider;
 import org.jetrs.provider.ext.interceptor.GZipCodec;
 import org.jetrs.server.app.ApplicationServer;
 import org.jetrs.server.app.filter.Filter1;
@@ -69,20 +61,7 @@ public class ApplicationServerTest {
   private static final Random random = new Random();
   private static final ApplicationServer server = new ApplicationServer(null, null);
   private static final String serviceUrl = "http://localhost:" + server.getContainerPort() + ApplicationServer.applicationPath;
-  private static final Client client;
-
-  static {
-    client = ClientBuilder.newClient();
-    client.register(new CharacterProvider());
-    client.register(new NumberProvider());
-    client.register(new BytesProvider());
-    client.register(new StreamingOutputProvider());
-    client.register(new StringProvider());
-    client.register(new FormProvider());
-    client.register(new InputStreamProvider());
-    client.register(new FormMultivaluedMapProvider());
-    client.register(GZipCodec.class);
-  }
+  private static final Client client = ClientBuilder.newClient().register(GZipCodec.class);
 
   public static String encodeLexicographically(final Map<String,?> map) {
     final int size = map.size();

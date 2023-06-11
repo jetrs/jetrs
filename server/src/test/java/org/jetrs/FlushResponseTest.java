@@ -28,12 +28,6 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
-import org.jetrs.provider.ext.BytesProvider;
-import org.jetrs.provider.ext.CharacterProvider;
-import org.jetrs.provider.ext.FormMultivaluedMapProvider;
-import org.jetrs.provider.ext.FormProvider;
-import org.jetrs.provider.ext.NumberProvider;
-import org.jetrs.provider.ext.StringProvider;
 import org.jetrs.provider.ext.interceptor.GZipCodec;
 import org.jetrs.server.app.ApplicationServer;
 import org.jetrs.server.app.service.FlushResponseService;
@@ -44,18 +38,7 @@ import org.libj.lang.Strings;
 public class FlushResponseTest {
   private static final ApplicationServer server = new ApplicationServer(null, null);
   private static final String serviceUrl = "http://localhost:" + server.getContainerPort() + ApplicationServer.applicationPath;
-  private static final Client client;
-
-  static {
-    client = ClientBuilder.newClient();
-    client.register(new CharacterProvider());
-    client.register(new NumberProvider());
-    client.register(new BytesProvider());
-    client.register(new StringProvider());
-    client.register(new FormProvider());
-    client.register(new FormMultivaluedMapProvider());
-    client.register(GZipCodec.class);
-  }
+  private static final Client client = ClientBuilder.newClient().register(GZipCodec.class);
 
   public static String s(final Object obj) {
     return obj == null ? "" : obj.toString();

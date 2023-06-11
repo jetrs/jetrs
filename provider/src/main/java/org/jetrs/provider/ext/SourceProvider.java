@@ -40,8 +40,8 @@ import org.jetrs.MessageBodyProvider;
  */
 @Provider
 @Singleton
-@Consumes({MediaType.APPLICATION_XML, MediaType.TEXT_XML, MediaType.WILDCARD})
-@Produces({MediaType.APPLICATION_XML, MediaType.TEXT_XML, MediaType.WILDCARD})
+@Consumes({MediaType.TEXT_XML, MediaType.APPLICATION_XML, "application/*+xml"})
+@Produces({MediaType.TEXT_XML, MediaType.APPLICATION_XML, "application/*+xml"})
 public class SourceProvider extends MessageBodyProvider<Source> {
   private static final TransformerFactory transformerFactory = TransformerFactory.newInstance();
 

@@ -28,13 +28,6 @@ import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.ext.RuntimeDelegate;
 
-import org.jetrs.provider.ext.BytesProvider;
-import org.jetrs.provider.ext.FormMultivaluedMapProvider;
-import org.jetrs.provider.ext.FormProvider;
-import org.jetrs.provider.ext.InputStreamProvider;
-import org.jetrs.provider.ext.NumberProvider;
-import org.jetrs.provider.ext.StreamingOutputProvider;
-import org.jetrs.provider.ext.StringProvider;
 import org.jetrs.provider.ext.interceptor.GZipCodec;
 import org.jetrs.provider.ext.mapper.ThrowableMapper;
 import org.jetrs.provider.ext.mapper.WebApplicationExceptionMapper;
@@ -75,13 +68,6 @@ public class ApplicationServer extends Application implements AutoCloseable {
     }
     else {
       // General
-      this.singletons.add(new InputStreamProvider());
-      this.singletons.add(new BytesProvider());
-      this.singletons.add(new NumberProvider());
-      this.singletons.add(new StringProvider());
-      this.singletons.add(new FormMultivaluedMapProvider());
-      this.singletons.add(new FormProvider());
-      this.singletons.add(new StreamingOutputProvider());
       this.singletons.add(new WebApplicationExceptionMapper(true));
       this.singletons.add(new ThrowableMapper<>(true));
 
