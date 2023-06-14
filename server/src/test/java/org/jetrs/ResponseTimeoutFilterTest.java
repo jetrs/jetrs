@@ -18,21 +18,24 @@ package org.jetrs;
 
 import static org.junit.Assert.*;
 
+import java.net.SocketException;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
-import javax.servlet.ServletException;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.Produces;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.ExceptionMapper;
 
 import org.jetrs.provider.container.ResponseTimeoutFilter;
 import org.jetrs.server.app.ApplicationServer;
@@ -61,13 +64,13 @@ public class ResponseTimeoutFilterTest {
     @GET
     @Path("{delay:\\d+}")
     @Produces(MediaType.TEXT_PLAIN)
-    public String getByte(@PathParam("delay") final long delay) throws InterruptedException {
+    public String getByte(@PathParam("delay") final long delay) {
       try {
         Thread.sleep(delay);
         return success;
       }
       catch (final InterruptedException e) {
-        throw e;
+        throw new AbortFilterChainException(Response.status(504).entity(failure).build());
       }
     }
   }
@@ -76,16 +79,7 @@ public class ResponseTimeoutFilterTest {
   private static final int numTests = 10;
   private static final ApplicationServer server = new ApplicationServer(new Object[] {
     new TestFilter(timeout),
-    new DelayService(),
-    new ExceptionMapper<Throwable>() {
-      @Override
-      public Response toResponse(final Throwable exception) {
-        if (exception instanceof ServletException && exception.getCause() instanceof InterruptedException)
-          return Response.status(504).entity(failure).build();
-
-        throw new AssertionError();
-      }
-    }
+    new DelayService()
   }, new Class[0]);
   private static final String serviceUrl = "http://localhost:" + server.getContainerPort() + ApplicationServer.applicationPath;
   private static final Client client;
@@ -102,7 +96,7 @@ public class ResponseTimeoutFilterTest {
 
   @Test
   @SuppressWarnings("unused")
-  public void test() throws Exception {
+  public void testLogic() throws Exception {
     try {
       new TestFilter(-1);
       fail("Expected IllegalArgumentException");
@@ -134,6 +128,33 @@ public class ResponseTimeoutFilterTest {
       assertEquals(success, responses.get(i).get().readEntity(String.class));
 
     assertEquals(0, timedOut.size());
+  }
+
+  @Test
+  public void testLoad() throws InterruptedException {
+    final int noThreads = 5;
+    final ExecutorService executor = Executors.newFixedThreadPool(noThreads);
+    for (int j = 0; j < noThreads; ++j) { // [N]
+      executor.execute(() -> {
+        for (int i = 0; i < 20; ++i) { // [N]
+          try {
+            test(210).get().readEntity(String.class);
+          }
+          catch (final Exception e) {
+            if (e.getCause() instanceof ProcessingException && e.getCause().getCause() instanceof SocketException && "Unexpected end of file from server".equals(e.getCause().getCause().getMessage()))
+              return;
+
+            if (e.getCause() instanceof ProcessingException && e.getCause().getCause() instanceof SocketException && "Unexpected end of file from server".equals(e.getCause().getCause().getMessage()))
+              return;
+
+            e.printStackTrace();
+            System.exit(1);
+          }
+        }
+      });
+    }
+    executor.shutdown();
+    executor.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
   }
 
   @AfterClass
