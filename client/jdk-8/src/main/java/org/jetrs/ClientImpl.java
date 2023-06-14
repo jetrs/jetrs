@@ -51,6 +51,10 @@ class ClientImpl implements Client, ConfigurableImpl<Client> {
   private final long connectTimeout;
   private final long readTimeout;
 
+  private final Set<Object> singletons;
+  private final Set<Class<?>> classes;
+  private final ClientRuntimeContext clientRuntimeContext;
+
   ClientImpl(final ConfigurationImpl configuration, final SSLContext sslContext, final HostnameVerifier verifier, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final long connectTimeout, final long readTimeout) {
     this.configuration = configuration;
     this.sslContext = sslContext;
@@ -59,31 +63,27 @@ class ClientImpl implements Client, ConfigurableImpl<Client> {
     this.scheduledExecutorService = scheduledExecutorService;
     this.connectTimeout = connectTimeout;
     this.readTimeout = readTimeout;
-  }
 
-  private Set<Object> singletons;
-  private Set<Class<?>> classes;
+    this.singletons = new ConcurrentHashSet<>(configuration.components().instances());
+    this.classes = new ConcurrentHashSet<>(configuration.components().classes());
 
-  private ClientRuntimeContext buildProviders() {
+    final ArrayList<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories = new ArrayList<>();
+    final ArrayList<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorProviderFactories = new ArrayList<>();
+    final ArrayList<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderProviderFactories = new ArrayList<>();
+    final ArrayList<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterProviderFactories = new ArrayList<>();
+    final ArrayList<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperProviderFactories = new ArrayList<>();
+
+    final Bootstrap<?> bootstrap = new Bootstrap<>(
+      readerInterceptorProviderFactories,
+      writerInterceptorProviderFactories,
+      messageBodyReaderProviderFactories,
+      messageBodyWriterProviderFactories,
+      exceptionMapperProviderFactories
+    );
+
     try {
-      final ArrayList<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories = new ArrayList<>();
-      final ArrayList<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorProviderFactories = new ArrayList<>();
-      final ArrayList<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderProviderFactories = new ArrayList<>();
-      final ArrayList<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterProviderFactories = new ArrayList<>();
-      final ArrayList<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperProviderFactories = new ArrayList<>();
-
-      final Bootstrap<?> bootstrap = new Bootstrap<>(
-        readerInterceptorProviderFactories,
-        writerInterceptorProviderFactories,
-        messageBodyReaderProviderFactories,
-        messageBodyWriterProviderFactories,
-        exceptionMapperProviderFactories
-      );
-
-      this.singletons = new ConcurrentHashSet<>(configuration.components().instances());
-      this.classes = new ConcurrentHashSet<>(configuration.components().classes());
       bootstrap.init(singletons, classes, null);
-      return new ClientRuntimeContext(configuration, readerInterceptorProviderFactories, writerInterceptorProviderFactories, messageBodyReaderProviderFactories, messageBodyWriterProviderFactories, exceptionMapperProviderFactories);
+      this.clientRuntimeContext = new ClientRuntimeContext(configuration, readerInterceptorProviderFactories, writerInterceptorProviderFactories, messageBodyReaderProviderFactories, messageBodyWriterProviderFactories, exceptionMapperProviderFactories);
     }
     catch (final IllegalAccessException | PackageNotFoundException e) {
       throw new RuntimeException(e);
@@ -130,30 +130,30 @@ class ClientImpl implements Client, ConfigurableImpl<Client> {
   @Override
   public WebTarget target(final String uri) {
     assertNotClosed();
-    return new WebTargetImpl(this, buildProviders(), configuration, UriBuilder.fromUri(uri), executorService, scheduledExecutorService, connectTimeout, readTimeout);
+    return new WebTargetImpl(this, clientRuntimeContext, configuration, UriBuilder.fromUri(uri), executorService, scheduledExecutorService, connectTimeout, readTimeout);
   }
 
   @Override
   public WebTarget target(final URI uri) {
     assertNotClosed();
-    return new WebTargetImpl(this, buildProviders(), configuration, UriBuilder.fromUri(uri), executorService, scheduledExecutorService, connectTimeout, readTimeout);
+    return new WebTargetImpl(this, clientRuntimeContext, configuration, UriBuilder.fromUri(uri), executorService, scheduledExecutorService, connectTimeout, readTimeout);
   }
 
   @Override
   public WebTarget target(final UriBuilder uriBuilder) {
     assertNotClosed();
-    return new WebTargetImpl(this, buildProviders(), configuration, uriBuilder, executorService, scheduledExecutorService, connectTimeout, readTimeout);
+    return new WebTargetImpl(this, clientRuntimeContext, configuration, uriBuilder, executorService, scheduledExecutorService, connectTimeout, readTimeout);
   }
 
   @Override
   public WebTarget target(final Link link) {
     assertNotClosed();
-    return new WebTargetImpl(this, buildProviders(), configuration, UriBuilder.fromLink(link), executorService, scheduledExecutorService, connectTimeout, readTimeout);
+    return new WebTargetImpl(this, clientRuntimeContext, configuration, UriBuilder.fromLink(link), executorService, scheduledExecutorService, connectTimeout, readTimeout);
   }
 
   @Override
   public Invocation.Builder invocation(final Link link) {
     assertNotClosed();
-    return new ClientRequestContextImpl.BuilderImpl(this, buildProviders(), link.getUri(), executorService, scheduledExecutorService, connectTimeout, readTimeout);
+    return new ClientRequestContextImpl.BuilderImpl(this, clientRuntimeContext, link.getUri(), executorService, scheduledExecutorService, connectTimeout, readTimeout);
   }
 }
