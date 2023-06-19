@@ -218,9 +218,6 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext,Ht
     preMatchRequestFilterCalled = true;
     final ArrayList<ProviderFactory<ContainerRequestFilter>> preMatchContainerRequestFilterProviderFactories = runtimeContext.getPreMatchContainerRequestFilterProviderFactories();
     final int i$ = preMatchContainerRequestFilterProviderFactories.size();
-    if (i$ == 0)
-      return;
-
     for (int i = 0; i < i$; ++i) // [RA]
       preMatchContainerRequestFilterProviderFactories.get(i).getSingletonOrFromRequestContext(this).filter(this);
   }

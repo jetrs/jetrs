@@ -796,7 +796,7 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
   }
 
   private final ConcurrentNullHashMap<Class<?>,ParamConverter<?>> dynamicParamConverters = new ConcurrentNullHashMap<>();
-  private final TypedParamConverter<?>[] paramConverters = new TypedParamConverter<?>[] {
+  private final TypedParamConverter<?>[] paramConverters = {
     new TypedParamConverter<String>(String.class) {
       @Override
       public String fromString(final String value) {
