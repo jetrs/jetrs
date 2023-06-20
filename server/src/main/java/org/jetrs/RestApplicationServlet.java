@@ -264,7 +264,7 @@ abstract class RestApplicationServlet extends RestHttpServlet {
         }
       }
     }
-    catch (final ServletException | RuntimeException t) {
+    catch (final Throwable t) {
       if (t.getCause() instanceof ServletException)
         throw (ServletException)t.getCause();
 
