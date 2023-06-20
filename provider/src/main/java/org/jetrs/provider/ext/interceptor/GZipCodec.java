@@ -24,7 +24,6 @@ import java.util.zip.GZIPInputStream;
 import javax.annotation.Priority;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.ext.Provider;
 
 import org.libj.util.zip.UnsynchronizedGZIPOutputStream;
 
@@ -32,7 +31,6 @@ import org.libj.util.zip.UnsynchronizedGZIPOutputStream;
  * GZIP codec support. Interceptor that encodes the output or decodes the input if {@value HttpHeaders#CONTENT_ENCODING} value
  * equals to {@code gzip} or {@code x-gzip}.
  */
-@Provider
 @Priority(Priorities.ENTITY_CODER)
 public class GZipCodec extends ContentCodec {
   public GZipCodec() {

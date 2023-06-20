@@ -59,7 +59,7 @@ class Bootstrap<R extends ArrayList<? extends Comparable<?>>> {
   }
 
   private static final boolean hasContextFields(final Class<?> cls) {
-    for (final Field field : Classes.getDeclaredFieldsDeep(cls))
+    for (final Field field : Classes.getDeclaredFieldsDeep(cls)) // [F]
       if (field.isAnnotationPresent(Context.class))
         return true;
 

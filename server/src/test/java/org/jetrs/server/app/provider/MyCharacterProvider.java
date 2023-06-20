@@ -21,11 +21,9 @@ import static org.junit.Assert.*;
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.ext.Provider;
 
 import org.jetrs.provider.ext.CharacterProvider;
 
-@Provider
 public class MyCharacterProvider extends CharacterProvider {
   public static int instanceCount = 0;
   public static int postConstructCalled = 0;

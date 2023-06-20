@@ -211,7 +211,7 @@ abstract class RestApplicationServlet extends RestHttpServlet {
       catch (final EOFException e) {
         if (logger.isDebugEnabled()) logger.debug(e.getMessage(), e);
       }
-      catch (final IOException | RuntimeException | ServletException e) {
+      catch (final Throwable e) {
         if (!(e instanceof AbortFilterChainException)) {
           // FIXME: Review [JAX-RS 2.1 3.3.4 2,3]
           // (4b) Error

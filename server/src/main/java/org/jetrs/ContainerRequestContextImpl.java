@@ -870,12 +870,12 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext,Ht
     return null;
   }
 
-  void sendError(final int scInternalServerError, final Exception e) throws IOException {
+  void sendError(final int scInternalServerError, final Throwable t) throws IOException {
     if (httpServletResponse.isCommitted()) {
-      if (logger.isInfoEnabled()) logger.info("Unable to overwrite committed response [" + httpServletResponse.getStatus() + "] -> [" + scInternalServerError + "]: ", e);
+      if (logger.isInfoEnabled()) logger.info("Unable to overwrite committed response [" + httpServletResponse.getStatus() + "] -> [" + scInternalServerError + "]: ", t);
     }
     else {
-      httpServletResponse.sendError(scInternalServerError, Throwables.toString(e));
+      httpServletResponse.sendError(scInternalServerError, Throwables.toString(t));
     }
   }
 
@@ -915,9 +915,9 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext,Ht
     return response;
   }
 
-  void writeResponse(final Exception e) throws IOException {
+  void writeResponse(final Throwable t) throws IOException {
     if (httpServletResponse.isCommitted()) {
-      if (logger.isInfoEnabled()) logger.info("Unable to overwrite committed response [" + httpServletResponse.getStatus() + "] -> [" + containerResponseContext.getStatus() + "]: ", e);
+      if (logger.isInfoEnabled()) logger.info("Unable to overwrite committed response [" + httpServletResponse.getStatus() + "] -> [" + containerResponseContext.getStatus() + "]: ", t);
     }
     else {
       containerResponseContext.writeResponse(httpServletResponse, resourceInfo);

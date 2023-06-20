@@ -29,7 +29,6 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.ext.Provider;
 
 import org.jetrs.MessageBodyProvider;
 import org.libj.lang.Numbers;
@@ -37,7 +36,6 @@ import org.libj.lang.Numbers;
 /**
  * JAX-RS 2.1 Section 4.2.4
  */
-@Provider
 @Singleton
 @Consumes(MediaType.TEXT_PLAIN)
 @Produces(MediaType.TEXT_PLAIN)
