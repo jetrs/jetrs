@@ -45,7 +45,7 @@ import javax.ws.rs.core.StreamingOutput;
 
 import org.jetrs.HttpHeaders;
 import org.jetrs.MultivaluedArrayHashMap;
-import org.jetrs.provider.ext.interceptor.GZipCodec;
+import org.jetrs.provider.ext.interceptor.GZipCodecInterceptor;
 import org.jetrs.server.app.ApplicationServer;
 import org.jetrs.server.app.filter.Filter1;
 import org.jetrs.server.app.provider.MyCharacterProvider;
@@ -61,7 +61,7 @@ public class ApplicationServerTest {
   private static final Random random = new Random();
   private static final ApplicationServer server = new ApplicationServer(null, null);
   private static final String serviceUrl = "http://localhost:" + server.getContainerPort() + ApplicationServer.applicationPath;
-  private static final Client client = ClientBuilder.newClient().register(GZipCodec.class);
+  private static final Client client = ClientBuilder.newClient().register(GZipCodecInterceptor.class);
 
   public static String encodeLexicographically(final Map<String,?> map) {
     final int size = map.size();

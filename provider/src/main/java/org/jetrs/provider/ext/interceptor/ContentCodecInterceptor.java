@@ -49,18 +49,18 @@ import org.libj.util.ObservableOutputStream;
  * headers.
  */
 @Priority(Priorities.ENTITY_CODER)
-public abstract class ContentCodec implements ReaderInterceptor, WriterInterceptor {
+public abstract class ContentCodecInterceptor implements ReaderInterceptor, WriterInterceptor {
   private final Set<String> supportedEncodings;
 
   @Context
   private HttpHeaders requestHeaders;
 
   /**
-   * Creates a new {@link ContentCodec} with the supported content encodings.
+   * Creates a new {@link ContentCodecInterceptor} with the supported content encodings.
    *
    * @param supportedEncodings Values of {@code Content-Encoding} header supported by this encoding provider.
    */
-  protected ContentCodec(final String ... supportedEncodings) {
+  protected ContentCodecInterceptor(final String ... supportedEncodings) {
     assertNotEmpty(supportedEncodings);
     this.supportedEncodings = Collections.unmodifiableSet(CollectionUtil.asCollection(new HashSet<>(supportedEncodings.length), supportedEncodings));
   }

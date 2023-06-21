@@ -28,7 +28,7 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
-import org.jetrs.provider.ext.interceptor.GZipCodec;
+import org.jetrs.provider.ext.interceptor.GZipCodecInterceptor;
 import org.jetrs.server.app.ApplicationServer;
 import org.jetrs.server.app.service.FlushResponseService;
 import org.junit.AfterClass;
@@ -38,7 +38,7 @@ import org.libj.lang.Strings;
 public class FlushResponseTest {
   private static final ApplicationServer server = new ApplicationServer(null, null);
   private static final String serviceUrl = "http://localhost:" + server.getContainerPort() + ApplicationServer.applicationPath;
-  private static final Client client = ClientBuilder.newClient().register(GZipCodec.class);
+  private static final Client client = ClientBuilder.newClient().register(GZipCodecInterceptor.class);
 
   public static String s(final Object obj) {
     return obj == null ? "" : obj.toString();

@@ -28,7 +28,7 @@ import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.ext.RuntimeDelegate;
 
-import org.jetrs.provider.ext.interceptor.GZipCodec;
+import org.jetrs.provider.ext.interceptor.GZipCodecInterceptor;
 import org.jetrs.provider.ext.mapper.ThrowableMapper;
 import org.jetrs.provider.ext.mapper.WebApplicationExceptionMapper;
 import org.jetrs.server.app.filter.Filter1;
@@ -84,7 +84,7 @@ public class ApplicationServer extends Application implements AutoCloseable {
     }
     else {
       this.classes.add(Filter1.class);
-      this.classes.add(GZipCodec.class);
+      this.classes.add(GZipCodecInterceptor.class);
       this.classes.add(CoreTypeService.class);
       this.classes.add(MyCharacterProvider.class);
     }

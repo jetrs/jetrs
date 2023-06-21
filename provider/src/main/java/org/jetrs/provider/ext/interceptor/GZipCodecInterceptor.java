@@ -32,8 +32,8 @@ import org.libj.util.zip.UnsynchronizedGZIPOutputStream;
  * equals to {@code gzip} or {@code x-gzip}.
  */
 @Priority(Priorities.ENTITY_CODER)
-public class GZipCodec extends ContentCodec {
-  public GZipCodec() {
+public class GZipCodecInterceptor extends ContentCodecInterceptor {
+  public GZipCodecInterceptor() {
     super("gzip", "x-gzip");
   }
 
