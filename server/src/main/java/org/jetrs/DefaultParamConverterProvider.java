@@ -414,7 +414,7 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
     }
 
     if (paramConverter == null && componentType.isPrimitive()) {
-      componentType = Classes.toWrapper(componentType);
+      componentType = Classes.box(componentType);
       paramConverter = lookupParamConverter(paramConverterProviderFactories, requestContext, componentType, genericType, annotations);
       if (onlyIfEager && paramConverter != null && AnnotationUtil.isAnnotationPresent(paramConverter.getClass(), Lazy.class))
         return null;

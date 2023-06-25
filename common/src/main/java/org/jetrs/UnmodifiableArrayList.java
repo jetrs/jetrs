@@ -24,7 +24,7 @@ import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 
 public class UnmodifiableArrayList<E> extends ArrayList<E> {
-  boolean superAdd(final E element) {
+  boolean add$(final E element) {
     return super.add(element);
   }
 

@@ -186,7 +186,7 @@ class MirrorQualityList<V,R> extends MirrorList<V,List<V>,R,List<R>> implements 
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
-  private void superReverse() {
+  private void reverse$() {
     final Qualifier tempQualifier = qualifier;
     qualifier = (Qualifier)(reverse != null ? reverse : qualifier.reverse());
     reverse = tempQualifier;
@@ -194,9 +194,9 @@ class MirrorQualityList<V,R> extends MirrorList<V,List<V>,R,List<R>> implements 
 
   @Override
   public MirrorQualityList<R,V> reverse() {
-    superReverse();
+    reverse$();
     if (mirrorList != null)
-      getMirrorList().superReverse();
+      getMirrorList().reverse$();
 
     return (MirrorQualityList<R,V>)super.reverse();
   }
@@ -393,7 +393,7 @@ class MirrorQualityList<V,R> extends MirrorList<V,List<V>,R,List<R>> implements 
   }
 
   @SuppressWarnings("unchecked")
-  private MirrorQualityList<V,R> superClone() {
+  private MirrorQualityList<V,R> clone$() {
     try {
       final MirrorQualityList<V,R> clone = (MirrorQualityList<V,R>)super.clone();
       if (qualities != null)
@@ -409,8 +409,8 @@ class MirrorQualityList<V,R> extends MirrorList<V,List<V>,R,List<R>> implements 
 
   @Override
   public MirrorQualityList<V,R> clone() {
-    final MirrorQualityList<V,R> clone = superClone();
-    clone.mirrorList = getMirrorList().superClone();
+    final MirrorQualityList<V,R> clone = clone$();
+    clone.mirrorList = getMirrorList().clone$();
     ((MirrorQualityList<R,V>)clone.mirrorList).mirrorList = clone;
     return clone;
   }

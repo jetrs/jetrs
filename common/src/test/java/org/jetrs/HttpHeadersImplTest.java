@@ -120,12 +120,10 @@ public class HttpHeadersImplTest extends RuntimeDelegateTest {
       throw new IllegalArgumentException();
 
     assertFalse(headers.remove(name, null));
-    if (headers instanceof HttpHeadersImpl) {
+    if (headers instanceof HttpHeadersImpl)
       assertTrue(headers.remove(name, Collections.singletonList(value.toString())));
-    }
-    else {
+    else
       assertTrue(headers.remove(name, Collections.singletonList(value)));
-    }
   }
 
   private static void assertSize(final int expected, final HttpHeadersMap<?,?> headers) {

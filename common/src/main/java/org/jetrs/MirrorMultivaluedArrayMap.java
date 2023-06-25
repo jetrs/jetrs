@@ -261,7 +261,7 @@ class MirrorMultivaluedArrayMap<K,V,R> extends MirrorMap<K,List<V>,List<R>> impl
   }
 
   @SuppressWarnings("unchecked")
-  private MirrorMultivaluedArrayMap<K,V,R> superClone() {
+  private MirrorMultivaluedArrayMap<K,V,R> clone$() {
     try {
       final MirrorMultivaluedArrayMap<K,V,R> clone = (MirrorMultivaluedArrayMap<K,V,R>)super.clone();
       clone.entrySet = null;
@@ -277,8 +277,8 @@ class MirrorMultivaluedArrayMap<K,V,R> extends MirrorMap<K,List<V>,List<R>> impl
 
   @Override
   public MirrorMultivaluedArrayMap<K,V,R> clone() {
-    final MirrorMultivaluedArrayMap<K,V,R> clone = superClone();
-    clone.mirrorMap = getMirrorMap().superClone();
+    final MirrorMultivaluedArrayMap<K,V,R> clone = clone$();
+    clone.mirrorMap = getMirrorMap().clone$();
     clone.getMirrorMap().mirrorMap = clone;
     return clone;
   }
