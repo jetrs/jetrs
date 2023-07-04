@@ -30,6 +30,23 @@ public final class ClientProperties {
   public static final String CONTENT_LENGTH_BUFFER_CLIENT = "jetrs.client.contentLength.buffer";
 
   /**
+   * Sets the maximum number of connections to open to each destinations.
+   * <p>
+   * <a href="https://www.rfc-editor.org/rfc/rfc2616.html#section-8.1.4">RFC 2616 suggests</a> that 2 connections should be opened
+   * per each destination, but browsers commonly open 6.
+   * <p>
+   * Default: {@value #MAX_CONNECTIONS_PER_DESTINATION_DEFAULT}.
+   * <p>
+   * Configuration property: <tt>{@value}</tt>
+   */
+  public static final String MAX_CONNECTIONS_PER_DESTINATION = "jetrs.client.maxConnectionsPerDestination";
+
+  /**
+   * Default value for {@link #MAX_CONNECTIONS_PER_DESTINATION} property.
+   */
+  public static final int MAX_CONNECTIONS_PER_DESTINATION_DEFAULT = 64;
+
+  /**
    * Follow redirects to the URI declared in 3xx responses.
    * <p>
    * Default: {@value #FOLLOW_REDIRECTS_DEFAULT}.

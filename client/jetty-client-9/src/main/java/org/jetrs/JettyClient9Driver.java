@@ -57,6 +57,7 @@ import org.libj.util.CollectionUtil;
 
 public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
   private static final ThreadLocal<Long> connectTimeoutLocal = new ThreadLocal<>();
+  private static final int maxConnectionsPerDestination = Systems.getProperty(ClientProperties.MAX_CONNECTIONS_PER_DESTINATION, ClientProperties.MAX_CONNECTIONS_PER_DESTINATION_DEFAULT);
 
   @Override
   HttpClient newClient(final SSLContext sslContext) {
@@ -86,8 +87,8 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
       }
     });
 
-    httpClient.setStopTimeout(0); // FIXME: Put in config
-    httpClient.setMaxConnectionsPerDestination(256);  // FIXME: Put into config
+    httpClient.setStopTimeout(0); // NOTE: Deprecated in v10, so set to 0 to disable in v9.
+    httpClient.setMaxConnectionsPerDestination(maxConnectionsPerDestination);
     httpClient.setCookieStore(Jdk8ClientDriver.cookieStore);
     try {
       httpClient.start();

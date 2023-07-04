@@ -65,6 +65,16 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
     public void write(final int b) {
       ++count;
     }
+
+    @Override
+    public void write(final byte[] b) {
+      count += b.length;
+    }
+
+    @Override
+    public void write(final byte[] b, final int off, final int len) {
+      count += len;
+    }
   }
 
   private final ArrayList<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorProviderFactories;
