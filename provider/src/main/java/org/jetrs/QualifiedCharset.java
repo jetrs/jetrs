@@ -104,9 +104,9 @@ class QualifiedCharset extends Charset implements Equatable, Qualified {
     if (obj == this)
       return true;
 
-    if (!(obj instanceof QualifiedCharset))
+    if (!(obj instanceof QualifiedCharset && super.equals(obj)))
       return false;
 
-    return super.equals(obj) && Objects.equals(quality, ((QualifiedCharset)obj).quality);
+    return  Objects.equals(quality, ((QualifiedCharset)obj).quality);
   }
 }

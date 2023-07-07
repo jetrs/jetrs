@@ -27,7 +27,7 @@ final class MessageBodyReaderProviderFactory extends MessageBodyProviderFactory<
   MessageBodyReaderProviderFactory(final Class<MessageBodyReader<?>> clazz, final MessageBodyReader<?> singleton) throws IllegalAccessException, InstantiationException, InvocationTargetException {
     super(clazz, singleton, MessageBodyReader.class);
     if (getType() == null)
-      throw new IllegalStateException("type == null");
+      throw new IllegalStateException("type is null");
   }
 
   @Override

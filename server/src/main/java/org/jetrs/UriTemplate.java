@@ -158,19 +158,19 @@ class UriTemplate implements Comparable<UriTemplate> {
     if (classPath == null && methodPath == null)
       throw new IllegalArgumentException("classPath == null && methodPath == null");
 
-    final StringBuilder builder = new StringBuilder(baseUri);
-    addLeadingRemoveTrailing(builder, classPath);
-    addLeadingRemoveTrailing(builder, methodPath);
-    this.uriTemplate = builder.toString();
+    final StringBuilder b = new StringBuilder(baseUri);
+    addLeadingRemoveTrailing(b, classPath);
+    addLeadingRemoveTrailing(b, methodPath);
+    this.uriTemplate = b.toString();
 
-    builder.setLength(0);
-    builder.append('^');
+    b.setLength(0);
+    b.append('^');
 
-    this.pathSegmentParamNames = parsePathParams(builder, null, uriTemplate, uriTemplate.length(), -1, 0);
+    this.pathSegmentParamNames = parsePathParams(b, null, uriTemplate, uriTemplate.length(), -1, 0);
 
-    builder.append("(/.*)?$");
+    b.append("(/.*)?$");
 
-    this.pattern = Patterns.compile(builder.toString());
+    this.pattern = Patterns.compile(b.toString());
     this.allGroups = allGroups + nonDefaultGroups;
   }
 

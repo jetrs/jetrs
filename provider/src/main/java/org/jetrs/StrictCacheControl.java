@@ -267,12 +267,13 @@ class StrictCacheControl extends CacheControl {
 
   static StrictCacheControl parse(final String value) {
     final String[] directives = Strings.split(value, ',');
-    for (int i = 0, i$ = directives.length; i < i$; ++i) // [A]
+    final int i$ = directives.length;
+    for (int i = 0; i < i$; ++i) // [A]
       directives[i] = directives[i].trim();
 
     boolean valid = false;
     final StrictCacheControl cacheControl = new StrictCacheControl();
-    for (int i = 0, i$ = directives.length; i < i$; ++i) // [A]
+    for (int i = 0; i < i$; ++i) // [A]
       valid |= Directive.parseDirective(cacheControl, directives[i]);
 
     if (!valid)
@@ -338,7 +339,7 @@ class StrictCacheControl extends CacheControl {
   }
 
   @Override
-  public boolean equals(Object obj) {
+  public boolean equals(final Object obj) {
     return super.equals(obj);
   }
 

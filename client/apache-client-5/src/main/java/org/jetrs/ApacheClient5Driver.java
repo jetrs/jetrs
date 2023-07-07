@@ -70,7 +70,7 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
 
   static {
     poolingConnManager.setDefaultMaxPerRoute(Systems.getProperty(ClientProperties.MAX_CONNECTIONS_PER_DESTINATION, ClientProperties.MAX_CONNECTIONS_PER_DESTINATION_DEFAULT));
-    // poolingConnManager.setMaxTotal(1024); // NOTE: Not supporting this option, because it is not supported by all drivers.
+    poolingConnManager.setMaxTotal(Integer.MAX_VALUE); // NOTE: Not supporting this option, because it is not supported by all drivers.
   }
 
   static void addCookie(final Map<String,NewCookie> cookies, final Cookie cookie) {
@@ -84,13 +84,11 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
 
   @Override
   CloseableHttpClient newClient(final SSLContext sslContext) {
-    final CloseableHttpClient httpClient = HttpClients.custom()
+    return HttpClients.custom()
       .setConnectionManager(poolingConnManager)
       .setConnectionManagerShared(true)
       .setDefaultCookieStore(cookieStore)
       .build();
-
-    return httpClient;
   }
 
   private static final String[] excludeHeaders = {HttpHeader.CONTENT_LENGTH.getName(), HttpHeader.TRANSFER_ENCODING.getName()};
