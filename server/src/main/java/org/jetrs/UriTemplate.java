@@ -60,7 +60,7 @@ class UriTemplate implements Comparable<UriTemplate> {
       throw new IllegalArgumentException("Invalid URI template start ('" + ch + "' at index " + i + "): " + uriTemplate);
 
     final StringBuilder b = new StringBuilder();
-    for (char escape;;) { // [N]
+    char escape; do {
       if ((escape = getEscapeChar(ch)) != NO_ESCAPE)
         b.append(ESCAPE).append(escape);
       else
@@ -73,11 +73,12 @@ class UriTemplate implements Comparable<UriTemplate> {
       if (!isValidPathPart(ch))
         throw new IllegalArgumentException("Invalid URI template part ('" + ch + "' at index " + i + ": " + uriTemplate);
     }
+    while (true);
 
     return b.append(DEL).append(i).toString();
   }
 
-  static boolean addLeadingRemoveTrailing(final StringBuilder builder, final Path path) {
+  static boolean addLeadingRemoveTrailing(final StringBuilder b, final Path path) {
     final String value;
     final int i$;
     if (path == null || (i$ = (value = path.value()).length()) == 0)
@@ -93,23 +94,23 @@ class UriTemplate implements Comparable<UriTemplate> {
         if (i$ == 2)
           return false;
 
-        builder.append(value, 0, trailingSlash);
+        b.append(value, 0, trailingSlash);
         return true;
       }
 
-      builder.append('/');
+      b.append('/');
     }
     else if (!leadingSlash) {
-      builder.append('/');
+      b.append('/');
     }
 
-    builder.append(value, 0, trailingSlash);
+    b.append(value, 0, trailingSlash);
     return true;
   }
 
   // FIXME: This does URI-Encode...
   // FIXME: URL-Encode baseUri, but don't double-encode %-encoded values
-  private static int appendLiteral(final StringBuilder builder, final String uriTemplate, final int i$, final int start, final int end) {
+  private static int appendLiteral(final StringBuilder b, final String uriTemplate, final int i$, final int start, final int end) {
     // Append the literal path, first with URI encode, then with regex escape
     int repeatedSlashes = 0;
     char ch, prev = '\0';
@@ -118,26 +119,26 @@ class UriTemplate implements Comparable<UriTemplate> {
       if (ch != '/') {
         final String en = URIComponent.encode(ch);
         if (en.length() > 1) {
-          builder.append(en);
+          b.append(en);
         }
         else {
           if (Patterns.isMetaCharacter(ch))
-            builder.append('\\');
+            b.append('\\');
 
-          builder.append(ch);
+          b.append(ch);
         }
       }
       else if (prev == '/') {
         ++repeatedSlashes;
       }
       else {
-        builder.append('/');
+        b.append('/');
       }
     }
 
-    final int builderLen = builder.length() - 1;
-    if (end == i$ && builder.charAt(builderLen) == '/') {
-      builder.setLength(builderLen);
+    final int builderLen = b.length() - 1;
+    if (end == i$ && b.charAt(builderLen) == '/') {
+      b.setLength(builderLen);
       ++repeatedSlashes;
     }
 
@@ -152,7 +153,8 @@ class UriTemplate implements Comparable<UriTemplate> {
   private int nonDefaultGroups;
 
   UriTemplate(final String baseUri, final Path classPath, final Path methodPath) {
-    if (baseUri.length() > 0 && (!baseUri.startsWith("/") || baseUri.endsWith("/")))
+    final int length = baseUri.length();
+    if (length > 0 && (baseUri.charAt(0) != '/' || baseUri.charAt(length - 1) == '/'))
       throw new IllegalArgumentException("baseUri (" + baseUri + ") be either \"\", or a multi-character string starting with '/' and not ending with '/'");
 
     if (classPath == null && methodPath == null)

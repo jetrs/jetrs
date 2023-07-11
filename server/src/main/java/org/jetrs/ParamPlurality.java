@@ -105,10 +105,11 @@ abstract class ParamPlurality<T> {
           throw new RuntimeException(e);
         }
         catch (final InvocationTargetException e) {
-          if (e.getCause() instanceof RuntimeException)
-            throw (RuntimeException)e.getCause();
+          final Throwable cause = e.getCause();
+          if (cause instanceof RuntimeException)
+            throw (RuntimeException)cause;
 
-          throw new ProcessingException(e.getCause());
+          throw new ProcessingException(cause);
         }
       }
 
@@ -154,8 +155,20 @@ abstract class ParamPlurality<T> {
 
       @Override
       Object getNullValue(final Class<?> rawType) {
-        if (rawType == byte.class)
-          return (byte)0;
+        if (rawType == int.class)
+          return 0;
+
+        if (rawType == long.class)
+          return 0L;
+
+        if (rawType == double.class)
+          return 0d;
+
+        if (rawType == boolean.class)
+          return false;
+
+        if (rawType == float.class)
+          return 0f;
 
         if (rawType == char.class)
           return '\u0000';
@@ -163,20 +176,8 @@ abstract class ParamPlurality<T> {
         if (rawType == short.class)
           return (short)0;
 
-        if (rawType == int.class)
-          return 0;
-
-        if (rawType == long.class)
-          return 0L;
-
-        if (rawType == float.class)
-          return 0f;
-
-        if (rawType == double.class)
-          return 0d;
-
-        if (rawType == boolean.class)
-          return false;
+        if (rawType == byte.class)
+          return (byte)0;
 
         return null;
       }
@@ -193,7 +194,7 @@ abstract class ParamPlurality<T> {
   }
 
   static ParamPlurality<?> fromClass(final Class<?> clazz) {
-    if (Set.class.isAssignableFrom(clazz) || List.class.isAssignableFrom(clazz) || SortedSet.class.isAssignableFrom(clazz))
+    if (List.class.isAssignableFrom(clazz) || Set.class.isAssignableFrom(clazz) || SortedSet.class.isAssignableFrom(clazz))
       return COLLECTION;
 
     if (clazz.isArray())

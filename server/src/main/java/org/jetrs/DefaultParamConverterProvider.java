@@ -847,10 +847,11 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
             throw new RuntimeException(e);
           }
           catch (final InvocationTargetException e) {
-            if (e.getCause() instanceof RuntimeException)
-              throw (RuntimeException)e.getCause();
+            final Throwable cause = e.getCause();
+            if (cause instanceof RuntimeException)
+              throw (RuntimeException)cause;
 
-            throw new ProcessingException(e.getCause());
+            throw new ProcessingException(cause);
           }
         }
       };

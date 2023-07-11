@@ -44,10 +44,11 @@ class ResourceMatches extends ArrayList<ResourceMatch> {
         throw new InternalServerErrorException(e);
       }
       catch (final InvocationTargetException e) {
-        if (e.getCause() instanceof RuntimeException)
-          throw (RuntimeException)e.getCause();
+        final Throwable cause = e.getCause();
+        if (cause instanceof RuntimeException)
+          throw (RuntimeException)cause;
 
-        throw new InternalServerErrorException(e.getCause());
+        throw new InternalServerErrorException(cause);
       }
     }, null) : matchedResources;
   }

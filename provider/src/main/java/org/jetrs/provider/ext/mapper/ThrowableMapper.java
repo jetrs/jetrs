@@ -40,6 +40,9 @@ public class ThrowableMapper<T extends Throwable> implements ExceptionMapper<T> 
   }
 
   protected Response toResponse(final T exception, final Response response) {
+    if (response.hasEntity())
+      return response;
+
     final int status = response.getStatus();
     final StringBuilder builder = new StringBuilder("{\"status\":").append(status);
     if (verbose) {
