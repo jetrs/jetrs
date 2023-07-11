@@ -920,7 +920,7 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext,Ht
       if (logger.isInfoEnabled()) logger.info("Unable to overwrite committed response [" + httpServletResponse.getStatus() + "] -> [" + containerResponseContext.getStatus() + "]: ", t);
     }
     else {
-      containerResponseContext.writeResponse(httpServletResponse, resourceInfo);
+      containerResponseContext.writeResponse(httpServletResponse, resourceInfo, t != null);
     }
   }
 

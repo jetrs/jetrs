@@ -49,7 +49,7 @@ public final class MediaTypes {
   static final ServerMediaType[] WILDCARD_SERVER_TYPE = {ServerMediaType.WILDCARD_TYPE};
   static final MediaType[] WILDCARD_TYPE = {MediaType.WILDCARD_TYPE};
 
-  static final Comparator<MediaType> QUALITY_COMPARATOR = (o1, o2) -> {
+  static final Comparator<MediaType> QUALITY_COMPARATOR = (final MediaType o1, final MediaType o2) -> {
     if (o1 == null)
       return o2 == null ? 0 : 1;
 

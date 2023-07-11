@@ -16,6 +16,7 @@
 
 package org.jetrs;
 
+import java.util.Comparator;
 import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
@@ -23,6 +24,22 @@ import javax.ws.rs.core.MediaType;
 import org.libj.lang.Numbers;
 
 class ServerMediaType extends QualifiedMediaType {
+  static final Comparator<MediaType> SERVER_QUALITY_COMPARATOR = (final MediaType o1, final MediaType o2) -> {
+    Float q1 = getServerQuality(o2);
+    if (q1 == null)
+      q1 = 1f;
+
+    Float q2 = getServerQuality(o1);
+    if (q2 == null)
+      q2 = 1f;
+
+    return Float.compare(q1, q2);
+  };
+
+  static Float getServerQuality(final MediaType mediaType) {
+    return Numbers.parseFloat(mediaType.getParameters().get("qs"));
+  }
+
   /** A {@link ServerMediaType} constant representing wildcard {@value #WILDCARD} media type. */
   static final ServerMediaType WILDCARD_TYPE = new ServerMediaType(MediaType.WILDCARD_TYPE);
 
@@ -85,6 +102,6 @@ class ServerMediaType extends QualifiedMediaType {
 
   @Override
   public Float getQuality() {
-    return Numbers.parseFloat(getParameters().get("qs"));
+    return getServerQuality(this);
   }
 }

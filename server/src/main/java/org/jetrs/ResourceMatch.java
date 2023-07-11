@@ -57,7 +57,7 @@ class ResourceMatch implements Comparable<ResourceMatch> {
 
   private final String uriEncoded;
   private String uriDecoded;
-  private final CompatibleMediaType[] producedMediaTypess;
+  private final CompatibleMediaType[] producedMediaTypes;
   private final String[] pathSegmentParamNames;
   private final MultivaluedArrayMap<String,String> pathParameters;
   private final long[] regionStartEnds;
@@ -68,7 +68,7 @@ class ResourceMatch implements Comparable<ResourceMatch> {
     this.instance = resourceInfo.getSingleton();
 
     this.uriEncoded = assertNotNull(uriEncoded);
-    this.producedMediaTypess = assertNotEmpty(producedMediaTypes);
+    this.producedMediaTypes = assertNotEmpty(producedMediaTypes);
 
     this.pathSegmentParamNames = assertNotNull(pathSegmentParamNames);
     this.regionStartEnds = assertNotNull(regionStartEnds);
@@ -96,7 +96,7 @@ class ResourceMatch implements Comparable<ResourceMatch> {
   }
 
   CompatibleMediaType[] getProducedMediaTypes() {
-    return producedMediaTypess;
+    return producedMediaTypes;
   }
 
   Object getResourceInstance(final ContainerRequestContextImpl requestContext) throws IllegalAccessException, InstantiationException, IOException, InvocationTargetException {
@@ -121,7 +121,7 @@ class ResourceMatch implements Comparable<ResourceMatch> {
     if (c != 0)
       return c;
 
-    return ArrayUtil.compare(producedMediaTypess, o.producedMediaTypess, MediaTypes.QUALITY_COMPARATOR);
+    return ArrayUtil.compare(producedMediaTypes, o.producedMediaTypes, MediaTypes.QUALITY_COMPARATOR);
   }
 
   @Override

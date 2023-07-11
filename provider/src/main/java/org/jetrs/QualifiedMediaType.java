@@ -16,6 +16,7 @@
 
 package org.jetrs;
 
+import java.util.Comparator;
 import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
@@ -23,6 +24,22 @@ import javax.ws.rs.core.MediaType;
 import org.libj.lang.Numbers;
 
 class QualifiedMediaType extends MediaType implements Qualified {
+  static final Comparator<MediaType> QUALITY_COMPARATOR = (final MediaType o1, final MediaType o2) -> {
+    Float q1 = getQuality(o2);
+    if (q1 == null)
+      q1 = 1f;
+
+    Float q2 = getQuality(o1);
+    if (q2 == null)
+      q2 = 1f;
+
+    return Float.compare(q1, q2);
+  };
+
+  static Float getQuality(final MediaType mediaType) {
+    return Numbers.parseFloat(mediaType.getParameters().get("q"));
+  }
+
   /**
    * Creates a new instance of {@link QualifiedMediaType} with the supplied type, subtype and parameters.
    *
@@ -68,6 +85,6 @@ class QualifiedMediaType extends MediaType implements Qualified {
 
   @Override
   public Float getQuality() {
-    return Numbers.parseFloat(getParameters().get("q"));
+    return getQuality(this);
   }
 }
