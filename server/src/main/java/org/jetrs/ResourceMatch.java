@@ -57,18 +57,18 @@ class ResourceMatch implements Comparable<ResourceMatch> {
 
   private final String uriEncoded;
   private String uriDecoded;
-  private final CompatibleMediaType[] producedMediaTypes;
+  private final CompatibleMediaType[] compatibleMediaTypes;
   private final String[] pathSegmentParamNames;
   private final MultivaluedArrayMap<String,String> pathParameters;
   private final long[] regionStartEnds;
 
-  ResourceMatch(final ResourceInfoImpl resourceInfo, final String uriEncoded, final CompatibleMediaType[] producedMediaTypes, final String[] pathSegmentParamNames, final long[] regionStartEnds, final MultivaluedArrayMap<String,String> pathParameters) {
+  ResourceMatch(final ResourceInfoImpl resourceInfo, final String uriEncoded, final CompatibleMediaType[] compatibleMediaTypes, final String[] pathSegmentParamNames, final long[] regionStartEnds, final MultivaluedArrayMap<String,String> pathParameters) {
     this.resourceInfo = resourceInfo;
     this.resourceClass = resourceInfo.getResourceClass();
     this.instance = resourceInfo.getSingleton();
 
     this.uriEncoded = assertNotNull(uriEncoded);
-    this.producedMediaTypes = assertNotEmpty(producedMediaTypes);
+    this.compatibleMediaTypes = assertNotEmpty(compatibleMediaTypes);
 
     this.pathSegmentParamNames = assertNotNull(pathSegmentParamNames);
     this.regionStartEnds = assertNotNull(regionStartEnds);
@@ -95,8 +95,8 @@ class ResourceMatch implements Comparable<ResourceMatch> {
     return uriDecoded == null ? uriDecoded = URLs.decodePath(uriEncoded) : uriDecoded;
   }
 
-  CompatibleMediaType[] getProducedMediaTypes() {
-    return producedMediaTypes;
+  CompatibleMediaType[] getCompatibleMediaTypes() {
+    return compatibleMediaTypes;
   }
 
   Object getResourceInstance(final ContainerRequestContextImpl requestContext) throws IllegalAccessException, InstantiationException, IOException, InvocationTargetException {
@@ -121,7 +121,7 @@ class ResourceMatch implements Comparable<ResourceMatch> {
     if (c != 0)
       return c;
 
-    return ArrayUtil.compare(producedMediaTypes, o.producedMediaTypes, MediaTypes.QUALITY_COMPARATOR);
+    return ArrayUtil.compare(compatibleMediaTypes, o.compatibleMediaTypes, MediaTypes.QUALITY_COMPARATOR);
   }
 
   @Override

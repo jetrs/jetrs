@@ -88,6 +88,9 @@ public class MediaTypesTest {
     MediaType client = MediaTypes.parse("application/*");
     assertEquals(server, MediaTypes.getCompatible(server, client, null));
 
+    client = MediaTypes.parse("application/hal+xml;charset=utf-8;x=3;q=.8");
+    assertEquals(MediaTypes.parse("application/hal+xml;charset=utf-8;q=.8;x=3"), MediaTypes.getCompatible(server, client, null));
+
     client = MediaTypes.parse("application/json");
     assertNull(MediaTypes.getCompatible(server, client, null));
 
@@ -124,5 +127,8 @@ public class MediaTypesTest {
 
     client = MediaTypes.parse("application/hal+xml;charset=utf-8;x=3;q=.8");
     assertEquals(MediaTypes.parse("application/hal+xml;charset=utf-8;q=.8;x=3;y=foo"), MediaTypes.getCompatible(server, client, null));
+
+    assertEquals(MediaTypes.parse("application/vnd.example+json"), MediaTypes.getCompatible(ServerMediaType.valueOf("application/vnd.example+json"), MediaTypes.parse("application/json"), null));
+    assertEquals(MediaTypes.parse("application/vnd.example+json"), MediaTypes.getCompatible(ServerMediaType.valueOf("application/json"), MediaTypes.parse("application/vnd.example+json"), null));
   }
 }

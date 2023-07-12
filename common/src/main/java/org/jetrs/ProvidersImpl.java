@@ -34,25 +34,51 @@ class ProvidersImpl implements Providers {
     this.requestContext = requestContext;
   }
 
-  @SuppressWarnings("unchecked")
-  private <T,M>M getProvider(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final ArrayList<? extends MessageBodyProviderFactory<?>> factories) {
+  private <T>Object getProvider(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final ArrayList<? extends MessageBodyProviderFactory<?>> factories, final boolean asHolder) {
     for (int i = 0, i$ = factories.size(); i < i$; ++i) { // [RA]
       final MessageBodyProviderFactory<?> factory = factories.get(i);
-      if (factory.getCompatibleMediaType(requestContext, type, genericType, annotations, mediaType) != null)
-        return (M)factory.getSingletonOrFromRequestContext(requestContext);
+      final CompatibleMediaType[] compatibleMediaType = factory.getCompatibleMediaType(requestContext, type, genericType, annotations, mediaType);
+      if (compatibleMediaType != null) {
+        final Object provider = factory.getSingletonOrFromRequestContext(requestContext);
+        return asHolder ? new MessageBodyProviderHolder<>(provider, compatibleMediaType) : provider;
+      }
     }
 
     return null;
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public <T>MessageBodyReader<T> getMessageBodyReader(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
-    return getProvider(type, genericType, annotations, mediaType, requestContext.getMessageBodyReaderFactoryList());
+    return (MessageBodyReader<T>)getProvider(type, genericType, annotations, mediaType, requestContext.getMessageBodyReaderFactoryList(), false);
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public <T>MessageBodyWriter<T> getMessageBodyWriter(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
-    return getProvider(type, genericType, annotations, mediaType, requestContext.getMessageBodyWriterFactoryList());
+    return (MessageBodyWriter<T>)getProvider(type, genericType, annotations, mediaType, requestContext.getMessageBodyWriterFactoryList(), false);
+  }
+
+  @SuppressWarnings("unchecked")
+  <T>MessageBodyProviderHolder<T> getMessageBodyReader(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType[] mediaTypes) {
+    for (final MediaType mediaType : mediaTypes) { // [A]
+      final Object provider = getProvider(type, genericType, annotations, mediaType, requestContext.getMessageBodyReaderFactoryList(), true);
+      if (provider != null)
+        return (MessageBodyProviderHolder<T>)provider;
+    }
+
+    return null;
+  }
+
+  @SuppressWarnings("unchecked")
+  <T>MessageBodyProviderHolder<T> getMessageBodyWriter(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType[] mediaTypes) {
+    for (final MediaType mediaType : mediaTypes) { // [A]
+      final Object provider = getProvider(type, genericType, annotations, mediaType, requestContext.getMessageBodyWriterFactoryList(), true);
+      if (provider != null)
+        return (MessageBodyProviderHolder<T>)provider;
+    }
+
+    return null;
   }
 
   @Override

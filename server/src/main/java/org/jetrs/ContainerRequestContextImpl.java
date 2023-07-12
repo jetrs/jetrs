@@ -762,8 +762,8 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext,Ht
         continue;
 
       maybeNotAcceptable = true;
-      final CompatibleMediaType[] producedMediaTypes = resourceInfo.getCompatibleAccept(getAcceptableMediaTypes(), getHeaders().get(ACCEPT_CHARSET));
-      if (producedMediaTypes == null)
+      final CompatibleMediaType[] compatibleMediaTypes = resourceInfo.getCompatibleAccept(getAcceptableMediaTypes(), getHeaders().get(ACCEPT_CHARSET));
+      if (compatibleMediaTypes == null)
         continue;
 
       if (resourceMatches == null)
@@ -783,7 +783,7 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext,Ht
         regionStartEnds[j] = Numbers.Composite.encode(start, end);
       }
 
-      resourceMatches.add(new ResourceMatch(resourceInfo, matcher.group(), producedMediaTypes, pathParamNames, regionStartEnds, pathParameters)); // We only care about the highest quality match of the Accept header
+      resourceMatches.add(new ResourceMatch(resourceInfo, matcher.group(), compatibleMediaTypes, pathParamNames, regionStartEnds, pathParameters)); // We only care about the highest quality match of the Accept header
     }
 
     if (resourceMatches != null) {

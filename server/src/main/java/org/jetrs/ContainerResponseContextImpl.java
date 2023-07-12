@@ -289,14 +289,16 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
   private class BufferedSocketOutputStream extends SafeDirectByteArrayOutputStream {
     private final HttpServletResponse httpServletResponse;
     private final RelegateOutputStream relegateOutputStream;
+    private final MediaType[] compatibleMediaTypes;
     private final MessageBodyWriter<?> messageBodyWriter;
     private final boolean isException;
     private boolean isClosed;
 
-    BufferedSocketOutputStream(final HttpServletResponse httpServletResponse, final RelegateOutputStream relegateOutputStream, final int size, final MessageBodyWriter<?> messageBodyWriter, final boolean isException) {
+    BufferedSocketOutputStream(final HttpServletResponse httpServletResponse, final RelegateOutputStream relegateOutputStream, final int size, final MediaType[] compatibleMediaTypes, final MessageBodyWriter<?> messageBodyWriter, final boolean isException) {
       super(size);
       this.httpServletResponse = httpServletResponse;
       this.relegateOutputStream = relegateOutputStream;
+      this.compatibleMediaTypes = compatibleMediaTypes;
       this.messageBodyWriter = messageBodyWriter;
       this.isException = isException;
     }
@@ -311,7 +313,7 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
       getStringHeaders().add(HttpHeaders.TRANSFER_ENCODING, "chunked");
       httpServletResponse.setBufferSize(chunkSize);
 
-      flushHeaders(httpServletResponse, messageBodyWriter, isException);
+      flushHeaders(httpServletResponse, compatibleMediaTypes, messageBodyWriter, isException);
       final OutputStream socketOutputStream = httpServletResponse.getOutputStream();
       socketOutputStream.write(buf, 0, count);
       socketOutputStream.write(bs, off, len);
@@ -329,7 +331,7 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
 
       getHeaders().putSingle(HttpHeaders.CONTENT_LENGTH, Integer.valueOf(count));
       // httpServletResponse.setBufferSize(Streams.DEFAULT_SOCKET_BUFFER_SIZE); // FIXME: Setting this to a low value significantly reduces performance, so leaving this to the servlet container's default
-      flushHeaders(httpServletResponse, messageBodyWriter, isException);
+      flushHeaders(httpServletResponse, compatibleMediaTypes, messageBodyWriter, isException);
       try (final OutputStream socketOutputStream = httpServletResponse.getOutputStream()) {
         socketOutputStream.write(buf, 0, count);
       }
@@ -353,7 +355,7 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
     if (resourceMatch == null)
       return null;
 
-    final MediaType contentType = resourceMatch.getProducedMediaTypes()[0];
+    final MediaType contentType = resourceMatch.getCompatibleMediaTypes()[0];
     if (contentType.isWildcardSubtype()) {
       if (!contentType.isWildcardType() && !"application".equals(contentType.getType()))
         throw new NotAcceptableException();
@@ -364,20 +366,16 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
     return contentType.getParameters().size() > 0 ? MediaTypes.cloneWithoutParameters(contentType) : contentType;
   }
 
-  private void flushHeaders(final HttpServletResponse httpServletResponse, final MessageBodyWriter<?> messageBodyWriter, final boolean isException) throws IOException {
+  private void flushHeaders(final HttpServletResponse httpServletResponse, final MediaType[] compatibleMediaTypes, final MessageBodyWriter<?> messageBodyWriter, final boolean isException) throws IOException {
     // [JAX-RS 3.5 and 3.8 9]
     if (hasEntity() && getMediaType() == null) {
       MediaType contentType;
-      if (isException) {
+      if (isException)
         contentType = getMediaType(messageBodyWriter);
-      }
-      else {
-        contentType = getMediaType(requestContext.getResourceMatch());
-        if (contentType == null)
-          contentType = getMediaType(messageBodyWriter);
-      }
+      else
+        contentType = compatibleMediaTypes[0];
 
-      if (contentType == null) {
+      if (contentType == null || contentType.isWildcardType()) {
         if (logger.isWarnEnabled()) logger.warn("Content-Type not specified -- setting to " + MediaType.APPLICATION_OCTET_STREAM);
         contentType = MediaType.APPLICATION_OCTET_STREAM_TYPE;
       }
@@ -419,8 +417,10 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
   @SuppressWarnings("rawtypes")
   void writeResponse(final HttpServletResponse httpServletResponse, final ResourceInfoImpl resourceInfo, final boolean isException) throws IOException {
     final Object entity = getEntity();
+    final ResourceMatch resourceMatch = requestContext.getResourceMatch();
+    final MediaType[] compatibleMediaTypes = resourceMatch != null ? resourceMatch.getCompatibleMediaTypes() : MediaTypes.WILDCARD_COMPATIBLE_TYPE;
     if (entity == null) {
-      flushHeaders(httpServletResponse, null, isException);
+      flushHeaders(httpServletResponse, compatibleMediaTypes, null, isException);
       return;
     }
 
@@ -435,10 +435,12 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
       methodAnnotations = null;
     }
 
-    final MediaType mediaType = getMediaType();
-    final MessageBodyWriter messageBodyWriter = requestContext.getProviders().getMessageBodyWriter(getEntityClass(), methodReturnType, methodAnnotations, mediaType != null ? mediaType : MediaType.WILDCARD_TYPE);
-    if (messageBodyWriter == null)
+    final MessageBodyProviderHolder<?> messageBodyProviderHolder = requestContext.getProviders().getMessageBodyWriter(getEntityClass(), methodReturnType, methodAnnotations, compatibleMediaTypes);
+    if (messageBodyProviderHolder == null)
       throw new InternalServerErrorException("MessageBodyWriter not found for " + getEntityClass().getName()); // [JAX-RS 4.2.2 7]
+
+    final MessageBodyWriter messageBodyWriter = (MessageBodyWriter)messageBodyProviderHolder.getProvider();
+    final MediaType[] compatibleMediaTypesWithWriter = messageBodyProviderHolder.getMediaTypes();
 
     // Start WriterInterceptor process chain
     final boolean isHead = HttpMethod.HEAD.equals(requestContext.getMethod());
@@ -482,12 +484,12 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
                 transferEncoding.remove(chunkedIndex);
 
               // httpServletResponse.setBufferSize(Streams.DEFAULT_SOCKET_BUFFER_SIZE); // FIXME: Setting this to a low value significantly reduces performance, so leaving this to the servlet container's default
-              flushHeaders(httpServletResponse, messageBodyWriter, isException);
+              flushHeaders(httpServletResponse, compatibleMediaTypesWithWriter, messageBodyWriter, isException);
               target = httpServletResponse.getOutputStream();
             }
             else if (chunkedIndex >= 0) {
               httpServletResponse.setBufferSize(chunkSize);
-              flushHeaders(httpServletResponse, messageBodyWriter, isException);
+              flushHeaders(httpServletResponse, compatibleMediaTypesWithWriter, messageBodyWriter, isException);
               target = httpServletResponse.getOutputStream();
             }
             else if (bufferSize < chunkSize) { // Let the servlet container try to detect the Content-Length on its own
@@ -495,7 +497,7 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
               target = httpServletResponse.getOutputStream();
             }
             else {
-              target = new BufferedSocketOutputStream(httpServletResponse, relegateOutputStream, bufferSize, messageBodyWriter, isException);
+              target = new BufferedSocketOutputStream(httpServletResponse, relegateOutputStream, bufferSize, compatibleMediaTypesWithWriter, messageBodyWriter, isException);
             }
           }
 
@@ -530,7 +532,7 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
           getHeaders().putSingle(HttpHeaders.CONTENT_LENGTH, Integer.valueOf(contentLength));
       }
 
-      flushHeaders(httpServletResponse, messageBodyWriter, isException);
+      flushHeaders(httpServletResponse, compatibleMediaTypesWithWriter, messageBodyWriter, isException);
     }
   }
 

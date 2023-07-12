@@ -154,7 +154,7 @@ abstract class RequestContext<R extends RuntimeContext,P> extends InterceptorCon
     return runtimeContext.getExceptionMapperProviderFactories();
   }
 
-  final Providers getProviders() {
+  final ProvidersImpl getProviders() {
     return providers;
   }
 

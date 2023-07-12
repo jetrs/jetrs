@@ -35,6 +35,8 @@ final class MessageBodyWriterProviderFactory extends MessageBodyProviderFactory<
       return null;
 
     final MessageBodyWriter<?> instance = getSingletonOrFromRequestContext(requestContext);
+    if (instance.getClass().getName().equals("org.jsonx.JxObjectProvider"))
+      super.getCompatibleMediaType(requestContext, type, genericType, annotations, mediaType);
     return instance.isWriteable(type, genericType, annotations, mediaType) ? mediaTypes : null;
   }
 }
