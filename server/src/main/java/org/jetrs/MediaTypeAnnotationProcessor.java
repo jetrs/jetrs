@@ -90,11 +90,11 @@ class MediaTypeAnnotationProcessor<T extends Annotation> {
     this.mediaTypes = mediaTypes;
   }
 
-  CompatibleMediaType[] getCompatibleMediaType(final List<MediaType> mediaTypes, final List<String> acceptCharsets) {
+  MediaType[] getCompatibleMediaType(final List<MediaType> mediaTypes, final List<String> acceptCharsets) {
     return MediaTypes.getCompatible(this.mediaTypes, mediaTypes, acceptCharsets);
   }
 
-  CompatibleMediaType[] getCompatibleMediaType(final MediaType mediaType, final List<String> acceptCharsets) {
+  MediaType[] getCompatibleMediaType(final MediaType mediaType, final List<String> acceptCharsets) {
     return MediaTypes.getCompatible(this.mediaTypes, mediaType, acceptCharsets);
   }
 

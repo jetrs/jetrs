@@ -38,8 +38,8 @@ import org.jetrs.MessageBodyProvider;
  * JAX-RS 2.1 Section 4.2.4
  */
 @Singleton
-@Consumes({MediaType.TEXT_XML, MediaType.APPLICATION_XML, "application/*+xml"})
-@Produces({MediaType.TEXT_XML, MediaType.APPLICATION_XML, "application/*+xml"})
+@Consumes({"application/*+xml", "text/xml"})
+@Produces({"application/*+xml", "text/xml"})
 public class SourceProvider extends MessageBodyProvider<Source> {
   private static final TransformerFactory transformerFactory = TransformerFactory.newInstance();
 

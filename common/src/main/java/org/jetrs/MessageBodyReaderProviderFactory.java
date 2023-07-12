@@ -31,12 +31,12 @@ final class MessageBodyReaderProviderFactory extends MessageBodyProviderFactory<
   }
 
   @Override
-  public CompatibleMediaType[] getCompatibleMediaType(final RequestContext<?,?> requestContext, final Class<?> type, final Type genericType, final Annotation[] annotations, MediaType mediaType) {
+  public MediaType[] getCompatibleMediaType(final RequestContext<?,?> requestContext, final Class<?> type, final Type genericType, final Annotation[] annotations, MediaType mediaType) {
     // SPEC: 4.2.1 Message Body Reader
     if (mediaType == null)
       mediaType = MediaType.APPLICATION_OCTET_STREAM_TYPE;
 
-    final CompatibleMediaType[] mediaTypes = super.getCompatibleMediaType(requestContext, type, genericType, annotations, mediaType);
+    final MediaType[] mediaTypes = super.getCompatibleMediaType(requestContext, type, genericType, annotations, mediaType);
     if (mediaTypes == null)
       return null;
 

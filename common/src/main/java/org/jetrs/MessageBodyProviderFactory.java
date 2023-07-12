@@ -45,7 +45,7 @@ abstract class MessageBodyProviderFactory<T> extends TypeProviderFactory<T> {
    *         exists.
    * @throws NullPointerException If {@code mediaType} is null.
    */
-  CompatibleMediaType[] getCompatibleMediaType(final RequestContext<?,?> requestContext, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
+  MediaType[] getCompatibleMediaType(final RequestContext<?,?> requestContext, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
     return MediaTypes.getCompatible(allowedTypes, mediaType, null);
   }
 }

@@ -40,8 +40,8 @@ import org.libj.util.function.Throwing;
 /**
  * JAX-RS 2.1 Section 4.2.4
  */
-@Consumes
-@Produces
+@Consumes(MediaType.WILDCARD)
+@Produces(MediaType.WILDCARD)
 public class FileProvider extends MessageBodyProvider<File> {
   static long writeTo(final Object range, final File file, final OutputStream out, final BiObjBiLongConsumer<? super RandomAccessFile,? super OutputStream> consumer) throws IOException {
     final String rangeString;

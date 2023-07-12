@@ -762,7 +762,7 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext,Ht
         continue;
 
       maybeNotAcceptable = true;
-      final CompatibleMediaType[] compatibleMediaTypes = resourceInfo.getCompatibleAccept(getAcceptableMediaTypes(), getHeaders().get(ACCEPT_CHARSET));
+      final MediaType[] compatibleMediaTypes = resourceInfo.getCompatibleAccept(getAcceptableMediaTypes(), getHeaders().get(ACCEPT_CHARSET));
       if (compatibleMediaTypes == null)
         continue;
 

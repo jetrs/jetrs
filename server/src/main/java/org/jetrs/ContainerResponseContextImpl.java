@@ -418,7 +418,7 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
   void writeResponse(final HttpServletResponse httpServletResponse, final ResourceInfoImpl resourceInfo, final boolean isException) throws IOException {
     final Object entity = getEntity();
     final ResourceMatch resourceMatch = requestContext.getResourceMatch();
-    final MediaType[] compatibleMediaTypes = resourceMatch != null ? resourceMatch.getCompatibleMediaTypes() : MediaTypes.WILDCARD_COMPATIBLE_TYPE;
+    final MediaType[] compatibleMediaTypes = resourceMatch != null ? resourceMatch.getCompatibleMediaTypes() : MediaTypes.WILDCARD_TYPE;
     if (entity == null) {
       flushHeaders(httpServletResponse, compatibleMediaTypes, null, isException);
       return;

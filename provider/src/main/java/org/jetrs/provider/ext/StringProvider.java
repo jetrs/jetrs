@@ -43,8 +43,8 @@ import org.libj.lang.Systems;
  * JAX-RS 2.1 Section 4.2.4
  */
 @Singleton
-@Consumes
-@Produces
+@Consumes(MediaType.WILDCARD)
+@Produces(MediaType.WILDCARD)
 public class StringProvider extends MessageBodyProvider<String> {
   private static final int bufferSize = Systems.getProperty(CommonProperties.CONTENT_LENGTH_BUFFER, CommonProperties.CONTENT_LENGTH_BUFFER_DEFAULT);
 

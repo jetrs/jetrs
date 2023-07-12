@@ -37,8 +37,8 @@ import org.libj.io.Streams;
  * JAX-RS 2.1 Section 4.2.4
  */
 @Singleton
-@Consumes
-@Produces
+@Consumes(MediaType.WILDCARD)
+@Produces(MediaType.WILDCARD)
 public class BytesProvider extends MessageBodyProvider<byte[]> {
   @Override
   public boolean isReadable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {

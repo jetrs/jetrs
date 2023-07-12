@@ -46,8 +46,8 @@ import org.libj.lang.ObjectUtil;
  * JAX-RS 2.1 Section 4.2.4
  */
 @Singleton
-@Consumes
-@Produces
+@Consumes(MediaType.WILDCARD)
+@Produces(MediaType.WILDCARD)
 public class DataSourceProvider extends MessageBodyProvider<DataSource> {
   private static final int DEFAULT_BUFFER_SIZE = 65536;
 

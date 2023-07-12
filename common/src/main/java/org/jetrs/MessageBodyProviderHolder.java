@@ -16,11 +16,13 @@
 
 package org.jetrs;
 
+import javax.ws.rs.core.MediaType;
+
 class MessageBodyProviderHolder<P> {
   private final P provider;
-  private final CompatibleMediaType[] mediaTypes;
+  private final MediaType[] mediaTypes;
 
-  MessageBodyProviderHolder(final P provider, final CompatibleMediaType[] mediaTypes) {
+  MessageBodyProviderHolder(final P provider, final MediaType[] mediaTypes) {
     this.provider = provider;
     this.mediaTypes = mediaTypes;
   }
@@ -29,7 +31,7 @@ class MessageBodyProviderHolder<P> {
     return provider;
   }
 
-  CompatibleMediaType[] getMediaTypes() {
+  MediaType[] getMediaTypes() {
     return mediaTypes;
   }
 }

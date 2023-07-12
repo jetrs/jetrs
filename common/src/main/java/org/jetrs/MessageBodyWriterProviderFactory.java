@@ -29,14 +29,12 @@ final class MessageBodyWriterProviderFactory extends MessageBodyProviderFactory<
   }
 
   @Override
-  public CompatibleMediaType[] getCompatibleMediaType(final RequestContext<?,?> requestContext, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
-    final CompatibleMediaType[] mediaTypes = super.getCompatibleMediaType(requestContext, type, genericType, annotations, mediaType);
+  public MediaType[] getCompatibleMediaType(final RequestContext<?,?> requestContext, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
+    final MediaType[] mediaTypes = super.getCompatibleMediaType(requestContext, type, genericType, annotations, mediaType);
     if (mediaTypes == null)
       return null;
 
     final MessageBodyWriter<?> instance = getSingletonOrFromRequestContext(requestContext);
-    if (instance.getClass().getName().equals("org.jsonx.JxObjectProvider"))
-      super.getCompatibleMediaType(requestContext, type, genericType, annotations, mediaType);
     return instance.isWriteable(type, genericType, annotations, mediaType) ? mediaTypes : null;
   }
 }

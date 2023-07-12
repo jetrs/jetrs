@@ -23,6 +23,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Comparator;
 
 import javax.servlet.ServletException;
+import javax.ws.rs.core.MediaType;
 
 import org.libj.net.URLs;
 import org.libj.util.ArrayUtil;
@@ -57,12 +58,12 @@ class ResourceMatch implements Comparable<ResourceMatch> {
 
   private final String uriEncoded;
   private String uriDecoded;
-  private final CompatibleMediaType[] compatibleMediaTypes;
+  private final MediaType[] compatibleMediaTypes;
   private final String[] pathSegmentParamNames;
   private final MultivaluedArrayMap<String,String> pathParameters;
   private final long[] regionStartEnds;
 
-  ResourceMatch(final ResourceInfoImpl resourceInfo, final String uriEncoded, final CompatibleMediaType[] compatibleMediaTypes, final String[] pathSegmentParamNames, final long[] regionStartEnds, final MultivaluedArrayMap<String,String> pathParameters) {
+  ResourceMatch(final ResourceInfoImpl resourceInfo, final String uriEncoded, final MediaType[] compatibleMediaTypes, final String[] pathSegmentParamNames, final long[] regionStartEnds, final MultivaluedArrayMap<String,String> pathParameters) {
     this.resourceInfo = resourceInfo;
     this.resourceClass = resourceInfo.getResourceClass();
     this.instance = resourceInfo.getSingleton();
@@ -95,7 +96,7 @@ class ResourceMatch implements Comparable<ResourceMatch> {
     return uriDecoded == null ? uriDecoded = URLs.decodePath(uriEncoded) : uriDecoded;
   }
 
-  CompatibleMediaType[] getCompatibleMediaTypes() {
+  MediaType[] getCompatibleMediaTypes() {
     return compatibleMediaTypes;
   }
 

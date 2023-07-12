@@ -33,7 +33,7 @@ import javax.ws.rs.ext.MessageBodyWriter;
  * JAX-RS 2.1 Section 4.2.4
  */
 @Singleton
-@Produces
+@Produces(MediaType.WILDCARD)
 public class StreamingOutputProvider implements MessageBodyWriter<StreamingOutput> {
   @Override
   public boolean isWriteable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {

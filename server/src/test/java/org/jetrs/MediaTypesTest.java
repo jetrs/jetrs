@@ -71,25 +71,28 @@ public class MediaTypesTest {
     final MediaType ws2 = new MediaType("*", "specific");
     final MediaType sw2 = new MediaType("specific", "*");
 
-    assertEquals(new CompatibleMediaType("*", "*", 0), MediaTypes.getCompatible(ww1, ww2, null));
-    assertEquals(new CompatibleMediaType("*", "specific", 1), MediaTypes.getCompatible(ww1, ws2, null));
-    assertEquals(new CompatibleMediaType("specific", "*", 1), MediaTypes.getCompatible(ww1, sw2, null));
-    assertEquals(new CompatibleMediaType("*", "specific", 1), MediaTypes.getCompatible(ws1, ww2, null));
-    assertEquals(new CompatibleMediaType("*", "specific", 0), MediaTypes.getCompatible(ws1, ws2, null));
-    assertEquals(new CompatibleMediaType("specific", "specific", 2), MediaTypes.getCompatible(ws1, sw2, null));
-    assertEquals(new CompatibleMediaType("specific", "specific", 2), MediaTypes.getCompatible(sw1, ws2, null));
-    assertEquals(new CompatibleMediaType("specific", "*", 0), MediaTypes.getCompatible(sw1, sw2, null));
-    assertEquals(new CompatibleMediaType("specific", "*", 1), MediaTypes.getCompatible(sw1, ww2, null));
+    assertEquals(new MediaType("*", "*"), MediaTypes.getCompatible(ww1, ww2, null));
+    assertEquals(new MediaType("*", "specific"), MediaTypes.getCompatible(ww1, ws2, null));
+    assertEquals(new MediaType("specific", "*"), MediaTypes.getCompatible(ww1, sw2, null));
+    assertEquals(new MediaType("*", "specific"), MediaTypes.getCompatible(ws1, ww2, null));
+    assertEquals(new MediaType("*", "specific"), MediaTypes.getCompatible(ws1, ws2, null));
+    assertEquals(new MediaType("specific", "specific"), MediaTypes.getCompatible(ws1, sw2, null));
+    assertEquals(new MediaType("specific", "specific"), MediaTypes.getCompatible(sw1, ws2, null));
+    assertEquals(new MediaType("specific", "*"), MediaTypes.getCompatible(sw1, sw2, null));
+    assertEquals(new MediaType("specific", "*"), MediaTypes.getCompatible(sw1, ww2, null));
   }
 
   @Test
   public void testCompatible() {
+    assertEquals(MediaTypes.parse("application/vnd.example+json"), MediaTypes.getCompatible(ServerMediaType.valueOf("application/vnd.example+json"), MediaTypes.parse("application/*+json"), null));
+    assertEquals(MediaTypes.parse("application/vnd.example+json"), MediaTypes.getCompatible(ServerMediaType.valueOf("application/*+json"), MediaTypes.parse("application/vnd.example+json"), null));
+
     ServerMediaType server = ServerMediaType.valueOf("application/xml");
     MediaType client = MediaTypes.parse("application/*");
     assertEquals(server, MediaTypes.getCompatible(server, client, null));
 
-    client = MediaTypes.parse("application/hal+xml;charset=utf-8;x=3;q=.8");
-    assertEquals(MediaTypes.parse("application/hal+xml;charset=utf-8;q=.8;x=3"), MediaTypes.getCompatible(server, client, null));
+    client = MediaTypes.parse("application/xml;charset=utf-8;x=3;q=.8");
+    assertEquals(MediaTypes.parse("application/xml;charset=utf-8;q=.8;x=3"), MediaTypes.getCompatible(server, client, null));
 
     client = MediaTypes.parse("application/json");
     assertNull(MediaTypes.getCompatible(server, client, null));
@@ -127,8 +130,5 @@ public class MediaTypesTest {
 
     client = MediaTypes.parse("application/hal+xml;charset=utf-8;x=3;q=.8");
     assertEquals(MediaTypes.parse("application/hal+xml;charset=utf-8;q=.8;x=3;y=foo"), MediaTypes.getCompatible(server, client, null));
-
-    assertEquals(MediaTypes.parse("application/vnd.example+json"), MediaTypes.getCompatible(ServerMediaType.valueOf("application/vnd.example+json"), MediaTypes.parse("application/json"), null));
-    assertEquals(MediaTypes.parse("application/vnd.example+json"), MediaTypes.getCompatible(ServerMediaType.valueOf("application/json"), MediaTypes.parse("application/vnd.example+json"), null));
   }
 }

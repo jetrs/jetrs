@@ -45,7 +45,6 @@ import org.libj.util.CollectionUtil;
  */
 public final class MediaTypes {
   static final ServerMediaType[] OCTET_SERVER_TYPE = {ServerMediaType.APPLICATION_OCTET_STREAM_TYPE};
-  static final CompatibleMediaType[] WILDCARD_COMPATIBLE_TYPE = {CompatibleMediaType.WILDCARD_TYPE};
   static final ServerMediaType[] WILDCARD_SERVER_TYPE = {ServerMediaType.WILDCARD_TYPE};
   static final MediaType[] WILDCARD_TYPE = {MediaType.WILDCARD_TYPE};
 
@@ -127,7 +126,7 @@ public final class MediaTypes {
   }
 
   /**
-   * Returns an array of {@link CompatibleMediaType}s by evaluating the provided {@link ServerMediaType}s, {@link MediaType}s and
+   * Returns an array of {@link MediaType}s by evaluating the provided {@link ServerMediaType}s, {@link MediaType}s and
    * "Accept-Charset" header values for compatibility.
    *
    * @implNote The "Accept-Charset" header values are only considered if a {@code charset} parameter is not present on the provided
@@ -135,38 +134,38 @@ public final class MediaTypes {
    * @param serverTypes The {@link ServerMediaType}s sorted on the "qs" parameter in descending order.
    * @param clientTypes The client {@link MediaType}s sorted on the "q" parameter in descending order.
    * @param acceptCharsets Value of "Accept-Charsets" header, or {@code null} if no such header was provided.
-   * @return An array of {@link CompatibleMediaType}s by evaluating the provided {@link ServerMediaType}s, {@link MediaType}s and
+   * @return An array of {@link MediaType}s by evaluating the provided {@link ServerMediaType}s, {@link MediaType}s and
    *         "Accept-Charset" header values for compatibility.
-   * @throws NullPointerException If {@code serverTypes}, any member of {@code serverTypes}, {@code clientTypes}, or any member
-   *           of {@code clientTypes} is null.
+   * @throws NullPointerException If {@code serverTypes}, any member of {@code serverTypes}, {@code clientTypes}, or any member of
+   *           {@code clientTypes} is null.
    */
-  static CompatibleMediaType[] getCompatible(final ServerMediaType[] serverTypes, final MediaType[] clientTypes, final List<String> acceptCharsets) {
-    final CompatibleMediaType[] mediaTypes = getCompatible(serverTypes, clientTypes, acceptCharsets, 0, 0, 0);
+  static MediaType[] getCompatible(final ServerMediaType[] serverTypes, final MediaType[] clientTypes, final List<String> acceptCharsets) {
+    final MediaType[] mediaTypes = getCompatible(serverTypes, clientTypes, acceptCharsets, 0, 0, 0);
     Arrays.sort(mediaTypes, QUALITY_COMPARATOR);
     return mediaTypes;
   }
 
-  private static CompatibleMediaType[] getCompatible(final ServerMediaType[] serverTypes, final MediaType[] clientTypes, final List<String> acceptCharsets, int index1, final int index2, final int depth) {
+  private static MediaType[] getCompatible(final ServerMediaType[] serverTypes, final MediaType[] clientTypes, final List<String> acceptCharsets, int index1, final int index2, final int depth) {
     if (index2 == clientTypes.length) {
       if (++index1 == serverTypes.length)
-        return depth == 0 ? WILDCARD_COMPATIBLE_TYPE : new CompatibleMediaType[depth];
+        return depth == 0 ? WILDCARD_TYPE : new MediaType[depth];
 
       return getCompatible(serverTypes, clientTypes, acceptCharsets, index1, 0, depth);
     }
 
     final ServerMediaType serverType = serverTypes[index1];
     final MediaType clientType = clientTypes[index2];
-    final CompatibleMediaType compatibleType = getCompatible(serverType, clientType, acceptCharsets);
+    final MediaType compatibleType = getCompatible(serverType, clientType, acceptCharsets);
     if (compatibleType == null)
       return getCompatible(serverTypes, clientTypes, acceptCharsets, index1, index2 + 1, depth);
 
-    final CompatibleMediaType[] compatibleTypes = getCompatible(serverTypes, clientTypes, acceptCharsets, index1, index2 + 1, depth + 1);
+    final MediaType[] compatibleTypes = getCompatible(serverTypes, clientTypes, acceptCharsets, index1, index2 + 1, depth + 1);
     compatibleTypes[depth] = compatibleType;
     return compatibleTypes;
   }
 
   /**
-   * Returns an array of {@link CompatibleMediaType}s by evaluating the provided {@link ServerMediaType}s, {@link MediaType}s and
+   * Returns an array of {@link MediaType}s by evaluating the provided {@link ServerMediaType}s, {@link MediaType}s and
    * "Accept-Charset" header values for compatibility.
    *
    * @implNote The "Accept-Charset" header values are only considered if a {@code charset} parameter is not present on the provided
@@ -174,38 +173,38 @@ public final class MediaTypes {
    * @param serverTypes The {@link ServerMediaType}s sorted on the "qs" parameter in descending order.
    * @param clientTypes The client {@link MediaType}s sorted on the "q" parameter in descending order.
    * @param acceptCharsets Value of "Accept-Charsets" header, or {@code null} if no such header was provided.
-   * @return An array of {@link CompatibleMediaType}s by evaluating the provided {@link ServerMediaType}s, {@link MediaType}s and
+   * @return An array of {@link MediaType}s by evaluating the provided {@link ServerMediaType}s, {@link MediaType}s and
    *         "Accept-Charset" header values for compatibility.
-   * @throws NullPointerException If {@code serverTypes}, any member of {@code serverTypes}, {@code clientTypes}, or any member
-   *           of {@code clientTypes} is null.
+   * @throws NullPointerException If {@code serverTypes}, any member of {@code serverTypes}, {@code clientTypes}, or any member of
+   *           {@code clientTypes} is null.
    */
-  static CompatibleMediaType[] getCompatible(final ServerMediaType[] serverTypes, final List<MediaType> clientTypes, final List<String> acceptCharsets) {
-    final CompatibleMediaType[] mediaTypes = getCompatible(serverTypes, clientTypes, acceptCharsets, 0, 0, 0);
+  static MediaType[] getCompatible(final ServerMediaType[] serverTypes, final List<MediaType> clientTypes, final List<String> acceptCharsets) {
+    final MediaType[] mediaTypes = getCompatible(serverTypes, clientTypes, acceptCharsets, 0, 0, 0);
     Arrays.sort(mediaTypes, QUALITY_COMPARATOR);
     return mediaTypes;
   }
 
-  private static CompatibleMediaType[] getCompatible(final ServerMediaType[] serverTypes, final List<MediaType> clientTypes, final List<String> acceptCharsets, int index1, final int index2, final int depth) {
+  private static MediaType[] getCompatible(final ServerMediaType[] serverTypes, final List<MediaType> clientTypes, final List<String> acceptCharsets, int index1, final int index2, final int depth) {
     if (index2 == clientTypes.size()) {
       if (++index1 == serverTypes.length)
-        return depth == 0 ? WILDCARD_COMPATIBLE_TYPE : new CompatibleMediaType[depth];
+        return depth == 0 ? WILDCARD_TYPE : new MediaType[depth];
 
       return getCompatible(serverTypes, clientTypes, acceptCharsets, index1, 0, depth);
     }
 
     final ServerMediaType serverType = serverTypes[index1];
     final MediaType clientType = clientTypes.get(index2);
-    final CompatibleMediaType compatibleType = getCompatible(serverType, clientType, acceptCharsets);
+    final MediaType compatibleType = getCompatible(serverType, clientType, acceptCharsets);
     if (compatibleType == null)
       return getCompatible(serverTypes, clientTypes, acceptCharsets, index1, index2 + 1, depth);
 
-    final CompatibleMediaType[] compatibleTypes = getCompatible(serverTypes, clientTypes, acceptCharsets, index1, index2 + 1, depth + 1);
+    final MediaType[] compatibleTypes = getCompatible(serverTypes, clientTypes, acceptCharsets, index1, index2 + 1, depth + 1);
     compatibleTypes[depth] = compatibleType;
     return compatibleTypes;
   }
 
   /**
-   * Returns an array of {@link CompatibleMediaType}s by evaluating the provided {@link ServerMediaType}s, {@link MediaType} and
+   * Returns an array of {@link MediaType}s by evaluating the provided {@link ServerMediaType}s, {@link MediaType} and
    * "Accept-Charset" header values for compatibility.
    *
    * @implNote The "Accept-Charset" header values are only considered if a {@code charset} parameter is not present on the provided
@@ -213,32 +212,32 @@ public final class MediaTypes {
    * @param serverTypes The {@link ServerMediaType}s sorted on the "qs" parameter in descending order.
    * @param clientType The client {@link MediaType}.
    * @param acceptCharsets Value of "Accept-Charsets" header, or {@code null} if no such header was provided.
-   * @return An array of {@link CompatibleMediaType}s by evaluating the provided {@link ServerMediaType}s, {@link MediaType} and
+   * @return An array of {@link MediaType}s by evaluating the provided {@link ServerMediaType}s, {@link MediaType} and
    *         "Accept-Charset" header values for compatibility.
    * @throws NullPointerException If {@code serverTypes}, any member of {@code serverTypes}, or {@code clientType} is null.
    */
-  static CompatibleMediaType[] getCompatible(final ServerMediaType[] serverTypes, final MediaType clientType, final List<String> acceptCharsets) {
-    final CompatibleMediaType[] mediaTypes = getCompatible(serverTypes, clientType, acceptCharsets, serverTypes.length, 0, 0);
+  static MediaType[] getCompatible(final ServerMediaType[] serverTypes, final MediaType clientType, final List<String> acceptCharsets) {
+    final MediaType[] mediaTypes = getCompatible(serverTypes, clientType, acceptCharsets, serverTypes.length, 0, 0);
     Arrays.sort(mediaTypes, QUALITY_COMPARATOR);
     return mediaTypes;
   }
 
-  private static CompatibleMediaType[] getCompatible(final ServerMediaType[] serverTypes, final MediaType clientType, final List<String> acceptCharsets, final int length, final int index, final int depth) {
+  private static MediaType[] getCompatible(final ServerMediaType[] serverTypes, final MediaType clientType, final List<String> acceptCharsets, final int length, final int index, final int depth) {
     if (index == length)
-      return depth == 0 ? WILDCARD_COMPATIBLE_TYPE : new CompatibleMediaType[depth];
+      return depth == 0 ? WILDCARD_TYPE : new MediaType[depth];
 
     final ServerMediaType serverType = serverTypes[index];
-    final CompatibleMediaType compatibleType = getCompatible(serverType, clientType, acceptCharsets);
+    final MediaType compatibleType = getCompatible(serverType, clientType, acceptCharsets);
     if (compatibleType == null)
       return getCompatible(serverTypes, clientType, acceptCharsets, length, index + 1, depth);
 
-    final CompatibleMediaType[] compatibleTypes = getCompatible(serverTypes, clientType, acceptCharsets, length, index + 1, depth + 1);
+    final MediaType[] compatibleTypes = getCompatible(serverTypes, clientType, acceptCharsets, length, index + 1, depth + 1);
     compatibleTypes[depth] = compatibleType;
     return compatibleTypes;
   }
 
   /**
-   * Returns an array of {@link CompatibleMediaType}s by evaluating the provided {@link ServerMediaType}s, {@link MediaType} and
+   * Returns an array of {@link MediaType}s by evaluating the provided {@link ServerMediaType}s, {@link MediaType} and
    * "Accept-Charset" header values for compatibility.
    *
    * @implNote The "Accept-Charset" header values are only considered if a {@code charset} parameter is not present on the provided
@@ -246,26 +245,26 @@ public final class MediaTypes {
    * @param serverTypes The {@link ServerMediaType}s sorted on the "qs" parameter in descending order.
    * @param clientType The client {@link MediaType}.
    * @param acceptCharsets Value of "Accept-Charsets" header, or {@code null} if no such header was provided.
-   * @return An array of {@link CompatibleMediaType}s by evaluating the provided {@link ServerMediaType}s, {@link MediaType} and
+   * @return An array of {@link MediaType}s by evaluating the provided {@link ServerMediaType}s, {@link MediaType} and
    *         "Accept-Charset" header values for compatibility.
    * @throws NullPointerException If {@code serverTypes}, any member of {@code serverTypes}, or {@code clientType} is null.
    */
-  static CompatibleMediaType[] getCompatible(final List<ServerMediaType> serverTypes, final MediaType clientType, final List<String> acceptCharsets) {
-    final CompatibleMediaType[] mediaTypes = getCompatible(serverTypes, clientType, acceptCharsets, serverTypes.size(), 0, 0);
+  static MediaType[] getCompatible(final List<ServerMediaType> serverTypes, final MediaType clientType, final List<String> acceptCharsets) {
+    final MediaType[] mediaTypes = getCompatible(serverTypes, clientType, acceptCharsets, serverTypes.size(), 0, 0);
     Arrays.sort(mediaTypes, QUALITY_COMPARATOR);
     return mediaTypes;
   }
 
-  private static CompatibleMediaType[] getCompatible(final List<ServerMediaType> serverTypes, final MediaType clientType, final List<String> acceptCharsets, final int length, final int index, final int depth) {
+  private static MediaType[] getCompatible(final List<ServerMediaType> serverTypes, final MediaType clientType, final List<String> acceptCharsets, final int length, final int index, final int depth) {
     if (index == length)
-      return depth == 0 ? WILDCARD_COMPATIBLE_TYPE : new CompatibleMediaType[depth];
+      return depth == 0 ? WILDCARD_TYPE : new MediaType[depth];
 
     final ServerMediaType serverType = serverTypes.get(index);
-    final CompatibleMediaType compatibleType = getCompatible(serverType, clientType, acceptCharsets);
+    final MediaType compatibleType = getCompatible(serverType, clientType, acceptCharsets);
     if (compatibleType == null)
       return getCompatible(serverTypes, clientType, acceptCharsets, length, index + 1, depth);
 
-    final CompatibleMediaType[] compatibleTypes = getCompatible(serverTypes, clientType, acceptCharsets, length, index + 1, depth + 1);
+    final MediaType[] compatibleTypes = getCompatible(serverTypes, clientType, acceptCharsets, length, index + 1, depth + 1);
     compatibleTypes[depth] = compatibleType;
     return compatibleTypes;
   }
@@ -275,8 +274,11 @@ public final class MediaTypes {
       return subType1;
 
     final int p1 = subType1.indexOf('+');
+    if (p1 < 1)
+      return null;
+
     final int p2 = subType2.indexOf('+');
-    if (p1 < 1 && p2 < 1)
+    if (p2 < 1)
       return null;
 
     if (p1 == 1 && subType1.charAt(0) == '*')
@@ -285,29 +287,23 @@ public final class MediaTypes {
     if (p2 == 1 && subType2.charAt(0) == '*')
       return subType1;
 
-    if (p1 > 0 && subType2.equals(subType1.substring(p1 + 1)))
-      return subType1;
-
-    if (p2 > 0 && subType1.equals(subType2.substring(p2 + 1)))
-      return subType2;
-
     return null;
   }
 
   /**
-   * Returns a {@link CompatibleMediaType} by evaluating the provided {@link ServerMediaType}, {@link MediaType} and
-   * "Accept-Charset" header values for compatibility, or {@code null} if the arguments are not compatible.
+   * Returns a {@link MediaType} by evaluating the provided {@link ServerMediaType}, {@link MediaType} and "Accept-Charset" header
+   * values for compatibility, or {@code null} if the arguments are not compatible.
    *
    * @implNote The "Accept-Charset" header values are only considered if a {@code charset} parameter is not present on the provided
    *           {@link ServerMediaType}.
    * @param serverType The {@link ServerMediaType}.
    * @param clientType The client {@link MediaType}.
    * @param acceptCharsets Value of "Accept-Charsets" header, or {@code null} if no such header was provided.
-   * @return A {@link CompatibleMediaType} by evaluating the provided {@link ServerMediaType}, {@link MediaType} and
-   *         "Accept-Charset" header values for compatibility, or {@code null} if the arguments are not compatible.
+   * @return A {@link MediaType} by evaluating the provided {@link ServerMediaType}, {@link MediaType} and "Accept-Charset" header
+   *         values for compatibility, or {@code null} if the arguments are not compatible.
    * @throws NullPointerException If {@code serverType} or {@code clientType} is null.
    */
-  static CompatibleMediaType getCompatible(final ServerMediaType serverType, final MediaType clientType, final List<String> acceptCharsets) {
+  static MediaType getCompatible(final ServerMediaType serverType, final MediaType clientType, final List<String> acceptCharsets) {
     if (serverType.isWildcardType()) {
       // {*/?}+{?/?}
       if (clientType.isWildcardType()) {
@@ -316,20 +312,20 @@ public final class MediaTypes {
           // {*/*}+{*/?}
           if (clientType.isWildcardSubtype())
             // {*/*}+{*/*}
-            return CompatibleMediaType.WILDCARD_TYPE;
+            return MediaType.WILDCARD_TYPE;
 
           // {*/*}+{*/s}
-          return !isCharsetMatched(serverType, clientType, acceptCharsets) ? null : new CompatibleMediaType(clientType, mergeParameters(serverType, clientType), 1);
+          return !isCharsetMatched(serverType, clientType, acceptCharsets) ? null : new MediaType(clientType.getType(), clientType.getSubtype(), mergeParameters(serverType, clientType));
         }
         else if (clientType.isWildcardSubtype()) {
           // {*/s}+{*/*}
-          return !isCharsetMatched(serverType, clientType, acceptCharsets) ? null : new CompatibleMediaType(serverType, mergeParameters(serverType, clientType), 1);
+          return !isCharsetMatched(serverType, clientType, acceptCharsets) ? null : new MediaType(serverType.getType(), serverType.getSubtype(), mergeParameters(serverType, clientType));
         }
 
         // {*/s}+{*/s}
         final String subType = getCompatibleSubType(serverType.getSubtype(), clientType.getSubtype());
         if (subType != null)
-          return !isCharsetMatched(serverType, clientType, acceptCharsets) ? null : new CompatibleMediaType(serverType.getType(), subType, mergeParameters(serverType, clientType), 0);
+          return !isCharsetMatched(serverType, clientType, acceptCharsets) ? null : new MediaType(serverType.getType(), subType, mergeParameters(serverType, clientType));
 
         return null;
       }
@@ -337,14 +333,14 @@ public final class MediaTypes {
         // {*/*}+{s/?}
         if (clientType.isWildcardSubtype())
           // {*/*}+{s/*}
-          return !isCharsetMatched(serverType, clientType, acceptCharsets) ? null : new CompatibleMediaType(clientType.getType(), serverType.getSubtype(), 1);
+          return !isCharsetMatched(serverType, clientType, acceptCharsets) ? null : new MediaType(clientType.getType(), serverType.getSubtype());
 
         // {*/*}+{s/s}
-        return !isCharsetMatched(serverType, clientType, acceptCharsets) ? null : new CompatibleMediaType(clientType, mergeParameters(serverType, clientType), 2);
+        return !isCharsetMatched(serverType, clientType, acceptCharsets) ? null : new MediaType(clientType.getType(), clientType.getSubtype(), mergeParameters(serverType, clientType));
       }
 
       // {*/s}+{s/s}
-      return !isCharsetMatched(serverType, clientType, acceptCharsets) ? null : new CompatibleMediaType(clientType.getType(), serverType.getSubtype(), mergeParameters(serverType, clientType), 2);
+      return !isCharsetMatched(serverType, clientType, acceptCharsets) ? null : new MediaType(clientType.getType(), serverType.getSubtype(), mergeParameters(serverType, clientType));
     }
     else if (clientType.isWildcardType()) {
       // {s/?}+{*/?}
@@ -352,20 +348,20 @@ public final class MediaTypes {
         // {s/*}+{*/?}
         if (clientType.isWildcardSubtype())
           // {s/*}+{*/*}
-          return !isCharsetMatched(serverType, clientType, acceptCharsets) ? null : new CompatibleMediaType(serverType, mergeParameters(serverType, clientType), 1);
+          return !isCharsetMatched(serverType, clientType, acceptCharsets) ? null : new MediaType(serverType.getType(), serverType.getSubtype(), mergeParameters(serverType, clientType));
 
         // {s/*}+{*/s}
-        return !isCharsetMatched(serverType, clientType, acceptCharsets) ? null : new CompatibleMediaType(serverType.getType(), clientType.getSubtype(), mergeParameters(serverType, clientType), 2);
+        return !isCharsetMatched(serverType, clientType, acceptCharsets) ? null : new MediaType(serverType.getType(), clientType.getSubtype(), mergeParameters(serverType, clientType));
       }
       else if (clientType.isWildcardSubtype()) {
         // {s/s}+{*/*}
-        return !isCharsetMatched(serverType, clientType, acceptCharsets) ? null : new CompatibleMediaType(serverType, mergeParameters(serverType, clientType), 2);
+        return !isCharsetMatched(serverType, clientType, acceptCharsets) ? null : new MediaType(serverType.getType(), serverType.getSubtype(), mergeParameters(serverType, clientType));
       }
 
       // {s/s}+{*/s}
       final String subType = getCompatibleSubType(serverType.getSubtype(), clientType.getSubtype());
       if (subType != null)
-        return !isCharsetMatched(serverType, clientType, acceptCharsets) ? null : new CompatibleMediaType(serverType.getType(), subType, mergeParameters(serverType, clientType), 1);
+        return !isCharsetMatched(serverType, clientType, acceptCharsets) ? null : new MediaType(serverType.getType(), subType, mergeParameters(serverType, clientType));
 
       return null;
     }
@@ -378,26 +374,27 @@ public final class MediaTypes {
       // {s/*}+{s/?}
       if (clientType.isWildcardSubtype())
         // {s/*}+{s/*}
-        return !isCharsetMatched(serverType, clientType, acceptCharsets) ? null : new CompatibleMediaType(serverType, mergeParameters(serverType, clientType), 0);
+        return !isCharsetMatched(serverType, clientType, acceptCharsets) ? null : new MediaType(serverType.getType(), serverType.getSubtype(), mergeParameters(serverType, clientType));
 
       // {s/*}+{s/s}
-      return !isCharsetMatched(serverType, clientType, acceptCharsets) ? null : new CompatibleMediaType(serverType.getType(), clientType.getSubtype(), mergeParameters(serverType, clientType), 1);
+      return !isCharsetMatched(serverType, clientType, acceptCharsets) ? null : new MediaType(serverType.getType(), clientType.getSubtype(), mergeParameters(serverType, clientType));
     }
     else if (clientType.isWildcardSubtype()) {
       // {s/s}+{s/*}
-      return !isCharsetMatched(serverType, clientType, acceptCharsets) ? null : new CompatibleMediaType(serverType, mergeParameters(serverType, clientType), 1);
+      return !isCharsetMatched(serverType, clientType, acceptCharsets) ? null : new MediaType(serverType.getType(), serverType.getSubtype(), mergeParameters(serverType, clientType));
     }
 
     // {s/s}+{s/s}
     final String subType = getCompatibleSubType(serverType.getSubtype(), clientType.getSubtype());
     if (subType != null)
-      return !isCharsetMatched(serverType, clientType, acceptCharsets) ? null : new CompatibleMediaType(serverType.getType(), subType, mergeParameters(serverType, clientType), 0);
+      return !isCharsetMatched(serverType, clientType, acceptCharsets) ? null : new MediaType(serverType.getType(), subType, mergeParameters(serverType, clientType));
 
     return null;
   }
 
   private interface Adapter<T> {
     boolean hasNext(T obj, int index);
+
     String next(T obj, int index);
   }
 
