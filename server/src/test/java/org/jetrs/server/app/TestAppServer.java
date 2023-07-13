@@ -44,16 +44,16 @@ import org.openjax.jetty.UncaughtServletExceptionHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@ApplicationPath(ApplicationServer.applicationPath)
-public class ApplicationServer extends Application implements AutoCloseable {
-  public static final String applicationPath = "/foo";
+@ApplicationPath(TestAppServer.applicationPath)
+public class TestAppServer extends Application implements AutoCloseable {
+  public static final String applicationPath = "/test";
 
-  private static final Logger logger = LoggerFactory.getLogger(ApplicationServer.class);
+  private static final Logger logger = LoggerFactory.getLogger(TestAppServer.class);
 
   public static final String mimeType = "application/vnd.jetrs.v1+json";
 
   public static void main(final String[] args) throws Exception {
-    try (final ApplicationServer instance = new ApplicationServer(null, null)) {
+    try (final TestAppServer instance = new TestAppServer(null, null)) {
       instance.container.join();
     }
   }
@@ -62,7 +62,7 @@ public class ApplicationServer extends Application implements AutoCloseable {
   private final HashSet<Object> singletons = new HashSet<>();
   private final Set<Class<?>> classes = new HashSet<>();
 
-  public ApplicationServer(final Object[] singletons, final Class<?>[] classes) {
+  public TestAppServer(final Object[] singletons, final Class<?>[] classes) {
     if (singletons != null) {
       Collections.addAll(this.singletons, singletons);
     }

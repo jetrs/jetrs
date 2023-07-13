@@ -16,7 +16,7 @@
 
 package org.jetrs.server.app.service;
 
-import static org.jetrs.server.ApplicationServerTest.*;
+import static org.jetrs.server.GeneralServerTest.*;
 import static org.junit.Assert.*;
 
 import java.util.Arrays;

@@ -38,7 +38,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.jetrs.provider.container.ResponseTimeoutFilter;
-import org.jetrs.server.app.ApplicationServer;
+import org.jetrs.server.app.TestAppServer;
 import org.junit.AfterClass;
 import org.junit.Test;
 
@@ -77,11 +77,11 @@ public class ResponseTimeoutFilterTest {
 
   private static final long timeout = 200;
   private static final int numTests = 10;
-  private static final ApplicationServer server = new ApplicationServer(new Object[] {
+  private static final TestAppServer server = new TestAppServer(new Object[] {
     new TestFilter(timeout),
     new DelayService()
   }, new Class[0]);
-  private static final String serviceUrl = "http://localhost:" + server.getContainerPort() + ApplicationServer.applicationPath;
+  private static final String serviceUrl = "http://localhost:" + server.getContainerPort() + TestAppServer.applicationPath;
   private static final Client client;
 
   private static ArrayList<String> timedOut = new ArrayList<>();

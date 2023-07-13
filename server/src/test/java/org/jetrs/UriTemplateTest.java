@@ -107,7 +107,7 @@ public class UriTemplateTest {
   @Test
   public void testBaseUriNoLeadingSlash() {
     try {
-      new UriTemplate("foo", null, null);
+      new UriTemplate("test", null, null);
       fail("Expected IllegalArgumentException");
     }
     catch (final Exception e) {
@@ -127,7 +127,7 @@ public class UriTemplateTest {
   @Test
   public void testUriTemplatePaths() {
     try {
-      new UriTemplate("/foo", null, null);
+      new UriTemplate("/test", null, null);
       fail("Expected IllegalArgumentException");
     }
     catch (final Exception e) {
@@ -248,30 +248,30 @@ public class UriTemplateTest {
 
   @Test
   public void test() {
-    assertEquals("^/foo/(?<IDZZZ9>[^/]+?)(/.*)?$", pathToUriTemplate("/foo", "{ ID}", 1));
-    assertEquals("^/foo/bar/(?<iZWdZZZ14>[^/]+?)(/.*)?$", pathToUriTemplate("/foo", "bar/{ i_d}///", 1));
-    assertEquals("^/foo/bar/(?<iZXdZZZ15>[^/]+?)(/.*)?$", pathToUriTemplate("/foo", "bar/{  i.d  }///", 1));
-    assertEquals("^/foo/bar/(?<iZYdZZZ16>[^/]+?)(/.*)?$", pathToUriTemplate("/foo", "bar/{   i-d    }///", 1));
-    assertEquals("^/foo/bar/(?<iZZdZZZ15>[^/]+?)(/.*)?$", pathToUriTemplate("/foo", "bar/{  iZd  }///", 1));
-    assertEquals("^/foo/bar/(?<ZZidZZZ14>[^/]+?)(/.*)?$", pathToUriTemplate("/foo", "bar/{ Zid }///", 1));
-    assertEquals("^/foo/(?<idZZZ8>[^/]+?)/bar(/.*)?$", pathToUriTemplate("/foo", "{id  }/bar", 1));
-    assertEquals("^/foo/a/b(?<idZZZ12>[^/]+?)c/bar(?<idZZZ23>[^/]+?)d(/.*)?$", pathToUriTemplate("/foo/a/", "/b{ id }c/bar{ id}d/", 2));
+    assertEquals("^/test/(?<IDZZZ10>[^/]+?)(/.*)?$", pathToUriTemplate("/test", "{ ID}", 1));
+    assertEquals("^/test/bar/(?<iZWdZZZ15>[^/]+?)(/.*)?$", pathToUriTemplate("/test", "bar/{ i_d}///", 1));
+    assertEquals("^/test/bar/(?<iZXdZZZ16>[^/]+?)(/.*)?$", pathToUriTemplate("/test", "bar/{  i.d  }///", 1));
+    assertEquals("^/test/bar/(?<iZYdZZZ17>[^/]+?)(/.*)?$", pathToUriTemplate("/test", "bar/{   i-d    }///", 1));
+    assertEquals("^/test/bar/(?<iZZdZZZ16>[^/]+?)(/.*)?$", pathToUriTemplate("/test", "bar/{  iZd  }///", 1));
+    assertEquals("^/test/bar/(?<ZZidZZZ15>[^/]+?)(/.*)?$", pathToUriTemplate("/test", "bar/{ Zid }///", 1));
+    assertEquals("^/test/(?<idZZZ9>[^/]+?)/bar(/.*)?$", pathToUriTemplate("/test", "{id  }/bar", 1));
+    assertEquals("^/test/a/b(?<idZZZ13>[^/]+?)c/bar(?<idZZZ24>[^/]+?)d(/.*)?$", pathToUriTemplate("/test/a/", "/b{ id }c/bar{ id}d/", 2));
 
-    assertEquals("^/foo/bar/(?<idZZZ12>([^/]+?))(/.*)?$", pathToUriTemplate("/foo", "bar/{id:([^/]+?)}", 1));
-    assertEquals("^/foo/bar/(?<idZZZ12>[^/]+?)(/.*)?$", pathToUriTemplate("/foo", "bar/{id:[^/]+?}", 1));
-    assertEquals("^/foo/bar/(?<idZZZ13>([^/]+?))/(?<nameZZZ41>[^/]+?)(/.*)?$", pathToUriTemplate("/foo", "bar/{ id:   ([^/]+?)         }/{name}", 2));
-    assertEquals("^/foo/bar/(?<idZZZ13>( [^/]+?))/(?<nameZZZ45>[^/]+?)(/.*)?$", pathToUriTemplate("/foo", "bar/{ id:   ( [^/]+?)         }/{   name   }/", 2));
-    assertEquals("^/foo/bar/(?<idZZZ13>(    [^/]+?))/(?<nameZZZ45>[^/]+?)(/.*)?$", pathToUriTemplate("/foo", "bar/{ id:   (    [^/]+?)         }/{name }/", 2));
-    assertEquals("^/foo/bar/(?<idZZZ14>([^/]+? ))/(?<nameZZZ51>[^/]+?)(/.*)?$", pathToUriTemplate("/foo", "bar/{  id    :   ([^/]+? )         }/{    name}", 2));
-    assertEquals("^/foo/bar/(?<idZZZ13>([^/]+?    ))/(?<nameZZZ46>[^/]+?)(/.*)?$", pathToUriTemplate("/foo", "bar/{ id:   ([^/]+?    )         }/{ name   }///", 2));
-    assertEquals("^/foo/bar/(?<idZZZ12>[^/]+?)/(?<nameZZZ28>[^/]+?)(/.*)?$", pathToUriTemplate("/foo", "bar/{id : [^/]+?}/{name}", 2));
-    assertEquals("^/foo/(?<idZZZ8>([^/]+?))/bar/(?<nameZZZ35>[^/]+?)/hi(/.*)?$", pathToUriTemplate("/foo", "{id   :    ([^/]+?)}/bar/{name}//hi///", 2));
-    assertEquals("^/foo/(?<idZZZ8>[^/]+?)/bar/(?<nameZZZ28>[^/]+?)/hi(/.*)?$", pathToUriTemplate("/foo", "{id: [^/]+?}/bar/{ name}/hi", 2));
-    assertEquals("^/foo/bar/(?<idZZZ13>([^/]+?))/blank/(?<nameZZZ39>[^/]+?)(/.*)?$", pathToUriTemplate("/foo", "bar//{id  :([^/]+?)}/blank/{  name  }//", 2));
-    assertEquals("^/foo/bar/(?<idZZZ12>[^/]+?)/blank/(?<nameZZZ38>[^/]+?)(/.*)?$", pathToUriTemplate("/foo", "bar/{id   :   [^/]+?}/blank/{name  }", 2));
+    assertEquals("^/test/bar/(?<idZZZ13>([^/]+?))(/.*)?$", pathToUriTemplate("/test", "bar/{id:([^/]+?)}", 1));
+    assertEquals("^/test/bar/(?<idZZZ13>[^/]+?)(/.*)?$", pathToUriTemplate("/test", "bar/{id:[^/]+?}", 1));
+    assertEquals("^/test/bar/(?<idZZZ14>([^/]+?))/(?<nameZZZ42>[^/]+?)(/.*)?$", pathToUriTemplate("/test", "bar/{ id:   ([^/]+?)         }/{name}", 2));
+    assertEquals("^/test/bar/(?<idZZZ14>( [^/]+?))/(?<nameZZZ46>[^/]+?)(/.*)?$", pathToUriTemplate("/test", "bar/{ id:   ( [^/]+?)         }/{   name   }/", 2));
+    assertEquals("^/test/bar/(?<idZZZ14>(    [^/]+?))/(?<nameZZZ46>[^/]+?)(/.*)?$", pathToUriTemplate("/test", "bar/{ id:   (    [^/]+?)         }/{name }/", 2));
+    assertEquals("^/test/bar/(?<idZZZ15>([^/]+? ))/(?<nameZZZ52>[^/]+?)(/.*)?$", pathToUriTemplate("/test", "bar/{  id    :   ([^/]+? )         }/{    name}", 2));
+    assertEquals("^/test/bar/(?<idZZZ14>([^/]+?    ))/(?<nameZZZ47>[^/]+?)(/.*)?$", pathToUriTemplate("/test", "bar/{ id:   ([^/]+?    )         }/{ name   }///", 2));
+    assertEquals("^/test/bar/(?<idZZZ13>[^/]+?)/(?<nameZZZ29>[^/]+?)(/.*)?$", pathToUriTemplate("/test", "bar/{id : [^/]+?}/{name}", 2));
+    assertEquals("^/test/(?<idZZZ9>([^/]+?))/bar/(?<nameZZZ36>[^/]+?)/hi(/.*)?$", pathToUriTemplate("/test", "{id   :    ([^/]+?)}/bar/{name}//hi///", 2));
+    assertEquals("^/test/(?<idZZZ9>[^/]+?)/bar/(?<nameZZZ29>[^/]+?)/hi(/.*)?$", pathToUriTemplate("/test", "{id: [^/]+?}/bar/{ name}/hi", 2));
+    assertEquals("^/test/bar/(?<idZZZ14>([^/]+?))/blank/(?<nameZZZ40>[^/]+?)(/.*)?$", pathToUriTemplate("/test", "bar//{id  :([^/]+?)}/blank/{  name  }//", 2));
+    assertEquals("^/test/bar/(?<idZZZ13>[^/]+?)/blank/(?<nameZZZ39>[^/]+?)(/.*)?$", pathToUriTemplate("/test", "bar/{id   :   [^/]+?}/blank/{name  }", 2));
 
     assertEquals("^/(?<countryZZZ12>[a-z A-Z]{2})(?<pZZZ29>/?)(?<stateZZZ43>([ a-zA-Z ]{2})?)(/.*)?$", pathToUriTemplate(null, "{   country :[a-z A-Z]{2}}{p:/?}{    state:([ a-zA-Z ]{2})?}", 3));
 
-    assertEquals("^/foo/(?<idZZZ8>(?<Zgrp>[ a-z]{1})\\k<Zgrp>)(/.*)?$", pathToUriTemplate("/foo", "{id  :(?<grp>[ a-z]{1})\\k<grp>}", 1));
+    assertEquals("^/test/(?<idZZZ9>(?<Zgrp>[ a-z]{1})\\k<Zgrp>)(/.*)?$", pathToUriTemplate("/test", "{id  :(?<grp>[ a-z]{1})\\k<grp>}", 1));
   }
 }

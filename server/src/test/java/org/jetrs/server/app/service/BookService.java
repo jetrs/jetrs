@@ -38,7 +38,7 @@ import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
-import org.jetrs.server.ApplicationServerTest;
+import org.jetrs.server.GeneralServerTest;
 
 @Path("/books")
 @Singleton
@@ -51,7 +51,7 @@ public class BookService {
       }
       else if (arg instanceof PathSegment) {
         final PathSegment pathSegment = (PathSegment)arg;
-        builder.append("{" + pathSegment.getPath() + "}: " + ApplicationServerTest.encodeLexicographically(pathSegment.getMatrixParameters()));
+        builder.append("{" + pathSegment.getPath() + "}: " + GeneralServerTest.encodeLexicographically(pathSegment.getMatrixParameters()));
       }
       else {
         builder.append(arg);

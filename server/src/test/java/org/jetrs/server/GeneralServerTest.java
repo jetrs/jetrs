@@ -46,7 +46,7 @@ import javax.ws.rs.core.StreamingOutput;
 import org.jetrs.HttpHeaders;
 import org.jetrs.MultivaluedArrayHashMap;
 import org.jetrs.provider.ext.interceptor.GZipCodecInterceptor;
-import org.jetrs.server.app.ApplicationServer;
+import org.jetrs.server.app.TestAppServer;
 import org.jetrs.server.app.filter.Filter1;
 import org.jetrs.server.app.provider.MyCharacterProvider;
 import org.jetrs.server.app.service.CoreTypeService;
@@ -57,10 +57,10 @@ import org.libj.lang.Strings;
 import org.libj.util.Dates;
 import org.libj.util.SimpleDateFormats;
 
-public class ApplicationServerTest {
+public class GeneralServerTest {
   private static final Random random = new Random();
-  private static final ApplicationServer server = new ApplicationServer(null, null);
-  private static final String serviceUrl = "http://localhost:" + server.getContainerPort() + ApplicationServer.applicationPath;
+  private static final TestAppServer server = new TestAppServer(null, null);
+  private static final String serviceUrl = "http://localhost:" + server.getContainerPort() + TestAppServer.applicationPath;
   private static final Client client = ClientBuilder.newClient().register(GZipCodecInterceptor.class);
 
   public static String encodeLexicographically(final Map<String,?> map) {
@@ -326,11 +326,11 @@ public class ApplicationServerTest {
 
   @Test
   public void testBookService4() throws Exception {
-    final Invocation.Builder request = request("/books/query/aA/BaCb/cDc/ba///////foo/bar/hi/hello/good/bye");
+    final Invocation.Builder request = request("/books/query/aA/BaCb/cDc/ba///////test/bar/hi/hello/good/bye");
     final Response getResponse = request.get();
 
     final String data = assertResponse(200, getResponse, String.class);
-    assertEquals("List of Books order by: [aA, BaCb] :: [BaCb, ba, , , , , , , foo, bar, hi, hello, good, bye] :: []", data);
+    assertEquals("List of Books order by: [aA, BaCb] :: [BaCb, ba, , , , , , , test, bar, hi, hello, good, bye] :: []", data);
 
     final Response headResponse = request.head();
     assertGetHead(getResponse, headResponse);
@@ -338,11 +338,11 @@ public class ApplicationServerTest {
 
   @Test
   public void testBookService6() throws Exception {
-    final Invocation.Builder request = request("/books/categories1;name=cat;name=bla;cat=hemi/static;stat=foo/objects1;name=green;value=ok");
+    final Invocation.Builder request = request("/books/categories1;name=cat;name=bla;cat=hemi/static;stat=test/objects1;name=green;value=ok");
     final Response getResponse = request.get();
 
     final String data = assertResponse(200, getResponse, String.class);
-    assertEquals("{books}: [] | {categories1}: [cat:[hemi], name:[cat, bla]] | {static}: [stat:[foo]] | {objects1}: [name:[green], value:[ok]] | {categories1}: [cat:[hemi], name:[cat, bla]] | {objects1}: [name:[green], value:[ok]] | cat | cat | bla | green", data);
+    assertEquals("{books}: [] | {categories1}: [cat:[hemi], name:[cat, bla]] | {static}: [stat:[test]] | {objects1}: [name:[green], value:[ok]] | {categories1}: [cat:[hemi], name:[cat, bla]] | {objects1}: [name:[green], value:[ok]] | cat | cat | bla | green", data);
 
     final Response headResponse = request.head();
     assertGetHead(getResponse, headResponse);
@@ -377,7 +377,7 @@ public class ApplicationServerTest {
 
     final String data = assertResponse(200, getResponse, String.class);
     // FIXME: Is the client supposed to automatically return a String due to "text/plain" MediaType?!
-    assertEquals("[" + ApplicationServer.applicationPath + "/root2/2]\norg.jetrs.server.app.service.RootService2\n{}", data);
+    assertEquals("[" + TestAppServer.applicationPath + "/root2/2]\norg.jetrs.server.app.service.RootService2\n{}", data);
 
     final Response headResponse = request.head();
     assertGetHead(getResponse, headResponse);
@@ -390,7 +390,7 @@ public class ApplicationServerTest {
 
     final String data = assertResponse(200, getResponse, String.class);
     // FIXME: Is the client supposed to automatically return a String due to "text/plain" MediaType?!
-    assertEquals("[" + ApplicationServer.applicationPath + "/root2/2/123, " + ApplicationServer.applicationPath + "/root2/2/123]\norg.jetrs.server.app.service.RootService2, org.jetrs.server.app.service.RootService2\n{id=[123]}", data);
+    assertEquals("[" + TestAppServer.applicationPath + "/root2/2/123, " + TestAppServer.applicationPath + "/root2/2/123]\norg.jetrs.server.app.service.RootService2, org.jetrs.server.app.service.RootService2\n{id=[123]}", data);
 
     final Response headResponse = request.head();
     assertGetHead(getResponse, headResponse);
@@ -403,7 +403,7 @@ public class ApplicationServerTest {
 
     final String data = assertResponse(200, getResponse, String.class);
     // FIXME: Is the client supposed to automatically return a String due to "text/plain" MediaType?!
-    assertEquals("[" + ApplicationServer.applicationPath + "/root2/2/123/456, " + ApplicationServer.applicationPath + "/root2/2/123/456, " + ApplicationServer.applicationPath + "/root2/2/123/456]\norg.jetrs.server.app.service.RootService2, org.jetrs.server.app.service.RootService2, org.jetrs.server.app.service.RootService2\n{id2=[456], id1=[123]}", data);
+    assertEquals("[" + TestAppServer.applicationPath + "/root2/2/123/456, " + TestAppServer.applicationPath + "/root2/2/123/456, " + TestAppServer.applicationPath + "/root2/2/123/456]\norg.jetrs.server.app.service.RootService2, org.jetrs.server.app.service.RootService2, org.jetrs.server.app.service.RootService2\n{id2=[456], id1=[123]}", data);
 
     final Response headResponse = request.head();
     assertGetHead(getResponse, headResponse);
