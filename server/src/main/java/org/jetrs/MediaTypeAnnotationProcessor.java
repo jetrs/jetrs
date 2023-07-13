@@ -68,9 +68,6 @@ class MediaTypeAnnotationProcessor<T extends Annotation> {
 
         mediaTypes = ServerMediaType.valueOf(((Consumes)annotation).value());
       }
-
-      if (mediaTypes.length == 0)
-        mediaTypes = MediaTypes.WILDCARD_SERVER_TYPE;
     }
     else if (annotationClass == Produces.class) {
       if (annotation != null) {
@@ -79,15 +76,12 @@ class MediaTypeAnnotationProcessor<T extends Annotation> {
 
         mediaTypes = ServerMediaType.valueOf(((Produces)annotation).value());
       }
-
-      if (mediaTypes.length == 0)
-        mediaTypes = MediaTypes.OCTET_SERVER_TYPE;
     }
     else {
       throw new UnsupportedOperationException("Expected @Consumes or @Produces, but got: " + annotationClass.getName());
     }
 
-    this.mediaTypes = mediaTypes;
+    this.mediaTypes = mediaTypes.length > 0 ? mediaTypes : MediaTypes.WILDCARD_SERVER_TYPE;
   }
 
   MediaType[] getCompatibleMediaType(final List<MediaType> mediaTypes, final List<String> acceptCharsets) {

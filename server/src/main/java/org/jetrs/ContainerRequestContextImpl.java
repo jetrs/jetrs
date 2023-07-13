@@ -342,10 +342,13 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext,Ht
       return null;
 
     final Providers providers = getProviders();
-    final MediaType contentType = getMediaType();
-    final MessageBodyReader<?> messageBodyReader = providers.getMessageBodyReader(clazz, type, annotations, contentType != null ? contentType : MediaType.APPLICATION_OCTET_STREAM_TYPE); // [JAX-RS 4.2.1]
+    MediaType contentType = getMediaType();
+    if (contentType == null)
+      contentType = MediaType.APPLICATION_OCTET_STREAM_TYPE;
+
+    final MessageBodyReader<?> messageBodyReader = providers.getMessageBodyReader(clazz, type, annotations, contentType); // [JAX-RS 4.2.1]
     if (messageBodyReader == null)
-      throw new WebApplicationException("Could not find MessageBodyReader for type: " + clazz.getName());
+      throw new WebApplicationException("Could not find MessageBodyReader for type: " + clazz.getName() + " " + contentType);
 
     // FIXME: Why is there a return type for ReaderInterceptorContext#proceed()? And it's of type Object. What type is ReaderInterceptorContext supposed to return? It should be InputStream, but then it makes it redundant.
     setType(clazz);
@@ -763,7 +766,7 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext,Ht
 
       maybeNotAcceptable = true;
       final MediaType[] compatibleMediaTypes = resourceInfo.getCompatibleAccept(getAcceptableMediaTypes(), getHeaders().get(ACCEPT_CHARSET));
-      if (compatibleMediaTypes == null)
+      if (compatibleMediaTypes.length == 0)
         continue;
 
       if (resourceMatches == null)
@@ -790,6 +793,12 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext,Ht
       resourceMatches.sort(null);
       return resourceMatches;
     }
+
+    if (maybeNotAcceptable)
+      throw new NotAcceptableException();
+
+    if (maybeNotSupported)
+      throw new NotSupportedException();
 
     if (maybeNotAllowed == null || isOverride)
       return null;
@@ -819,12 +828,6 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext,Ht
       if (matches != null)
         return matches;
     }
-
-    if (maybeNotAcceptable)
-      throw new NotAcceptableException();
-
-    if (maybeNotSupported)
-      throw new NotSupportedException();
 
     throw new NotAllowedException(Response.status(Response.Status.METHOD_NOT_ALLOWED).allow(maybeNotAllowed).build());
   }

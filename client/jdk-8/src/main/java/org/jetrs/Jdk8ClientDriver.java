@@ -120,7 +120,7 @@ public class Jdk8ClientDriver extends ClientDriver {
         if (cacheControl != null)
           connection.setRequestProperty(HttpHeaders.CACHE_CONTROL, cacheControl.toString());
         else
-          connection.setUseCaches(false);
+          connection.setUseCaches(true);
 
         $span(Span.INIT);
 
@@ -131,10 +131,8 @@ public class Jdk8ClientDriver extends ClientDriver {
           $span(Span.ENTITY_INIT);
 
           connection.setDoOutput(true);
-          final Class<?> entityClass = entity.getEntity().getClass();
-          final MessageBodyWriter messageBodyWriter = getProviders().getMessageBodyWriter(entityClass, null, entity.getAnnotations(), entity.getMediaType());
-          if (messageBodyWriter == null)
-            throw new ProcessingException("MessageBodyWriter not found for " + entityClass.getName());
+
+          final MessageBodyWriter messageBodyWriter = getMessageBodyWriter();
 
           writeContentSync(messageBodyWriter, () -> {
             setHeaders(connection);

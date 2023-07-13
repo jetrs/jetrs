@@ -60,7 +60,7 @@ public class TestAppServer extends Application implements AutoCloseable {
 
   private final EmbeddedServletContainer container;
   private final HashSet<Object> singletons = new HashSet<>();
-  private final Set<Class<?>> classes = new HashSet<>();
+  private final HashSet<Class<?>> classes = new HashSet<>();
 
   public TestAppServer(final Object[] singletons, final Class<?>[] classes) {
     if (singletons != null) {
@@ -103,7 +103,7 @@ public class TestAppServer extends Application implements AutoCloseable {
         .build();
 
       this.container.start();
-      System.err.println("[START] http://localhost:" + getContainerPort() + applicationPath);
+      System.err.println("[START] " + getServiceUrl());
     }
     catch (final RuntimeException t) {
       close();
@@ -113,6 +113,10 @@ public class TestAppServer extends Application implements AutoCloseable {
       close();
       throw new RuntimeException(e);
     }
+  }
+
+  public String getServiceUrl() {
+    return "http://localhost:" + getContainerPort() + applicationPath;
   }
 
   @Override

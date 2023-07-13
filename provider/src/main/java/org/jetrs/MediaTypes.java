@@ -26,11 +26,13 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import javax.ws.rs.core.MediaType;
 
 import org.libj.lang.Numbers;
 import org.libj.lang.Strings;
+import org.libj.util.ArrayUtil;
 import org.libj.util.CollectionUtil;
 
 /**
@@ -44,7 +46,6 @@ import org.libj.util.CollectionUtil;
  *      Structured Syntax Suffix</a>
  */
 public final class MediaTypes {
-  static final ServerMediaType[] OCTET_SERVER_TYPE = {ServerMediaType.APPLICATION_OCTET_STREAM_TYPE};
   static final ServerMediaType[] WILDCARD_SERVER_TYPE = {ServerMediaType.WILDCARD_TYPE};
   static final MediaType[] WILDCARD_TYPE = {MediaType.WILDCARD_TYPE};
 
@@ -103,17 +104,17 @@ public final class MediaTypes {
 
     final String clientCharset = clientType.getParameters().get("charset");
     if (clientCharset != null)
-      return serverCharset.equals(clientCharset);
+      return serverCharset.equalsIgnoreCase(clientCharset);
 
-    final int i$;
-    if (acceptCharsets == null || (i$ = acceptCharsets.size()) == 0)
+    final int size;
+    if (acceptCharsets == null || (size = acceptCharsets.size()) == 0)
       return true;
 
     if (CollectionUtil.isRandomAccess(acceptCharsets)) {
       int i = 0; do // [RA]
         if (acceptCharsets.get(i).equalsIgnoreCase(serverCharset))
           return true;
-      while (++i < i$);
+      while (++i < size);
     }
     else {
       final Iterator<String> it = acceptCharsets.iterator(); do // [I]
@@ -148,7 +149,7 @@ public final class MediaTypes {
   private static MediaType[] getCompatible(final ServerMediaType[] serverTypes, final MediaType[] clientTypes, final List<String> acceptCharsets, int index1, final int index2, final int depth) {
     if (index2 == clientTypes.length) {
       if (++index1 == serverTypes.length)
-        return depth == 0 ? WILDCARD_TYPE : new MediaType[depth];
+        return depth == 0 ? EMPTY_MEDIA_TYPE : new MediaType[depth];
 
       return getCompatible(serverTypes, clientTypes, acceptCharsets, index1, 0, depth);
     }
@@ -187,7 +188,7 @@ public final class MediaTypes {
   private static MediaType[] getCompatible(final ServerMediaType[] serverTypes, final List<MediaType> clientTypes, final List<String> acceptCharsets, int index1, final int index2, final int depth) {
     if (index2 == clientTypes.size()) {
       if (++index1 == serverTypes.length)
-        return depth == 0 ? WILDCARD_TYPE : new MediaType[depth];
+        return depth == 0 ? EMPTY_MEDIA_TYPE : new MediaType[depth];
 
       return getCompatible(serverTypes, clientTypes, acceptCharsets, index1, 0, depth);
     }
@@ -224,7 +225,7 @@ public final class MediaTypes {
 
   private static MediaType[] getCompatible(final ServerMediaType[] serverTypes, final MediaType clientType, final List<String> acceptCharsets, final int length, final int index, final int depth) {
     if (index == length)
-      return depth == 0 ? WILDCARD_TYPE : new MediaType[depth];
+      return depth == 0 ? EMPTY_MEDIA_TYPE : new MediaType[depth];
 
     final ServerMediaType serverType = serverTypes[index];
     final MediaType compatibleType = getCompatible(serverType, clientType, acceptCharsets);
@@ -257,7 +258,7 @@ public final class MediaTypes {
 
   private static MediaType[] getCompatible(final List<ServerMediaType> serverTypes, final MediaType clientType, final List<String> acceptCharsets, final int length, final int index, final int depth) {
     if (index == length)
-      return depth == 0 ? WILDCARD_TYPE : new MediaType[depth];
+      return depth == 0 ? EMPTY_MEDIA_TYPE : new MediaType[depth];
 
     final ServerMediaType serverType = serverTypes.get(index);
     final MediaType compatibleType = getCompatible(serverType, clientType, acceptCharsets);
@@ -277,12 +278,12 @@ public final class MediaTypes {
     if (p1 < 1)
       return null;
 
+    if (p1 == 1 && subType1.charAt(0) == '*')
+      return subType2;
+
     final int p2 = subType2.indexOf('+');
     if (p2 < 1)
       return null;
-
-    if (p1 == 1 && subType1.charAt(0) == '*')
-      return subType2;
 
     if (p2 == 1 && subType2.charAt(0) == '*')
       return subType1;
@@ -495,7 +496,7 @@ public final class MediaTypes {
 
   static final ServerMediaType[] EMPTY_SERVER_TYPE = {};
   private static final QualifiedMediaType[] EMPTY_QUALIFIED_TYPE = {};
-  private static final MediaType[] EMPTY_MEDIA_TYPE = {};
+  static final MediaType[] EMPTY_MEDIA_TYPE = {};
 
   @SuppressWarnings("unchecked")
   private static final <T extends MediaType>T[] empty(final Class<T> cls) {
@@ -699,6 +700,25 @@ public final class MediaTypes {
 
   static MediaType cloneWithoutParameters(final MediaType mediaType) {
     return new MediaType(mediaType.getType(), mediaType.getSubtype());
+  }
+
+  static MediaType cloneWithoutParameters(final MediaType mediaType, final String ... excepts) {
+    if (mediaType.getParameters().size() == 0)
+      return cloneWithoutParameters(mediaType);
+
+    final TreeMap<String,String> parameters = new TreeMap<>();
+    for (final Map.Entry<String,String> entry : mediaType.getParameters().entrySet()) {
+      final String key = entry.getKey();
+      if (ArrayUtil.contains(excepts, key))
+        parameters.put(key, entry.getValue());
+    }
+
+    return new MediaType(mediaType.getType(), mediaType.getSubtype()) {
+      @Override
+      public Map<String,String> getParameters() {
+        return parameters;
+      }
+    };
   }
 
   /**

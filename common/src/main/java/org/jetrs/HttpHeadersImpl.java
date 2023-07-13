@@ -268,7 +268,7 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
 
   void setMediaType(final MediaType mediaType) {
     if (mediaType != null)
-      getMirrorMap().putSingle(HttpHeaders.CONTENT_TYPE, mediaType.getParameters().size() == 0 ? mediaType : MediaTypes.cloneWithoutParameters(mediaType));
+      getMirrorMap().putSingle(HttpHeaders.CONTENT_TYPE, mediaType.getParameters().size() == 0 ? mediaType : MediaTypes.cloneWithoutParameters(mediaType, "charset", "boundary"));
     else
       remove(HttpHeaders.CONTENT_TYPE);
   }

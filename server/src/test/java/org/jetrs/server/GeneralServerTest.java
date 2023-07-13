@@ -60,7 +60,7 @@ import org.libj.util.SimpleDateFormats;
 public class GeneralServerTest {
   private static final Random random = new Random();
   private static final TestAppServer server = new TestAppServer(null, null);
-  private static final String serviceUrl = "http://localhost:" + server.getContainerPort() + TestAppServer.applicationPath;
+  private static final String serviceUrl = server.getServiceUrl();
   private static final Client client = ClientBuilder.newClient().register(GZipCodecInterceptor.class);
 
   public static String encodeLexicographically(final Map<String,?> map) {

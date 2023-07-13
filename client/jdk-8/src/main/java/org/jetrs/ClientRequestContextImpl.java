@@ -65,8 +65,12 @@ import javax.ws.rs.ext.WriterInterceptorContext;
 
 import org.libj.util.ObservableOutputStream;
 import org.libj.util.function.ThrowingSupplier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 abstract class ClientRequestContextImpl extends RequestContext<ClientRuntimeContext,HashMap<String,Object>> implements ClientRequestContext, Invocation, WriterInterceptorContext {
+  private static final Logger logger = LoggerFactory.getLogger(ClientRequestContextImpl.class);
+
   final ClientImpl client;
   private final ArrayList<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorProviderFactories;
   final URI uri;
@@ -94,7 +98,11 @@ abstract class ClientRequestContextImpl extends RequestContext<ClientRuntimeCont
       this.entity = entity.getEntity();
       this.entityClass = this.entity == null ? null : this.entity.getClass();
       setAnnotations(entity.getAnnotations());
-      getStringHeaders().setMediaType(entity.getMediaType());
+      final MediaType mediaType = entity.getMediaType();
+      if (mediaType != null)
+        requestHeaders.setMediaType(mediaType);
+      else if (requestHeaders.getMediaType() == null)
+        logger.warn("Empty Content-Type for request with entity may be set to default value by HTTP client");
     }
 
     this.executorService = executorService;
@@ -102,6 +110,18 @@ abstract class ClientRequestContextImpl extends RequestContext<ClientRuntimeCont
     this.properties = properties;
     this.connectTimeout = connectTimeout;
     this.readTimeout = readTimeout;
+  }
+
+  protected final MessageBodyWriter<?> getMessageBodyWriter() throws ProcessingException {
+    MediaType mediaType = getMediaType();
+    if (mediaType == null)
+      mediaType = MediaType.APPLICATION_OCTET_STREAM_TYPE;
+
+    final MessageBodyWriter<?> messageBodyWriter = getProviders().getMessageBodyWriter(getEntityClass(), getGenericType(), getAnnotations(), mediaType);
+    if (messageBodyWriter == null)
+      throw new ProcessingException("MessageBodyWriter not found for " + getEntityClass().getName() + " " + mediaType);
+
+    return messageBodyWriter;
   }
 
   @Override

@@ -31,10 +31,10 @@ final class MessageBodyWriterProviderFactory extends MessageBodyProviderFactory<
   @Override
   public MediaType[] getCompatibleMediaType(final RequestContext<?,?> requestContext, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
     final MediaType[] mediaTypes = super.getCompatibleMediaType(requestContext, type, genericType, annotations, mediaType);
-    if (mediaTypes == null)
-      return null;
+    if (mediaTypes.length == 0)
+      return mediaTypes;
 
     final MessageBodyWriter<?> instance = getSingletonOrFromRequestContext(requestContext);
-    return instance.isWriteable(type, genericType, annotations, mediaType) ? mediaTypes : null;
+    return instance.isWriteable(type, genericType, annotations, mediaType) ? mediaTypes : MediaTypes.EMPTY_MEDIA_TYPE;
   }
 }

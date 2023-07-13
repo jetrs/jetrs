@@ -151,12 +151,8 @@ abstract class Invoker<R> {
 
   final Invocation build(final String method, final HttpHeadersImpl requestHeaders, final ArrayList<Cookie> cookies, final CacheControl cacheControl, final Entity<?> entity) {
     client.assertNotClosed();
-    final HttpHeadersImpl headers = requestHeaders != null ? requestHeaders.clone() : new HttpHeadersImpl();
-    if (entity != null && entity.getMediaType() != null && headers.getMediaType() == null)
-      headers.setMediaType(entity.getMediaType());
-
     try {
-      return driver.build(client, runtimeContext, uri, method, headers, cookies, cacheControl, entity, executorService, scheduledExecutorService, getProperties(), connectTimeout, readTimeout);
+      return driver.build(client, runtimeContext, uri, method, requestHeaders != null ? requestHeaders.clone() : new HttpHeadersImpl(), cookies, cacheControl, entity, executorService, scheduledExecutorService, getProperties(), connectTimeout, readTimeout);
     }
     catch (final Exception e) {
       throw new ProcessingException(e);

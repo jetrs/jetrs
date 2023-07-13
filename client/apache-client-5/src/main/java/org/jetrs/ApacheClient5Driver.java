@@ -197,10 +197,7 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
           else {
             $span(Span.ENTITY_INIT);
 
-            final Class<?> entityClass = entity.getEntity().getClass();
-            final MessageBodyWriter messageBodyWriter = getProviders().getMessageBodyWriter(entityClass, null, entity.getAnnotations(), entity.getMediaType());
-            if (messageBodyWriter == null)
-              throw new ProcessingException("MessageBodyWriter not found for " + entityClass.getName());
+            final MessageBodyWriter messageBodyWriter = getMessageBodyWriter();
 
             final AtomicLong timeout = new AtomicLong(readTimeout > 0 ? readTimeout : Long.MAX_VALUE);
             final ReentrantLock lock = new ReentrantLock();
@@ -311,7 +308,7 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
                 }
               });
 
-              messageBodyWriter.writeTo(entity.getEntity(), entityClass, null, entity.getAnnotations(), entity.getMediaType(), requestHeaders.getMirrorMap(), relegateEntityStream);
+              messageBodyWriter.writeTo(getEntity(), getEntityClass(), null, getAnnotations(), getMediaType(), requestHeaders.getMirrorMap(), relegateEntityStream);
             }
 
             $span(Span.RESPONSE_WAIT);

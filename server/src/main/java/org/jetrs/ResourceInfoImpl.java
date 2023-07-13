@@ -209,7 +209,7 @@ class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImpl> {
   }
 
   boolean isCompatibleContentType(final MediaType contentType) {
-    return getConsumesMatcher().getCompatibleMediaType(contentType, null) != null;
+    return getConsumesMatcher().getCompatibleMediaType(contentType, null).length != 0;
   }
 
   MediaType[] getCompatibleAccept(final List<MediaType> acceptMediaTypes, final List<String> acceptCharsets) {

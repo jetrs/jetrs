@@ -40,8 +40,8 @@ import javax.ws.rs.core.UriInfo;
 
 import org.jetrs.server.GeneralServerTest;
 
-@Path("/books")
 @Singleton
+@Path("/books")
 public class BookService {
   private static String toString(final Object ... args) {
     final StringBuilder builder = new StringBuilder();

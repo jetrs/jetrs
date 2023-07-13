@@ -37,10 +37,10 @@ final class MessageBodyReaderProviderFactory extends MessageBodyProviderFactory<
       mediaType = MediaType.APPLICATION_OCTET_STREAM_TYPE;
 
     final MediaType[] mediaTypes = super.getCompatibleMediaType(requestContext, type, genericType, annotations, mediaType);
-    if (mediaTypes == null)
-      return null;
+    if (mediaTypes.length == 0)
+      return mediaTypes;
 
     final MessageBodyReader<?> instance = getSingletonOrFromRequestContext(requestContext);
-    return instance.isReadable(type, genericType, annotations, mediaType) ? mediaTypes : null;
+    return instance.isReadable(type, genericType, annotations, mediaType) ? mediaTypes : MediaTypes.EMPTY_MEDIA_TYPE;
   }
 }
