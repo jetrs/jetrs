@@ -275,18 +275,13 @@ public final class MediaTypes {
       return subType1;
 
     final int p1 = subType1.indexOf('+');
-    if (p1 < 1)
-      return null;
+    final int p2 = subType2.indexOf('+');
 
     if (p1 == 1 && subType1.charAt(0) == '*')
-      return subType2;
-
-    final int p2 = subType2.indexOf('+');
-    if (p2 < 1)
-      return null;
+      return subType1.substring(2).equals(subType2.substring(p2 + 1)) ? subType2 : null;
 
     if (p2 == 1 && subType2.charAt(0) == '*')
-      return subType1;
+      return subType2.substring(2).equals(subType1.substring(p1 + 1)) ? subType1 : null;
 
     return null;
   }

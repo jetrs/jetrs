@@ -24,6 +24,7 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Variant;
 
 import org.jetrs.CommonProperties;
@@ -103,7 +104,7 @@ public class MediaTypeServerTest {
     assertEquals(200, request("pa", null, "application/json").post(Entity.entity("[\"application/json\"]", "application/json")).getStatus());
     assertEquals(200, request("pa", null, "text/xml", "application/xml", "application/json;charset=utf-8").post(Entity.entity("[\"application/json;charset=utf-8\"]", "application/json;charset=utf-8;x=3;q=.8")).getStatus());
     assertEquals(200, request("pa", null, "text/json", "text/xml", "application/xml").post(Entity.entity("[\"text/json\"]", "text/json")).getStatus());
-    assertEquals(200, request("pa", null, "application/xml", "text/plain").post(Entity.entity("[\"text/plain\"]", new Variant((MediaType)null, (String)null, "utf-8"))).getStatus());
+    assertEquals(200, request("pa", "text/plain", "application/xml", "text/plain").post(Entity.entity("[\"text/plain\"]", new Variant((MediaType)null, (String)null, "utf-8"))).getStatus());
     assertEquals(500, request("pa", null, "text/html", "application/xml").post(Entity.entity("[\"text/html\"]", "text/html")).getStatus());
   }
 
@@ -116,17 +117,23 @@ public class MediaTypeServerTest {
     assertEquals(500, request("pb", null, "text/html", "text/plain").post(Entity.entity("[\"text/html\"]", "text/html")).getStatus());
   }
 
+  private static void assertResponse(final int statusCode, final String expectedContentType, final Response response) {
+    assertEquals(statusCode, response.getStatus());
+    final String actualContentType = response.getHeaderString(HttpHeaders.CONTENT_TYPE);
+    assertEquals(expectedContentType, actualContentType);
+  }
+
   @Test
   public void testPC() {
-    assertEquals(200, request("pc", null, "application/json;charset=utf-8").post(Entity.entity("[\"application/json;charset=utf-8\"]", "application/json;charset=utf-8;x=3;q=.8")).getStatus());
-    assertEquals(200, request("pc", null, "application/vnd.jetrs.v1+json;charset=utf-8").post(Entity.entity("[\"application/vnd.jetrs.v1+json;charset=utf-8\"]", "application/vnd.jetrs.v1+json;charset=utf-8;x=3;q=.8")).getStatus());
-    assertEquals(200, request("pc", null, "application/json;charset=ascii").post(Entity.entity("[\"application/json;charset=ascii\"]", "application/json;charset=ascii;x=3;q=.8")).getStatus());
-    assertEquals(200, request("pc", null, "application/json;charset=utf-8").post(Entity.entity("[\"application/json;charset=utf-8\"]", "application/json;charset=utf-8;x=3;q=.8")).getStatus());
-    assertEquals(406, request("pc", null, "text/plain", "application/json;charset=iso-8859-1").post(Entity.entity("[\"application/json;charset=iso-8859-1\"]", "application/json;charset=iso-8859-1;x=3;q=.8")).getStatus());
-    assertEquals(200, request("pc", null, "application/json").post(Entity.entity("[\"application/json\"]", "application/json;x=3;q=.8")).getStatus());
-    assertEquals(200, request("pc", null, "text/json").post(Entity.entity("[\"text/json\"]", "text/json")).getStatus());
-    assertEquals(200, request("pc", null, "text/json;charset=ascii").post(Entity.entity("[\"text/json;charset=ascii\"]", "text/json;charset=ascii")).getStatus());
-    assertEquals(406, request("pc", null, "text/plain").post(Entity.entity("[\"text/plain\"]", new Variant((MediaType)null, (String)null, "utf-8"))).getStatus());
-    assertEquals(500, request("pc", null, "text/html").post(Entity.entity("[\"text/html\"]", "text/html")).getStatus());
+    assertResponse(200, "application/json;charset=utf-8", request("pc", null, "application/xml", "application/json;charset=utf-8").post(Entity.entity("[\"application/json;charset=utf-8\"]", "application/json;charset=utf-8;x=3;q=.8")));
+    assertResponse(200, "application/vnd.jetrs.v1+json;charset=utf-8", request("pc", null, "application/vnd.jetrs.v1+json;charset=utf-8", "application/vnd.jetrs.v1+xml").post(Entity.entity("[\"application/vnd.jetrs.v1+json;charset=utf-8\"]", "application/vnd.jetrs.v1+json;charset=utf-8;x=3;q=.8")));
+    assertResponse(200, "application/json;charset=ascii", request("pc", null, "application/json;charset=ascii;q=.5", "application/json;charset=ascii;q=.3").post(Entity.entity("[\"application/json;charset=ascii;q=.5\"]", "application/json;charset=ascii;x=3;q=.8")));
+    assertResponse(200, "application/json;charset=utf-8", request("pc", null, "application/json;charset=iso-8859-1", "application/json;charset=utf-8").post(Entity.entity("[\"application/json;charset=utf-8\"]", "application/json;charset=utf-8;x=3;q=.8")));
+    assertResponse(406, null, request("pc", null, "text/plain", "application/json;charset=iso-8859-1").post(Entity.entity("[\"application/json;charset=iso-8859-1\"]", "application/json;charset=iso-8859-1;x=3;q=.8")));
+    assertResponse(200, "application/json;charset=ascii", request("pc", null, "application/json").post(Entity.entity("[\"application/json\"]", "application/json;x=3;q=.8")));
+    assertResponse(200, "text/json", request("pc", null, "text/json").post(Entity.entity("[\"text/json\"]", "text/json")));
+    assertResponse(200, "text/json;charset=ascii", request("pc", null, "text/json;charset=ascii").post(Entity.entity("[\"text/json;charset=ascii\"]", "text/json;charset=ascii")));
+    assertResponse(406, null, request("pc", null, "text/plain").post(Entity.entity("[\"text/plain\"]", new Variant((MediaType)null, (String)null, "utf-8"))));
+    assertResponse(500, null, request("pc", null, "text/html").post(Entity.entity("[\"text/html\"]", "text/html")));
   }
 }

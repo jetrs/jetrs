@@ -301,7 +301,7 @@ class MirrorQualityList<V,R> extends MirrorList<V,List<V>,R,List<R>> implements 
       if (mirrorList != null)
         getMirrorList().qualities = qualities;
 
-      return size();
+      return index;
     }
 
     if (quality == 1f)

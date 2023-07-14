@@ -86,6 +86,7 @@ public class MediaTypesTest {
   public void testCompatible() {
     assertEquals(MediaTypes.parse("application/vnd.jetrs.v1+json"), MediaTypes.getCompatible(ServerMediaType.valueOf("application/vnd.jetrs.v1+json"), MediaTypes.parse("application/*+json"), null));
     assertEquals(MediaTypes.parse("application/vnd.jetrs.v1+json"), MediaTypes.getCompatible(ServerMediaType.valueOf("application/*+json"), MediaTypes.parse("application/vnd.jetrs.v1+json"), null));
+    assertEquals(null, MediaTypes.getCompatible(ServerMediaType.valueOf("application/*+json;charset=utf-8;qs=.5"), MediaTypes.parse("application/xml"), null));
 
     ServerMediaType server = ServerMediaType.valueOf("application/xml");
     MediaType client = MediaTypes.parse("application/*");

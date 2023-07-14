@@ -51,6 +51,39 @@ public class MirrorQualityListTest {
   }
 
   @Test
+  public void testListFist() {
+    final MirrorQualityList<String,Float> list = newList();
+    final MirrorQualityList<Float,String> mirror = list.getMirrorList();
+    list.add("0.3");
+    list.add("0.5");
+    list.add("0.8");
+    assertEquals("[0.8, 0.5, 0.3]", list.toString());
+    assertEquals("[0.8, 0.5, 0.3]", mirror.toString());
+  }
+
+  @Test
+  public void testMirrorFirst() {
+    final MirrorQualityList<String,Float> list = newList();
+    final MirrorQualityList<Float,String> mirror = list.getMirrorList();
+    mirror.add(0.3f);
+    mirror.add(0.5f);
+    mirror.add(0.8f);
+    assertEquals("[0.8, 0.5, 0.3]", list.toString());
+    assertEquals("[0.8, 0.5, 0.3]", mirror.toString());
+  }
+
+  @Test
+  public void testListMirror() {
+    final MirrorQualityList<String,Float> list = newList();
+    final MirrorQualityList<Float,String> mirror = list.getMirrorList();
+    mirror.add(0.3f);
+    list.add("0.5");
+    mirror.add(0.8f);
+    assertEquals("[0.8, 0.5, 0.3]", list.toString());
+    assertEquals("[0.8, 0.5, 0.3]", mirror.toString());
+  }
+
+  @Test
   public void test() {
     final MirrorQualityList<String,Float> list = newList();
     list.add("0.1");
