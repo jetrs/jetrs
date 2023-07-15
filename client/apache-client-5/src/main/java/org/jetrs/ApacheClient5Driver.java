@@ -308,7 +308,7 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
                 }
               });
 
-              messageBodyWriter.writeTo(getEntity(), getEntityClass(), null, getAnnotations(), getMediaType(), requestHeaders.getMirrorMap(), relegateEntityStream);
+              messageBodyWriter.writeTo(getEntity(), getEntityClass(), getGenericType(), getAnnotations(), getMediaType(), requestHeaders.getMirrorMap(), relegateEntityStream);
             }
 
             $span(Span.RESPONSE_WAIT);

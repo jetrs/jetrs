@@ -59,7 +59,7 @@ public abstract class CachedClientDriver<C> extends ClientDriver {
     }
   };
 
-  abstract C newClient(final SSLContext sslContext);
+  abstract C newClient(SSLContext sslContext);
 
   @Override
   final Invocation build(final ClientImpl client, final ClientRuntimeContext runtimeContext, final URI uri, final String method, final HttpHeadersImpl requestHeaders, final ArrayList<Cookie> cookies, final CacheControl cacheControl, final Entity<?> entity, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final HashMap<String,Object> properties, final long connectTimeout, final long readTimeout) throws Exception {

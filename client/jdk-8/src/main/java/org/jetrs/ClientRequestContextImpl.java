@@ -102,7 +102,7 @@ abstract class ClientRequestContextImpl extends RequestContext<ClientRuntimeCont
       if (mediaType != null)
         requestHeaders.setMediaType(mediaType);
       else if (requestHeaders.getMediaType() == null)
-        logger.warn("Empty Content-Type for request with entity may be set to default value by HTTP client");
+        if (logger.isWarnEnabled()) logger.warn("Empty Content-Type for request with entity may be set to default value by HTTP client");
     }
 
     this.executorService = executorService;
@@ -119,7 +119,7 @@ abstract class ClientRequestContextImpl extends RequestContext<ClientRuntimeCont
 
     final MessageBodyWriter<?> messageBodyWriter = getProviders().getMessageBodyWriter(getEntityClass(), getGenericType(), getAnnotations(), mediaType);
     if (messageBodyWriter == null)
-      throw new ProcessingException("MessageBodyWriter not found for " + getEntityClass().getName() + " " + mediaType);
+      throw new ProcessingException("Could not find MessageBodyWriter for {type=" + getEntityClass().getName() + ", genericType=" + getGenericType().getTypeName() + ", annotations=" + Arrays.toString(getAnnotations()) + ", mediaType=" + mediaType + "}");
 
     return messageBodyWriter;
   }
@@ -256,10 +256,11 @@ abstract class ClientRequestContextImpl extends RequestContext<ClientRuntimeCont
   @Override
   @SuppressWarnings("unchecked")
   public void proceed() throws IOException, WebApplicationException {
-    if (++interceptorIndex < writerInterceptorProviderFactories.size()) {
+    final int size = writerInterceptorProviderFactories.size();
+    if (++interceptorIndex < size) {
       writerInterceptorProviderFactories.get(interceptorIndex).getSingletonOrFromRequestContext(this).aroundWriteTo(this);
     }
-    else if (interceptorIndex == writerInterceptorProviderFactories.size()) {
+    else if (interceptorIndex == size) {
       try (final OutputStream entityStream = getOutputStream()) {
         messageBodyWriter.writeTo(getEntity(), getEntityClass(), getEntityType(), getEntityAnnotations(), getMediaType(), getHeaders(), entityStream);
       }

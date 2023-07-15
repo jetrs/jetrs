@@ -152,7 +152,7 @@ abstract class InterceptorContextImpl<P> implements InterceptorContext {
 
   @Override
   public final void setAnnotations(final Annotation[] annotations) {
-    this.annotations = annotations;
+    this.annotations = annotations != null ? annotations : AnnotationUtil.EMPTY_ANNOTATIONS;
   }
 
   @Override

@@ -30,6 +30,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
@@ -123,9 +124,14 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
     return status;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @throws NullPointerException If {@code statusInfo} is null.
+   */
   @Override
   public void setStatusInfo(final Response.StatusType statusInfo) {
-    this.status = statusInfo;
+    this.status = Objects.requireNonNull(statusInfo);
   }
 
   @Override
@@ -272,10 +278,11 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
   @Override
   @SuppressWarnings("unchecked")
   public void proceed() throws IOException {
-    if (++interceptorIndex < writerInterceptorProviderFactories.size()) {
+    final int size = writerInterceptorProviderFactories.size();
+    if (++interceptorIndex < size) {
       writerInterceptorProviderFactories.get(interceptorIndex).getSingletonOrFromRequestContext(requestContext).aroundWriteTo(this);
     }
-    else if (interceptorIndex == writerInterceptorProviderFactories.size()) {
+    else if (interceptorIndex == size) {
       try (final OutputStream entityStream = getOutputStream()) {
         messageBodyWriter.writeTo(getEntity(), getEntityClass(), getEntityType(), getEntityAnnotations(), getMediaType(), getHeaders(), entityStream);
       }
@@ -399,7 +406,7 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
   }
 
   @SuppressWarnings("rawtypes")
-  void writeResponse(final HttpServletResponse httpServletResponse, final ResourceInfoImpl resourceInfo, final boolean isException) throws IOException {
+  void writeResponse(final HttpServletResponse httpServletResponse, final boolean isException) throws IOException {
     final Object entity = getEntity();
     final ResourceMatch resourceMatch = requestContext.getResourceMatch();
     final MediaType[] compatibleMediaTypes = resourceMatch != null ? resourceMatch.getCompatibleMediaTypes() : MediaTypes.WILDCARD_TYPE;
@@ -408,20 +415,9 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
       return;
     }
 
-    final Type methodReturnType;
-    final Annotation[] methodAnnotations;
-    if (resourceInfo != null) {
-      methodReturnType = resourceInfo.getMethodReturnType();
-      methodAnnotations = resourceInfo.getMethodAnnotations();
-    }
-    else {
-      methodReturnType = null;
-      methodAnnotations = null;
-    }
-
-    final MessageBodyProviderHolder<?> messageBodyProviderHolder = requestContext.getProviders().getMessageBodyWriter(getEntityClass(), methodReturnType, methodAnnotations, compatibleMediaTypes);
+    final MessageBodyProviderHolder<?> messageBodyProviderHolder = requestContext.getProviders().getMessageBodyWriter(getEntityClass(), getGenericType(), getAnnotations(), compatibleMediaTypes);
     if (messageBodyProviderHolder == null)
-      throw new InternalServerErrorException("MessageBodyWriter not found for " + getEntityClass().getName()); // [JAX-RS 4.2.2 7]
+      throw new InternalServerErrorException("Could not find MessageBodyWriter for {type=" + getEntityClass().getName() + ", genericType=" + getGenericType().getTypeName() + ", annotations=" + Arrays.toString(getAnnotations()) + ", mediaTypes=" + Arrays.toString(compatibleMediaTypes) + "}"); // [JAX-RS 4.2.2 7]
 
     final MessageBodyWriter messageBodyWriter = (MessageBodyWriter)messageBodyProviderHolder.getProvider();
     final MediaType[] compatibleMediaTypesWithWriter = messageBodyProviderHolder.getMediaTypes();

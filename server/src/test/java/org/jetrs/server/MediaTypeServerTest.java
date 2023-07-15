@@ -43,11 +43,18 @@ public class MediaTypeServerTest {
 
   private static final TestAppServer server = new TestAppServer(new Object[] {
     new MediaTypeService(),
-    new MyJsonProvider(),
-
+    new MyJsonProvider()
   }, null);
   private static final String serviceUrl = server.getServiceUrl();
   private static final Client client = ClientBuilder.newClient().register(GZipCodecInterceptor.class).register(new StringProvider());
+
+  private static void assertResponse(final int statusCode, final String expectedContentType, final Response response) {
+    assertEquals(statusCode, response.getStatus());
+    final String actualContentType = response.getHeaderString(HttpHeaders.CONTENT_TYPE);
+    assertEquals(expectedContentType, actualContentType);
+    if (actualContentType == null)
+      assertNull(response.getEntity());
+  }
 
   @AfterClass
   public static void afterClass() throws Exception {
@@ -101,26 +108,20 @@ public class MediaTypeServerTest {
 
   @Test
   public void testPA() {
-    assertEquals(200, request("pa", null, "application/json").post(Entity.entity("[\"application/json\"]", "application/json")).getStatus());
-    assertEquals(200, request("pa", null, "text/xml", "application/xml", "application/json;charset=utf-8").post(Entity.entity("[\"application/json;charset=utf-8\"]", "application/json;charset=utf-8;x=3;q=.8")).getStatus());
-    assertEquals(200, request("pa", null, "text/json", "text/xml", "application/xml").post(Entity.entity("[\"text/json\"]", "text/json")).getStatus());
-    assertEquals(200, request("pa", "text/plain", "application/xml", "text/plain").post(Entity.entity("[\"text/plain\"]", new Variant((MediaType)null, (String)null, "utf-8"))).getStatus());
-    assertEquals(500, request("pa", null, "text/html", "application/xml").post(Entity.entity("[\"text/html\"]", "text/html")).getStatus());
+    assertResponse(200, "application/json", request("pa", null, "application/json").post(Entity.entity("[\"application/json\"]", "application/json")));
+    assertResponse(200, "application/json;charset=utf-8", request("pa", null, "application/xml", "application/json;charset=utf-8", "text/xml").post(Entity.entity("[\"application/json;charset=utf-8\"]", "application/json;charset=utf-8;x=3;q=.8")));
+    assertResponse(200, "text/json", request("pa", null, "text/json", "text/xml", "application/xml").post(Entity.entity("[\"text/json\"]", "text/json")));
+    assertResponse(200, "text/plain", request("pa", "text/plain", "application/xml", "text/plain").post(Entity.entity("[\"text/plain\"]", new Variant((MediaType)null, (String)null, "utf-8"))));
+    assertResponse(500, null, request("pa", null, "text/html", "application/xml").post(Entity.entity("[\"text/html\"]", "text/html")));
   }
 
   @Test
   public void testPB() {
-    assertEquals(200, request("pb", null, "application/json", "application/xml").post(Entity.entity("[\"application/json\"]", "application/json")).getStatus());
-    assertEquals(200, request("pb", null, "application/json;charset=utf-8", "text/xml", "application/xml").post(Entity.entity("[\"application/json;charset=utf-8\"]", "application/json;charset=utf-8;x=3;q=.8")).getStatus());
-    assertEquals(406, request("pb", null, "text/json", "text/xml").post(Entity.entity("[\"text/json\"]", "text/json")).getStatus());
-    assertEquals(406, request("pb", null, "text/xml", "text/plain").post(Entity.entity("[\"text/plain\"]", new Variant((MediaType)null, (String)null, "utf-8"))).getStatus());
-    assertEquals(500, request("pb", null, "text/html", "text/plain").post(Entity.entity("[\"text/html\"]", "text/html")).getStatus());
-  }
-
-  private static void assertResponse(final int statusCode, final String expectedContentType, final Response response) {
-    assertEquals(statusCode, response.getStatus());
-    final String actualContentType = response.getHeaderString(HttpHeaders.CONTENT_TYPE);
-    assertEquals(expectedContentType, actualContentType);
+    assertResponse(200, "application/json", request("pb", null, "text/xml", "application/json", "application/xml").post(Entity.entity("[\"application/json\"]", "application/json")));
+    assertResponse(200, "application/json;charset=utf-8", request("pb", null, "application/json;charset=utf-8", "text/xml", "application/xml").post(Entity.entity("[\"application/json;charset=utf-8\"]", "application/json;charset=utf-8;x=3;q=.8")));
+    assertResponse(406, null, request("pb", null, "text/xml", "text/json", "text/xml").post(Entity.entity("[\"text/json\"]", "text/json")));
+    assertResponse(406, null, request("pb", null, "text/xml", "text/plain").post(Entity.entity("[\"text/plain\"]", new Variant((MediaType)null, (String)null, "utf-8"))));
+    assertResponse(500, null, request("pb", null, "text/html", "text/plain").post(Entity.entity("[\"text/html\"]", "text/html")));
   }
 
   @Test

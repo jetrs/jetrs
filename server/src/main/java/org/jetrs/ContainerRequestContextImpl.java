@@ -323,14 +323,14 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext,Ht
 
   @Override
   @SuppressWarnings("unchecked")
-  <T>T findInjectableValue(final AnnotatedElement element, final int parameterIndex, final Annotation[] annotations, final Class<T> clazz, final Type type) throws IOException {
-    T injectableObject = super.findInjectableValue(element, parameterIndex, annotations, clazz, type);
+  <T>T findInjectableValue(final AnnotatedElement element, final int parameterIndex, final Annotation[] annotations, final Class<T> rawType, final Type genericType) throws IOException {
+    T injectableObject = super.findInjectableValue(element, parameterIndex, annotations, rawType, genericType);
     if (injectableObject != null)
       return injectableObject;
 
     final Annotation annotation = findInjectableAnnotation(annotations, true);
     if (annotation != null) {
-      final Object argument = getParamObject(element, parameterIndex, annotation, annotations, clazz, type);
+      final Object argument = getParamObject(element, parameterIndex, annotation, annotations, rawType, genericType);
       if (argument instanceof Exception)
         throw new BadRequestException((Exception)argument);
 
@@ -346,13 +346,13 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext,Ht
     if (contentType == null)
       contentType = MediaType.APPLICATION_OCTET_STREAM_TYPE;
 
-    final MessageBodyReader<?> messageBodyReader = providers.getMessageBodyReader(clazz, type, annotations, contentType); // [JAX-RS 4.2.1]
+    final MessageBodyReader<?> messageBodyReader = providers.getMessageBodyReader(rawType, genericType, annotations, contentType); // [JAX-RS 4.2.1]
     if (messageBodyReader == null)
-      throw new WebApplicationException("Could not find MessageBodyReader for type: " + clazz.getName() + " " + contentType);
+      throw new WebApplicationException("Could not find MessageBodyReader for {type=" + rawType.getName() + ", genericType=" + genericType.getTypeName() + ", annotations=" + Arrays.toString(annotations) + ", mediaType=" + contentType + "}");
 
     // FIXME: Why is there a return type for ReaderInterceptorContext#proceed()? And it's of type Object. What type is ReaderInterceptorContext supposed to return? It should be InputStream, but then it makes it redundant.
-    setType(clazz);
-    setGenericType(clazz.getGenericSuperclass());
+    setType(rawType);
+    setGenericType(rawType.getGenericSuperclass());
     setAnnotations(annotations);
     try {
       return (T)readBody(messageBodyReader);
@@ -923,7 +923,7 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext,Ht
       if (logger.isInfoEnabled()) logger.info("Unable to overwrite committed response [" + httpServletResponse.getStatus() + "] -> [" + containerResponseContext.getStatus() + "]: ", t);
     }
     else {
-      containerResponseContext.writeResponse(httpServletResponse, resourceInfo, t != null);
+      containerResponseContext.writeResponse(httpServletResponse, t != null);
     }
   }
 

@@ -22,6 +22,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Locale;
@@ -157,7 +158,7 @@ class ResponseImpl extends Response {
     final MediaType mediaType = headers.getMediaType();
     final MessageBodyReader<T> messageBodyReader = providers.getMessageBodyReader(rawType, genericType, annotations, mediaType);
     if (messageBodyReader == null)
-      throw new ProcessingException("Could not find MessageBodyReader for type: " + rawType.getName());
+      throw new ProcessingException("Could not find MessageBodyReader for {type=" + rawType.getName() + ", genericType=" + genericType.getTypeName() + ", annotations=" + Arrays.toString(annotations) + ", mediaType=" + mediaType + "}");
 
     final boolean wasBuffered = wasBuffered();
     if (wasBuffered)
