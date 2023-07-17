@@ -18,6 +18,7 @@ package org.jetrs;
 
 import java.lang.annotation.Annotation;
 import java.net.URI;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -37,6 +38,9 @@ import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Variant;
+import javax.ws.rs.ext.RuntimeDelegate;
+
+import org.libj.util.CollectionUtil;
 
 // FIXME: It is implied that a ResponseBuilderImpl instance only exists in Server Runtime. Is this correct?
 class ResponseBuilderImpl extends Response.ResponseBuilder implements Cloneable {
@@ -145,12 +149,49 @@ class ResponseBuilderImpl extends Response.ResponseBuilder implements Cloneable 
 
   @Override
   public Response.ResponseBuilder header(final String name, final Object value) {
-    if (value == null)
+    if (value == null) {
       headers.remove(name);
-    else if (value instanceof String)
+    }
+    else if (value instanceof String) {
       headers.add(name, (String)value);
-    else
+    }
+    else if (value.getClass().isArray()) {
+      final Object[] array = (Object[])value;
+      final int length = array.length;
+      if (length > 0) {
+        final Object obj = array[0];
+        final RuntimeDelegate.HeaderDelegate<Object> delegate = HeaderDelegateImpl.lookup(name, obj.getClass());
+        headers.add(name, delegate.toString(obj));
+        for (int i = 1; i < length; ++i) // [A]
+          headers.add(name, delegate.toString(array[i]));
+      }
+    }
+    else if (value instanceof Collection) {
+      final Collection<?> collection = (Collection<?>)value;
+      final int size = collection.size();
+      if (size > 0) {
+        final RuntimeDelegate.HeaderDelegate<Object> delegate;
+        final List<?> list;
+        if (value instanceof List && CollectionUtil.isRandomAccess(list = (List<?>)value)) {
+          final Object obj = list.get(0);
+          delegate = HeaderDelegateImpl.lookup(name, obj.getClass());
+          headers.add(name, delegate.toString(obj));
+          for (int i = 1; i < size; ++i) // [RA]
+            headers.add(name, delegate.toString(list.get(i)));
+        }
+        else {
+          final Iterator<?> i = collection.iterator();
+          final Object obj = i.next();
+          delegate = HeaderDelegateImpl.lookup(name, obj.getClass());
+          headers.add(name, delegate.toString(obj));
+          while (i.hasNext())
+            headers.add(name, delegate.toString(i.next()));
+        }
+      }
+    }
+    else {
       headers.add(name, HeaderDelegateImpl.lookup(name, value.getClass()).toString(value));
+    }
 
     return this;
   }
@@ -250,6 +291,34 @@ class ResponseBuilderImpl extends Response.ResponseBuilder implements Cloneable 
   }
 
   @Override
+  public Response.ResponseBuilder link(final String uri, final String rel) {
+    return link(URI.create(uri), rel);
+  }
+
+  @Override
+  public Response.ResponseBuilder link(final URI uri, final String rel) {
+    headers.getMirrorMap().add(HttpHeaders.LINK, new LinkImpl(uri, rel));
+    return this;
+  }
+
+  @Override
+  public Response.ResponseBuilder links(final Link ... links) {
+    if (links == null) {
+      headers.remove(HttpHeaders.LINK);
+      return this;
+    }
+
+    if (links.length == 0)
+      return this;
+
+    final HttpHeadersMap<Object,String> mirrorMap = headers.getMirrorMap();
+    for (final Link link : links) // [A]
+      mirrorMap.add(HttpHeaders.LINK, link);
+
+    return this;
+  }
+
+  @Override
   public Response.ResponseBuilder location(final URI location) {
     headers.getMirrorMap().putSingle(HttpHeaders.LOCATION, location);
     return this;
@@ -275,24 +344,6 @@ class ResponseBuilderImpl extends Response.ResponseBuilder implements Cloneable 
 
   @Override
   public Response.ResponseBuilder variants(final List<Variant> variants) {
-    // TODO: Implement this.
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public Response.ResponseBuilder links(final Link ... links) {
-    // TODO: Implement this.
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public Response.ResponseBuilder link(final URI uri, final String rel) {
-    // TODO: Implement this.
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public Response.ResponseBuilder link(final String uri, final String rel) {
     // TODO: Implement this.
     throw new UnsupportedOperationException();
   }

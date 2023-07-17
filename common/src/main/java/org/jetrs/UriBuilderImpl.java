@@ -349,7 +349,7 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
   @Override
   public UriBuilder host(final String host) throws IllegalArgumentException {
     if (host != null && host.length() == 0)
-      throw new IllegalArgumentException(invalidParam("host", "\"" + host + "\""));
+      throw new IllegalArgumentException(invalidParam("host", "\"\""));
 
     this.host = host;
     return this;
@@ -493,13 +493,13 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
       path = "";
 
     if (values.length != 0) {
-      final StringBuilder builder = new StringBuilder();
+      final StringBuilder b = new StringBuilder();
       for (final Object value : values) { // [A]
         assertNotNull(value, "value is null");
-        builder.append(';').append(UriEncoder.MATRIX.encode(name)).append('=').append(UriEncoder.MATRIX.encode(value.toString()));
+        b.append(';').append(UriEncoder.MATRIX.encode(name)).append('=').append(UriEncoder.MATRIX.encode(value.toString()));
       }
 
-      path += builder;
+      path += b;
     }
 
     return this;
@@ -547,15 +547,15 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
     // put back all path param expressions
     if (pathParams != null) {
       final Matcher matcher = UriEncoder.PARAM_REPLACEMENT.matcher(path);
-      final StringBuilder builder = new StringBuilder();
+      final StringBuilder b = new StringBuilder();
       int from = 0;
       for (int i = 0; matcher.find(); ++i, from = matcher.end()) { // [RA]
-        builder.append(path, from, matcher.start());
-        builder.append(pathParams.get(i));
+        b.append(path, from, matcher.start());
+        b.append(pathParams.get(i));
       }
 
-      builder.append(path, from, path.length());
-      path = builder.toString();
+      b.append(path, from, path.length());
+      path = b.toString();
     }
 
     return this;
@@ -572,19 +572,19 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
     assertNotNull(name, "name is null");
     assertNotNull(values, "values is null");
 
-    final StringBuilder builder = new StringBuilder();
+    final StringBuilder b = new StringBuilder();
     if (query != null)
-      builder.append(query).append('&');
+      b.append(query).append('&');
 
     for (int i = 0, i$ = values.length; i < i$; ++i) { // [A]
       final Object value = assertNotNull(values[i], "value is null");
       if (i > 0)
-        builder.append('&');
+        b.append('&');
 
-      builder.append(UriEncoder.QUERY_PARAM.encode(name)).append('=').append(UriEncoder.QUERY_PARAM.encode(value.toString()));
+      b.append(UriEncoder.QUERY_PARAM.encode(name)).append('=').append(UriEncoder.QUERY_PARAM.encode(value.toString()));
     }
 
-    query = builder.toString();
+    query = b.toString();
     return this;
   }
 

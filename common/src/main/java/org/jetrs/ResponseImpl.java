@@ -303,31 +303,27 @@ class ResponseImpl extends Response {
 
   @Override
   public Set<Link> getLinks() {
-    // TODO:
-    throw new UnsupportedOperationException();
+    return Links.getLinks(headers);
   }
 
   @Override
   public boolean hasLink(final String relation) {
-    // TODO:
-    throw new UnsupportedOperationException();
+    return Links.hasLink(headers, relation);
   }
 
   @Override
   public Link getLink(final String relation) {
-    // TODO:
-    throw new UnsupportedOperationException();
+    return Links.getLink(headers, relation);
   }
 
   @Override
   public Builder getLinkBuilder(final String relation) {
-    // TODO:
-    throw new UnsupportedOperationException();
+    return Links.getLinkBuilder(headers, relation);
   }
 
   @Override
   @Deprecated
-  public MultivaluedArrayMap<String,Object> getMetadata() {
+  public final MultivaluedArrayMap<String,Object> getMetadata() {
     return getHeaders();
   }
 

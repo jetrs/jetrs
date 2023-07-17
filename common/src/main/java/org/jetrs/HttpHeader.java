@@ -27,6 +27,7 @@ import java.util.Locale;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.EntityTag;
+import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
@@ -450,8 +451,9 @@ final class HttpHeader<T> {
 
   /**
    * @see <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Link">MDN Web Docs</a>
+   * @see <a href="https://datatracker.ietf.org/doc/html/rfc8288">RFC 8288</a>
    */
-  static final HttpHeader<String> LINK = new HttpHeader<>(HttpHeaders.LINK, none, false, HeaderDelegateImpl.STRING); // FIXME: Strong Type Candidate
+  static final HttpHeader<Link> LINK = new HttpHeader<>(HttpHeaders.LINK, comma, false, HeaderDelegateImpl.LINK);
 
   /**
    * @see <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Location">MDN Web Docs</a>

@@ -71,7 +71,8 @@ abstract class ParamPlurality<T> {
 
       @Override
       Class<?> getMemberClass(final Class<?> rawType, final Type genericType) {
-        return rawType.getComponentType();
+        final Class<?> cls = rawType.getComponentType();
+        return cls != null ? cls : ((Class<?>)genericType).getComponentType();
       }
 
       @Override

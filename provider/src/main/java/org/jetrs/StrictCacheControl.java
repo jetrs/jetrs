@@ -255,13 +255,15 @@ class StrictCacheControl extends CacheControl {
 
     static boolean parseDirective(final StrictCacheControl cacheControl, final String directiveString) {
       final Directive[] directives = values();
-      final int len = directives.length - 1;
-      for (final Directive directive : directives) // [A]
-        for (final String name : directive.names) // [A]
-          if (Strings.startsWithIgnoreCase(directiveString, name) && (name.length() == directiveString.length() || directiveString.charAt(name.length()) == '='))
+      for (final Directive directive : directives) { // [A]
+        for (final String name : directive.names) { // [A]
+          final int length = name.length();
+          if (Strings.startsWithIgnoreCase(directiveString, name) && (length == directiveString.length() || directiveString.charAt(length) == '='))
             return directive.parse(cacheControl, directiveString);
+        }
+      }
 
-      return directives[len].parse(cacheControl, directiveString);
+      return directives[directives.length - 1].parse(cacheControl, directiveString);
     }
   }
 

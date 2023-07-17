@@ -16,6 +16,8 @@
 
 package org.jetrs;
 
+import static org.libj.lang.Assertions.*;
+
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -637,11 +639,10 @@ public final class MediaTypes {
   // FIXME: What are the legal name and sub-name spec? Need to properly throw IllegalArgumentException!
   @SuppressWarnings("unchecked")
   static <T extends QualifiedMediaType>T parse(final Class<T> cls, String string) {
-    string = string.trim();
-    if (string.length() == 0)
-      throw new IllegalArgumentException(string);
+    assertNotEmpty(string = string.trim());
 
-    for (int i = 0, i$ = string.length(); i < i$; ++i) { // [N]
+    final int len = string.length();
+    for (int i = 0; i < len; ++i) { // [N]
       final char ch = string.charAt(i);
       if (!isValidChar(ch))
         throw new IllegalArgumentException("Illegal character '" + ch + "' at pos=" + i + " in: " + string);
@@ -653,7 +654,7 @@ public final class MediaTypes {
     final String subtype;
     if (start > -1) {
       type = string.substring(0, start).trim();
-      subtype = string.substring(start + 1, end > -1 ? end : string.length()).trim();
+      subtype = string.substring(start + 1, end > -1 ? end : len).trim();
       if (subtype.chars().anyMatch(c -> c == '/'))
         throw new IllegalArgumentException(string);
 
@@ -668,7 +669,6 @@ public final class MediaTypes {
       subtype = null;
     }
 
-    final int len = string.length();
     start = end;
     final HashMap<String,String> parameters = new HashMap<>();
     do {

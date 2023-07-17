@@ -38,9 +38,7 @@ class ProvidersImpl implements Providers {
     for (int i = 0, i$ = factories.size(); i < i$; ++i) { // [RA]
       final MessageBodyProviderFactory<?> factory = factories.get(i);
       final MediaType[] compatibleMediaType = factory.getCompatibleMediaType(requestContext, type, genericType, annotations, mediaType);
-      if (compatibleMediaType == null)
-        factory.getCompatibleMediaType(requestContext, type, genericType, annotations, mediaType);
-      if (compatibleMediaType.length != 0) {
+      if (compatibleMediaType.length > 0) {
         final Object provider = factory.getSingletonOrFromRequestContext(requestContext);
         return asHolder ? new MessageBodyProviderHolder<>(provider, compatibleMediaType) : provider;
       }

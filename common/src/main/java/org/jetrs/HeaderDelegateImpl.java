@@ -32,6 +32,7 @@ import java.util.Locale;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.EntityTag;
+import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
@@ -108,6 +109,7 @@ abstract class HeaderDelegateImpl<T> implements RuntimeDelegate.HeaderDelegate<T
   public static final HeaderDelegateImpl<Double> DOUBLE;
   public static final HeaderDelegateImpl<EntityTag> ENTITY_TAG;
   public static final HeaderDelegateImpl<Float> FLOAT;
+  public static final HeaderDelegateImpl<Link> LINK;
   public static final HeaderDelegateImpl<LocalDateTime> LOCAL_DATE_TIME;
   public static final HeaderDelegateImpl<Locale> LOCALE;
   public static final HeaderDelegateImpl<MediaType> MEDIA_TYPE;
@@ -350,9 +352,7 @@ abstract class HeaderDelegateImpl<T> implements RuntimeDelegate.HeaderDelegate<T
         if (value.isWeak())
           builder.append("W/");
 
-        builder.append('"');
-        builder.append(valueValue);
-        builder.append('"');
+        builder.append('"').append(valueValue).append('"');
         return builder.toString();
       }
     },
@@ -364,6 +364,17 @@ abstract class HeaderDelegateImpl<T> implements RuntimeDelegate.HeaderDelegate<T
 
       @Override
       public String toString(final Float value) {
+        return value.toString();
+      }
+    },
+    LINK = new HeaderDelegateImpl<Link>(Link.class, true) {
+      @Override
+      Link valueOf(final String value) {
+        return Links.parse(value);
+      }
+
+      @Override
+      public String toString(final Link value) {
         return value.toString();
       }
     },
@@ -570,12 +581,12 @@ abstract class HeaderDelegateImpl<T> implements RuntimeDelegate.HeaderDelegate<T
         if (value.length == 0)
           return "";
 
-        final StringBuilder builder = new StringBuilder();
-        builder.append(value[0]);
+        final StringBuilder b = new StringBuilder();
+        b.append(value[0]);
         for (int i = 1, i$ = value.length; i < i$; ++i) // [A]
-          builder.append(',').append(value[i]);
+          b.append(',').append(value[i]);
 
-        return builder.toString();
+        return b.toString();
       }
     },
     TK = new HeaderDelegateImpl<Tk>(Tk.class, true) {

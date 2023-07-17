@@ -106,9 +106,13 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
     this();
     if (headers.size() > 0) {
       for (final Map.Entry<String,List<String>> entry : headers.entrySet()) { // [S]
-        final String key = entry.getKey();
-        if (key != null)
-          addAll(key, entry.getValue());
+        final String headerName = entry.getKey();
+        if (headerName != null) {
+          final List<String> values = getValues(headerName);
+          final char[] delimiters = getHeaderValueDelimiters(headerName);
+          for (final String value : entry.getValue()) // [L]
+            parseHeaderValuesFromString(values, value, delimiters);
+        }
       }
     }
   }
@@ -124,7 +128,7 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
     final MirrorMultivaluedArrayMap<String,Object,String> mirrorMap = getMirrorMap();
     if (headers.size() > 0)
       for (final Map.Entry<String,List<Object>> entry : headers.entrySet()) // [S]
-      mirrorMap.addAll(entry.getKey(), entry.getValue());
+        mirrorMap.addAll(entry.getKey(), entry.getValue());
   }
 
   /**
@@ -150,9 +154,8 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
 
       final List<String> values = getValues(headerName);
       final char[] delimiters = getHeaderValueDelimiters(headerName);
-      do {
+      do
         parseHeaderValuesFromString(values, headerValues.nextElement(), delimiters);
-      }
       while (headerValues.hasMoreElements());
     }
   }

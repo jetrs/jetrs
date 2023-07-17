@@ -119,7 +119,7 @@ abstract class ClientRequestContextImpl extends RequestContext<ClientRuntimeCont
 
     final MessageBodyWriter<?> messageBodyWriter = getProviders().getMessageBodyWriter(getEntityClass(), getGenericType(), getAnnotations(), mediaType);
     if (messageBodyWriter == null)
-      throw new ProcessingException("Could not find MessageBodyWriter for {type=" + getEntityClass().getName() + ", genericType=" + getGenericType().getTypeName() + ", annotations=" + Arrays.toString(getAnnotations()) + ", mediaType=" + mediaType + "}");
+      throw new ProcessingException("Could not find MessageBodyWriter for {type=" + getEntityClass().getName() + ", genericType=" + (getGenericType() == null ? "null" : getGenericType().getTypeName()) + ", annotations=" + Arrays.toString(getAnnotations()) + ", mediaType=" + mediaType + "}");
 
     return messageBodyWriter;
   }

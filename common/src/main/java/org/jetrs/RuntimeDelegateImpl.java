@@ -92,8 +92,7 @@ public class RuntimeDelegateImpl extends RuntimeDelegate {
 
   @Override
   public Link.Builder createLinkBuilder() {
-    // TODO: Implement this.
-    throw new UnsupportedOperationException();
+    return new LinkImpl.BuilderImpl();
   }
 
   @Override

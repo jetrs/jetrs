@@ -168,26 +168,22 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
 
   @Override
   public Set<Link> getLinks() {
-    // TODO: Implement this.
-    throw new UnsupportedOperationException();
+    return Links.getLinks(getStringHeaders());
   }
 
   @Override
   public boolean hasLink(final String relation) {
-    // TODO: Implement this.
-    throw new UnsupportedOperationException();
+    return Links.hasLink(getStringHeaders(), relation);
   }
 
   @Override
   public Link getLink(final String relation) {
-    // TODO: Implement this.
-    throw new UnsupportedOperationException();
+    return Links.getLink(getStringHeaders(), relation);
   }
 
   @Override
   public Builder getLinkBuilder(final String relation) {
-    // TODO: Implement this.
-    throw new UnsupportedOperationException();
+    return Links.getLinkBuilder(getStringHeaders(), relation);
   }
 
   private Object entity;
@@ -367,7 +363,8 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
         contentType = compatibleMediaTypes[0]; // Here we expect at least one MediaType
 
       if (contentType == null || contentType.isWildcardType()) {
-        if (logger.isWarnEnabled()) logger.warn("Content-Type not specified -- setting to " + MediaType.APPLICATION_OCTET_STREAM);
+        if (logger.isWarnEnabled())
+          logger.warn("Content-Type not specified -- setting to " + MediaType.APPLICATION_OCTET_STREAM);
         contentType = MediaType.APPLICATION_OCTET_STREAM_TYPE;
       }
 
@@ -417,7 +414,7 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
 
     final MessageBodyProviderHolder<?> messageBodyProviderHolder = requestContext.getProviders().getMessageBodyWriter(getEntityClass(), getGenericType(), getAnnotations(), compatibleMediaTypes);
     if (messageBodyProviderHolder == null)
-      throw new InternalServerErrorException("Could not find MessageBodyWriter for {type=" + getEntityClass().getName() + ", genericType=" + getGenericType().getTypeName() + ", annotations=" + Arrays.toString(getAnnotations()) + ", mediaTypes=" + Arrays.toString(compatibleMediaTypes) + "}"); // [JAX-RS 4.2.2 7]
+      throw new InternalServerErrorException("Could not find MessageBodyWriter for {type=" + getEntityClass().getName() + ", genericType=" + (getGenericType() == null ? "null" : getGenericType().getTypeName()) + ", annotations=" + Arrays.toString(getAnnotations()) + ", mediaTypes=" + Arrays.toString(compatibleMediaTypes) + "}"); // [JAX-RS
 
     final MessageBodyWriter messageBodyWriter = (MessageBodyWriter)messageBodyProviderHolder.getProvider();
     final MediaType[] compatibleMediaTypesWithWriter = messageBodyProviderHolder.getMediaTypes();
@@ -442,7 +439,8 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
           }
         }
         else {
-          if (logger.isInfoEnabled()) logger.info("Unable to overwrite committed response [" + httpServletResponse.getStatus() + "] -> [" + getStatus() + "]: " + entity);
+          if (logger.isInfoEnabled())
+            logger.info("Unable to overwrite committed response [" + httpServletResponse.getStatus() + "] -> [" + getStatus() + "]: " + entity);
         }
       }
     }
@@ -525,7 +523,8 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
         outputStream.close();
       }
       catch (final Exception e) {
-        if (logger.isDebugEnabled()) logger.debug(e.getMessage(), e);
+        if (logger.isDebugEnabled())
+          logger.debug(e.getMessage(), e);
       }
       finally {
         outputStream = null;
