@@ -97,7 +97,6 @@ public class RuntimeDelegateImpl extends RuntimeDelegate {
 
   @Override
   public VariantListBuilder createVariantListBuilder() {
-    // TODO: Implement this.
-    throw new UnsupportedOperationException();
+    return new VariantListBuilderImpl();
   }
 }
