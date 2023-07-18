@@ -30,6 +30,8 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import javax.inject.Singleton;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.MessageBodyReader;
@@ -172,6 +174,20 @@ class Bootstrap<R extends ArrayList<? extends Comparable<?>>> {
           classes.add(providerClass);
         else
           singletons.add(providerClass.getDeclaredConstructor().newInstance());
+
+        if (logger.isDebugEnabled()) {
+          final StringBuilder b = new StringBuilder();
+          final Consumes c = providerClass.getAnnotation(Consumes.class);
+          if (c != null)
+            b.append(c).append(' ');
+
+          final Produces p = providerClass.getAnnotation(Produces.class);
+          if (p != null)
+            b.append(p).append(' ');
+
+          b.append("-> ").append(providerClass.getSimpleName());
+          logger.debug(b.toString());
+        }
       }
       catch (final Exception | ServiceConfigurationError e) {
         if (logger.isWarnEnabled()) logger.warn("Failed to load provider " + providerClass + ".", e);
