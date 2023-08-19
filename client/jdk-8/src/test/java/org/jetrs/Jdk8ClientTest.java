@@ -62,13 +62,13 @@ public class Jdk8ClientTest {
   }
 
   private static final byte[] testBytes = createRandomBytes(Short.MAX_VALUE * 16);
-  private static Client client = ClientBuilder
+  private static final Client client = ClientBuilder
     .newBuilder()
     .connectTimeout(25000, TimeUnit.MILLISECONDS)
     .readTimeout(25000, TimeUnit.MILLISECONDS)
     .build();
 
-  private static int tests = 50;
+  private static final int tests = 50;
 
   private abstract static class Trial {
     private Trial(final String method) throws InterruptedException, IOException {

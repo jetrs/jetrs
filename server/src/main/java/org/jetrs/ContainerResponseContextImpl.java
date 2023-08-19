@@ -79,11 +79,11 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
     }
   }
 
-  private final ArrayList<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorProviderFactories;
   private final HttpServletRequest httpServletRequest;
-  private final ContainerRequestContextImpl requestContext;
   private final HttpHeadersImpl headers;
   private Response.StatusType status;
+  private final ContainerRequestContextImpl requestContext;
+  private final ArrayList<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorProviderFactories;
 
   ContainerResponseContextImpl(final PropertiesAdapter<HttpServletRequest> propertiesAdapter, final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse, final ContainerRequestContextImpl requestContext) {
     super(propertiesAdapter);

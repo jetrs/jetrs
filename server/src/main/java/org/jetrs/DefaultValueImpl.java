@@ -17,7 +17,7 @@
 package org.jetrs;
 
 class DefaultValueImpl {
-  static DefaultValueImpl[] EMPTY_ARRAY = {};
+  static final DefaultValueImpl[] EMPTY_ARRAY = {};
 
   final boolean isConverted;
   final String annotatedValue;
