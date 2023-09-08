@@ -79,11 +79,11 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
     }
   }
 
-  private final HttpServletRequest httpServletRequest;
-  private final HttpHeadersImpl headers;
+  private HttpServletRequest httpServletRequest;
+  private HttpHeadersImpl headers;
   private Response.StatusType status;
-  private final ContainerRequestContextImpl requestContext;
-  private final ArrayList<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorProviderFactories;
+  private ContainerRequestContextImpl requestContext;
+  private ArrayList<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorProviderFactories;
 
   ContainerResponseContextImpl(final PropertiesAdapter<HttpServletRequest> propertiesAdapter, final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse, final ContainerRequestContextImpl requestContext) {
     super(propertiesAdapter);
@@ -337,6 +337,8 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
       try (final OutputStream socketOutputStream = httpServletResponse.getOutputStream()) {
         socketOutputStream.write(buf, 0, count);
       }
+
+      super.close();
     }
   }
 
@@ -484,9 +486,8 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
 
         @Override
         protected void afterWrite(final int b, final byte[] bs, final int off, final int len) {
-          if (!(target instanceof BufferedSocketOutputStream)) {
+          if (!(target instanceof BufferedSocketOutputStream))
             relegateOutputStream.setTarget(target);
-          }
         }
 
         @Override
@@ -523,12 +524,21 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
         outputStream.close();
       }
       catch (final Exception e) {
-        if (logger.isDebugEnabled())
-          logger.debug(e.getMessage(), e);
+        if (logger.isDebugEnabled()) logger.debug(e.getMessage(), e);
       }
       finally {
         outputStream = null;
       }
     }
+
+    entity = null;
+    entityClass = null;
+    entityType = null;
+    headers = null;
+    httpServletRequest = null;
+    messageBodyWriter = null;
+    requestContext = null;
+    status = null;
+    writerInterceptorProviderFactories = null;
   }
 }

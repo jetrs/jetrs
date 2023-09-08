@@ -47,8 +47,11 @@ public class FlushResponseService {
       public void write(final OutputStream output) throws IOException, WebApplicationException {
         final int len = bytes.length - 2;
         output.write(bytes, 0, len);
-        if (exception)
-          throw new IOException();
+        if (exception) {
+          final IOException e = new IOException();
+          e.setStackTrace(new StackTraceElement[0]);
+          throw e;
+        }
 
         output.write(bytes, len, bytes.length - len);
       }

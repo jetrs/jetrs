@@ -27,6 +27,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -75,41 +76,57 @@ public class Jdk8ClientTest {
       this(method, null);
     }
 
+    private void invokeAsync(final AsyncInvoker invoker, final String method, final Supplier<Entity<?>> entity) throws ExecutionException, InterruptedException, IOException {
+      try (final Response response = (entity != null ? invoker.method(method, entity.get()) : invoker.method(method)).get()) {
+        assertResponse(response);
+      }
+    }
+
     private Trial(final String method, final Supplier<Entity<?>> entity) throws InterruptedException, IOException {
       final WireMockRule server = new WireMockRule(0);
       server.start();
       configServer(server);
 
       final Invocation.Builder builder = buildRequest("http://localhost:" + server.port());
-      for (int i = 0; i < tests; ++i) // [N]
+      for (int i = 0; i < tests; ++i) { // [N]
         assertResponse(entity != null ? builder.method(method, entity.get()) : builder.method(method));
+      }
 
       final ExecutorService executor = Executors.newFixedThreadPool(tests);
       final CountDownLatch latch = new CountDownLatch(tests);
       for (int i = 0; i < tests; ++i) { // [N]
         executor.submit(() -> {
-          try {
-            final AsyncInvoker invoker = builder.async();
-            try (final Response response = (entity != null ? invoker.method(method, entity.get()) : invoker.method(method)).get()) {
-              assertResponse(response);
-            }
+          do {
+            try {
+              final AsyncInvoker invoker = builder.async();
+              if (HttpMethod.POST.equals(method)) { // FIXME: Had to add this, because for some reason the WireMock server was resulting in "Error writing to server"
+                synchronized (method.intern()) {
+                  invokeAsync(invoker, method, entity);
+                }
+              }
+              else {
+                invokeAsync(invoker, method, entity);
+              }
 
-            return true;
-          }
-          catch (final Exception e) {
-            synchronized (Jdk8ClientTest.class) {
-              e.printStackTrace();
-              System.exit(1);
-              return false;
+              return true;
+            }
+            catch (final Exception e) {
+              synchronized (Jdk8ClientTest.class) {
+                e.printStackTrace();
+                System.exit(1);
+                return false;
+              }
+            }
+            finally {
+              latch.countDown();
             }
           }
-          finally {
-            latch.countDown();
-          }
+          while (true);
         });
       }
 
       latch.await();
+      server.shutdown();
     }
 
     abstract void configServer(WireMockRule server);

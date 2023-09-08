@@ -19,7 +19,7 @@ package org.jetrs.provider.container;
 import static org.libj.lang.Assertions.*;
 
 import java.util.HashMap;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.ws.rs.container.ContainerRequestContext;
@@ -48,7 +48,7 @@ public abstract class ResponseTimeoutFilter implements ContainerRequestFilter, C
   private static final String EXPIRE_TIME = ResponseTimeoutFilter.class.getName() + ".EXPIRE_TIME";
   private static final String THREAD = ResponseTimeoutFilter.class.getName() + ".THREAD";
 
-  private static final ConcurrentHashMap<ContainerRequestContext,HashMap<String,Object>> debugMap = new ConcurrentHashMap<ContainerRequestContext,HashMap<String,Object>>() {
+  private static final WeakHashMap<ContainerRequestContext,HashMap<String,Object>> debugMap = new WeakHashMap<ContainerRequestContext,HashMap<String,Object>>() {
     @Override
     public HashMap<String,Object> get(final Object key) {
       HashMap<String,Object> value = super.get(key);

@@ -66,7 +66,7 @@ abstract class RequestContext<R extends RuntimeContext,P> extends InterceptorCon
   private static final Logger logger = LoggerFactory.getLogger(RequestContext.class);
   private static final Comparator<Constructor<?>> parameterCountComparator = Comparator.comparingInt(c -> -c.getParameterCount());
   @SuppressWarnings("rawtypes")
-  private static final Map<Class<?>,Constructor[]> classToConstructors = new HashMap<>();
+  private static final HashMap<Class<?>,Constructor[]> classToConstructors = new HashMap<>();
 
   // Gets the constructor with most args [JAX-RS 2.1 3.1.2]
   @SuppressWarnings("unchecked")
@@ -314,8 +314,7 @@ abstract class RequestContext<R extends RuntimeContext,P> extends InterceptorCon
   }
 
   private static void postConstruct(final Object instance) throws InstantiationException {
-    final Class<?> cls = instance.getClass();
-    final Method[] methods = Classes.getDeclaredMethodsWithAnnotation(cls, PostConstruct.class);
+    final Method[] methods = Classes.getDeclaredMethodsWithAnnotation(instance.getClass(), PostConstruct.class);
     if (methods.length == 0)
       return;
 

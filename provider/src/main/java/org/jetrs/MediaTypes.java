@@ -698,11 +698,12 @@ public final class MediaTypes {
   }
 
   static MediaType cloneWithoutParameters(final MediaType mediaType, final String ... excepts) {
-    if (mediaType.getParameters().size() == 0)
+    final Map<String,String> params = mediaType.getParameters();
+    if (params.size() == 0)
       return cloneWithoutParameters(mediaType);
 
     final TreeMap<String,String> parameters = new TreeMap<>();
-    for (final Map.Entry<String,String> entry : mediaType.getParameters().entrySet()) {
+    for (final Map.Entry<String,String> entry : params.entrySet()) { // [S]
       final String key = entry.getKey();
       if (ArrayUtil.contains(excepts, key))
         parameters.put(key, entry.getValue());

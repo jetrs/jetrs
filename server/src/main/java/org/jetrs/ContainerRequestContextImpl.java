@@ -133,7 +133,7 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext,Ht
     return result;
   }
 
-  private final ArrayList<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories;
+  private ArrayList<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories;
 
   private HttpServletRequest httpServletRequest;
   private HttpServletResponse httpServletResponse;
@@ -1045,8 +1045,29 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext,Ht
 
   @Override
   public void close() throws IOException {
-    containerResponseContext.close();
-    if (entityStream != null)
+    if (containerResponseContext != null) {
+      containerResponseContext.close();
+      containerResponseContext = null;
+    }
+
+    if (entityStream != null) {
       entityStream.close();
+      entityStream = null;
+    }
+
+    hasEntity = null;
+    headers = null;
+    httpServletRequest = null;
+    httpServletResponse = null;
+    lastProceeded = null;
+    messageBodyReader = null;
+    readerInterceptorProviderFactories = null;
+    resourceInfo = null;
+    resourceInfos = null;
+    resourceMatch = null;
+    resourceMatches = null;
+    securityContext = null;
+    stage = null;
+    uriInfo = null;
   }
 }

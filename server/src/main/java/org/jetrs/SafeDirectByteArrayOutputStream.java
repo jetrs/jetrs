@@ -60,4 +60,9 @@ abstract class SafeDirectByteArrayOutputStream extends DirectByteArrayOutputStre
     }
     while (beforeOverflow(-1, b, off, len));
   }
+
+  @Override
+  public void close() throws IOException {
+    buf = null;
+  }
 }

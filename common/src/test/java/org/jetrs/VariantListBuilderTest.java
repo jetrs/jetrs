@@ -31,7 +31,7 @@ public class VariantListBuilderTest {
   private static void assertVariants(final VariantListBuilder builder, final Variant ... variants) {
     final List<Variant> actual = builder.build();
     assertEquals(variants.length, actual.size());
-    for (final Variant variant : variants)
+    for (final Variant variant : variants) // [A]
       assertTrue(actual.contains(variant));
 
     assertEquals(0, builder.build().size());

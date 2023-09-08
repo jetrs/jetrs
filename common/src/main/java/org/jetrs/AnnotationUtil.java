@@ -27,7 +27,7 @@ import javax.ws.rs.Path;
 import org.libj.lang.Classes;
 
 final class AnnotationUtil {
-  static final Annotation[] EMPTY_ANNOTATIONS = new Annotation[0];
+  static final Annotation[] EMPTY_ANNOTATIONS = {};
 
   /**
    * Returns all annotations on the class itself, and all JaxRs annotations encountered on the first layer of traversing super

@@ -16,16 +16,25 @@
 
 package org.jetrs;
 
+import java.io.IOException;
 import java.io.OutputStream;
 
 import org.libj.util.DelegateOutputStream;
 
 public class RelegateOutputStream extends DelegateOutputStream {
   public void setTarget(final OutputStream target) {
-    this.target = target;
+    super.target = target;
   }
 
   public OutputStream getTarget() {
     return target;
+  }
+
+  @Override
+  public void close() throws IOException {
+    if (target != null) {
+      super.close();
+      target = null;
+    }
   }
 }

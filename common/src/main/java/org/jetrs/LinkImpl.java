@@ -199,7 +199,7 @@ public class LinkImpl extends Link {
     final StringBuilder b = new StringBuilder();
     b.append('<').append(uri).append('>');
     if (params.size() > 0) {
-      for (final Map.Entry<String,String> entry : params.entrySet()) {
+      for (final Map.Entry<String,String> entry : params.entrySet()) { // [S]
         final String key = entry.getKey();
         final String value = entry.getValue();
         if (REL.equals(key)) {
