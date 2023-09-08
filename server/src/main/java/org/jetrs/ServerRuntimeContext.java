@@ -18,11 +18,9 @@ package org.jetrs;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Enumeration;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.Application;
@@ -33,8 +31,6 @@ import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.ParamConverterProvider;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
-
-import org.libj.lang.Enumerations;
 
 class ServerRuntimeContext extends RuntimeContext {
   private final ArrayList<ProviderFactory<ParamConverterProvider>> paramConverterProviderFactories;
@@ -104,33 +100,6 @@ class ServerRuntimeContext extends RuntimeContext {
     return containerResponseFilterProviderFactories;
   }
 
-  private static final PropertiesAdapter<HttpServletRequest> propertiesAdapter = new PropertiesAdapter<HttpServletRequest>() {
-    @Override
-    Object getProperty(final HttpServletRequest properties, final String name) {
-      return properties.getAttribute(name);
-    }
-
-    @Override
-    Enumeration<String> getPropertyNames(final HttpServletRequest properties) {
-      return properties.getAttributeNames();
-    }
-
-    @Override
-    void setProperty(final HttpServletRequest properties, final String name, final Object value) {
-      properties.setAttribute(name, value);
-    }
-
-    @Override
-    void removeProperty(final HttpServletRequest properties, final String name) {
-      properties.removeAttribute(name);
-    }
-
-    @Override
-    int size(final HttpServletRequest properties) {
-      return Enumerations.getSize(properties.getAttributeNames());
-    }
-  };
-
   private final ThreadLocal<ContainerRequestContextImpl> threadLocalRequestContext = new ThreadLocal<>();
 
   @Override
@@ -139,7 +108,7 @@ class ServerRuntimeContext extends RuntimeContext {
   }
 
   ContainerRequestContextImpl newRequestContext(final Request request) {
-    final ContainerRequestContextImpl requestContext = new ContainerRequestContextImpl(propertiesAdapter, this, request) {
+    final ContainerRequestContextImpl requestContext = new ContainerRequestContextImpl(this, request) {
       @Override
       public void close() throws IOException {
         threadLocalRequestContext.remove();

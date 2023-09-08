@@ -47,7 +47,7 @@ import org.jetrs.EntityUtil.ConsumableByteArrayInputStream;
 import org.libj.io.Streams;
 
 class ResponseImpl extends Response {
-  private final RequestContext<?,?> requestContext;
+  private final RequestContext<?> requestContext;
   private final Providers providers;
   private final int statusCode;
   private final Response.StatusType statusInfo;
@@ -59,7 +59,7 @@ class ResponseImpl extends Response {
   final Annotation[] annotations; // FIXME: annotations are not being used, but they need to be used by the MessageBodyWriter.. there's no API to get them out of this class
   private boolean closed;
 
-  ResponseImpl(final RequestContext<?,?> requestContext, final int statusCode, final Response.StatusType statusInfo, final HttpHeadersImpl headers, final Map<String,NewCookie> cookies, final Object entity, final Annotation[] annotations) {
+  ResponseImpl(final RequestContext<?> requestContext, final int statusCode, final Response.StatusType statusInfo, final HttpHeadersImpl headers, final Map<String,NewCookie> cookies, final Object entity, final Annotation[] annotations) {
     this.requestContext = requestContext;
     this.providers = requestContext.getProviders();
     this.statusCode = statusCode;
@@ -173,7 +173,7 @@ class ResponseImpl extends Response {
       if (readerInterceptorProviderFactories == null)
         return (messageBodyReader.readFrom(rawType, genericType, annotations, mediaType, headers, entityStream));
 
-      final ReaderInterceptorContextImpl readerInterceptorContext = new ReaderInterceptorContextImpl(rawType, genericType, annotations, headers, entityStream) {
+      try (final ReaderInterceptorContextImpl readerInterceptorContext = new ReaderInterceptorContextImpl(rawType, genericType, annotations, headers, entityStream) {
         private int interceptorIndex = -1;
         private Object lastProceeded;
 
@@ -188,9 +188,9 @@ class ResponseImpl extends Response {
 
           return lastProceeded;
         }
-      };
-
-      return EntityUtil.checktNotNull((T)readerInterceptorContext.proceed(), readerInterceptorContext.getAnnotations());
+      }) {
+        return EntityUtil.checktNotNull((T)readerInterceptorContext.proceed(), readerInterceptorContext.getAnnotations());
+      }
     }
     catch (final Exception e) {
       throw new ResponseProcessingException(this, e);

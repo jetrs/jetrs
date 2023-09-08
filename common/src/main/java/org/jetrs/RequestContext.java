@@ -62,7 +62,7 @@ import org.slf4j.LoggerFactory;
  * @see <a href="http://download.oracle.com/otn-pub/jcp/jaxrs-2_0_rev_A-mrel-spec/jsr339-jaxrs-2.0-final-spec.pdf">JSR339 JAX-RS 2.0
  *      [9.2]</a>
  */
-abstract class RequestContext<R extends RuntimeContext,P> extends InterceptorContextImpl<P> {
+abstract class RequestContext<R extends RuntimeContext> extends InterceptorContextImpl {
   private static final Logger logger = LoggerFactory.getLogger(RequestContext.class);
   private static final Comparator<Constructor<?>> parameterCountComparator = Comparator.comparingInt(c -> -c.getParameterCount());
   @SuppressWarnings("rawtypes")
@@ -83,8 +83,7 @@ abstract class RequestContext<R extends RuntimeContext,P> extends InterceptorCon
   private final Request request;
   private final ProvidersImpl providers;
 
-  RequestContext(final PropertiesAdapter<P> propertiesAdapter, final R runtimeContext, final Request request) {
-    super(propertiesAdapter);
+  RequestContext(final R runtimeContext, final Request request) {
     this.method = request.getMethod();
     this.runtimeContext = runtimeContext;
     this.request = request;

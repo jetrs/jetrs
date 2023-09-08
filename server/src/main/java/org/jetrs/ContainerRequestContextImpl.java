@@ -18,7 +18,6 @@ package org.jetrs;
 
 import static org.jetrs.HttpHeaders.*;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
@@ -90,7 +89,7 @@ import org.libj.util.ArrayUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext,HttpServletRequest> implements Closeable, ContainerRequestContext, ReaderInterceptorContext {
+class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> implements ContainerRequestContext, ReaderInterceptorContext {
   private static final Logger logger = LoggerFactory.getLogger(ContainerRequestContextImpl.class);
 
   enum Stage {
@@ -148,8 +147,8 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext,Ht
 
   private HttpHeadersImpl headers;
 
-  ContainerRequestContextImpl(final PropertiesAdapter<HttpServletRequest> propertiesAdapter, final ServerRuntimeContext runtimeContext, final Request request) {
-    super(propertiesAdapter, runtimeContext, request);
+  ContainerRequestContextImpl(final ServerRuntimeContext runtimeContext, final Request request) {
+    super(runtimeContext, request);
     this.readerInterceptorProviderFactories = getReaderInterceptorFactoryList();
   }
 
@@ -157,7 +156,7 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext,Ht
     this.resourceInfos = runtimeContext.getResourceInfos();
     this.httpServletRequest = httpServletRequest;
     this.httpServletResponse = httpServletResponse;
-    this.containerResponseContext = new ContainerResponseContextImpl(propertiesAdapter, httpServletRequest, httpServletResponse, this);
+    this.containerResponseContext = new ContainerResponseContextImpl(httpServletRequest, httpServletResponse, this);
     this.uriInfo = new UriInfoImpl(httpServletRequest, this);
     this.headers = new HttpHeadersImpl(httpServletRequest);
   }
@@ -173,8 +172,19 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext,Ht
   }
 
   @Override
-  HttpServletRequest getProperties() {
-    return httpServletRequest;
+  public final void setProperty(final String name, final Object object) {
+    // NOTE: This is done this way because I've found that properties are randomly missing from the implementation of the underlying HttpServletRequest's setAttribute method.
+    // NOTE: The reason to set the property in the HttpServletRequest is because the JAX-RS contract requires it.
+    super.setProperty(name, object);
+    httpServletRequest.setAttribute(name, object);
+  }
+
+  @Override
+  public final void removeProperty(final String name) {
+    // NOTE: This is done this way because I've found that properties are randomly missing from the implementation of the underlying HttpServletRequest's setAttribute method.
+    // NOTE: The reason to set the property in the HttpServletRequest is because the JAX-RS contract requires it.
+    super.removeProperty(name);
+    httpServletRequest.removeAttribute(name);
   }
 
   @Override
@@ -1045,6 +1055,8 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext,Ht
 
   @Override
   public void close() throws IOException {
+    super.close();
+
     if (containerResponseContext != null) {
       containerResponseContext.close();
       containerResponseContext = null;

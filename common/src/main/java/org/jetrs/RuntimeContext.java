@@ -49,7 +49,7 @@ abstract class RuntimeContext {
     this.exceptionMapperProviderFactories = exceptionMapperProviderFactories;
   }
 
-  abstract RequestContext<?,?> localRequestContext();
+  abstract RequestContext<?> localRequestContext();
 
   Configuration getConfiguration() {
     return configuration;

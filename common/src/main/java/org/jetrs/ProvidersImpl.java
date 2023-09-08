@@ -28,9 +28,9 @@ import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Providers;
 
 class ProvidersImpl implements Providers {
-  private final RequestContext<?,?> requestContext;
+  private final RequestContext<?> requestContext;
 
-  ProvidersImpl(final RequestContext<?,?> requestContext) {
+  ProvidersImpl(final RequestContext<?> requestContext) {
     this.requestContext = requestContext;
   }
 

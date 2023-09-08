@@ -18,7 +18,6 @@ package org.jetrs;
 
 import static org.libj.lang.Assertions.*;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
@@ -55,7 +54,7 @@ import org.libj.util.CollectionUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletRequest> implements Closeable, ContainerResponseContext, WriterInterceptorContext {
+class ContainerResponseContextImpl extends InterceptorContextImpl implements ContainerResponseContext, WriterInterceptorContext {
   private static final Logger logger = LoggerFactory.getLogger(ContainerResponseContextImpl.class);
   static final int chunkSize = assertPositive(Systems.getProperty(ServerProperties.CHUNKED_ENCODING_SIZE_SERVER, CommonProperties.CHUNKED_ENCODING_SIZE, CommonProperties.CHUNKED_ENCODING_SIZE_DEFAULT));
   static final int bufferSize = Systems.getProperty(ServerProperties.CONTENT_LENGTH_BUFFER_SERVER, CommonProperties.CONTENT_LENGTH_BUFFER, CommonProperties.CONTENT_LENGTH_BUFFER_DEFAULT);
@@ -85,8 +84,7 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
   private ContainerRequestContextImpl requestContext;
   private ArrayList<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorProviderFactories;
 
-  ContainerResponseContextImpl(final PropertiesAdapter<HttpServletRequest> propertiesAdapter, final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse, final ContainerRequestContextImpl requestContext) {
-    super(propertiesAdapter);
+  ContainerResponseContextImpl(final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse, final ContainerRequestContextImpl requestContext) {
     this.httpServletRequest = httpServletRequest;
     this.headers = new HttpHeadersImpl(httpServletResponse);
     this.status = Responses.from(httpServletResponse.getStatus());
@@ -95,8 +93,19 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
   }
 
   @Override
-  HttpServletRequest getProperties() {
-    return httpServletRequest;
+  public final void setProperty(final String name, final Object object) {
+    // NOTE: This is done this way because I've found that properties are randomly missing from the implementation of the underlying HttpServletRequest's setAttribute method.
+    // NOTE: The reason to set the property in the HttpServletRequest is because the JAX-RS contract requires it.
+    super.setProperty(name, object);
+    httpServletRequest.setAttribute(name, object);
+  }
+
+  @Override
+  public final void removeProperty(final String name) {
+    // NOTE: This is done this way because I've found that properties are randomly missing from the implementation of the underlying HttpServletRequest's setAttribute method.
+    // NOTE: The reason to set the property in the HttpServletRequest is because the JAX-RS contract requires it.
+    super.removeProperty(name);
+    httpServletRequest.removeAttribute(name);
   }
 
   @Override
@@ -516,7 +525,8 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
   }
 
   @Override
-  public void close() {
+  public void close() throws IOException {
+    super.close();
     firstOutputStream = null;
     noopOutputStream = null;
     if (outputStream != null) {
