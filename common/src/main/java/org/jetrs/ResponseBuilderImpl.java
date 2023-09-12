@@ -121,14 +121,11 @@ class ResponseBuilderImpl extends Response.ResponseBuilder implements Cloneable 
     return this;
   }
 
-  /**
-   * {@inheritDoc}
-   *
-   * @throws NullPointerException If {@code methods} is null.
-   */
   @Override
   public Response.ResponseBuilder allow(final Set<String> methods) {
-    if (methods.size() > 0)
+    if (methods == null)
+      headers.remove(HttpHeaders.ALLOW);
+    else if (methods.size() > 0)
       for (final String method : methods) // [S]
         headers.add(HttpHeaders.ALLOW, method);
 
