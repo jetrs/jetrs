@@ -1067,8 +1067,6 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> i
       entityStream = null;
     }
 
-    hasEntity = null;
-    headers = null;
     httpServletRequest = null;
     httpServletResponse = null;
     lastProceeded = null;
@@ -1078,8 +1076,11 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> i
     resourceInfos = null;
     resourceMatch = null;
     resourceMatches = null;
-    securityContext = null;
     stage = null;
-    uriInfo = null;
+
+    // hasEntity = null;        // Retain to allow `public hasEntity()` to be called after close()
+    // headers = null;          // Retain to allow `public getHeaders()` to be called after close()
+    // securityContext = null;  // Retain to allow `public getSecurityContext()` to be called after close()
+    // uriInfo = null;          // Retain to allow `public getUriInfo()` to be called after close()
   }
 }
