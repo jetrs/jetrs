@@ -25,10 +25,13 @@
     <version>2.1.0-alpha-5-SNAPSHOT</version>
   </parent>
   <artifactId>jetty-client-9</artifactId>
-  <name>JetRS Client Jetty Client 9</name>
+  <name>JetRS Client: Jetty Client 9</name>
   <description>
     JetRS client implementation utilizing Jetty Client 9 as the underlying driver.
   </description>
+  <properties>
+    <version.jetty>9.4.52.v20230823</version.jetty>
+  </properties>
   <build>
     <plugins>
       <plugin>
@@ -40,7 +43,7 @@
             <configuration>
               <archive>
                 <manifestEntries>
-                  <Automatic-Module-Name>${project.groupId}.jetty_client_9</Automatic-Module-Name>
+                  <Automatic-Module-Name>${project.groupId}.jettyclient9</Automatic-Module-Name>
                 </manifestEntries>
               </archive>
             </configuration>
@@ -53,13 +56,13 @@
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-client</artifactId>
-      <version>9.4.52.v20230823</version>
+      <version>${version.jetty}</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.eclipse.jetty.http2</groupId>
       <artifactId>http2-http-client-transport</artifactId>
-      <version>9.4.52.v20230823</version>
+      <version>${version.jetty}</version>
       <scope>provided</scope>
     </dependency>
 

@@ -25,7 +25,7 @@
     <version>2.1.0-alpha-5-SNAPSHOT</version>
   </parent>
   <artifactId>jdk-8</artifactId>
-  <name>JetRS Client JDK 8</name>
+  <name>JetRS Client: JDK 8</name>
   <description>
     JDK 8 JetRS client implementation based on Java's HttpURLConnection.
   </description>
@@ -40,7 +40,7 @@
             <configuration>
               <archive>
                 <manifestEntries>
-                  <Automatic-Module-Name>${project.groupId}.jdk_8</Automatic-Module-Name>
+                  <Automatic-Module-Name>${project.groupId}.jdk8</Automatic-Module-Name>
                 </manifestEntries>
               </archive>
             </configuration>

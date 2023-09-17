@@ -39,8 +39,8 @@ import org.jetrs.server.app.service.FileUploadService;
 import org.jetrs.server.app.service.FlushResponseService;
 import org.jetrs.server.app.service.RootService1;
 import org.jetrs.server.app.service.RootService2;
-import org.openjax.jetty.EmbeddedServletContainer;
-import org.openjax.jetty.UncaughtServletExceptionHandler;
+import org.openjax.esc.EmbeddedJetty9;
+import org.openjax.esc.UncaughtServletExceptionHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,7 +58,7 @@ public class TestAppServer extends Application implements AutoCloseable {
     }
   }
 
-  private final EmbeddedServletContainer container;
+  private final EmbeddedJetty9 container;
   private final HashSet<Object> singletons = new HashSet<>();
   private final HashSet<Class<?>> classes = new HashSet<>();
 
@@ -90,7 +90,7 @@ public class TestAppServer extends Application implements AutoCloseable {
     }
 
     try {
-      this.container = new EmbeddedServletContainer.Builder()
+      this.container = new EmbeddedJetty9.Builder()
         .withUncaughtServletExceptionHandler(new UncaughtServletExceptionHandler() {
           @Override
           public void uncaughtServletException(final ServletRequest request, final ServletResponse response, final Exception e) {

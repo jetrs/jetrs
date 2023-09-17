@@ -25,7 +25,7 @@
     <version>2.1.0-alpha-5-SNAPSHOT</version>
   </parent>
   <artifactId>apache-client-5</artifactId>
-  <name>JetRS Client Apache HttpClient 5</name>
+  <name>JetRS Client Apache: HttpClient 5</name>
   <description>
     JetRS client implementation utilizing Apache HttpClient 5 as the underlying driver.
   </description>
@@ -40,7 +40,7 @@
             <configuration>
               <archive>
                 <manifestEntries>
-                  <Automatic-Module-Name>${project.groupId}.apache_client_5</Automatic-Module-Name>
+                  <Automatic-Module-Name>${project.groupId}.apacheclient5</Automatic-Module-Name>
                 </manifestEntries>
               </archive>
             </configuration>
