@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.jetrs.client</groupId>
     <artifactId>client</artifactId>
-    <version>2.1.0-alpha-5-SNAPSHOT</version>
+    <version>2.1.0-alpha-5</version>
   </parent>
   <artifactId>jetty-client-9</artifactId>
   <name>JetRS Client: Jetty Client 9</name>
