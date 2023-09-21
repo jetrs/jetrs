@@ -22,11 +22,11 @@
   <parent>
     <groupId>org.entinae</groupId>
     <artifactId>pom</artifactId>
-    <version>1.0.7</version>
+    <version>1.0.8-SNAPSHOT</version>
   </parent>
   <groupId>org.jetrs</groupId>
   <artifactId>jetrs</artifactId>
-  <version>2.1.0-alpha-5</version>
+  <version>2.2.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <url>https://www.jetrs.org/</url>
   <name>JetRS</name>
@@ -93,17 +93,17 @@
     <dependency>
       <groupId>org.libj</groupId>
       <artifactId>logging</artifactId>
-      <version>0.4.6</version>
+      <version>0.5.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.libj</groupId>
       <artifactId>net</artifactId>
-      <version>0.5.3</version>
+      <version>0.5.4-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.libj</groupId>
       <artifactId>test</artifactId>
-      <version>0.7.2</version>
+      <version>0.7.3-SNAPSHOT</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
