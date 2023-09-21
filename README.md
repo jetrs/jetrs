@@ -28,7 +28,7 @@
    <dependency>
      <groupId>org.jetrs</groupId>
      <artifactId>server</artifactId>
-     <version>2.1.0-alpha-3</version>
+     <version>2.1.0-alpha-5</version>
    </dependency>
    ```
 
@@ -38,7 +38,7 @@
    <dependency>
      <groupId>org.jsonx</groupId>
      <artifactId>jaxrs</artifactId>
-     <version>0.3.2</version>
+     <version>0.4.0</version>
    </dependency>
    ```
 
