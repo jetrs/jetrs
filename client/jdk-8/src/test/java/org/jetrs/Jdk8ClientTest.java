@@ -149,7 +149,8 @@ public class Jdk8ClientTest {
       @Override
       Invocation.Builder buildRequest(final String host) {
         return client.target(host + "/get")
-          .request().header(HttpHeaders.ACCEPT, "text/xml;q=.5,text/html");
+          .request()
+          .header(HttpHeaders.ACCEPT, "text/xml;q=.5,text/html");
       }
 
       @Override

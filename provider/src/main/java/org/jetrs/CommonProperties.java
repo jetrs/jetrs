@@ -24,10 +24,10 @@ public final class CommonProperties {
    * <p>
    * Configuration property: <tt>{@value}</tt>
    *
-   * @implNote This property is relevant for all messages that specify {@code "chunked"} in the
-   *           {@value HttpHeaders#TRANSFER_ENCODING} header, or if the {@value HttpHeaders#CONTENT_LENGTH} header is not specified
-   *           and the encoded entity size exceeds the buffer size as configured by the {@link #CONTENT_LENGTH_BUFFER} property,
-   *           thus switching the transfer to chunked encoding.
+   * @implNote This property is relevant for all messages that specify {@code "chunked"} in the {@value HttpHeaders#TRANSFER_ENCODING}
+   *           header, or if the {@value HttpHeaders#CONTENT_LENGTH} header is not specified and the encoded entity size exceeds the
+   *           buffer size as configured by the {@link #CONTENT_LENGTH_BUFFER} property, thus switching the transfer to chunked
+   *           encoding.
    * @see #CONTENT_LENGTH_BUFFER
    */
   public static final String CHUNKED_ENCODING_SIZE = "jetrs.chunkedEncodingSize";
@@ -62,7 +62,7 @@ public final class CommonProperties {
 
   /**
    * Disable standard providers for specified entity classes from automatically loading during startup.
-   *
+   * @formatter:off
    * <blockquote>
    * <table>
    * <caption>Standard Providers</caption>
@@ -79,7 +79,7 @@ public final class CommonProperties {
    * <tr><td><code>javax.xml.transform.Source</code></td></tr>
    * </table>
    * </blockquote>
-   *
+   * @formatter:on
    * Multiple default providers can be disabled with comma separated keys, or {@code "*"} can be specified to disable all default
    * providers.
    *
@@ -89,8 +89,8 @@ public final class CommonProperties {
   public static final String DISABLE_STANDARD_PROVIDER = "jetrs.disableStandardProvider";
 
   /**
-   * Specifies whether JAX-RS Services Loading (via SPI) is enabled. If absent or {@code "true"}, JAX-RS Services Loading (via SPI)
-   * of {@link javax.ws.rs.core.Feature} or {@link javax.ws.rs.container.DynamicFeature} is enabled.
+   * Specifies whether JAX-RS Services Loading (via SPI) is enabled. If absent or {@code "true"}, JAX-RS Services Loading (via SPI) of
+   * {@link javax.ws.rs.core.Feature} or {@link javax.ws.rs.container.DynamicFeature} is enabled.
    */
   public static final String JAXRS_LOAD_SERVICES = "jakarta.ws.rs.loadServices";
 

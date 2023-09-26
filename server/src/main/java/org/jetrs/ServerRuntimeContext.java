@@ -53,7 +53,8 @@ class ServerRuntimeContext extends RuntimeContext {
     final ArrayList<ProviderFactory<ContainerRequestFilter>> preMatchContainerRequestFilterProviderFactories,
     final ArrayList<ProviderFactory<ContainerRequestFilter>> containerRequestFilterProviderFactories,
     final ArrayList<ProviderFactory<ContainerResponseFilter>> containerResponseFilterProviderFactories,
-    final ServletConfig servletConfig, final ServletContext servletContext,
+    final ServletConfig servletConfig,
+    final ServletContext servletContext,
     final Application application,
     final ArrayList<ResourceInfoImpl> resourceInfos
   ) {

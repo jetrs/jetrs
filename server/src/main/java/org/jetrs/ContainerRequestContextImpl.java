@@ -173,7 +173,8 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> i
 
   @Override
   public final void setProperty(final String name, final Object object) {
-    // NOTE: This is done this way because I've found that properties are randomly missing from the implementation of the underlying HttpServletRequest's setAttribute method.
+    // NOTE: This is done this way because I've found that properties are randomly missing from the implementation of the underlying
+    // NOTE: HttpServletRequest's setAttribute method.
     // NOTE: The reason to set the property in the HttpServletRequest is because the JAX-RS contract requires it.
     super.setProperty(name, object);
     httpServletRequest.setAttribute(name, object);
@@ -181,7 +182,8 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> i
 
   @Override
   public final void removeProperty(final String name) {
-    // NOTE: This is done this way because I've found that properties are randomly missing from the implementation of the underlying HttpServletRequest's setAttribute method.
+    // NOTE: This is done this way because I've found that properties are randomly missing from the implementation of the underlying
+    // NOTE: HttpServletRequest's setAttribute method.
     // NOTE: The reason to set the property in the HttpServletRequest is because the JAX-RS contract requires it.
     super.removeProperty(name);
     httpServletRequest.removeAttribute(name);
@@ -266,7 +268,7 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> i
 
   @Override
   @SuppressWarnings("unchecked")
-  <T>T findInjectableContextValue(final Class<T> clazz) {
+  <T> T findInjectableContextValue(final Class<T> clazz) {
     // FIXME: Support ResourceContext
     // if (ResourceContext.class.isAssignableFrom(clazz))
 
@@ -333,7 +335,7 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> i
 
   @Override
   @SuppressWarnings("unchecked")
-  <T>T findInjectableValue(final AnnotatedElement element, final int parameterIndex, final Annotation[] annotations, final Class<T> rawType, final Type genericType) throws IOException {
+  <T> T findInjectableValue(final AnnotatedElement element, final int parameterIndex, final Annotation[] annotations, final Class<T> rawType, final Type genericType) throws IOException {
     T injectableObject = super.findInjectableValue(element, parameterIndex, annotations, rawType, genericType);
     if (injectableObject != null)
       return injectableObject;
@@ -360,7 +362,8 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> i
     if (messageBodyReader == null)
       throw new WebApplicationException("Could not find MessageBodyReader for {type=" + rawType.getName() + ", genericType=" + genericType.getTypeName() + ", annotations=" + Arrays.toString(annotations) + ", mediaType=" + contentType + "}");
 
-    // FIXME: Why is there a return type for ReaderInterceptorContext#proceed()? And it's of type Object. What type is ReaderInterceptorContext supposed to return? It should be InputStream, but then it makes it redundant.
+    // FIXME: Why is there a return type for ReaderInterceptorContext#proceed()? And it's of type Object. What type is
+    // FIXME: ReaderInterceptorContext supposed to return? It should be InputStream, but then it makes it redundant.
     setType(rawType);
     setGenericType(rawType.getGenericSuperclass());
     setAnnotations(annotations);
@@ -539,7 +542,7 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> i
           }
         }
 
-        if (logger.isWarnEnabled()) if (logger.isWarnEnabled()) logger.warn("@PathParam(\"" + pathParamNameToMatch + "\") PathSegment not found in URI template of @Path on: " + element);
+        if (logger.isWarnEnabled()) { logger.warn("@PathParam(\"" + pathParamNameToMatch + "\") PathSegment not found in URI template of @Path on: " + element); }
         return null;
       }
 
@@ -591,7 +594,7 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> i
       // FIXME: Another useful warning would be: notify if more than 1 @PathParam annotations specify the same name
       String value = null;
       if (values == null) {
-        if (logger.isWarnEnabled()) logger.warn("@PathParam(\"" + pathParamNameToMatch + "\") not found in URI template of @Path on: " + element);
+        if (logger.isWarnEnabled()) { logger.warn("@PathParam(\"" + pathParamNameToMatch + "\") not found in URI template of @Path on: " + element); }
 
         final DefaultValueImpl defaultValue = getDefaultValue(element, parameterIndex);
         if (defaultValue != null) {
@@ -715,19 +718,19 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> i
 
         requestUriBuilder.append(ch);
         final int[] ret = normalizeUri(requestUriBuilder, path, len, false, i + 1, depth + 1);
-//        ret[depth] = i;
+        // ret[depth] = i;
         return ret;
       }
       else if (ch == ';') {
         final int[] ret = normalizeUri(requestUriBuilder, path, len, true, i + 1, depth + 1);
-//        ret[depth] = i;
+        // ret[depth] = i;
         return ret;
       }
 
       requestUriBuilder.append(ch);
     }
 
-    return null; //new int[depth];
+    return null; // new int[depth];
   }
 
   private ResourceMatches filterAndMatch(final String requestMethod, final boolean isOverride) {
@@ -885,7 +888,7 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> i
 
   void sendError(final int scInternalServerError, final Throwable t) throws IOException {
     if (httpServletResponse.isCommitted()) {
-      if (logger.isInfoEnabled()) logger.info("Unable to overwrite committed response [" + httpServletResponse.getStatus() + "] -> [" + scInternalServerError + "]: ", t);
+      if (logger.isInfoEnabled()) { logger.info("Unable to overwrite committed response [" + httpServletResponse.getStatus() + "] -> [" + scInternalServerError + "]: ", t); }
     }
     else {
       httpServletResponse.sendError(scInternalServerError, Throwables.toString(t));
@@ -904,12 +907,14 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> i
         if (i$ > 0) {
           final String key = entry.getKey();
           if (values instanceof RandomAccess) {
-            int i = 0; do // [RA]
+            int i = 0;
+            do // [RA]
               containerResponseHeaders.add(key, values.get(i));
             while (++i < i$);
           }
           else {
-            final Iterator<String> i = values.iterator(); do // [I]
+            final Iterator<String> i = values.iterator();
+            do // [I]
               containerResponseHeaders.add(key, i.next());
             while (i.hasNext());
           }
@@ -930,7 +935,7 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> i
 
   void writeResponse(final Throwable t) throws IOException {
     if (httpServletResponse.isCommitted()) {
-      if (logger.isInfoEnabled()) logger.info("Unable to overwrite committed response [" + httpServletResponse.getStatus() + "] -> [" + containerResponseContext.getStatus() + "]: ", t);
+      if (logger.isInfoEnabled()) { logger.info("Unable to overwrite committed response [" + httpServletResponse.getStatus() + "] -> [" + containerResponseContext.getStatus() + "]: ", t); }
     }
     else {
       containerResponseContext.writeResponse(httpServletResponse, t != null);
@@ -1078,9 +1083,9 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> i
     resourceMatches = null;
     stage = null;
 
-    // hasEntity = null;        // Retain to allow `public hasEntity()` to be called after close()
-    // headers = null;          // Retain to allow `public getHeaders()` to be called after close()
-    // securityContext = null;  // Retain to allow `public getSecurityContext()` to be called after close()
-    // uriInfo = null;          // Retain to allow `public getUriInfo()` to be called after close()
+    // hasEntity = null; // Retain to allow `public hasEntity()` to be called after close()
+    // headers = null; // Retain to allow `public getHeaders()` to be called after close()
+    // securityContext = null; // Retain to allow `public getSecurityContext()` to be called after close()
+    // uriInfo = null; // Retain to allow `public getUriInfo()` to be called after close()
   }
 }

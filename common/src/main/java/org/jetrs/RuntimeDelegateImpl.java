@@ -55,7 +55,7 @@ public class RuntimeDelegateImpl extends RuntimeDelegate {
       }
     }
 
-    if (logger.isDebugEnabled()) logger.debug("cls: " + cls + ", endpointFactory: " + System.identityHashCode(endpointFactory));
+    if (logger.isDebugEnabled()) { logger.debug("cls: " + cls + ", endpointFactory: " + System.identityHashCode(endpointFactory)); }
   }
 
   void setRuntimeContext(final RuntimeContext runtimeContext) {
@@ -64,7 +64,7 @@ public class RuntimeDelegateImpl extends RuntimeDelegate {
 
   @Override
   @SuppressWarnings("unchecked")
-  public <T>T createEndpoint(final Application application, final Class<T> endpointType) {
+  public <T> T createEndpoint(final Application application, final Class<T> endpointType) {
     assertNotNull(application, "application is null");
     if (endpointFactory == null)
       throw new UnsupportedOperationException("No endpoint types are supported: No container available");
@@ -73,7 +73,7 @@ public class RuntimeDelegateImpl extends RuntimeDelegate {
   }
 
   @Override
-  public <T>HeaderDelegate<T> createHeaderDelegate(final Class<T> type) {
+  public <T> HeaderDelegate<T> createHeaderDelegate(final Class<T> type) {
     return HeaderDelegateImpl.lookup(assertNotNull(type, "type is null"));
   }
 

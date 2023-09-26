@@ -34,7 +34,7 @@ class ProvidersImpl implements Providers {
     this.requestContext = requestContext;
   }
 
-  private <T>Object getProvider(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final ArrayList<? extends MessageBodyProviderFactory<?>> factories, final boolean asHolder) {
+  private <T> Object getProvider(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final ArrayList<? extends MessageBodyProviderFactory<?>> factories, final boolean asHolder) {
     for (int i = 0, i$ = factories.size(); i < i$; ++i) { // [RA]
       final MessageBodyProviderFactory<?> factory = factories.get(i);
       final MediaType[] compatibleMediaType = factory.getCompatibleMediaType(requestContext, type, genericType, annotations, mediaType);
@@ -49,18 +49,18 @@ class ProvidersImpl implements Providers {
 
   @Override
   @SuppressWarnings("unchecked")
-  public <T>MessageBodyReader<T> getMessageBodyReader(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
+  public <T> MessageBodyReader<T> getMessageBodyReader(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
     return (MessageBodyReader<T>)getProvider(type, genericType, annotations, mediaType, requestContext.getMessageBodyReaderFactoryList(), false);
   }
 
   @Override
   @SuppressWarnings("unchecked")
-  public <T>MessageBodyWriter<T> getMessageBodyWriter(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
+  public <T> MessageBodyWriter<T> getMessageBodyWriter(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
     return (MessageBodyWriter<T>)getProvider(type, genericType, annotations, mediaType, requestContext.getMessageBodyWriterFactoryList(), false);
   }
 
   @SuppressWarnings("unchecked")
-  <T>MessageBodyProviderHolder<T> getMessageBodyReader(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType[] mediaTypes) {
+  <T> MessageBodyProviderHolder<T> getMessageBodyReader(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType[] mediaTypes) {
     for (final MediaType mediaType : mediaTypes) { // [A]
       final Object provider = getProvider(type, genericType, annotations, mediaType, requestContext.getMessageBodyReaderFactoryList(), true);
       if (provider != null)
@@ -71,7 +71,7 @@ class ProvidersImpl implements Providers {
   }
 
   @SuppressWarnings("unchecked")
-  <T>MessageBodyProviderHolder<T> getMessageBodyWriter(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType[] mediaTypes) {
+  <T> MessageBodyProviderHolder<T> getMessageBodyWriter(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType[] mediaTypes) {
     for (final MediaType mediaType : mediaTypes) { // [A]
       final Object provider = getProvider(type, genericType, annotations, mediaType, requestContext.getMessageBodyWriterFactoryList(), true);
       if (provider != null)
@@ -83,7 +83,7 @@ class ProvidersImpl implements Providers {
 
   @Override
   @SuppressWarnings("unchecked")
-  public <T extends Throwable>ExceptionMapper<T> getExceptionMapper(final Class<T> type) {
+  public <T extends Throwable> ExceptionMapper<T> getExceptionMapper(final Class<T> type) {
     final ArrayList<TypeProviderFactory<ExceptionMapper<?>>> factories = requestContext.getExceptionMapperProviderFactoryList();
     for (int i = 0, i$ = factories.size(); i < i$; ++i) { // [RA]
       final TypeProviderFactory<ExceptionMapper<?>> factory = factories.get(i);
@@ -95,7 +95,7 @@ class ProvidersImpl implements Providers {
   }
 
   @Override
-  public <T>ContextResolver<T> getContextResolver(final Class<T> contextType, final MediaType mediaType) {
+  public <T> ContextResolver<T> getContextResolver(final Class<T> contextType, final MediaType mediaType) {
     // TODO: Implement this.
     throw new UnsupportedOperationException();
   }

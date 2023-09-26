@@ -108,7 +108,6 @@ public class BookService {
     for (int i = 0, i$ = bSeg1.length; i < i$; ++i) // [A]
       assertEquals(bSeg1[i], bSeg2.get(i));
 
-
     return Response.status(200).entity("List of Books order by: " + aSeg2 + " :: " + bSeg2 + " :: " + orderBy).build();
   }
 

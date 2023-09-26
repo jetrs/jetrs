@@ -15,6 +15,7 @@ public class SafeDirectByteArrayOutputStreamTest {
     final int overflow = 123;
     final SafeDirectByteArrayOutputStream out = new SafeDirectByteArrayOutputStream(valid) {
       private int oveflowIndex = overflow;
+
       @Override
       boolean beforeOverflow(final int b, final byte[] buf, final int off, final int len) {
         assertEquals(oveflowIndex++, b);

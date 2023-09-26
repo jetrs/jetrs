@@ -361,10 +361,10 @@ public class HttpHeadersImplTest extends RuntimeDelegateTest {
   @Test
   public void testCacheControl() {
     testSimple(HttpHeader.CACHE_CONTROL.getName(), CacheControl.class,
-//      "no-store",
-//      "no-store,max-age=0",
-//      "public,max-age=604800,immutable",
-//      "max-age=0,must-revalidate",
+      // "no-store",
+      // "no-store,max-age=0",
+      // "public,max-age=604800,immutable",
+      // "max-age=0,must-revalidate",
       "private,no-cache,no-store,max-age=0,proxy-revalidate,pre-check=0,post-check=0");
   }
 
@@ -1029,7 +1029,8 @@ public class HttpHeadersImplTest extends RuntimeDelegateTest {
   @Test
   public void testSetCookie() {
     // FIXME: This does not properly handle multiple cookies being set in one Set-Cookie header, i.e.:
-    // FIXME: hest2=spam, pony2=spam, sovs2=spam; expires=Wed, 04-May-2011 07:51:27 GMT, NO_CACHE=Y; expires=Wed, 04-May-2011 07:56:27 GMT; path=/; domain=.something.d6.revealit.dk
+    // FIXME: hest2=spam, pony2=spam, sovs2=spam; expires=Wed, 04-May-2011 07:51:27 GMT, NO_CACHE=Y; expires=Wed, 04-May-2011 07:56:27
+    // GMT; path=/; domain=.something.d6.revealit.dk
     testSimple(HttpHeader.SET_COOKIE.getName(), NewCookie.class,
       "sessionId=38afes7a8",
       "id=a3fWa; Expires=Wed, 21 Oct 2015 07:28:00 GMT",
@@ -1085,7 +1086,7 @@ public class HttpHeadersImplTest extends RuntimeDelegateTest {
     final MediaType contentType1 = MediaTypes.parse("text/html; charset=UTF-8; q=.1");
     contentTypes.add(contentType1);
     headers.getMirrorMap().put(contentTypeName, contentTypes);
-//    contentTypes.add(Boolean.TRUE);
+    // contentTypes.add(Boolean.TRUE);
 
     assertEquals(contentType1, headers.getMirrorMap().getFirst(contentTypeName));
     assertEquals(contentType1.toString(), headers.getFirst(contentTypeName));

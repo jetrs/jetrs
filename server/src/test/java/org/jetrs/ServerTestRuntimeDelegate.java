@@ -23,6 +23,7 @@ import javax.ws.rs.core.Application;
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class ServerTestRuntimeDelegate extends RuntimeDelegateImpl {
   final ArrayList EMPTY_LIST = new ArrayList<>(0);
+
   public ServerTestRuntimeDelegate() {
     setRuntimeContext(new ServerRuntimeContext(
       EMPTY_LIST,
@@ -34,9 +35,9 @@ public class ServerTestRuntimeDelegate extends RuntimeDelegateImpl {
       EMPTY_LIST,
       EMPTY_LIST,
       EMPTY_LIST,
-      null, null,
+      null,
+      null,
       new Application(),
-      null
-    ));
+      null));
   }
 }

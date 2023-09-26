@@ -59,7 +59,7 @@ abstract class Invoker<R> {
         throw new IllegalStateException("Provider " + systemProp + " could not be instantiated: " + e, e);
       }
       catch (final SecurityException e) {
-        if (logger.isDebugEnabled()) logger.debug("Failed to load service " + factoryId + " from a system property", e);
+        if (logger.isDebugEnabled()) { logger.debug("Failed to load service " + factoryId + " from a system property", e); }
       }
     }
 
@@ -84,7 +84,7 @@ abstract class Invoker<R> {
       return iterator.hasNext() ? iterator.next() : null;
     }
     catch (final Exception | ServiceConfigurationError e) {
-      if (logger.isDebugEnabled()) logger.debug("Failed to load service " + factoryId + ".", e);
+      if (logger.isDebugEnabled()) { logger.debug("Failed to load service " + factoryId + ".", e); }
       return null;
     }
   }

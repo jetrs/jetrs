@@ -49,12 +49,12 @@ public abstract class MessageBodyProvider<T> implements MessageBodyReader<T>, Me
     return Readers.readFully(charset != null && Charset.isSupported(charset) ? new InputStreamReader(in, charset) : new InputStreamReader(in));
   }
 
-  protected static <K,V>V getFirstOrDefault(final MultivaluedMap<K,? extends V> headers, final K key, final V defaultValue) {
+  protected static <K,V> V getFirstOrDefault(final MultivaluedMap<K,? extends V> headers, final K key, final V defaultValue) {
     final V value = headers.getFirst(key);
     return value != null ? value : defaultValue;
   }
 
-  protected static <K,V,W>W getFirstOrDefault(final MultivaluedMap<K,? extends V> headers, final K key, final W defaultValue, final Function<? super V,? extends W> function) {
+  protected static <K,V,W> W getFirstOrDefault(final MultivaluedMap<K,? extends V> headers, final K key, final W defaultValue, final Function<? super V,? extends W> function) {
     final V value = headers.getFirst(key);
     return value != null ? function.apply(value) : defaultValue;
   }

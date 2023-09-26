@@ -649,8 +649,8 @@ final class HttpHeader<T> {
   static final HttpHeader<String> SOURCEMAP = new HttpHeader<>(HttpHeaders.SOURCEMAP, none, false, HeaderDelegateImpl.STRING); // FIXME: Strong Type Candidate
 
   /**
-   * CGI header field specifying the status of the HTTP response. Normal HTTP responses use a separate "Status-Line" instead,
-   * defined by RFC 7230.
+   * CGI header field specifying the status of the HTTP response. Normal HTTP responses use a separate "Status-Line" instead, defined
+   * by RFC 7230.
    *
    * @see <a href="https://en.wikipedia.org/wiki/List_of_HTTP_header_fields">List of HTTP header fields</a>
    */
@@ -816,8 +816,8 @@ final class HttpHeader<T> {
   static final HttpHeader<String> X_CORRELATION_ID = new HttpHeader<>(HttpHeaders.X_CORRELATION_ID, none, false, HeaderDelegateImpl.STRING);
 
   /**
-   * Mainly used to identify Ajax requests (most JavaScript frameworks send this field with value of XMLHttpRequest); also
-   * identifies Android apps using WebView.
+   * Mainly used to identify Ajax requests (most JavaScript frameworks send this field with value of XMLHttpRequest); also identifies
+   * Android apps using WebView.
    *
    * @see <a href="https://en.wikipedia.org/wiki/List_of_HTTP_header_fields">List of HTTP header fields</a>
    * @see <a href="https://www.stoutner.com/the-x-requested-with-header/">Specification</a>

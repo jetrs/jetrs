@@ -224,10 +224,8 @@ public class GeneralServerTest {
     }
   }
 
-  @Test
-  public void testUploadEcho() throws IOException, URISyntaxException {
-    final int len = Math.abs(random.nextInt(Short.MAX_VALUE));
-    final Response response = client.target(new URI(serviceUrl + "/upload/echo"))
+  private static Response echo(final int len, final boolean error) throws URISyntaxException {
+    return client.target(new URI(serviceUrl + "/upload/echo" + (error ? "?error" : "")))
       .request()
       .header(HttpHeaders.CONTENT_ENCODING, "gzip")
       .header(HttpHeaders.ACCEPT_ENCODING, "gzip")
@@ -238,14 +236,22 @@ public class GeneralServerTest {
             output.write((byte)random.nextInt());
         }
       }, MediaType.APPLICATION_OCTET_STREAM));
+  }
 
+  @Test
+  public void testUploadEcho() throws IOException, URISyntaxException {
+    final int len = Math.abs(random.nextInt(Short.MAX_VALUE));
+    assertEquals(Response.Status.SERVICE_UNAVAILABLE.getStatusCode(), echo(len, true).getStatus());
+
+    final Response response = echo(len, false);
+
+    assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
     final InputStream in = (InputStream)response.getEntity();
     int i = 0;
     while (in.read() != -1)
       ++i;
 
     assertEquals(len, i);
-    assertEquals(200, response.getStatus());
   }
 
   private static Invocation.Builder request(final String path) {
@@ -429,11 +435,9 @@ public class GeneralServerTest {
 
   @Test
   public void testMatchPost1String() throws Exception {
-//    Response response = client.target(serviceUrl + "/root1/1")
-//      .request()
-//      .post(Entity.text("data"));
+    // Response response = client.target(serviceUrl + "/root1/1").request().post(Entity.text("data"));
 
-//    assertResponse(405, response, null);
+    // assertResponse(405, response, null);
     Response response = client.target(serviceUrl + "/root1/1/eyj1ijoicgfub2fpiiwiysi6imnrzmu5")
       .request()
       .post(Entity.text("data"));
@@ -491,7 +495,7 @@ public class GeneralServerTest {
     server.close();
   }
 
-  private static <T>T assertResponse(final int status, final Response response, final Class<T> entityClass) throws Exception {
+  private static <T> T assertResponse(final int status, final Response response, final Class<T> entityClass) throws Exception {
     final T data;
     if (status != response.getStatus() || entityClass == null) {
       data = null;

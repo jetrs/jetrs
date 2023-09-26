@@ -26,15 +26,15 @@ import org.libj.util.MirrorList;
 import org.libj.util.MirrorMap;
 
 /**
- * A {@link MirrorMultivaluedArrayMap} that uses lists of type {@link MirrorQualityList}, which automatically sort header values based on
- * quality (i.e. {@code "q=0.2"}).
+ * A {@link MirrorMultivaluedArrayMap} that uses lists of type {@link MirrorQualityList}, which automatically sort header values
+ * based on quality (i.e. {@code "q=0.2"}).
  *
  * @param <V> The type of value elements in this map.
  * @param <R> The type of reflected value elements in the mirror map.
  */
 class HttpHeadersMap<V,R> extends MirrorMultivaluedArrayMap<String,V,R> {
   @SuppressWarnings("unchecked")
-  private static <C extends List<T> & Cloneable,T>C ensureCloneable(final List<T> list) {
+  private static <C extends List<T> & Cloneable,T> C ensureCloneable(final List<T> list) {
     if (list == null)
       return (C)new ArrayList<>();
 
@@ -99,8 +99,8 @@ class HttpHeadersMap<V,R> extends MirrorMultivaluedArrayMap<String,V,R> {
    * Creates a new {@link HttpHeadersMap} with the specified maps and mirror. This method is specific for the construction of a
    * reflected {@link HttpHeadersMap} instance.
    *
-   * @param mirrorMap The {@link HttpHeadersMap} for which {@code this} map will be a reflection. Likewise, {@code this} map will be
-   *          a reflection for {@code mirrorMap}.
+   * @param mirrorMap The {@link HttpHeadersMap} for which {@code this} map will be a reflection. Likewise, {@code this} map will be a
+   *          reflection for {@code mirrorMap}.
    * @param values The underlying map of type {@code <K,List<V>>}, which is implicitly assumed to also be {@link Cloneable}.
    * @param mirror The {@link org.jetrs.MirrorMultivaluedArrayMap.Mirror} specifying the
    *          {@link org.jetrs.MirrorMultivaluedArrayMap.Mirror#valueToReflection(Object,List) V -&gt; R} and

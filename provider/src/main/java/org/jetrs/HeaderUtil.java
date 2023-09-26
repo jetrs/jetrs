@@ -21,8 +21,8 @@ import org.libj.lang.Numbers;
 final class HeaderUtil {
   /**
    * Parses the quality attribute from a raw header string (i.e. {@code "fr-CH;q=0.8"}), and returns a
-   * {@link org.libj.lang.Numbers.Composite composite} {@code long} containing the {@code float} quality value and two
-   * {@code short}s representing the start and end indexes of the attribute in the string.
+   * {@link org.libj.lang.Numbers.Composite composite} {@code long} containing the {@code float} quality value and two {@code short}s
+   * representing the start and end indexes of the attribute in the string.
    *
    * @param str The string to parse.
    * @param i The index from which to start parsing.

@@ -112,13 +112,15 @@ public abstract class ContentCodecInterceptor implements ReaderInterceptor, Writ
     if (acceptEncodings != null && (size = acceptEncodings.size()) > 0) {
       final Set<String> supportedEncodings = getSupportedEncodings();
       if (CollectionUtil.isRandomAccess(acceptEncodings)) {
-        int i = 0; do // [RA]
+        int i = 0;
+        do // [RA]
           if (trySetEncoding(acceptEncodings.get(i), supportedEncodings, context))
             break;
         while (++i < size);
       }
       else {
-        final Iterator<String> it = acceptEncodings.iterator(); do // [I]
+        final Iterator<String> it = acceptEncodings.iterator();
+        do // [I]
           if (trySetEncoding(it.next(), supportedEncodings, context))
             break;
         while (it.hasNext());

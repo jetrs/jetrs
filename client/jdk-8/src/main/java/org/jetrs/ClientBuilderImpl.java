@@ -42,7 +42,7 @@ public class ClientBuilderImpl extends ClientBuilder implements ConfigurableImpl
   private long connectTimeout;
   private long readTimeout;
 
-  private SSLContext newSSLContext()  {
+  private SSLContext newSSLContext() {
     try {
       // Get a KeyManager and initialize it
       final KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());

@@ -118,7 +118,9 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
           for (final Map.Entry<String,List<String>> entry : requestHeaders.entrySet()) { // [S]
             if ((values = entry.getValue()) != null && (size = values.size()) > 0) {
               name = entry.getKey();
-              /** @see org.apache.hc.core5.http.protocol.RequestContent#process(org.apache.hc.core5.http.HttpRequest,org.apache.hc.core5.http.EntityDetails,org.apache.hc.core5.http.protocol.HttpContext) */
+              /**
+               * @see org.apache.hc.core5.http.protocol.RequestContent#process(org.apache.hc.core5.http.HttpRequest,org.apache.hc.core5.http.EntityDetails,org.apache.hc.core5.http.protocol.HttpContext)
+               */
               for (final String excludeHeader : excludeHeaders) { // [A]
                 if (name.equalsIgnoreCase(excludeHeader))
                   continue OUT;
@@ -203,9 +205,10 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
             final ReentrantLock lock = new ReentrantLock();
             final Condition condition = lock.newCondition();
 
-            // This convoluted approach allows MessageBodyWriter#writeTo() to be called (which may set headers), and upon its first OutputStream#write(),
-            // the actual request is executed. Before it is executed, the request sets an AbstractHttpEntity. When AbstractHttpEntity#writeTo() is called,
-            // this approach sets the OutputStream from AbstractHttpEntity#writeTo() to the call thread waiting to continue MessageBodyWriter#writeTo().
+            // This convoluted approach allows MessageBodyWriter#writeTo() to be called (which may set headers), and upon its first
+            // OutputStream#write(), the actual request is executed. Before it is executed, the request sets an AbstractHttpEntity.
+            // When AbstractHttpEntity#writeTo() is called, this approach sets the OutputStream from AbstractHttpEntity#writeTo() to the call
+            // thread waiting to continue MessageBodyWriter#writeTo().
             final AtomicReference<Object> resultRef = new AtomicReference<>();
             final AtomicReference<UnsynchronizedByteArrayOutputStream> tempOutputStream = new AtomicReference<>();
             final AtomicBoolean executed = new AtomicBoolean();
@@ -346,12 +349,14 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
           else {
             cookies = new HashMap<>(noCookies);
             if (httpCookies instanceof RandomAccess) {
-              int i = 0; do // [RA]
+              int i = 0;
+              do // [RA]
                 addCookie(cookies, httpCookies.get(i));
               while (++i < noCookies);
             }
             else {
-              final Iterator<Cookie> i = httpCookies.iterator(); do // [I]
+              final Iterator<Cookie> i = httpCookies.iterator();
+              do // [I]
                 addCookie(cookies, i.next());
               while (i.hasNext());
             }

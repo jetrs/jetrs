@@ -257,7 +257,8 @@ class UriInfoImpl implements UriInfo {
           queryParametersDecoded.put(key, values);
         }
         else {
-          int i = 0; do
+          int i = 0;
+          do
             addDecoded(queryParametersDecoded, key, values.get(i));
           while (++i < i$);
         }

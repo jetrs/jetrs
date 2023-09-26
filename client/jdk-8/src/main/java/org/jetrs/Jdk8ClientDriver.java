@@ -184,12 +184,14 @@ public class Jdk8ClientDriver extends ClientDriver {
             final Date date = responseHeaders.getDate();
             cookies = new HashMap<>(noCookies);
             if (httpCookies instanceof RandomAccess) {
-              int i = 0; do // [RA]
+              int i = 0;
+              do // [RA]
                 addCookie(cookies, httpCookies.get(i), date);
               while (++i < noCookies);
             }
             else {
-              final Iterator<HttpCookie> i = httpCookies.iterator(); do // [I]
+              final Iterator<HttpCookie> i = httpCookies.iterator();
+              do // [I]
                 addCookie(cookies, i.next(), date);
               while (i.hasNext());
             }

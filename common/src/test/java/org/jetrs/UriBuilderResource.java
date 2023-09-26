@@ -29,9 +29,9 @@ public class UriBuilderResource {
   @GET
   @Path("method")
   public String get() {
-    final UriBuilder builder = UriBuilder
-      .fromPath("/customers/{id}")
-      .scheme("http").host("example.com")
+    final UriBuilder builder = UriBuilder.fromPath("/customers/{id}")
+      .scheme("http")
+      .host("example.com")
       .resolveTemplate("id", "100")
       .queryParam("myParam", "myValue");
 
@@ -42,9 +42,9 @@ public class UriBuilderResource {
   @GET
   @Path("locator/")
   public String locator() {
-    final UriBuilder builder = UriBuilder
-      .fromPath("/customers/{id}")
-      .scheme("http").host("{hostname}")
+    final UriBuilder builder = UriBuilder.fromPath("/customers/{id}")
+      .scheme("http")
+      .host("{hostname}")
       .queryParam("{queryParam}", "{queryValue}");
 
     final URI uri = builder.build("example.com", "100", "myParam", "myValue");
@@ -54,9 +54,9 @@ public class UriBuilderResource {
   @GET
   @Path("/test3/")
   public String test3UriBuilder() {
-    final UriBuilder builder = UriBuilder
-      .fromPath("/customers/{id}")
-      .scheme("http").host("{hostname}")
+    final UriBuilder builder = UriBuilder.fromPath("/customers/{id}")
+      .scheme("http")
+      .host("{hostname}")
       .queryParam("{queryParam}", "{queryValue}");
 
     final Map<String,String> map = new HashMap<>();

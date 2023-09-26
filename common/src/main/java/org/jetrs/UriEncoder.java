@@ -41,10 +41,9 @@ final class UriEncoder {
     final String[] queryStringEncoding = new String[128];
 
     /*
-     * Encode via <a href="http://ietf.org/rfc/rfc3986.txt">RFC 3986</a>. PCHAR
-     * is allowed along with '/' unreserved = ALPHA / DIGIT / "-" / "." / "_" /
-     * "~" sub-delims = "!" / "$" / "&" / "'" / "(" / ")" / "*" / "+" / "," /
-     * ";" / "=" pchar = unreserved / pct-encoded / sub-delims / ":" / "@"
+     * Encode via <a href="http://ietf.org/rfc/rfc3986.txt">RFC 3986</a>. PCHAR is allowed along with '/' unreserved = ALPHA / DIGIT /
+     * "-" / "." / "_" / "~" sub-delims = "!" / "$" / "&" / "'" / "(" / ")" / "*" / "+" / "," / ";" / "=" pchar = unreserved /
+     * pct-encoded / sub-delims / ":" / "@"
      */
     for (int i = 0; i < 128; ++i) { // [N]
       if ('a' <= i && i <= 'z' || 'A' <= i && i <= 'Z' || '0' <= i && i <= '9')
@@ -83,8 +82,8 @@ final class UriEncoder {
     System.arraycopy(pathEncoding, 0, pathSegmentEncoding, 0, pathEncoding.length);
     pathSegmentEncoding['/'] = "%2F";
     /*
-     * Encode via <a href="http://ietf.org/rfc/rfc3986.txt">RFC 3986</a>.
-     * unreserved = ALPHA / DIGIT / "-" / "." / "_" / "~" space encoded as '+'
+     * Encode via <a href="http://ietf.org/rfc/rfc3986.txt">RFC 3986</a>. unreserved = ALPHA / DIGIT / "-" / "." / "_" / "~" space
+     * encoded as '+'
      */
     for (int i = 0; i < 128; ++i) { // [N]
       if ('a' <= i && i <= 'z' || 'A' <= i && i <= 'Z' || '0' <= i && i <= '9')
@@ -97,6 +96,7 @@ final class UriEncoder {
         case '~':
         case '?':
           continue;
+
         case ' ':
           queryNameValueEncoding[i] = "+";
           continue;
@@ -131,6 +131,7 @@ final class UriEncoder {
         case '?':
         case '/':
           continue;
+
         case ' ':
           queryStringEncoding[i] = "%20";
           continue;

@@ -207,12 +207,14 @@ class ResponseBuilderImpl extends Response.ResponseBuilder implements Cloneable 
         final int i$ = values.size();
         if (i$ > 0) {
           if (values instanceof RandomAccess) {
-            int i = 0; do // [RA]
+            int i = 0;
+            do // [RA]
               addHeader(entry.getKey(), values.get(i));
             while (++i < i$);
           }
           else {
-            final Iterator<Object> i = values.iterator(); do // [I]
+            final Iterator<Object> i = values.iterator();
+            do // [I]
               addHeader(entry.getKey(), i.next());
             while (i.hasNext());
           }

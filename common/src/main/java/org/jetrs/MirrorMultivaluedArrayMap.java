@@ -77,7 +77,7 @@ class MirrorMultivaluedArrayMap<K,V,R> extends MirrorMap<K,List<V>,List<R>> impl
    *         {@link Cloneable}</b>.
    */
   @SuppressWarnings("unchecked")
-  static <C extends Map<K,V> & Cloneable,K,V>C toCloneable(final Map<K,V> map) {
+  static <C extends Map<K,V> & Cloneable,K,V> C toCloneable(final Map<K,V> map) {
     return (C)map;
   }
 
@@ -100,16 +100,16 @@ class MirrorMultivaluedArrayMap<K,V,R> extends MirrorMap<K,List<V>,List<R>> impl
    *          {@link Mirror#reflectionToValue(Object,List) R -&gt; V} methods.
    * @throws NullPointerException If any of the specified parameters is null.
    */
-  <CloneableValues extends Map<K,List<V>> & Cloneable,CloneableReflections extends Map<K,List<R>> & Cloneable>MirrorMultivaluedArrayMap(final CloneableValues values, final CloneableReflections reflections, final Mirror<K,V,R> mirror) {
+  <CloneableValues extends Map<K,List<V>> & Cloneable,CloneableReflections extends Map<K,List<R>> & Cloneable> MirrorMultivaluedArrayMap(final CloneableValues values, final CloneableReflections reflections, final Mirror<K,V,R> mirror) {
     super(values, reflections, mirror);
   }
 
   /**
-   * Creates a new {@link MirrorMultivaluedArrayMap} with the specified maps and mirror. This method is specific for the construction of
-   * a reflected {@link MirrorMultivaluedArrayMap} instance.
+   * Creates a new {@link MirrorMultivaluedArrayMap} with the specified maps and mirror. This method is specific for the construction
+   * of a reflected {@link MirrorMultivaluedArrayMap} instance.
    *
-   * @param mirrorMap The {@link MirrorMultivaluedArrayMap} for which {@code this} map will be a reflection. Likewise, {@code this} map
-   *          will be a reflection for {@code mirrorMap}.
+   * @param mirrorMap The {@link MirrorMultivaluedArrayMap} for which {@code this} map will be a reflection. Likewise, {@code this}
+   *          map will be a reflection for {@code mirrorMap}.
    * @param values The underlying map of type {@code <K,List<V>>}, which is implicitly assumed to also be {@link Cloneable}.
    * @param mirror The {@link Mirror} specifying the {@link Mirror#valueToReflection(Object,List) V -&gt; R} and
    *          {@link Mirror#reflectionToValue(Object,List) R -&gt; V} methods.

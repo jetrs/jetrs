@@ -89,7 +89,7 @@ class Bootstrap<R extends ArrayList<? extends Comparable<?>>> {
   }
 
   @SuppressWarnings("unchecked")
-  <T>boolean addResourceOrProvider(final ArrayList<Consumer<Set<Class<?>>>> afterAdds, final R resourceInfos, final Class<? extends T> clazz, final T singleton, final boolean scanned) throws IllegalAccessException, InstantiationException, InvocationTargetException {
+  <T> boolean addResourceOrProvider(final ArrayList<Consumer<Set<Class<?>>>> afterAdds, final R resourceInfos, final Class<? extends T> clazz, final T singleton, final boolean scanned) throws IllegalAccessException, InstantiationException, InvocationTargetException {
     if (ReaderInterceptor.class.isAssignableFrom(clazz))
       readerInterceptorProviderFactories.add(new ReaderInterceptorProviderFactory((Class<ReaderInterceptor>)clazz, (ReaderInterceptor)singleton));
 
@@ -190,7 +190,7 @@ class Bootstrap<R extends ArrayList<? extends Comparable<?>>> {
         }
       }
       catch (final Exception | ServiceConfigurationError e) {
-        if (logger.isWarnEnabled()) logger.warn("Failed to load provider " + providerClass + ".", e);
+        if (logger.isWarnEnabled()) { logger.warn("Failed to load provider " + providerClass + ".", e); }
       }
     }
   }
@@ -210,7 +210,9 @@ class Bootstrap<R extends ArrayList<? extends Comparable<?>>> {
         for (final Object singleton : singletons) { // [S]
           if (singleton != null) {
             final Class<? extends Object> cls = singleton.getClass();
-            if (logger.isWarnEnabled() && !cls.isAnnotationPresent(Singleton.class)) logger.warn("Object of class " + cls.getName() + " without @Singleton annotation is member of Application.getSingletons()");
+            if (logger.isWarnEnabled() && !cls.isAnnotationPresent(Singleton.class))
+              logger.warn("Object of class " + cls.getName() + " without @Singleton annotation is member of Application.getSingletons()");
+
             addResourceOrProvider(afterAdds, resourceInfos, cls, singleton, false);
           }
         }

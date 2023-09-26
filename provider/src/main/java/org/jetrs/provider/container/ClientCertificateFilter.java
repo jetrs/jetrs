@@ -62,15 +62,17 @@ public abstract class ClientCertificateFilter implements ContainerRequestFilter 
     valueValue = Strings.trimStartEnd(valueValue, '"', '"').trim();
     try {
       final X509Certificate cert = decodePem(valueValue);
-      if (cert == null)
-        if (logger.isWarnEnabled()) logger.warn("Invalid X.509 certificate in header \"" + headerName + "\": " + valueValue);
-      else
-        if (logger.isDebugEnabled()) logger.debug("Valid X.509 certificate in header \"" + headerName + "\"");
+      if (cert == null) {
+        if (logger.isWarnEnabled()) { logger.warn("Invalid X.509 certificate in header \"" + headerName + "\": " + valueValue); }
+      }
+      else {
+        if (logger.isDebugEnabled()) { logger.debug("Valid X.509 certificate in header \"" + headerName + "\""); }
+      }
 
       return cert;
     }
     catch (final CertificateException e) {
-      if (logger.isErrorEnabled()) logger.error(e.getMessage(), e);
+      if (logger.isErrorEnabled()) { logger.error(e.getMessage(), e); }
       return null;
     }
   }
@@ -97,15 +99,15 @@ public abstract class ClientCertificateFilter implements ContainerRequestFilter 
    * Get a <b>valid</b> certificate chain from the {@code clientCertHeader} header specifying the client certificate and the
    * {@code clientCertChainHeaderPrefix} header name prefix (to be prepended to {@code "_" + i}, where {@code i} starts at {@code 0}
    * and is incremented until the first {@code null} header chain entry is encountered) specifying the additional chain certificates
-   * in the provided {@link ContainerRequestContext}, or {@code null} if the specified header does not exist or the certificate is
-   * not valid.
+   * in the provided {@link ContainerRequestContext}, or {@code null} if the specified header does not exist or the certificate is not
+   * valid.
    *
    * @implNote The {@code clientCertHeader} header must contain the client certificate, and the header values specified by the
    *           {@code clientCertChainHeaderPrefix} header name prefix must provide the additional chain certificates.
    * @param requestContext The {@link ContainerRequestContext} providing the header values of the request.
    * @param clientCertHeader The header name containing a base64-encoded (Section 4 of [RFC4648]) DER [ITU.X690] PKIX certificate.
-   * @param clientCertChainHeaderPrefix The header name prefix to be prepended to {@code "_" + i}, where {@code i} starts at
-   *          {@code 0} and is incremented until the first {@code null} header chain entry is encountered.
+   * @param clientCertChainHeaderPrefix The header name prefix to be prepended to {@code "_" + i}, where {@code i} starts at {@code 0}
+   *          and is incremented until the first {@code null} header chain entry is encountered.
    * @return A <b>valid</b> certificate chain from the {@code clientCertHeader} header specifying the client certificate and the
    *         {@code clientCertChainHeaderPrefix} header name prefix (to be prepended to {@code "_" + i}, where {@code i} starts at
    *         {@code 0} and is incremented until the first {@code null} header chain entry is encountered) specifying the additional
@@ -123,7 +125,7 @@ public abstract class ClientCertificateFilter implements ContainerRequestFilter 
     final X509Certificate[] clientCertChain = getCertificateChain(requestContext, clientCertChainHeaderPrefix, 0, 1);
     clientCertChain[0] = clientCert;
 
-    if (logger.isDebugEnabled()) logger.debug("getCertificateChain(): " + Arrays.stream(clientCertChain).map(c -> c.getSubjectDN().toString()).collect(Collectors.joining(",", "{", "}")));
+    if (logger.isDebugEnabled()) { logger.debug("getCertificateChain(): " + Arrays.stream(clientCertChain).map(c -> c.getSubjectDN().toString()).collect(Collectors.joining(",", "{", "}"))); }
     return clientCertChain;
   }
 
@@ -138,8 +140,7 @@ public abstract class ClientCertificateFilter implements ContainerRequestFilter 
    * @param requestContext The {@link ContainerRequestContext} providing the header values of the request.
    * @param clientCertHeader The header name containing a base64-encoded (Section 4 of [RFC4648]) DER [ITU.X690] PKIX certificate.
    * @param trustedRootCerts The root certificates of the {@linkplain KeyStore Trust Store} specifying the certificate chain.
-   * @param intermediateCerts The intermediate certificates of the {@linkplain KeyStore Trust Store} specifying the certificate
-   *          chain.
+   * @param intermediateCerts The intermediate certificates of the {@linkplain KeyStore Trust Store} specifying the certificate chain.
    * @return A <b>valid</b> certificate chain from the {@code clientCertHeader} header specifying the client certificate in the
    *         provided {@link ContainerRequestContext} and the {@code trustedRootCerts} and {@code intermediateCerts} specifying the
    *         {@link KeyStore Trust Store}, or {@code null} if the specified header does not exist or the certificate is not valid.

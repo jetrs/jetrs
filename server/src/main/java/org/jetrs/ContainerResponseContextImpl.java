@@ -94,7 +94,8 @@ class ContainerResponseContextImpl extends InterceptorContextImpl implements Con
 
   @Override
   public final void setProperty(final String name, final Object object) {
-    // NOTE: This is done this way because I've found that properties are randomly missing from the implementation of the underlying HttpServletRequest's setAttribute method.
+    // NOTE: This is done this way because I've found that properties are randomly missing from the implementation of the underlying
+    // NOTE: HttpServletRequest's setAttribute method.
     // NOTE: The reason to set the property in the HttpServletRequest is because the JAX-RS contract requires it.
     super.setProperty(name, object);
     httpServletRequest.setAttribute(name, object);
@@ -102,7 +103,8 @@ class ContainerResponseContextImpl extends InterceptorContextImpl implements Con
 
   @Override
   public final void removeProperty(final String name) {
-    // NOTE: This is done this way because I've found that properties are randomly missing from the implementation of the underlying HttpServletRequest's setAttribute method.
+    // NOTE: This is done this way because I've found that properties are randomly missing from the implementation of the underlying
+    // NOTE: HttpServletRequest's setAttribute method.
     // NOTE: The reason to set the property in the HttpServletRequest is because the JAX-RS contract requires it.
     super.removeProperty(name);
     httpServletRequest.removeAttribute(name);
@@ -341,7 +343,8 @@ class ContainerResponseContextImpl extends InterceptorContextImpl implements Con
       isClosed = true;
 
       getHeaders().putSingle(HttpHeaders.CONTENT_LENGTH, Integer.valueOf(count));
-      // httpServletResponse.setBufferSize(Streams.DEFAULT_SOCKET_BUFFER_SIZE); // FIXME: Setting this to a low value significantly reduces performance, so leaving this to the servlet container's default
+      // httpServletResponse.setBufferSize(Streams.DEFAULT_SOCKET_BUFFER_SIZE); // FIXME: Setting this to a low value significantly
+      // reduces performance, so leaving this to the servlet container's default
       flushHeaders(httpServletResponse, compatibleMediaTypes, messageBodyWriter, isException);
       try (final OutputStream socketOutputStream = httpServletResponse.getOutputStream()) {
         socketOutputStream.write(buf, 0, count);
@@ -472,7 +475,8 @@ class ContainerResponseContextImpl extends InterceptorContextImpl implements Con
               if (chunkedIndex >= 0) // NOTE: This means that if "Content-Length" is present, it overrides "Content-Encoding": "chunked" (if present too)
                 transferEncoding.remove(chunkedIndex);
 
-              // httpServletResponse.setBufferSize(Streams.DEFAULT_SOCKET_BUFFER_SIZE); // FIXME: Setting this to a low value significantly reduces performance, so leaving this to the servlet container's default
+              // httpServletResponse.setBufferSize(Streams.DEFAULT_SOCKET_BUFFER_SIZE); // FIXME: Setting this to a low value significantly
+              // reduces performance, so leaving this to the servlet container's default
               flushHeaders(httpServletResponse, compatibleMediaTypesWithWriter, messageBodyWriter, isException);
               target = httpServletResponse.getOutputStream();
             }
@@ -534,7 +538,7 @@ class ContainerResponseContextImpl extends InterceptorContextImpl implements Con
         outputStream.close();
       }
       catch (final Exception e) {
-        if (logger.isDebugEnabled()) logger.debug(e.getMessage(), e);
+        if (logger.isDebugEnabled()) { logger.debug(e.getMessage(), e); }
       }
       finally {
         outputStream = null;

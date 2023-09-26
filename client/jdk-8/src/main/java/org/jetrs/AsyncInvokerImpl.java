@@ -53,62 +53,62 @@ class AsyncInvokerImpl extends Invoker<Future<Response>> implements AsyncInvoker
   }
 
   @Override
-  public <T>Future<T> get(final Class<T> responseType) {
+  public <T> Future<T> get(final Class<T> responseType) {
     return method(HttpMethod.GET, null, responseType);
   }
 
   @Override
-  public <T>Future<T> get(final GenericType<T> responseType) {
+  public <T> Future<T> get(final GenericType<T> responseType) {
     return method(HttpMethod.GET, null, responseType);
   }
 
   @Override
-  public <T>Future<T> get(final InvocationCallback<T> callback) {
+  public <T> Future<T> get(final InvocationCallback<T> callback) {
     return method(HttpMethod.GET, null, callback);
   }
 
   @Override
-  public <T>Future<T> put(final Entity<?> entity, final Class<T> responseType) {
+  public <T> Future<T> put(final Entity<?> entity, final Class<T> responseType) {
     return method(HttpMethod.PUT, null, responseType);
   }
 
   @Override
-  public <T>Future<T> put(final Entity<?> entity, final GenericType<T> responseType) {
+  public <T> Future<T> put(final Entity<?> entity, final GenericType<T> responseType) {
     return method(HttpMethod.PUT, null, responseType);
   }
 
   @Override
-  public <T>Future<T> put(final Entity<?> entity, final InvocationCallback<T> callback) {
+  public <T> Future<T> put(final Entity<?> entity, final InvocationCallback<T> callback) {
     return method(HttpMethod.PUT, null, callback);
   }
 
   @Override
-  public <T>Future<T> post(final Entity<?> entity, final Class<T> responseType) {
+  public <T> Future<T> post(final Entity<?> entity, final Class<T> responseType) {
     return method(HttpMethod.POST, null, responseType);
   }
 
   @Override
-  public <T>Future<T> post(final Entity<?> entity, final GenericType<T> responseType) {
+  public <T> Future<T> post(final Entity<?> entity, final GenericType<T> responseType) {
     return method(HttpMethod.POST, null, responseType);
   }
 
   @Override
-  public <T>Future<T> post(final Entity<?> entity, final InvocationCallback<T> callback) {
+  public <T> Future<T> post(final Entity<?> entity, final InvocationCallback<T> callback) {
     return method(HttpMethod.POST, null, callback);
   }
 
   @Override
-  public <T>Future<T> delete(final Class<T> responseType) {
+  public <T> Future<T> delete(final Class<T> responseType) {
     return method(HttpMethod.DELETE, null, responseType);
   }
 
   @Override
-  public <T>Future<T> delete(final GenericType<T> responseType) {
+  public <T> Future<T> delete(final GenericType<T> responseType) {
     return method(HttpMethod.DELETE, null, responseType);
   }
 
   @Override
-  public <T>Future<T> delete(final InvocationCallback<T> callback) {
+  public <T> Future<T> delete(final InvocationCallback<T> callback) {
     return method(HttpMethod.DELETE, null, callback);
   }
 
@@ -118,32 +118,32 @@ class AsyncInvokerImpl extends Invoker<Future<Response>> implements AsyncInvoker
   }
 
   @Override
-  public <T>Future<T> options(final Class<T> responseType) {
+  public <T> Future<T> options(final Class<T> responseType) {
     return method(HttpMethod.OPTIONS, null, responseType);
   }
 
   @Override
-  public <T>Future<T> options(final GenericType<T> responseType) {
+  public <T> Future<T> options(final GenericType<T> responseType) {
     return method(HttpMethod.OPTIONS, null, responseType);
   }
 
   @Override
-  public <T>Future<T> options(final InvocationCallback<T> callback) {
+  public <T> Future<T> options(final InvocationCallback<T> callback) {
     return method(HttpMethod.OPTIONS, null, callback);
   }
 
   @Override
-  public <T>Future<T> trace(final Class<T> responseType) {
+  public <T> Future<T> trace(final Class<T> responseType) {
     return method("TRACE", null, responseType);
   }
 
   @Override
-  public <T>Future<T> trace(final GenericType<T> responseType) {
+  public <T> Future<T> trace(final GenericType<T> responseType) {
     return method("TRACE", null, responseType);
   }
 
   @Override
-  public <T>Future<T> trace(final InvocationCallback<T> callback) {
+  public <T> Future<T> trace(final InvocationCallback<T> callback) {
     return method("TRACE", null, callback);
   }
 
@@ -153,17 +153,17 @@ class AsyncInvokerImpl extends Invoker<Future<Response>> implements AsyncInvoker
   }
 
   @Override
-  public <T>Future<T> method(final String name, final Class<T> responseType) {
+  public <T> Future<T> method(final String name, final Class<T> responseType) {
     return method(name, null, responseType);
   }
 
   @Override
-  public <T>Future<T> method(final String name, final GenericType<T> responseType) {
+  public <T> Future<T> method(final String name, final GenericType<T> responseType) {
     return method(name, null, responseType);
   }
 
   @Override
-  public <T>Future<T> method(final String name, final InvocationCallback<T> callback) {
+  public <T> Future<T> method(final String name, final InvocationCallback<T> callback) {
     return method(name, null, callback);
   }
 
@@ -174,7 +174,7 @@ class AsyncInvokerImpl extends Invoker<Future<Response>> implements AsyncInvoker
 
   @Override
   @SuppressWarnings("unchecked")
-  public <T>Future<T> method(final String name, final Entity<?> entity, final Class<T> responseType) {
+  public <T> Future<T> method(final String name, final Entity<?> entity, final Class<T> responseType) {
     client.assertNotClosed();
     final Invocation invocation = build(name, requestHeaders, cookies, cacheControl, entity);
     return executorService.submit(() -> {
@@ -192,7 +192,7 @@ class AsyncInvokerImpl extends Invoker<Future<Response>> implements AsyncInvoker
   }
 
   @Override
-  public <T>Future<T> method(final String name, final Entity<?> entity, final GenericType<T> responseType) {
+  public <T> Future<T> method(final String name, final Entity<?> entity, final GenericType<T> responseType) {
     client.assertNotClosed();
     final Invocation invocation = build(name, requestHeaders, cookies, cacheControl, entity);
     return executorService.submit(() -> {
@@ -204,7 +204,7 @@ class AsyncInvokerImpl extends Invoker<Future<Response>> implements AsyncInvoker
 
   @Override
   @SuppressWarnings("unchecked")
-  public <T>Future<T> method(final String name, final Entity<?> entity, final InvocationCallback<T> callback) {
+  public <T> Future<T> method(final String name, final Entity<?> entity, final InvocationCallback<T> callback) {
     client.assertNotClosed();
     final Invocation invocation = build(name, requestHeaders, cookies, cacheControl, entity);
     return executorService.submit(() -> {

@@ -102,7 +102,7 @@ abstract class ClientRequestContextImpl extends RequestContext<ClientRuntimeCont
       if (mediaType != null)
         requestHeaders.setMediaType(mediaType);
       else if (requestHeaders.getMediaType() == null)
-        if (logger.isWarnEnabled()) logger.warn("Empty Content-Type for request with entity may be set to default value by HTTP client");
+        if (logger.isWarnEnabled()) { logger.warn("Empty Content-Type for request with entity may be set to default value by HTTP client"); }
     }
 
     this.executorService = executorService;
@@ -137,7 +137,7 @@ abstract class ClientRequestContextImpl extends RequestContext<ClientRuntimeCont
 
   @Override
   @SuppressWarnings("unchecked")
-  <T>T findInjectableContextValue(final Class<T> clazz) {
+  <T> T findInjectableContextValue(final Class<T> clazz) {
     if (HttpHeaders.class.isAssignableFrom(clazz))
       return (T)getHttpHeaders();
 
@@ -396,12 +396,12 @@ abstract class ClientRequestContextImpl extends RequestContext<ClientRuntimeCont
   }
 
   @Override
-  public <T>T invoke(final Class<T> responseType) {
+  public <T> T invoke(final Class<T> responseType) {
     return invoke().readEntity(responseType);
   }
 
   @Override
-  public <T>T invoke(final GenericType<T> responseType) {
+  public <T> T invoke(final GenericType<T> responseType) {
     return invoke().readEntity(responseType);
   }
 
@@ -418,18 +418,18 @@ abstract class ClientRequestContextImpl extends RequestContext<ClientRuntimeCont
   }
 
   @Override
-  public <T>Future<T> submit(final Class<T> responseType) {
+  public <T> Future<T> submit(final Class<T> responseType) {
     return getExecutorService().submit(() -> invoke().readEntity(responseType));
   }
 
   @Override
-  public <T>Future<T> submit(final GenericType<T> responseType) {
+  public <T> Future<T> submit(final GenericType<T> responseType) {
     return getExecutorService().submit(() -> invoke().readEntity(responseType));
   }
 
   @Override
   @SuppressWarnings("unchecked")
-  public <T>Future<T> submit(final InvocationCallback<T> callback) {
+  public <T> Future<T> submit(final InvocationCallback<T> callback) {
     client.assertNotClosed();
     return getExecutorService().submit(() -> {
       try {
@@ -540,12 +540,14 @@ abstract class ClientRequestContextImpl extends RequestContext<ClientRuntimeCont
           if (values != null && (size = values.size()) > 0) {
             name = entry.getKey();
             if (values instanceof RandomAccess) {
-              int i = 0; do // [RA]
+              int i = 0;
+              do // [RA]
                 header(name, values.get(i));
               while (++i < size);
             }
             else {
-              final Iterator<Object> i = values.iterator(); do // [I]
+              final Iterator<Object> i = values.iterator();
+              do // [I]
                 header(name, i.next());
               while (i.hasNext());
             }
@@ -578,68 +580,68 @@ abstract class ClientRequestContextImpl extends RequestContext<ClientRuntimeCont
 
     @Override
     @SuppressWarnings("rawtypes")
-    public <T extends RxInvoker>T rx(final Class<T> clazz) {
+    public <T extends RxInvoker> T rx(final Class<T> clazz) {
       // TODO: Implement this.
       return null;
     }
 
     @Override
-    public <T>T get(final Class<T> responseType) {
+    public <T> T get(final Class<T> responseType) {
       return get().readEntity(responseType);
     }
 
     @Override
-    public <T>T get(final GenericType<T> responseType) {
+    public <T> T get(final GenericType<T> responseType) {
       return get().readEntity(responseType);
     }
 
     @Override
-    public <T>T put(final Entity<?> entity, final Class<T> responseType) {
+    public <T> T put(final Entity<?> entity, final Class<T> responseType) {
       return put(entity).readEntity(responseType);
     }
 
     @Override
-    public <T>T put(final Entity<?> entity, final GenericType<T> responseType) {
+    public <T> T put(final Entity<?> entity, final GenericType<T> responseType) {
       return put(entity).readEntity(responseType);
     }
 
     @Override
-    public <T>T post(final Entity<?> entity, final Class<T> responseType) {
+    public <T> T post(final Entity<?> entity, final Class<T> responseType) {
       return post(entity).readEntity(responseType);
     }
 
     @Override
-    public <T>T post(final Entity<?> entity, final GenericType<T> responseType) {
+    public <T> T post(final Entity<?> entity, final GenericType<T> responseType) {
       return post(entity).readEntity(responseType);
     }
 
     @Override
-    public <T>T delete(final Class<T> responseType) {
+    public <T> T delete(final Class<T> responseType) {
       return delete().readEntity(responseType);
     }
 
     @Override
-    public <T>T delete(final GenericType<T> responseType) {
+    public <T> T delete(final GenericType<T> responseType) {
       return delete().readEntity(responseType);
     }
 
     @Override
-    public <T>T options(final Class<T> responseType) {
+    public <T> T options(final Class<T> responseType) {
       return options().readEntity(responseType);
     }
 
     @Override
-    public <T>T options(final GenericType<T> responseType) {
+    public <T> T options(final GenericType<T> responseType) {
       return options().readEntity(responseType);
     }
 
     @Override
-    public <T>T trace(final Class<T> responseType) {
+    public <T> T trace(final Class<T> responseType) {
       return trace().readEntity(responseType);
     }
 
     @Override
-    public <T>T trace(final GenericType<T> responseType) {
+    public <T> T trace(final GenericType<T> responseType) {
       return trace().readEntity(responseType);
     }
 
@@ -649,12 +651,12 @@ abstract class ClientRequestContextImpl extends RequestContext<ClientRuntimeCont
     }
 
     @Override
-    public <T>T method(final String name, final Class<T> responseType) {
+    public <T> T method(final String name, final Class<T> responseType) {
       return method(name, (Entity<?>)null).readEntity(responseType);
     }
 
     @Override
-    public <T>T method(final String name, final GenericType<T> responseType) {
+    public <T> T method(final String name, final GenericType<T> responseType) {
       return method(name, (Entity<?>)null).readEntity(responseType);
     }
 
@@ -664,12 +666,12 @@ abstract class ClientRequestContextImpl extends RequestContext<ClientRuntimeCont
     }
 
     @Override
-    public <T>T method(final String name, final Entity<?> entity, final Class<T> responseType) {
+    public <T> T method(final String name, final Entity<?> entity, final Class<T> responseType) {
       return method(name, entity).readEntity(responseType);
     }
 
     @Override
-    public <T>T method(final String name, final Entity<?> entity, final GenericType<T> responseType) {
+    public <T> T method(final String name, final Entity<?> entity, final GenericType<T> responseType) {
       return method(name, entity).readEntity(responseType);
     }
 

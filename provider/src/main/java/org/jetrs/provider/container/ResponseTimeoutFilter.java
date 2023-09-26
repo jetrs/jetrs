@@ -87,7 +87,7 @@ public abstract class ResponseTimeoutFilter implements ContainerRequestFilter, C
                 final Object expireTime = requestContext.getProperty(EXPIRE_TIME);
                 if (expireTime == null) {
                   requestContexts.poll();
-                  if (logger.isErrorEnabled()) logger.error("ResponseTimeoutFilter: Unable to check expire time: " + ObjectUtil.simpleIdentityString(requestContext) + ".getProperty(" + EXPIRE_TIME + ") = null: " + requestContext.getUriInfo().getPath());
+                  if (logger.isErrorEnabled()) { logger.error("ResponseTimeoutFilter: Unable to check expire time: " + ObjectUtil.simpleIdentityString(requestContext) + ".getProperty(" + EXPIRE_TIME + ") = null: " + requestContext.getUriInfo().getPath()); }
                 }
                 else {
                   final long diff = (Long)expireTime - System.currentTimeMillis();
@@ -100,7 +100,7 @@ public abstract class ResponseTimeoutFilter implements ContainerRequestFilter, C
                     requestContexts.poll();
                     final Thread thread = (Thread)requestContext.getProperty(THREAD);
                     if (thread == null) {
-                      if (logger.isErrorEnabled()) logger.error("ResponseTimeoutFilter: Unable to enforce expire time: " + ObjectUtil.simpleIdentityString(requestContext) + ".getProperty(" + THREAD + ") = null: " + requestContext.getUriInfo().getPath());
+                      if (logger.isErrorEnabled()) { logger.error("ResponseTimeoutFilter: Unable to enforce expire time: " + ObjectUtil.simpleIdentityString(requestContext) + ".getProperty(" + THREAD + ") = null: " + requestContext.getUriInfo().getPath()); }
                     }
                     else {
                       onTimeout(requestContext, thread, timeout - diff);
@@ -110,10 +110,10 @@ public abstract class ResponseTimeoutFilter implements ContainerRequestFilter, C
               }
             }
             catch (final InterruptedException e) {
-              if (logger.isWarnEnabled()) logger.warn(e.getMessage(), e);
+              if (logger.isWarnEnabled()) { logger.warn(e.getMessage(), e); }
             }
             catch (final Exception e) {
-              if (logger.isErrorEnabled()) logger.error(e.getMessage(), e);
+              if (logger.isErrorEnabled()) { logger.error(e.getMessage(), e); }
             }
           }
           while (true);

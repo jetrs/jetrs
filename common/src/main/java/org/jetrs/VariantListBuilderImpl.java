@@ -46,11 +46,14 @@ class VariantListBuilderImpl extends Variant.VariantListBuilder {
     if (j$ == 0 && k$ == 0 && i$ == 0)
       return this;
 
-    int i = 0; do {
+    int i = 0;
+    do {
       final MediaType mediaType = i < i$ ? mediaTypes.get(i) : null;
-      int j = 0; do {
+      int j = 0;
+      do {
         final Locale language = j < j$ ? languages.get(j) : null;
-        int k = 0; do {
+        int k = 0;
+        do {
           final String encoding = k < k$ ? encodings.get(k) : null;
           variants.add(new Variant(mediaType, language, encoding));
         }

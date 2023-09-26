@@ -53,7 +53,8 @@ final class AnnotationUtil {
       if (annotation.annotationType().getPackage().getName().startsWith("javax.ws.rs."))
         hasJaxRsAnnotations = true;
 
-    // [JAX-RS 3.6] If a subclass or implementation method has any JAX-RS annotations then all of the annotations on the superclass or interface method are ignored.
+    // [JAX-RS 3.6] If a subclass or implementation method has any JAX-RS annotations then all of the annotations on the superclass or
+    // interface method are ignored.
     if (hasJaxRsAnnotations) {
       final Annotation[] result = new Annotation[depth + annotations.length];
       System.arraycopy(annotations, 0, result, depth, annotations.length);
@@ -91,7 +92,8 @@ final class AnnotationUtil {
       if (annotation.annotationType().getPackage().getName().startsWith("javax.ws.rs."))
         hasJaxRsAnnotations = true;
 
-    // [JAX-RS 3.6] If a subclass or implementation method has any JAX-RS annotations then all of the annotations on the superclass or interface method are ignored.
+    // [JAX-RS 3.6] If a subclass or implementation method has any JAX-RS annotations then all of the annotations on the superclass or
+    // interface method are ignored.
     if (hasJaxRsAnnotations) {
       final Annotation[] result = new Annotation[depth + annotations.length];
       System.arraycopy(annotations, 0, result, depth, annotations.length);
@@ -113,7 +115,7 @@ final class AnnotationUtil {
   }
 
   @SuppressWarnings("unchecked")
-  static <A extends Annotation>A getAnnotation(final Class<?> cls, final Class<A> annotationClass) {
+  static <A extends Annotation> A getAnnotation(final Class<?> cls, final Class<A> annotationClass) {
     Class<?> parent = cls;
     boolean hasJaxRsAnnotations = false;
     do {
@@ -126,7 +128,8 @@ final class AnnotationUtil {
           hasJaxRsAnnotations = true;
       }
 
-      // [JAX-RS 3.6] If a subclass or implementation method has any JAX-RS annotations then all of the annotations on the superclass or interface method are ignored.
+      // [JAX-RS 3.6] If a subclass or implementation method has any JAX-RS annotations then all of the annotations on the superclass or
+      // interface method are ignored.
       if (hasJaxRsAnnotations)
         return null;
     }
@@ -135,7 +138,7 @@ final class AnnotationUtil {
   }
 
   @SuppressWarnings("unchecked")
-  static <A extends Annotation>A getAnnotation(Method method, final Class<A> annotationClass) {
+  static <A extends Annotation> A getAnnotation(Method method, final Class<A> annotationClass) {
     boolean hasJaxRsAnnotations = false;
     Class<?> declaringClass;
     do {
@@ -148,7 +151,8 @@ final class AnnotationUtil {
           hasJaxRsAnnotations = true;
       }
 
-      // [JAX-RS 3.6] If a subclass or implementation method has any JAX-RS annotations then all of the annotations on the superclass or interface method are ignored.
+      // [JAX-RS 3.6] If a subclass or implementation method has any JAX-RS annotations then all of the annotations on the superclass or
+      // interface method are ignored.
       if (hasJaxRsAnnotations)
         return null;
     }
@@ -179,7 +183,8 @@ final class AnnotationUtil {
         }
       }
 
-      // [JAX-RS 3.6] If a subclass or implementation method has any JAX-RS annotations then all of the annotations on the superclass or interface method are ignored.
+      // [JAX-RS 3.6] If a subclass or implementation method has any JAX-RS annotations then all of the annotations on the superclass or
+      // interface method are ignored.
       if (hasJaxRsAnnotations)
         return path;
     }
@@ -200,7 +205,8 @@ final class AnnotationUtil {
           hasJaxRsAnnotations = true;
       }
 
-      // [JAX-RS 3.6] If a subclass or implementation method has any JAX-RS annotations then all of the annotations on the superclass or interface method are ignored.
+      // [JAX-RS 3.6] If a subclass or implementation method has any JAX-RS annotations then all of the annotations on the superclass or
+      // interface method are ignored.
       if (hasJaxRsAnnotations)
         return false;
     }
@@ -220,7 +226,8 @@ final class AnnotationUtil {
           hasJaxRsAnnotations = true;
       }
 
-      // [JAX-RS 3.6] If a subclass or implementation method has any JAX-RS annotations then all of the annotations on the superclass or interface method are ignored.
+      // [JAX-RS 3.6] If a subclass or implementation method has any JAX-RS annotations then all of the annotations on the superclass or
+      // interface method are ignored.
       if (hasJaxRsAnnotations)
         return false;
     }
@@ -243,7 +250,8 @@ final class AnnotationUtil {
           hasJaxRsAnnotations = true;
       }
 
-      // [JAX-RS 3.6] If a subclass or implementation method has any JAX-RS annotations then all of the annotations on the superclass or interface method are ignored.
+      // [JAX-RS 3.6] If a subclass or implementation method has any JAX-RS annotations then all of the annotations on the superclass or
+      // interface method are ignored.
       if (hasJaxRsAnnotations)
         return false;
     }

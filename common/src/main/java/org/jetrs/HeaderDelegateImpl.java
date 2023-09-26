@@ -618,7 +618,7 @@ abstract class HeaderDelegateImpl<T> implements RuntimeDelegate.HeaderDelegate<T
   }
 
   @SuppressWarnings("unchecked")
-  static <T>HeaderDelegateImpl<T> lookup(final Class<T> type) {
+  static <T> HeaderDelegateImpl<T> lookup(final Class<T> type) {
     if (type == null)
       return (HeaderDelegateImpl<T>)DEFAULT_COMMA;
 
@@ -639,7 +639,7 @@ abstract class HeaderDelegateImpl<T> implements RuntimeDelegate.HeaderDelegate<T
   }
 
   @SuppressWarnings("rawtypes")
-  static <T>RuntimeDelegate.HeaderDelegate lookup(final String headerName, final Class<T> type) {
+  static <T> RuntimeDelegate.HeaderDelegate lookup(final String headerName, final Class<T> type) {
     final AbstractMap.SimpleEntry<HttpHeader<?>,HeaderDelegateImpl<?>> entry = HttpHeader.headerNameToDelegate.get(headerName.toLowerCase());
     return entry != null && (type == null || entry.getValue().getType().isAssignableFrom(type)) ? entry.getValue() : lookup(type);
   }
@@ -662,7 +662,7 @@ abstract class HeaderDelegateImpl<T> implements RuntimeDelegate.HeaderDelegate<T
       return valueOf(value);
     }
     catch (final Exception e) {
-      if (logger.isDebugEnabled()) logger.debug("Exception parsing header value: \"" + value + "\"", e);
+      if (logger.isDebugEnabled()) { logger.debug("Exception parsing header value: \"" + value + "\"", e); }
       return null;
     }
   }

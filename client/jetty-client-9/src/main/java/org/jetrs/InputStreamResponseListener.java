@@ -65,8 +65,8 @@ import org.eclipse.jetty.util.log.Logger;
  * The {@link HttpClient} implementation (final the producer) will feed the input stream asynchronously while the application (the
  * consumer) is reading from it.
  * <p>
- * If the consumer is faster than the producer, then the consumer will block with the typical {@link InputStream#read()}
- * semantic. If the consumer is slower than the producer, then the producer will block until the client consumes.
+ * If the consumer is faster than the producer, then the consumer will block with the typical {@link InputStream#read()} semantic.
+ * If the consumer is slower than the producer, then the producer will block until the client consumes.
  */
 public class InputStreamResponseListener extends Listener.Adapter {
   private static final Logger LOG = Log.getLogger(org.eclipse.jetty.client.util.InputStreamResponseListener.class);
@@ -186,8 +186,8 @@ public class InputStreamResponseListener extends Listener.Adapter {
   /**
    * Waits for the given timeout for the response to be available, then returns it.
    * <p>
-   * The wait ends as soon as all the HTTP headers have been received, without waiting for the content. To wait for the whole
-   * content, see {@link #await(long, TimeUnit)}.
+   * The wait ends as soon as all the HTTP headers have been received, without waiting for the content. To wait for the whole content,
+   * see {@link #await(long, TimeUnit)}.
    *
    * @param timeout the time to wait
    * @param unit the timeout unit

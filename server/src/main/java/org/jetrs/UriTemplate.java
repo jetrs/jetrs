@@ -60,7 +60,8 @@ class UriTemplate implements Comparable<UriTemplate> {
       throw new IllegalArgumentException("Invalid URI template start ('" + ch + "' at index " + i + "): " + uriTemplate);
 
     final StringBuilder b = new StringBuilder();
-    char escape; do {
+    char escape;
+    do {
       if ((escape = getEscapeChar(ch)) != NO_ESCAPE)
         b.append(ESCAPE).append(escape);
       else

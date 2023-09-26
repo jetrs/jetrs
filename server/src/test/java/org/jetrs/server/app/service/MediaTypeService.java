@@ -32,7 +32,7 @@ public class MediaTypeService {
   private static void assertContentType(final String json, final Object ... mediaTypes) {
     final String expectedContentType = json.substring(2, json.length() - 2);
     for (final Object mediaType : mediaTypes) // [A]
-      if(expectedContentType.equalsIgnoreCase(mediaType.toString()))
+      if (expectedContentType.equalsIgnoreCase(mediaType.toString()))
         return;
 
     fail(expectedContentType + " is not in " + Arrays.toString(mediaTypes));

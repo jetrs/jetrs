@@ -55,10 +55,13 @@ public class FileUploadService {
   @Path("/upload/echo")
   @Consumes(MediaType.WILDCARD)
   @Produces(MediaType.WILDCARD)
-  public StreamingOutput uploadEcho(final InputStream in) {
+  public StreamingOutput uploadEcho(final InputStream in, @QueryParam("error") final boolean error) {
     return new StreamingOutput() {
       @Override
       public void write(final OutputStream output) throws IOException, WebApplicationException {
+        if (error)
+          throw new IOException();
+
         Streams.pipe(in, output);
       }
     };

@@ -70,7 +70,7 @@ abstract class RequestContext<R extends RuntimeContext> extends InterceptorConte
 
   // Gets the constructor with most args [JAX-RS 2.1 3.1.2]
   @SuppressWarnings("unchecked")
-  private static <T>Constructor<T>[] getConstructors(final Class<T> clazz) {
+  private static <T> Constructor<T>[] getConstructors(final Class<T> clazz) {
     Constructor<T>[] constructors = classToConstructors.get(clazz);
     if (constructors == null)
       classToConstructors.put(clazz, constructors = (Constructor<T>[])clazz.getConstructors());
@@ -166,7 +166,7 @@ abstract class RequestContext<R extends RuntimeContext> extends InterceptorConte
   }
 
   @SuppressWarnings("unchecked")
-  <T>T findInjectableContextValue(final Class<T> clazz) {
+  <T> T findInjectableContextValue(final Class<T> clazz) {
     if (Request.class.isAssignableFrom(clazz))
       return (T)request;
 
@@ -190,7 +190,7 @@ abstract class RequestContext<R extends RuntimeContext> extends InterceptorConte
   private Map<List<Object>,Object> injectedValueCache;
 
   @SuppressWarnings("unchecked")
-  <T>T findInjectableValueFromCache(final AnnotatedElement element, final int parameterIndex, final Annotation[] annotations, final Class<T> clazz, final Type type) throws IOException {
+  <T> T findInjectableValueFromCache(final AnnotatedElement element, final int parameterIndex, final Annotation[] annotations, final Class<T> clazz, final Type type) throws IOException {
     if (injectedValueCache == null) {
       injectedValueCache = new HashMap<>();
     }
@@ -210,11 +210,11 @@ abstract class RequestContext<R extends RuntimeContext> extends InterceptorConte
     return instance;
   }
 
-  <T>T findInjectableValue(final AnnotatedElement element, final int parameterIndex, final Annotation[] annotations, final Class<T> clazz, final Type type) throws IOException {
+  <T> T findInjectableValue(final AnnotatedElement element, final int parameterIndex, final Annotation[] annotations, final Class<T> clazz, final Type type) throws IOException {
     return findInjectableContextValue(clazz);
   }
 
-  final <T>T newResourceInstance(final Class<T> clazz) throws IllegalAccessException, InstantiationException, IOException, InvocationTargetException {
+  final <T> T newResourceInstance(final Class<T> clazz) throws IllegalAccessException, InstantiationException, IOException, InvocationTargetException {
     final T instance = newInstanceSansFields(clazz, true);
     if (instance != null) {
       injectFields(instance);
@@ -232,7 +232,7 @@ abstract class RequestContext<R extends RuntimeContext> extends InterceptorConte
   private Map<Class<?>,Object[]> contextInsances;
 
   @SuppressWarnings("unchecked")
-  final <T>T getProviderInstance(final Class<T> clazz) throws IllegalAccessException, InstantiationException, IOException, InvocationTargetException {
+  final <T> T getProviderInstance(final Class<T> clazz) throws IllegalAccessException, InstantiationException, IOException, InvocationTargetException {
     if (contextInsances == null) {
       contextInsances = new HashMap<>();
     }
@@ -270,7 +270,7 @@ abstract class RequestContext<R extends RuntimeContext> extends InterceptorConte
         if (builder != null) {
           builder.setCharAt(0, ':');
           builder.setCharAt(1, ' ');
-          if (logger.isWarnEnabled()) logger.warn("Class " + clazz.getName() + " with @Singleton annotation has @Context fields" + builder);
+          if (logger.isWarnEnabled()) { logger.warn("Class " + clazz.getName() + " with @Singleton annotation has @Context fields" + builder); }
         }
       }
 
@@ -283,7 +283,7 @@ abstract class RequestContext<R extends RuntimeContext> extends InterceptorConte
     return instance;
   }
 
-  private <T>T newInstanceSansFields(final Class<T> clazz, final boolean isResource) throws IllegalAccessException, InstantiationException, InvocationTargetException, IOException {
+  private <T> T newInstanceSansFields(final Class<T> clazz, final boolean isResource) throws IllegalAccessException, InstantiationException, InvocationTargetException, IOException {
     final Constructor<T>[] constructors = getConstructors(clazz);
 
     OUT:
@@ -299,7 +299,7 @@ abstract class RequestContext<R extends RuntimeContext> extends InterceptorConte
         final Annotation[] annotations = parameterAnnotations[i];
         final Annotation annotation = findInjectableAnnotation(annotations, isResource);
         if (annotation == null) {
-          if (logger.isWarnEnabled()) logger.warn("Unsupported parameter type: " + parameter.getName() + " on: " + clazz.getName() + "(" + Arrays.stream(parameters).map(p -> p.getType().getSimpleName()).collect(Collectors.joining(",")) + ")");
+          if (logger.isWarnEnabled()) { logger.warn("Unsupported parameter type: " + parameter.getName() + " on: " + clazz.getName() + "(" + Arrays.stream(parameters).map(p -> p.getType().getSimpleName()).collect(Collectors.joining(",")) + ")"); }
           continue OUT;
         }
 

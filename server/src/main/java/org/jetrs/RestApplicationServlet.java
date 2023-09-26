@@ -209,7 +209,7 @@ abstract class RestApplicationServlet extends RestHttpServlet {
         requestContext.writeResponse(null);
       }
       catch (final EOFException e) {
-        if (logger.isDebugEnabled()) logger.debug(e.getMessage(), e);
+        if (logger.isDebugEnabled()) { logger.debug(e.getMessage(), e); }
       }
       catch (final Throwable e) {
         if (!(e instanceof AbortFilterChainException)) {
@@ -232,7 +232,7 @@ abstract class RestApplicationServlet extends RestHttpServlet {
             throw e;
           }
 
-          if (logger.isInfoEnabled()) logger.info(e.getMessage(), e);
+          if (logger.isInfoEnabled()) { logger.info(e.getMessage(), e); }
         }
         else if (requestContext.getStage() == Stage.RESPONSE_FILTER) {
           throw new IllegalStateException("ContainerRequestContext.abortWith(Response) cannot be called from response filter chain");

@@ -30,7 +30,7 @@ import org.libj.lang.IllegalAnnotationException;
 import org.libj.util.ArrayUtil;
 
 class MediaTypeAnnotationProcessor<T extends Annotation> {
-  private static <T extends Annotation>T getMethodClassAnnotation(final Method method, final Class<T> annotationClass) {
+  private static <T extends Annotation> T getMethodClassAnnotation(final Method method, final Class<T> annotationClass) {
     final T annotation = AnnotationUtil.getAnnotation(method, annotationClass);
     return annotation != null ? annotation : AnnotationUtil.getAnnotation(method.getDeclaringClass(), annotationClass);
   }

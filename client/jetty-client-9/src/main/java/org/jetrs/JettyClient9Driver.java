@@ -61,13 +61,13 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
 
   @Override
   HttpClient newClient(final SSLContext sslContext) {
-//    HTTP2Client h2Client = new HTTP2Client();
-//    h2Client.setSelectors(1);
-//    HttpClientTransportOverHTTP2 transport = new HttpClientTransportOverHTTP2(h2Client);
+    // HTTP2Client h2Client = new HTTP2Client();
+    // h2Client.setSelectors(1);
+    // HttpClientTransportOverHTTP2 transport = new HttpClientTransportOverHTTP2(h2Client);
 
     final SslContextFactory sslContextFactory = new SslContextFactory.Client();
     sslContextFactory.setSslContext(sslContext);
-    final HttpClient httpClient = new HttpClient(/*transport,*/ sslContextFactory) {
+    final HttpClient httpClient = new HttpClient(/* transport, */ sslContextFactory) {
       @Override
       public long getConnectTimeout() {
         final Long connectTimeout = connectTimeoutLocal.get();
@@ -191,12 +191,14 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
             final Date date = responseHeaders.getDate();
             cookies = new HashMap<>(noCookies);
             if (httpCookies instanceof RandomAccess) {
-              int i = 0; do // [RA]
+              int i = 0;
+              do // [RA]
                 Jdk8ClientDriver.addCookie(cookies, httpCookies.get(i), date);
               while (++i < noCookies);
             }
             else {
-              final Iterator<HttpCookie> i = httpCookies.iterator(); do // [I]
+              final Iterator<HttpCookie> i = httpCookies.iterator();
+              do // [I]
                 Jdk8ClientDriver.addCookie(cookies, i.next(), date);
               while (i.hasNext());
             }

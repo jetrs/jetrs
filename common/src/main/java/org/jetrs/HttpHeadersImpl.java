@@ -197,7 +197,9 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
           return null;
 
         final Object reflection = HeaderDelegateImpl.lookup(key).getValue().fromString(value);
-        if (reflection == null && logger.isWarnEnabled()) logger.warn("Got null reflection for header: \"" + key + ": " + value + "\"", new Exception());
+        if (reflection == null && logger.isWarnEnabled())
+          logger.warn("Got null reflection for header: \"" + key + ": " + value + "\"", new Exception());
+
         return reflection;
       }
 
@@ -213,8 +215,8 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
 
       /**
        * Gets the quality attribute from a strongly typed header object (i.e. {@link MediaType#getParameters()
-       * mediaType.getParameters().get("q")}), and returns a {@link org.libj.lang.Numbers.Composite composite} {@code long}
-       * containing the {@code float} quality value and {@code int} ending index of the attribute in the string.
+       * mediaType.getParameters().get("q")}), and returns a {@link org.libj.lang.Numbers.Composite composite} {@code long} containing the
+       * {@code float} quality value and {@code int} ending index of the attribute in the string.
        *
        * @param value The object to parse.
        * @param index The index from which to start parsing (ignored).
@@ -301,14 +303,16 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
 
     final Map<String,Cookie> map = new LinkedHashMap<>();
     if (cookies.isRandomAccess()) {
-      int i = 0; do { // [RA]
+      int i = 0;
+      do { // [RA]
         final Cookie cookie = (Cookie)cookies.get(i);
         map.put(cookie.getName(), cookie);
       }
       while (++i < i$);
     }
     else {
-      final Iterator<?> it = cookies.iterator(); do { // [I]
+      final Iterator<?> it = cookies.iterator();
+      do { // [I]
         final Cookie cookie = (Cookie)it.next();
         map.put(cookie.getName(), cookie);
       }
@@ -361,8 +365,8 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
    * if no value exists.
    *
    * @param headerName The name of the header.
-   * @return A string representation of the list of header strings associated with the specified {@code header} name, or
-   *         {@code null} if no value exists
+   * @return A string representation of the list of header strings associated with the specified {@code header} name, or {@code null}
+   *         if no value exists.
    */
   String getString(final String headerName) {
     final List<String> values = get(headerName);
@@ -386,7 +390,8 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
 
     final StringBuilder builder = new StringBuilder();
     if (CollectionUtil.isRandomAccess(values)) {
-      int i = 0; do { // [RA]
+      int i = 0;
+      do { // [RA]
         if (i > 0)
           builder.append(delimiter);
 
@@ -395,7 +400,9 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
       while (++i < i$);
     }
     else {
-      int i = -1; final Iterator<String> it = values.iterator(); do { // [RA]
+      int i = -1;
+      final Iterator<String> it = values.iterator();
+      do { // [RA]
         if (++i > 0)
           builder.append(delimiter);
 

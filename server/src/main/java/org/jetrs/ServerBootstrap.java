@@ -61,8 +61,8 @@ class ServerBootstrap extends Bootstrap<ResourceInfos> {
   /**
    * http://docs.oracle.com/javaee/6/tutorial/doc/gilik.html Root resource classes are POJOs that are either annotated with
    * {@code @Path} or have at least one method annotated with @Path or a request method designator, such as {@code @GET},
-   * {@code @PUT}, {@code @POST}, or {@code @DELETE}. Resource methods are methods of a resource class annotated with a request
-   * method designator. This section explains how to use JAX-RS to annotate Java classes to create RESTful web services.
+   * {@code @PUT}, {@code @POST}, or {@code @DELETE}. Resource methods are methods of a resource class annotated with a request method
+   * designator. This section explains how to use JAX-RS to annotate Java classes to create RESTful web services.
    */
   private static boolean isRootResource(final Class<?> cls) {
     if (Modifier.isAbstract(cls.getModifiers()) || Modifier.isInterface(cls.getModifiers()))
@@ -84,9 +84,9 @@ class ServerBootstrap extends Bootstrap<ResourceInfos> {
     }
   }
 
-  private static <T>void add(final HttpMethod httpMethodAnnotation, final Method method, final String baseUri, final Path classPath, final Path methodPath, final ResourceInfos resourceInfos, final Class<? extends T> clazz, final T singleton) {
+  private static <T> void add(final HttpMethod httpMethodAnnotation, final Method method, final String baseUri, final Path classPath, final Path methodPath, final ResourceInfos resourceInfos, final Class<? extends T> clazz, final T singleton) {
     final ResourceInfoImpl resourceInfo = new ResourceInfoImpl(resourceInfos, httpMethodAnnotation, method, baseUri, classPath, methodPath, singleton);
-    if (logger.isDebugEnabled()) logger.debug((httpMethodAnnotation != null ? httpMethodAnnotation.value() : "*") + " " + resourceInfo.getUriTemplate() + " -> " + clazz.getSimpleName() + "." + method.getName() + "()");
+    if (logger.isDebugEnabled()) { logger.debug((httpMethodAnnotation != null ? httpMethodAnnotation.value() : "*") + " " + resourceInfo.getUriTemplate() + " -> " + clazz.getSimpleName() + "." + method.getName() + "()"); }
     resourceInfos.add(resourceInfo);
   }
 
@@ -96,7 +96,8 @@ class ServerBootstrap extends Bootstrap<ResourceInfos> {
   private final ArrayList<ProviderFactory<ContainerRequestFilter>> containerRequestFilterProviderFactories;
   private final ArrayList<ProviderFactory<ContainerResponseFilter>> containerResponseFilterProviderFactories;
 
-  ServerBootstrap(final String baseUri,
+  ServerBootstrap(
+    final String baseUri,
     final ArrayList<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories,
     final ArrayList<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorProviderFactories,
     final ArrayList<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderProviderFactories,
@@ -117,7 +118,7 @@ class ServerBootstrap extends Bootstrap<ResourceInfos> {
 
   @Override
   @SuppressWarnings("unchecked")
-  <T>boolean addResourceOrProvider(final ArrayList<Consumer<Set<Class<?>>>> afterAdd, final ResourceInfos resourceInfos, final Class<? extends T> clazz, final T singleton, final boolean scanned) throws IllegalAccessException, InstantiationException, InvocationTargetException {
+  <T> boolean addResourceOrProvider(final ArrayList<Consumer<Set<Class<?>>>> afterAdd, final ResourceInfos resourceInfos, final Class<? extends T> clazz, final T singleton, final boolean scanned) throws IllegalAccessException, InstantiationException, InvocationTargetException {
     if (ParamConverterProvider.class.isAssignableFrom(clazz))
       paramConverterProviderFactories.add(new ParamConverterProviderFactory((Class<ParamConverterProvider>)clazz, (ParamConverterProvider)singleton));
 
@@ -126,7 +127,8 @@ class ServerBootstrap extends Bootstrap<ResourceInfos> {
 
     if (ContainerResponseFilter.class.isAssignableFrom(clazz)) {
       containerResponseFilterProviderFactories.add(new ContainerResponseFilterProviderFactory((Class<ContainerResponseFilter>)clazz, (ContainerResponseFilter)singleton));
-      if (logger.isDebugEnabled() && AnnotationUtil.isAnnotationPresent(clazz, PreMatching.class)) logger.debug("@PreMatching annotation is not applicable to ContainerResponseFilter");
+      if (logger.isDebugEnabled() && AnnotationUtil.isAnnotationPresent(clazz, PreMatching.class))
+        logger.debug("@PreMatching annotation is not applicable to ContainerResponseFilter");
     }
 
     if (!isRootResource(clazz))

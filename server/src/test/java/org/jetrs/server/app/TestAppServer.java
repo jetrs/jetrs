@@ -16,6 +16,7 @@
 
 package org.jetrs.server.app;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -26,6 +27,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.RuntimeDelegate;
 
 import org.jetrs.provider.ext.interceptor.GZipCodecInterceptor;
@@ -46,13 +48,12 @@ import org.slf4j.LoggerFactory;
 
 @ApplicationPath(TestAppServer.applicationPath)
 public class TestAppServer extends Application implements AutoCloseable {
-  public static final String applicationPath = "/test";
-
   private static final Logger logger = LoggerFactory.getLogger(TestAppServer.class);
 
+  public static final String applicationPath = "/test";
   public static final String mimeType = "application/vnd.jetrs.v1+json";
 
-  public static void main(final String[] args) throws Exception {
+  public static void main(final String[] args) throws InterruptedException {
     try (final TestAppServer instance = new TestAppServer(null, null)) {
       instance.container.join();
     }
@@ -69,7 +70,12 @@ public class TestAppServer extends Application implements AutoCloseable {
     else {
       // General
       this.singletons.add(new WebApplicationExceptionMapper(true));
-      this.singletons.add(new ThrowableMapper<>(true));
+      this.singletons.add(new ThrowableMapper<Throwable>(true) {
+        @Override
+        public Response toResponse(final Throwable exception) {
+          return toResponse(exception, exception instanceof IOException ? Response.status(Response.Status.SERVICE_UNAVAILABLE).build() : Response.serverError().build());
+        }
+      });
 
       // Specific
       this.singletons.add(new RootService1());
@@ -95,7 +101,7 @@ public class TestAppServer extends Application implements AutoCloseable {
           @Override
           public void uncaughtServletException(final ServletRequest request, final ServletResponse response, final Exception e) {
             final HttpServletRequest httpServletRequest = (HttpServletRequest)request;
-            if (logger.isErrorEnabled()) logger.error(httpServletRequest.getMethod() + " " + httpServletRequest.getPathInfo(), e);
+            if (logger.isErrorEnabled()) { logger.error(httpServletRequest.getMethod() + " " + httpServletRequest.getPathInfo(), e); }
           }
         })
         .withServletInstances(RuntimeDelegate.getInstance().createEndpoint(this, HttpServlet.class))
@@ -139,13 +145,11 @@ public class TestAppServer extends Application implements AutoCloseable {
 
   @Override
   public void close() {
-    if (container != null) {
-      try {
-        container.close();
-      }
-      catch (final Exception e) {
-        e.printStackTrace();
-      }
+    try {
+      container.close();
+    }
+    catch (final Exception e) {
+      e.printStackTrace();
     }
   }
 }

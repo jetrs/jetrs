@@ -73,8 +73,7 @@ class ClientImpl implements Client, ConfigurableImpl<Client> {
         writerInterceptorProviderFactories,
         messageBodyReaderProviderFactories,
         messageBodyWriterProviderFactories,
-        exceptionMapperProviderFactories
-      );
+        exceptionMapperProviderFactories);
 
       final ComponentSet components = configuration.components();
       bootstrap.init(new HashSet<>(components.instances()), new HashSet<>(components.classes()), null);

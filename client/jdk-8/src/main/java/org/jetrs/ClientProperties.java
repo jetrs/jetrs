@@ -24,16 +24,16 @@ public final class ClientProperties {
   public static final String CHUNKED_ENCODING_SIZE_CLIENT = "jetrs.client.chunkedEncodingSize";
 
   /**
-   * Client-specific version of the common property {@link CommonProperties#CONTENT_LENGTH_BUFFER}, which, if present,
-   * overrides the common property for the client runtime.
+   * Client-specific version of the common property {@link CommonProperties#CONTENT_LENGTH_BUFFER}, which, if present, overrides the
+   * common property for the client runtime.
    */
   public static final String CONTENT_LENGTH_BUFFER_CLIENT = "jetrs.client.contentLength.buffer";
 
   /**
    * Sets the maximum number of connections to open to each destinations.
    * <p>
-   * <a href="https://www.rfc-editor.org/rfc/rfc2616.html#section-8.1.4">RFC 2616 suggests</a> that 2 connections should be opened
-   * per each destination, but browsers commonly open 6.
+   * <a href="https://www.rfc-editor.org/rfc/rfc2616.html#section-8.1.4">RFC 2616 suggests</a> that 2 connections should be opened per
+   * each destination, but browsers commonly open 6.
    * <p>
    * Default: {@value #MAX_CONNECTIONS_PER_DESTINATION_DEFAULT}.
    * <p>
@@ -84,8 +84,8 @@ public final class ClientProperties {
    * The size of the thread pool for the executor service to be used if an explicit executor is not provided via
    * {@link javax.ws.rs.client.ClientBuilder#executorService(java.util.concurrent.ExecutorService)}.
    * <p>
-   * When a positive value is provided, a cached thread pool is initialized by default with a maximum number of threads limited by
-   * the specified value.
+   * When a positive value is provided, a cached thread pool is initialized by default with a maximum number of threads limited by the
+   * specified value.
    * <p>
    * When a non-positive value is provided, or if the property is absent, a cached thread pool is initialized by default, which
    * creates new thread for every new request (see {@link java.util.concurrent.Executors}).
@@ -98,8 +98,8 @@ public final class ClientProperties {
    * The size of the thread pool for the scheduled executor service to be used if an explicit executor is not provided via
    * {@link javax.ws.rs.client.ClientBuilder#scheduledExecutorService(java.util.concurrent.ScheduledExecutorService)}.
    * <p>
-   * When a positive value is provided, a fixed thread pool is initialized by default with a maximum number of threads limited by
-   * the specified value.
+   * When a positive value is provided, a fixed thread pool is initialized by default with a maximum number of threads limited by the
+   * specified value.
    * <p>
    * When a non-positive value is provided, or if the property is absent, a single-thread thread pool is initialized by default.
    * <p>

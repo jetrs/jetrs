@@ -47,8 +47,8 @@ interface MultivaluedArrayMap<K,V> extends MultivaluedMap<K,V> {
   /**
    * Return a non-null list of values for a given key. The returned list may be empty.
    * <p>
-   * If there is no entry for the key in the map, a new empty {@link List} instance is created, registered within the map to hold
-   * the values of the key and returned from the method.
+   * If there is no entry for the key in the map, a new empty {@link List} instance is created, registered within the map to hold the
+   * values of the key and returned from the method.
    *
    * @param key The key.
    * @return value The value {@link List} registered with the key. The method is guaranteed to never return {@code null}.
@@ -104,8 +104,8 @@ interface MultivaluedArrayMap<K,V> extends MultivaluedMap<K,V> {
 
   /**
    * Add all values from the supplied value {@link List} to the current {@link List} of values for the supplied key. If the supplied
-   * value list is empty, method returns immediately. Method throws a {@link IllegalArgumentException} if the supplied array of
-   * values is null.
+   * value list is empty, method returns immediately. Method throws a {@link IllegalArgumentException} if the supplied array of values
+   * is null.
    *
    * @param key The key.
    * @param newValues The list of values to be added.
@@ -129,8 +129,8 @@ interface MultivaluedArrayMap<K,V> extends MultivaluedMap<K,V> {
   }
 
   /**
-   * Add a value to the first position in the current list of values for the supplied key. If the type of the value {@link List}
-   * does not extend {@link List}, a {@link UnsupportedOperationException} is thrown.
+   * Add a value to the first position in the current list of values for the supplied key. If the type of the value {@link List} does
+   * not extend {@link List}, a {@link UnsupportedOperationException} is thrown.
    *
    * @param key The key
    * @param value The value to be added.
@@ -168,7 +168,8 @@ interface MultivaluedArrayMap<K,V> extends MultivaluedMap<K,V> {
       return false;
 
     if (values instanceof RandomAccess) {
-      int i = 0; do { // [RA]
+      int i = 0;
+      do { // [RA]
         if (test.test(values.get(i))) {
           values.remove(i);
           return true;
@@ -177,7 +178,8 @@ interface MultivaluedArrayMap<K,V> extends MultivaluedMap<K,V> {
       while (++i < i$);
     }
     else {
-      final Iterator<V> i = values.iterator(); do { // [I]
+      final Iterator<V> i = values.iterator();
+      do { // [I]
         if (test.test(i.next())) {
           i.remove();
           return true;
@@ -208,7 +210,8 @@ interface MultivaluedArrayMap<K,V> extends MultivaluedMap<K,V> {
 
     boolean changed = false;
     if (values instanceof RandomAccess) {
-      int i = 0; do { // [RA]
+      int i = 0;
+      do { // [RA]
         if (test.test(values.get(i))) {
           values.remove(i);
           changed = true;
@@ -217,7 +220,8 @@ interface MultivaluedArrayMap<K,V> extends MultivaluedMap<K,V> {
       while (++i < i$);
     }
     else {
-      final Iterator<V> i = values.iterator(); do { // [I]
+      final Iterator<V> i = values.iterator();
+      do { // [I]
         if (test.test(i.next())) {
           i.remove();
           changed = true;
@@ -230,8 +234,8 @@ interface MultivaluedArrayMap<K,V> extends MultivaluedMap<K,V> {
   }
 
   /**
-   * Compare the specified map with this map for equality modulo the order of values for each key. Specifically, the values
-   * associated with each key are compared as if they were ordered lists.
+   * Compare the specified map with this map for equality modulo the order of values for each key. Specifically, the values associated
+   * with each key are compared as if they were ordered lists.
    *
    * @param otherMap Map to be compared to this one.
    * @return {@code true} if the maps are equal modulo value ordering.

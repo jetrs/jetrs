@@ -33,16 +33,14 @@ abstract class MessageBodyProviderFactory<T> extends TypeProviderFactory<T> {
   }
 
   /**
-   * Returns a compatible {@link MediaType} for the specified {@code provider} and the entity of the given parameters, if one
-   * exists.
+   * Returns a compatible {@link MediaType} for the specified {@code provider} and the entity of the given parameters, if one exists.
    *
    * @param requestContext The {@link RequestContext}.
    * @param type The {@link Class} of the entity.
    * @param genericType The generic {@link Type} of the entity.
    * @param annotations The annotations attached to the entity.
    * @param mediaType The {@link MediaType} of the entity.
-   * @return A compatible {@link MediaType} for the specified {@code provider} and the entity of the given parameters, if one
-   *         exists.
+   * @return A compatible {@link MediaType} for the specified {@code provider} and the entity of the given parameters, if one exists.
    * @throws NullPointerException If {@code mediaType} is null.
    */
   MediaType[] getCompatibleMediaType(final RequestContext<?> requestContext, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {

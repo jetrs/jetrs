@@ -52,8 +52,8 @@ public class MultivaluedArrayHashMap<K,V> extends HashMap<K,List<V>> implements 
   }
 
   /**
-   * Constructs a new {@link MultivaluedArrayHashMap} with the same mappings as the specified {@link Map}. The {@link List}
-   * instances holding the values of each key are created anew instead of being reused.
+   * Constructs a new {@link MultivaluedArrayHashMap} with the same mappings as the specified {@link Map}. The {@link List} instances
+   * holding the values of each key are created anew instead of being reused.
    *
    * @param map The multivalued map whose mappings are to be placed in this multivalued map.
    * @throws NullPointerException If the specified map is null.

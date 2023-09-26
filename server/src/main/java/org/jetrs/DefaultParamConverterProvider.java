@@ -77,10 +77,11 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
     return str.length() == 0 || (value = str.charAt(0)) < Character.MIN_VALUE || value > Character.MAX_VALUE ? defaultValue : Character.valueOf((char)value);
   }
 
-  private static <T>ParamConverter<T> lookupParamConverter(final ArrayList<ProviderFactory<ParamConverterProvider>> paramConverterProviderFactories, final RequestContext<?> requestContext, final Class<T> rawType, final Type genericType, final Annotation[] annotations) {
+  private static <T> ParamConverter<T> lookupParamConverter(final ArrayList<ProviderFactory<ParamConverterProvider>> paramConverterProviderFactories, final RequestContext<?> requestContext, final Class<T> rawType, final Type genericType, final Annotation[] annotations) {
     for (int i = 0, i$ = paramConverterProviderFactories.size(); i < i$; ++i) { // [RA]
       final ProviderFactory<ParamConverterProvider> factory = paramConverterProviderFactories.get(i);
-      // FIXME: Is there a way to detect whether the ParamConverterProvider can convert the parameter without instantiating the ParamConverterProvider?
+      // FIXME: Is there a way to detect whether the ParamConverterProvider can convert the parameter without instantiating the
+      // ParamConverterProvider?
       final ParamConverter<T> paramConverter = factory.getSingletonOrFromRequestContext(requestContext).getConverter(rawType, genericType, annotations);
       if (paramConverter != null)
         return paramConverter;
@@ -137,7 +138,8 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
               while (++i < size);
             }
             else {
-              final Iterator<String> it = values.iterator(); do // [I]
+              final Iterator<String> it = values.iterator();
+              do // [I]
                 a[i++] = (Integer)paramConverter.fromString(it.next());
               while (it.hasNext());
             }
@@ -150,7 +152,8 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
               while (++i < size);
             }
             else {
-              final Iterator<String> iterator = values.iterator(); do // [I]
+              final Iterator<String> iterator = values.iterator();
+              do // [I]
                 a[i++] = Numbers.parseInt(iterator.next(), 0);
               while (iterator.hasNext());
             }
@@ -173,7 +176,8 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
               while (++i < size);
             }
             else {
-              final Iterator<String> it = values.iterator(); do // [I]
+              final Iterator<String> it = values.iterator();
+              do // [I]
                 a[i++] = (Long)paramConverter.fromString(it.next());
               while (it.hasNext());
             }
@@ -186,7 +190,8 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
               while (++i < size);
             }
             else {
-              final Iterator<String> iterator = values.iterator(); do // [I]
+              final Iterator<String> iterator = values.iterator();
+              do // [I]
                 a[i++] = Numbers.parseLong(iterator.next(), 0L);
               while (iterator.hasNext());
             }
@@ -209,7 +214,8 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
               while (++i < size);
             }
             else {
-              final Iterator<String> it = values.iterator(); do // [I]
+              final Iterator<String> it = values.iterator();
+              do // [I]
                 a[i++] = (Double)paramConverter.fromString(it.next());
               while (it.hasNext());
             }
@@ -222,7 +228,8 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
               while (++i < size);
             }
             else {
-              final Iterator<String> iterator = values.iterator(); do // [I]
+              final Iterator<String> iterator = values.iterator();
+              do // [I]
                 a[i++] = Numbers.parseDouble(iterator.next(), 0d);
               while (iterator.hasNext());
             }
@@ -245,7 +252,8 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
               while (++i < size);
             }
             else {
-              final Iterator<String> it = values.iterator(); do // [I]
+              final Iterator<String> it = values.iterator();
+              do // [I]
                 a[i++] = (Float)paramConverter.fromString(it.next());
               while (it.hasNext());
             }
@@ -258,7 +266,8 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
               while (++i < size);
             }
             else {
-              final Iterator<String> iterator = values.iterator(); do // [I]
+              final Iterator<String> iterator = values.iterator();
+              do // [I]
                 a[i++] = Numbers.parseFloat(iterator.next(), 0f);
               while (iterator.hasNext());
             }
@@ -281,7 +290,8 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
               while (++i < size);
             }
             else {
-              final Iterator<String> it = values.iterator(); do // [I]
+              final Iterator<String> it = values.iterator();
+              do // [I]
                 a[i++] = (Boolean)paramConverter.fromString(it.next());
               while (it.hasNext());
             }
@@ -294,7 +304,8 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
               while (++i < size);
             }
             else {
-              final Iterator<String> iterator = values.iterator(); do // [I]
+              final Iterator<String> iterator = values.iterator();
+              do // [I]
                 a[i++] = Boolean.parseBoolean(iterator.next());
               while (iterator.hasNext());
             }
@@ -317,7 +328,8 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
               while (++i < size);
             }
             else {
-              final Iterator<String> it = values.iterator(); do // [I]
+              final Iterator<String> it = values.iterator();
+              do // [I]
                 a[i++] = (Byte)paramConverter.fromString(it.next());
               while (it.hasNext());
             }
@@ -330,7 +342,8 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
               while (++i < size);
             }
             else {
-              final Iterator<String> iterator = values.iterator(); do // [I]
+              final Iterator<String> iterator = values.iterator();
+              do // [I]
                 a[i++] = Numbers.parseByte(iterator.next(), (byte)0);
               while (iterator.hasNext());
             }
@@ -353,7 +366,8 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
               while (++i < size);
             }
             else {
-              final Iterator<String> it = values.iterator(); do // [I]
+              final Iterator<String> it = values.iterator();
+              do // [I]
                 a[i++] = (Character)paramConverter.fromString(it.next());
               while (it.hasNext());
             }
@@ -366,7 +380,8 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
               while (++i < size);
             }
             else {
-              final Iterator<String> iterator = values.iterator(); do // [I]
+              final Iterator<String> iterator = values.iterator();
+              do // [I]
                 a[i++] = parseChar(iterator.next());
               while (iterator.hasNext());
             }
@@ -389,7 +404,8 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
               while (++i < size);
             }
             else {
-              final Iterator<String> it = values.iterator(); do // [I]
+              final Iterator<String> it = values.iterator();
+              do // [I]
                 a[i++] = (Short)paramConverter.fromString(it.next());
               while (it.hasNext());
             }
@@ -402,7 +418,8 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
               while (++i < size);
             }
             else {
-              final Iterator<String> it = values.iterator(); do // [I]
+              final Iterator<String> it = values.iterator();
+              do // [I]
                 a[i++] = Numbers.parseShort(it.next(), (short)0);
               while (it.hasNext());
             }
@@ -430,12 +447,14 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
       if (paramPlurality == ParamPlurality.COLLECTION) {
         final Collection c = ParamPlurality.COLLECTION.newContainer(rawType, size);
         if (values instanceof RandomAccess) {
-          int i = 0; do // [RA]
+          int i = 0;
+          do // [RA]
             c.add(paramConverter.fromString(values.get(i)));
           while (++i < size);
         }
         else {
-          final Iterator<String> it = values.iterator(); do // [I]
+          final Iterator<String> it = values.iterator();
+          do // [I]
             c.add(paramConverter.fromString(it.next()));
           while (it.hasNext());
         }
@@ -451,7 +470,8 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
         while (++i < size);
       }
       else {
-        final Iterator<String> it = values.iterator(); do // [I]
+        final Iterator<String> it = values.iterator();
+        do // [I]
           a[i++] = paramConverter.fromString(it.next());
         while (it.hasNext());
       }
@@ -470,12 +490,14 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
       if (paramPlurality == ParamPlurality.COLLECTION) {
         final Collection c = ParamPlurality.COLLECTION.newContainer(rawType, size);
         if (values instanceof RandomAccess) {
-          int i = 0; do // [RA]
+          int i = 0;
+          do // [RA]
             c.add(Numbers.parseInteger(values.get(i), defaultValue));
           while (++i < size);
         }
         else {
-          final Iterator<String> it = values.iterator(); do // [I]
+          final Iterator<String> it = values.iterator();
+          do // [I]
             c.add(Numbers.parseInteger(it.next(), defaultValue));
           while (it.hasNext());
         }
@@ -491,7 +513,8 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
         while (++i < size);
       }
       else {
-        final Iterator<String> it = values.iterator(); do // [I]
+        final Iterator<String> it = values.iterator();
+        do // [I]
           a[i++] = Numbers.parseInteger(it.next(), defaultValue);
         while (it.hasNext());
       }
@@ -510,12 +533,14 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
       if (paramPlurality == ParamPlurality.COLLECTION) {
         final Collection c = ParamPlurality.COLLECTION.newContainer(rawType, size);
         if (values instanceof RandomAccess) {
-          int i = 0; do // [RA]
+          int i = 0;
+          do // [RA]
             c.add(Numbers.parseLong(values.get(i), defaultValue));
           while (++i < size);
         }
         else {
-          final Iterator<String> it = values.iterator(); do // [I]
+          final Iterator<String> it = values.iterator();
+          do // [I]
             c.add(Numbers.parseLong(it.next(), defaultValue));
           while (it.hasNext());
         }
@@ -531,7 +556,8 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
         while (++i < size);
       }
       else {
-        final Iterator<String> it = values.iterator(); do // [I]
+        final Iterator<String> it = values.iterator();
+        do // [I]
           a[i++] = Numbers.parseLong(it.next(), defaultValue);
         while (it.hasNext());
       }
@@ -550,12 +576,14 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
       if (paramPlurality == ParamPlurality.COLLECTION) {
         final Collection c = ParamPlurality.COLLECTION.newContainer(rawType, size);
         if (values instanceof RandomAccess) {
-          int i = 0; do // [RA]
+          int i = 0;
+          do // [RA]
             c.add(Numbers.parseDouble(values.get(i), defaultValue));
           while (++i < size);
         }
         else {
-          final Iterator<String> it = values.iterator(); do // [I]
+          final Iterator<String> it = values.iterator();
+          do // [I]
             c.add(Numbers.parseDouble(it.next(), defaultValue));
           while (it.hasNext());
         }
@@ -571,7 +599,8 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
         while (++i < size);
       }
       else {
-        final Iterator<String> it = values.iterator(); do // [I]
+        final Iterator<String> it = values.iterator();
+        do // [I]
           a[i++] = Numbers.parseDouble(it.next(), defaultValue);
         while (it.hasNext());
       }
@@ -590,12 +619,14 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
       if (paramPlurality == ParamPlurality.COLLECTION) {
         final Collection c = ParamPlurality.COLLECTION.newContainer(rawType, size);
         if (values instanceof RandomAccess) {
-          int i = 0; do // [RA]
+          int i = 0;
+          do // [RA]
             c.add(Numbers.parseFloat(values.get(i), defaultValue));
           while (++i < size);
         }
         else {
-          final Iterator<String> it = values.iterator(); do // [I]
+          final Iterator<String> it = values.iterator();
+          do // [I]
             c.add(Numbers.parseFloat(it.next(), defaultValue));
           while (it.hasNext());
         }
@@ -611,7 +642,8 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
         while (++i < size);
       }
       else {
-        final Iterator<String> it = values.iterator(); do // [I]
+        final Iterator<String> it = values.iterator();
+        do // [I]
           a[i++] = Numbers.parseFloat(it.next(), defaultValue);
         while (it.hasNext());
       }
@@ -630,12 +662,14 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
       if (paramPlurality == ParamPlurality.COLLECTION) {
         final Collection c = ParamPlurality.COLLECTION.newContainer(rawType, size);
         if (values instanceof RandomAccess) {
-          int i = 0; do // [RA]
+          int i = 0;
+          do // [RA]
             c.add(parseBoolean(values.get(i), defaultValue));
           while (++i < size);
         }
         else {
-          final Iterator<String> it = values.iterator(); do // [I]
+          final Iterator<String> it = values.iterator();
+          do // [I]
             c.add(parseBoolean(it.next(), defaultValue));
           while (it.hasNext());
         }
@@ -651,7 +685,8 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
         while (++i < size);
       }
       else {
-        final Iterator<String> it = values.iterator(); do // [I]
+        final Iterator<String> it = values.iterator();
+        do // [I]
           a[i++] = parseBoolean(it.next(), defaultValue);
         while (it.hasNext());
       }
@@ -670,12 +705,14 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
       if (paramPlurality == ParamPlurality.COLLECTION) {
         final Collection c = ParamPlurality.COLLECTION.newContainer(rawType, size);
         if (values instanceof RandomAccess) {
-          int i = 0; do // [RA]
+          int i = 0;
+          do // [RA]
             c.add(Numbers.parseByte(values.get(i), defaultValue));
           while (++i < size);
         }
         else {
-          final Iterator<String> it = values.iterator(); do // [I]
+          final Iterator<String> it = values.iterator();
+          do // [I]
             c.add(Numbers.parseByte(it.next(), defaultValue));
           while (it.hasNext());
         }
@@ -691,7 +728,8 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
         while (++i < size);
       }
       else {
-        final Iterator<String> it = values.iterator(); do // [I]
+        final Iterator<String> it = values.iterator();
+        do // [I]
           a[i++] = Numbers.parseByte(it.next(), defaultValue);
         while (it.hasNext());
       }
@@ -710,12 +748,14 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
       if (paramPlurality == ParamPlurality.COLLECTION) {
         final Collection c = ParamPlurality.COLLECTION.newContainer(rawType, size);
         if (values instanceof RandomAccess) {
-          int i = 0; do // [RA]
+          int i = 0;
+          do // [RA]
             c.add(parseCharacter(values.get(i), defaultValue));
           while (++i < size);
         }
         else {
-          final Iterator<String> it = values.iterator(); do // [I]
+          final Iterator<String> it = values.iterator();
+          do // [I]
             c.add(parseCharacter(it.next(), defaultValue));
           while (it.hasNext());
         }
@@ -731,7 +771,8 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
         while (++i < size);
       }
       else {
-        final Iterator<String> it = values.iterator(); do // [I]
+        final Iterator<String> it = values.iterator();
+        do // [I]
           a[i++] = parseCharacter(it.next(), defaultValue);
         while (it.hasNext());
       }
@@ -750,12 +791,14 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
       if (paramPlurality == ParamPlurality.COLLECTION) {
         final Collection c = ParamPlurality.COLLECTION.newContainer(rawType, size);
         if (values instanceof RandomAccess) {
-          int i = 0; do // [RA]
+          int i = 0;
+          do // [RA]
             c.add(Numbers.parseShort(values.get(i), defaultValue));
           while (++i < size);
         }
         else {
-          final Iterator<String> it = values.iterator(); do // [I]
+          final Iterator<String> it = values.iterator();
+          do // [I]
             c.add(Numbers.parseShort(it.next(), defaultValue));
           while (it.hasNext());
         }
@@ -771,7 +814,8 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
         while (++i < size);
       }
       else {
-        final Iterator<String> it = values.iterator(); do // [I]
+        final Iterator<String> it = values.iterator();
+        do // [I]
           a[i++] = Numbers.parseShort(it.next(), defaultValue);
         while (it.hasNext());
       }
@@ -819,7 +863,7 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
 
   @Override
   @SuppressWarnings("unchecked")
-  public <T>ParamConverter<T> getConverter(final Class<T> rawType, final Type genericType, final Annotation[] annotations) {
+  public <T> ParamConverter<T> getConverter(final Class<T> rawType, final Type genericType, final Annotation[] annotations) {
     if (rawType.isPrimitive() || rawType == Byte.class || rawType == Short.class || rawType == Character.class || rawType == Integer.class || rawType == Long.class || rawType == Float.class || rawType == Double.class || rawType == Boolean.class)
       return null;
 

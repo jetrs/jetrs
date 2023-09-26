@@ -43,27 +43,27 @@ class MirrorQualityList<V,R> extends MirrorList<V,List<V>,R,List<R>> implements 
   interface Qualifier<V,R> {
     /**
      * Returns a {@link org.libj.lang.Numbers.Composite#encode(float,int) composite} quality-and-index {@code long} comprised of the
-     * quality dereferenced from the value object of type {@code <V>}, and some index of type {@code int} that could be used to
-     * further direct downstream parsing.
+     * quality dereferenced from the value object of type {@code <V>}, and some index of type {@code int} that could be used to further
+     * direct downstream parsing.
      *
      * @param value The value of type {@code <V>} from which to dereference the quality.
      * @param index An index of type {@code int}.
      * @return A {@link org.libj.lang.Numbers.Composite#encode(float,int) composite} quality-and-index {@code long} comprised of the
-     *         quality dereferenced from the value object of type {@code <V>}, and some index of type {@code int} that could be used
-     *         to further direct downstream parsing.
+     *         quality dereferenced from the value object of type {@code <V>}, and some index of type {@code int} that could be used to
+     *         further direct downstream parsing.
      */
     long valueToQuality(V value, int index);
 
     /**
      * Returns a {@link org.libj.lang.Numbers.Composite#encode(float,int) composite} quality-and-index {@code long} comprised of the
-     * quality dereferenced from the reflection value object of type {@code <R>}, and some index of type {@code int} that could be
-     * used to further direct downstream parsing.
+     * quality dereferenced from the reflection value object of type {@code <R>}, and some index of type {@code int} that could be used
+     * to further direct downstream parsing.
      *
      * @param reflection The reflection value of type {@code <R>} from which to dereference the quality.
      * @param index An index of type {@code int}.
      * @return A {@link org.libj.lang.Numbers.Composite#encode(float,int) composite} quality-and-index {@code long} comprised of the
-     *         quality dereferenced from the value object of type {@code <R>}, and some index of type {@code int} that could be used
-     *         to further direct downstream parsing.
+     *         quality dereferenced from the value object of type {@code <R>}, and some index of type {@code int} that could be used to
+     *         further direct downstream parsing.
      */
     long reflectionToQuality(R reflection, int index);
 
@@ -100,7 +100,7 @@ class MirrorQualityList<V,R> extends MirrorList<V,List<V>,R,List<R>> implements 
    *         {@link Cloneable}</b>.
    */
   @SuppressWarnings("unchecked")
-  static <C extends List<T> & Cloneable,T>C toCloneable(final List<T> list) {
+  static <C extends List<T> & Cloneable,T> C toCloneable(final List<T> list) {
     return (C)list;
   }
 
@@ -135,7 +135,7 @@ class MirrorQualityList<V,R> extends MirrorList<V,List<V>,R,List<R>> implements 
    *          {@link Qualifier#reflectionToQuality(Object,int) R -> quality} methods.
    * @throws NullPointerException If {@code values}, {@code reflections}, or {@code mirror} is null.
    */
-  <CloneableValues extends List<V> & Cloneable,CloneableReflections extends List<R> & Cloneable>MirrorQualityList(final CloneableValues values, final CloneableReflections reflections, final Mirror<V,R> mirror, final Qualifier<V,R> qualifier) {
+  <CloneableValues extends List<V> & Cloneable,CloneableReflections extends List<R> & Cloneable> MirrorQualityList(final CloneableValues values, final CloneableReflections reflections, final Mirror<V,R> mirror, final Qualifier<V,R> qualifier) {
     super(values, reflections, mirror);
     this.qualifier = qualifier;
   }
@@ -287,8 +287,8 @@ class MirrorQualityList<V,R> extends MirrorList<V,List<V>,R,List<R>> implements 
    * Associates the specified {@code quality} to the provided {@code index}, and returns the index at which the associated value
    * object should be added to {@code this} list.
    *
-   * @param index The index at which the specified {@code quality} is desired to be associated. This method will overwrite this
-   *          index in order to place the quality in proper sorted order.
+   * @param index The index at which the specified {@code quality} is desired to be associated. This method will overwrite this index
+   *          in order to place the quality in proper sorted order.
    * @param quality The specified quality to be associated at the provided index.
    * @return The index at which the associated value object should be added to {@code this} list.
    */

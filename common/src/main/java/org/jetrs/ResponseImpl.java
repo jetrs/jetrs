@@ -56,7 +56,8 @@ class ResponseImpl extends Response {
   private final boolean hasEntity;
   private InputStream entityStream;
   private Object entityObject;
-  final Annotation[] annotations; // FIXME: annotations are not being used, but they need to be used by the MessageBodyWriter.. there's no API to get them out of this class
+  final Annotation[] annotations; // FIXME: annotations are not being used, but they need to be used by the MessageBodyWriter.. there's no API to get them out of this
+                                  // class
   private boolean closed;
 
   ResponseImpl(final RequestContext<?> requestContext, final int statusCode, final Response.StatusType statusInfo, final HttpHeadersImpl headers, final Map<String,NewCookie> cookies, final Object entity, final Annotation[] annotations) {
@@ -108,7 +109,7 @@ class ResponseImpl extends Response {
    * @throws NullPointerException If {@code entityType} is null.
    */
   @Override
-  public <T>T readEntity(final Class<T> entityType) throws IllegalStateException, ResponseProcessingException {
+  public <T> T readEntity(final Class<T> entityType) throws IllegalStateException, ResponseProcessingException {
     return readEntity(entityType, null, null);
   }
 
@@ -119,7 +120,7 @@ class ResponseImpl extends Response {
    */
   @Override
   @SuppressWarnings("unchecked")
-  public <T>T readEntity(final GenericType<T> entityType) throws IllegalStateException, ResponseProcessingException {
+  public <T> T readEntity(final GenericType<T> entityType) throws IllegalStateException, ResponseProcessingException {
     return (T)readEntity(entityType.getRawType(), entityType.getType(), null);
   }
 
@@ -129,7 +130,7 @@ class ResponseImpl extends Response {
    * @throws NullPointerException If {@code entityType} is null.
    */
   @Override
-  public <T>T readEntity(final Class<T> entityType, final Annotation[] annotations) throws IllegalStateException, ResponseProcessingException {
+  public <T> T readEntity(final Class<T> entityType, final Annotation[] annotations) throws IllegalStateException, ResponseProcessingException {
     return readEntity(entityType, null, annotations);
   }
 
@@ -140,12 +141,12 @@ class ResponseImpl extends Response {
    */
   @Override
   @SuppressWarnings("unchecked")
-  public <T>T readEntity(final GenericType<T> entityType, final Annotation[] annotations) throws IllegalStateException, ResponseProcessingException {
+  public <T> T readEntity(final GenericType<T> entityType, final Annotation[] annotations) throws IllegalStateException, ResponseProcessingException {
     return (T)readEntity(entityType.getRawType(), entityType.getType(), annotations);
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
-  private <T>T readEntity(final Class<T> rawType, final Type genericType, final Annotation[] annotations) throws IllegalStateException, ResponseProcessingException {
+  private <T> T readEntity(final Class<T> rawType, final Type genericType, final Annotation[] annotations) throws IllegalStateException, ResponseProcessingException {
     if (providers == null)
       throw new ProcessingException("No providers were registered for required MessageBodyReader for type: " + rawType.getName());
 

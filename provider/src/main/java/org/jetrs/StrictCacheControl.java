@@ -53,7 +53,8 @@ class StrictCacheControl extends CacheControl {
         final int i$ = fields.size();
         if (i$ > 0) {
           if (CollectionUtil.isRandomAccess(fields)) {
-            int i = 0; do { // [RA]
+            int i = 0;
+            do { // [RA]
               final String field = fields.get(i);
               if (field != null)
                 builder.append("private=").append(fieldToString(field)).append(',');
@@ -61,7 +62,8 @@ class StrictCacheControl extends CacheControl {
             while (++i < i$);
           }
           else {
-            final Iterator<String> it = fields.iterator(); do { // [I]
+            final Iterator<String> it = fields.iterator();
+            do { // [I]
               final String field = it.next();
               if (field != null)
                 builder.append("private=").append(fieldToString(field)).append(',');
@@ -95,7 +97,8 @@ class StrictCacheControl extends CacheControl {
         final int i$ = fields.size();
         if (i$ > 0) {
           if (CollectionUtil.isRandomAccess(fields)) {
-            int i = 0; do { // [RA]
+            int i = 0;
+            do { // [RA]
               final String field = fields.get(i);
               if (field != null)
                 builder.append("no-cache=").append(fieldToString(field)).append(',');
@@ -103,7 +106,8 @@ class StrictCacheControl extends CacheControl {
             while (++i < i$);
           }
           else {
-            final Iterator<String> it = fields.iterator(); do { // [I]
+            final Iterator<String> it = fields.iterator();
+            do { // [I]
               final String field = it.next();
               if (field != null)
                 builder.append("no-cache=").append(fieldToString(field)).append(',');

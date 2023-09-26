@@ -92,8 +92,7 @@ abstract class RestHttpServlet extends HttpServlet {
       paramConverterProviderFactories,
       preMatchContainerRequestFilterProviderFactories,
       containerRequestFilterProviderFactories,
-      containerResponseFilterProviderFactories
-    );
+      containerResponseFilterProviderFactories);
 
     try {
       final Application application;
@@ -131,10 +130,10 @@ abstract class RestHttpServlet extends HttpServlet {
         preMatchContainerRequestFilterProviderFactories,
         containerRequestFilterProviderFactories,
         containerResponseFilterProviderFactories,
-        config, getServletContext(),
+        config,
+        getServletContext(),
         application,
-        resourceInfos
-      );
+        resourceInfos);
 
       final RuntimeDelegate runtimeDelegate = RuntimeDelegate.getInstance();
       if (!(runtimeDelegate instanceof RuntimeDelegateImpl))

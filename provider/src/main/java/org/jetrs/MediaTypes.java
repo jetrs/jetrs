@@ -113,13 +113,15 @@ public final class MediaTypes {
       return true;
 
     if (CollectionUtil.isRandomAccess(acceptCharsets)) {
-      int i = 0; do // [RA]
+      int i = 0;
+      do // [RA]
         if (acceptCharsets.get(i).equalsIgnoreCase(serverCharset))
           return true;
       while (++i < size);
     }
     else {
-      final Iterator<String> it = acceptCharsets.iterator(); do // [I]
+      final Iterator<String> it = acceptCharsets.iterator();
+      do // [I]
         if (it.next().equalsIgnoreCase(serverCharset))
           return true;
       while (it.hasNext());
@@ -433,7 +435,7 @@ public final class MediaTypes {
   };
 
   @SuppressWarnings("unchecked")
-  private static <T extends QualifiedMediaType,S>T[] parse(final Class<T> cls, final Adapter<S> adapter, final S source, int index, final int depth, StringBuilder builder, String header, int start) {
+  private static <T extends QualifiedMediaType,S> T[] parse(final Class<T> cls, final Adapter<S> adapter, final S source, int index, final int depth, StringBuilder builder, String header, int start) {
     T mediaType = null;
     do {
       if (header == null) {
@@ -496,7 +498,7 @@ public final class MediaTypes {
   static final MediaType[] EMPTY_MEDIA_TYPE = {};
 
   @SuppressWarnings("unchecked")
-  private static final <T extends MediaType>T[] empty(final Class<T> cls) {
+  private static final <T extends MediaType> T[] empty(final Class<T> cls) {
     return (T[])(cls == ServerMediaType.class ? EMPTY_SERVER_TYPE : cls == QualifiedMediaType.class ? EMPTY_QUALIFIED_TYPE : EMPTY_MEDIA_TYPE);
   }
 
@@ -518,7 +520,7 @@ public final class MediaTypes {
    * @param strings The collection of strings.
    * @return An array of {@link MediaType} objects.
    */
-  static <T extends QualifiedMediaType>T[] parse(final Class<T> cls, final Collection<String> strings) {
+  static <T extends QualifiedMediaType> T[] parse(final Class<T> cls, final Collection<String> strings) {
     if (strings == null)
       return null;
 
@@ -551,7 +553,7 @@ public final class MediaTypes {
    * @param enumeration The enumeration of strings.
    * @return An array of {@link MediaType} objects.
    */
-  static <T extends QualifiedMediaType>T[] parse(final Class<T> cls, final Enumeration<String> enumeration) {
+  static <T extends QualifiedMediaType> T[] parse(final Class<T> cls, final Enumeration<String> enumeration) {
     if (enumeration == null)
       return null;
 
@@ -584,7 +586,7 @@ public final class MediaTypes {
    * @param strings The the strings array.
    * @return An array of {@link MediaType} objects.
    */
-  static <T extends QualifiedMediaType>T[] parse(final Class<T> cls, final String ... strings) {
+  static <T extends QualifiedMediaType> T[] parse(final Class<T> cls, final String ... strings) {
     if (strings == null)
       return null;
 
@@ -638,7 +640,7 @@ public final class MediaTypes {
   // FIXME: Reimplement with char-by-char algorithm
   // FIXME: What are the legal name and sub-name spec? Need to properly throw IllegalArgumentException!
   @SuppressWarnings("unchecked")
-  static <T extends QualifiedMediaType>T parse(final Class<T> cls, String string) {
+  static <T extends QualifiedMediaType> T parse(final Class<T> cls, String string) {
     assertNotEmpty(string = string.trim());
 
     final int len = string.length();

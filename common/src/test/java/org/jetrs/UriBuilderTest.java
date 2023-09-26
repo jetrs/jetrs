@@ -635,10 +635,10 @@ public class UriBuilderTest extends RuntimeDelegateTest {
   public void testReplaceQueryParamTest2() {
     final String expectedValue = "http://localhost:8080";
     final String param = "name";
-    final URI uri = UriBuilder
-      .fromPath("http://localhost:8080")
+    final URI uri = UriBuilder.fromPath("http://localhost:8080")
       .queryParam(param, "x=", "y?", "x y", "&")
-      .replaceQueryParam(param).build();
+      .replaceQueryParam(param)
+      .build();
 
     final String str = uri.toString();
     assertTrue("Incorrec URI returned: " + str + ", expecting " + expectedValue + "\n", str.equalsIgnoreCase(expectedValue));

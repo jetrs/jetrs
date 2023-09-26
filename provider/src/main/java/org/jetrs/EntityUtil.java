@@ -92,7 +92,7 @@ public final class EntityUtil {
     return _maxFormContentSize;
   }
 
-  public static <T>T checktNotNull(final T entity, final Annotation[] annotations) {
+  public static <T> T checktNotNull(final T entity, final Annotation[] annotations) {
     if (entity == null)
       for (final Annotation annotation : annotations) // [A]
         if (annotation.annotationType() == NotNull.class)
@@ -187,12 +187,14 @@ public final class EntityUtil {
         continue;
 
       if (values instanceof RandomAccess) {
-        int j = 0; do // [RA]
+        int j = 0;
+        do // [RA]
           write(writer, key, values.get(j), charset, i++);
         while (++j < size);
       }
       else {
-        final Iterator<String> i2 = values.iterator(); do // [I]
+        final Iterator<String> i2 = values.iterator();
+        do // [I]
           write(writer, key, i2.next(), charset, i++);
         while (i2.hasNext());
       }
