@@ -1,5 +1,7 @@
 package org.jetrs.server.app.service;
 
+import static org.libj.lang.Assertions.*;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.zip.GZIPOutputStream;
@@ -45,7 +47,7 @@ public class FlushResponseService {
     final Response.ResponseBuilder response = Response.ok(new StreamingOutput() {
       @Override
       public void write(final OutputStream output) throws IOException, WebApplicationException {
-        final int len = bytes.length - 2;
+        final int len = assertNotNegative(bytes.length - 2);
         output.write(bytes, 0, len);
         if (exception) {
           final IOException e = new IOException();

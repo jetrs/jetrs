@@ -74,14 +74,17 @@ public class FlushResponseTest {
     if (gzip)
       assertEquals("gzip", getResponse.getHeaderString(HttpHeaders.CONTENT_ENCODING));
 
-    assertEquals(200, getResponse.getStatus());
+    final boolean bufferOverflow = expectedContentLength > ContainerResponseContextImpl.bufferSize;
+
+    // Expect error if buffered or Content-Length && gzip (with gzip, the Content-Length is removed by ContentCodecInterceptor)
+    final boolean expectErrorResponse = exception && !bufferOverflow && (chunked == null || !chunked && gzip);
+    assertEquals(expectErrorResponse ? 503 : 200, getResponse.getStatus());
     if (!exception)
       assertArrayEquals(expected, actual);
 
     final MultivaluedMap<String,Object> headers = getResponse.getHeaders();
     final Object contentLength = headers.getFirst(HttpHeaders.CONTENT_LENGTH);
     final List<Object> transferEncoding = headers.get(HttpHeaders.TRANSFER_ENCODING);
-    final boolean bufferOverflow = expectedContentLength > ContainerResponseContextImpl.bufferSize;
     final boolean shouldBeChunked = (chunked != null ? chunked : bufferOverflow) || gzip && bufferOverflow;
     if (shouldBeChunked) {
       assertNull("Content-Length: " + contentLength, contentLength);
@@ -96,7 +99,7 @@ public class FlushResponseTest {
     }
 
     final Response headResponse = request.head();
-    assertGetHead(false, getResponse, headResponse);
+    assertGetHead(!exception, false, getResponse, headResponse);
     return time;
   }
 

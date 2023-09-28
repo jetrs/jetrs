@@ -59,7 +59,7 @@ class ContainerResponseContextImpl extends InterceptorContextImpl implements Con
   static final int chunkSize = assertPositive(Systems.getProperty(ServerProperties.CHUNKED_ENCODING_SIZE_SERVER, CommonProperties.CHUNKED_ENCODING_SIZE, CommonProperties.CHUNKED_ENCODING_SIZE_DEFAULT));
   static final int bufferSize = Systems.getProperty(ServerProperties.CONTENT_LENGTH_BUFFER_SERVER, CommonProperties.CONTENT_LENGTH_BUFFER, CommonProperties.CONTENT_LENGTH_BUFFER_DEFAULT);
 
-  private static class NoopOutputStream extends OutputStream {
+  private static class CountingNoopOutputStream extends OutputStream {
     int count = 0;
 
     @Override
@@ -251,7 +251,7 @@ class ContainerResponseContextImpl extends InterceptorContextImpl implements Con
 
   private OutputStream firstOutputStream;
   private OutputStream outputStream;
-  private NoopOutputStream noopOutputStream;
+  private CountingNoopOutputStream noopOutputStream;
 
   @Override
   public OutputStream getEntityStream() {
@@ -290,9 +290,13 @@ class ContainerResponseContextImpl extends InterceptorContextImpl implements Con
       writerInterceptorProviderFactories.get(interceptorIndex).getSingletonOrFromRequestContext(requestContext).aroundWriteTo(this);
     }
     else if (interceptorIndex == size) {
-      try (final OutputStream entityStream = getOutputStream()) {
-        messageBodyWriter.writeTo(getEntity(), getEntityClass(), getEntityType(), getEntityAnnotations(), getMediaType(), getHeaders(), entityStream);
-      }
+      // This is deliberately not using try-with-resource, because we don't want to close the OutputStream in case there is an exception
+      // thrown in the in the messageBodyWriter.writeTo(...) method. This is necessary, because after the exception is thrown,
+      // RestApplicationServlet executes the requestContext.writeResponse(...) process again for the response coming from ExceptionMapper.
+      @SuppressWarnings("resource")
+      final OutputStream entityStream = getOutputStream();
+      messageBodyWriter.writeTo(getEntity(), getEntityClass(), getEntityType(), getEntityAnnotations(), getMediaType(), getHeaders(), entityStream);
+      entityStream.close();
     }
     else {
       throw new IllegalStateException();
@@ -377,8 +381,7 @@ class ContainerResponseContextImpl extends InterceptorContextImpl implements Con
         contentType = compatibleMediaTypes[0]; // Here we expect at least one MediaType
 
       if (contentType == null || contentType.isWildcardType()) {
-        if (logger.isWarnEnabled())
-          logger.warn("Content-Type not specified -- setting to " + MediaType.APPLICATION_OCTET_STREAM);
+        if (logger.isWarnEnabled()) { logger.warn("Content-Type not specified -- setting to " + MediaType.APPLICATION_OCTET_STREAM); }
         contentType = MediaType.APPLICATION_OCTET_STREAM_TYPE;
       }
 
@@ -453,13 +456,12 @@ class ContainerResponseContextImpl extends InterceptorContextImpl implements Con
           }
         }
         else {
-          if (logger.isInfoEnabled())
-            logger.info("Unable to overwrite committed response [" + httpServletResponse.getStatus() + "] -> [" + getStatus() + "]: " + entity);
+          if (logger.isInfoEnabled()) { logger.info("Unable to overwrite committed response [" + httpServletResponse.getStatus() + "] -> [" + getStatus() + "]: " + entity); }
         }
       }
     }
     else if (isHead) {
-      firstOutputStream = outputStream = noopOutputStream = new NoopOutputStream();
+      firstOutputStream = outputStream = noopOutputStream = new CountingNoopOutputStream();
     }
     else {
       final RelegateOutputStream relegateOutputStream = new RelegateOutputStream();
@@ -475,8 +477,8 @@ class ContainerResponseContextImpl extends InterceptorContextImpl implements Con
               if (chunkedIndex >= 0) // NOTE: This means that if "Content-Length" is present, it overrides "Content-Encoding": "chunked" (if present too)
                 transferEncoding.remove(chunkedIndex);
 
-              // httpServletResponse.setBufferSize(Streams.DEFAULT_SOCKET_BUFFER_SIZE); // FIXME: Setting this to a low value significantly
-              // reduces performance, so leaving this to the servlet container's default
+              // FIXME: Setting this to a low value significantly reduces performance, so leaving this to the servlet container's default
+              // FIXME: httpServletResponse.setBufferSize(Streams.DEFAULT_SOCKET_BUFFER_SIZE);
               flushHeaders(httpServletResponse, compatibleMediaTypesWithWriter, messageBodyWriter, isException);
               target = httpServletResponse.getOutputStream();
             }

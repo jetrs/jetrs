@@ -18,6 +18,7 @@ package org.jetrs.server;
 
 import static org.junit.Assert.*;
 
+import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.core.MultivaluedMap;
@@ -26,29 +27,38 @@ import javax.ws.rs.core.Response;
 import org.jetrs.HttpHeaders;
 
 public final class AssertServer {
-  private static void assertHeadersEqual(final boolean shouldEqualOnError, final Response headResponse, final MultivaluedMap<?,?> expected, final MultivaluedMap<?,?> actual) {
+  private static void assertHeadersEqual(final boolean shouldEqualOnError, final boolean shouldEqualAll, final Response headResponse, final MultivaluedMap<?,?> expected, final MultivaluedMap<?,?> actual) {
     for (final Map.Entry<?,?> entry : expected.entrySet()) { // [S]
       final String headerName = entry.getKey().toString();
       if (HttpHeaders.DATE.equalsIgnoreCase(headerName))
         continue;
 
-      final boolean isErrorAndShouldEqual = headResponse.getStatus() == 200 || shouldEqualOnError;
-      if (HttpHeaders.CONTENT_LENGTH.equalsIgnoreCase(headerName) || HttpHeaders.CONTENT_TYPE.equalsIgnoreCase(headerName))
-        assertEquals(headerName, isErrorAndShouldEqual, entry.getValue().equals(actual.get(entry.getKey())));
-      else if (!isErrorAndShouldEqual && HttpHeaders.TRANSFER_ENCODING.equalsIgnoreCase(headerName))
+      final boolean isSuccess = headResponse.getStatus() == 200;
+      final boolean isErrorAndShouldEqual = isSuccess || shouldEqualOnError;
+      if (HttpHeaders.CONTENT_LENGTH.equalsIgnoreCase(headerName)) {
+        final Object expectedValue = entry.getValue();
+        final List<?> actualValue = actual.get(entry.getKey());
+        assertEquals(headerName + " " + expectedValue + " " + actualValue, isErrorAndShouldEqual, expectedValue.equals(actualValue));
+      }
+      else if (!isErrorAndShouldEqual && HttpHeaders.TRANSFER_ENCODING.equalsIgnoreCase(headerName)) {
         continue;
-      else
+      }
+      else if (shouldEqualAll || isSuccess || !HttpHeaders.CONTENT_TYPE.equalsIgnoreCase(headerName)) {
+        // Based on the buffering rules and transfer encoding, the an exception during entity write may lead
+        // to a different Content-Type for a GET than a HEAD, as for HEAD no data is actually written, thus
+        // not prematurely committing the response.
         assertEquals(headerName, entry.getValue(), actual.get(entry.getKey()));
+      }
     }
   }
 
   public static void assertGetHead(final Response getResponse, final Response headResponse) {
-    assertGetHead(true, getResponse, headResponse);
+    assertGetHead(true, true, getResponse, headResponse);
   }
 
-  public static void assertGetHead(final boolean shouldEqualOnError, final Response getResponse, final Response headResponse) {
-    assertHeadersEqual(shouldEqualOnError, headResponse, getResponse.getHeaders(), headResponse.getHeaders());
-    assertHeadersEqual(shouldEqualOnError, headResponse, getResponse.getStringHeaders(), headResponse.getStringHeaders());
+  public static void assertGetHead(final boolean shouldEqualOnError, final boolean shouldEqualAll, final Response getResponse, final Response headResponse) {
+    assertHeadersEqual(shouldEqualOnError, shouldEqualAll, headResponse, getResponse.getHeaders(), headResponse.getHeaders());
+    assertHeadersEqual(shouldEqualOnError, shouldEqualAll, headResponse, getResponse.getStringHeaders(), headResponse.getStringHeaders());
   }
 
   private AssertServer() {

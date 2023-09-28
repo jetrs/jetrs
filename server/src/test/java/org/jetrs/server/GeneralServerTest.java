@@ -224,27 +224,21 @@ public class GeneralServerTest {
     }
   }
 
-  private static Response echo(final int len, final boolean error) throws URISyntaxException {
-    return client.target(new URI(serviceUrl + "/upload/echo" + (error ? "?error" : "")))
-      .request()
-      .header(HttpHeaders.CONTENT_ENCODING, "gzip")
-      .header(HttpHeaders.ACCEPT_ENCODING, "gzip")
-      .put(Entity.entity(new StreamingOutput() {
-        @Override
-        public void write(final OutputStream output) throws IOException, WebApplicationException {
-          for (int i = 0; i < len; ++i) // [N]
-            output.write((byte)random.nextInt());
-        }
-      }, MediaType.APPLICATION_OCTET_STREAM));
+  private static Response echo(final int len, final boolean error, final boolean gzip) throws URISyntaxException {
+    final Invocation.Builder builder = client.target(new URI(serviceUrl + "/upload/echo" + (error ? "?error" : ""))).request();
+    if (gzip)
+      builder.header(HttpHeaders.CONTENT_ENCODING, "gzip").header(HttpHeaders.ACCEPT_ENCODING, "gzip");
+
+    return builder.put(Entity.entity(new StreamingOutput() {
+      @Override
+      public void write(final OutputStream output) throws IOException, WebApplicationException {
+        for (int i = 0; i < len; ++i) // [N]
+          output.write((byte)random.nextInt());
+      }
+    }, MediaType.APPLICATION_OCTET_STREAM));
   }
 
-  @Test
-  public void testUploadEcho() throws IOException, URISyntaxException {
-    final int len = Math.abs(random.nextInt(Short.MAX_VALUE));
-    assertEquals(Response.Status.SERVICE_UNAVAILABLE.getStatusCode(), echo(len, true).getStatus());
-
-    final Response response = echo(len, false);
-
+  private static void assertUploadEcho(final Response response, final int len) throws IOException {
     assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
     final InputStream in = (InputStream)response.getEntity();
     int i = 0;
@@ -252,6 +246,30 @@ public class GeneralServerTest {
       ++i;
 
     assertEquals(len, i);
+  }
+
+  @Test
+  public void testUploadEcho() throws IOException, URISyntaxException {
+    final int len = Math.abs(random.nextInt(Short.MAX_VALUE));
+    assertUploadEcho(echo(len, false, false), len);
+  }
+
+  @Test
+  public void testUploadEchoGzip() throws IOException, URISyntaxException {
+    final int len = Math.abs(random.nextInt(Short.MAX_VALUE));
+    assertUploadEcho(echo(len, false, true), len);
+  }
+
+  @Test
+  public void testUploadEchoError() throws URISyntaxException {
+    final int len = Math.abs(random.nextInt(Short.MAX_VALUE));
+    assertEquals(Response.Status.SERVICE_UNAVAILABLE.getStatusCode(), echo(len, true, false).getStatus());
+  }
+
+  @Test
+  public void testUploadEchoErrorGzip() throws URISyntaxException {
+    final int len = Math.abs(random.nextInt(Short.MAX_VALUE));
+    assertEquals(Response.Status.SERVICE_UNAVAILABLE.getStatusCode(), echo(len, true, true).getStatus());
   }
 
   private static Invocation.Builder request(final String path) {

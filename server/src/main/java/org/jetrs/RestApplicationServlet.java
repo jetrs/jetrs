@@ -232,7 +232,10 @@ abstract class RestApplicationServlet extends RestHttpServlet {
             throw e;
           }
 
-          if (logger.isInfoEnabled()) { logger.info(e.getMessage(), e); }
+          if (logger.isInfoEnabled()) {
+            final String message = e.getMessage();
+            logger.info(message != null ? message : "", e);
+          }
         }
         else if (requestContext.getStage() == Stage.RESPONSE_FILTER) {
           throw new IllegalStateException("ContainerRequestContext.abortWith(Response) cannot be called from response filter chain");
