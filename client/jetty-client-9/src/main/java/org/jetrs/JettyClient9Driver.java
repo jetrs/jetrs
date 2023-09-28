@@ -97,6 +97,8 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
       throw new ExceptionInInitializerError(e);
     }
 
+    // Remove Jetty's response handlers, to allow the JAX-RS runtime to handle the raw content.
+    httpClient.getContentDecoderFactories().clear();
     httpClient.getProtocolHandlers().remove(WWWAuthenticationProtocolHandler.NAME);
     return httpClient;
   }
