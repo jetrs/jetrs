@@ -337,7 +337,7 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> i
   @SuppressWarnings("unchecked")
   <T> T findInjectableValue(final AnnotatedElement element, final int parameterIndex, final Annotation[] annotations, final Class<T> rawType, final Type genericType) throws IOException {
     T injectableObject = super.findInjectableValue(element, parameterIndex, annotations, rawType, genericType);
-    if (injectableObject != null)
+    if (injectableObject != CONTEXT_NOT_FOUND)
       return injectableObject;
 
     final Annotation annotation = findInjectableAnnotation(annotations, true);

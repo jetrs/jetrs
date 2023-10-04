@@ -58,7 +58,6 @@ import org.slf4j.LoggerFactory;
 
 /**
  * @param <R> The type parameter of the {@link RuntimeContext}.
- * @param <P> The type parameter of the associated properties.
  * @see <a href="http://download.oracle.com/otn-pub/jcp/jaxrs-2_0_rev_A-mrel-spec/jsr339-jaxrs-2.0-final-spec.pdf">JSR339 JAX-RS 2.0
  *      [9.2]</a>
  */
@@ -165,6 +164,8 @@ abstract class RequestContext<R extends RuntimeContext> extends InterceptorConte
     return null;
   }
 
+  static final Object CONTEXT_NOT_FOUND = new Object();
+
   @SuppressWarnings("unchecked")
   <T> T findInjectableContextValue(final Class<T> clazz) {
     if (Request.class.isAssignableFrom(clazz))
@@ -173,7 +174,7 @@ abstract class RequestContext<R extends RuntimeContext> extends InterceptorConte
     if (Providers.class.isAssignableFrom(clazz))
       return (T)providers;
 
-    return null;
+    return (T)CONTEXT_NOT_FOUND;
   }
 
   private static List<Object> makeCacheKey(final Annotation[] annotations, final Class<?> clazz, final Type type) {
@@ -182,8 +183,8 @@ abstract class RequestContext<R extends RuntimeContext> extends InterceptorConte
     while (i < annotations.length)
       key[i] = annotations[i++];
 
-    key[i++] = clazz;
-    key[i] = type;
+    key[i] = clazz;
+    key[++i] = type;
     return Arrays.asList(key);
   }
 
@@ -225,7 +226,7 @@ abstract class RequestContext<R extends RuntimeContext> extends InterceptorConte
   }
 
   private static final Object[] NULL = {};
-  private static final Predicate<Field> injectableFieldPredicate = field -> {
+  private static final Predicate<Field> injectableFieldPredicate = (final Field field) -> {
     final int modifiers = field.getModifiers();
     return !Modifier.isStatic(modifiers) && !Modifier.isFinal(modifiers);
   };
