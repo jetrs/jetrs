@@ -1,4 +1,4 @@
-/* Copyright (c) 2019 JetRS
+/* Copyright (c) 2018 JetRS
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -16,73 +16,81 @@
 
 package org.jetrs;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Type;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.Priority;
+import javax.inject.Singleton;
 import javax.ws.rs.Priorities;
 
-class Component {
-  private static int getPriority(final Class<?> cls) {
-    final Priority priority = cls.getAnnotation(Priority.class);
-    return priority != null ? priority.value() : Priorities.USER;
+import org.libj.lang.Classes;
+
+class ProviderFactory<T> {
+  static Class<?> getGenericInterfaceFirstTypeArgument(final Class<?> cls, final Class<?> interfaceType, final Class<?> defaultValue) {
+    final Type[] typeArguments = Classes.getGenericInterfaceTypeArguments(cls, interfaceType);
+    return typeArguments.length > 0 && typeArguments[0] instanceof Class ? (Class<?>)typeArguments[0] : defaultValue;
   }
 
-  final Class<?> cls;
-  final Object instance;
-  final int priority;
-  final Map<Class<?>,Integer> contracts;
+  private final AtomicBoolean checkedSingletonAnnotation = new AtomicBoolean(false);
+  private final Class<T> clazz;
+  private T singleton;
+  private final int priority;
 
-  Component(final Class<?> cls, final Object instance) {
-    this(cls, instance, getPriority(cls));
+  ProviderFactory(final Class<T> clazz, final T singleton) {
+    this.clazz = clazz;
+    this.singleton = singleton;
+    final Priority priority = clazz.getAnnotation(Priority.class);
+    this.priority = priority == null ? Priorities.USER : priority.value();
   }
 
-  Component(final Class<?> cls, final Object instance, final int priority) {
-    this.cls = Objects.requireNonNull(cls);
-    this.instance = instance;
-    this.priority = priority;
-    this.contracts = null;
+  final Class<T> getProviderClass() {
+    return clazz;
   }
 
-  Component(final Class<?> cls, final Object instance, final Map<Class<?>,Integer> contracts) {
-    this.cls = cls;
-    this.instance = instance;
-    this.priority = getPriority(cls);
-    this.contracts = contracts == null ? null : Collections.unmodifiableMap(contracts);
+  final int getPriority() {
+    return priority;
   }
 
-  Component(final Class<?> cls, final Object instance, final Class<?>[] contracts) {
-    this.cls = cls;
-    this.instance = instance;
-    this.priority = getPriority(cls != null ? cls : instance.getClass());
-    if (contracts != null) {
-      final Map<Class<?>,Integer> map = new HashMap<>(contracts.length);
-      for (final Class<?> contract : contracts) // [A]
-        map.put(contract, getPriority(contract));
+  final T getSingletonOrFromRequestContext(final RequestContext<?> requestContext) {
+    if (singleton != null || requestContext == null)
+      return singleton;
 
-      this.contracts = Collections.unmodifiableMap(map);
+    try {
+      if (!checkedSingletonAnnotation.get()) {
+        synchronized (checkedSingletonAnnotation) {
+          if (singleton != null)
+            return singleton;
+
+          if (!checkedSingletonAnnotation.get()) {
+            checkedSingletonAnnotation.set(true);
+            if (clazz.isAnnotationPresent(Singleton.class))
+              return this.singleton = requestContext.getProviderInstance(clazz);
+          }
+        }
+      }
+
+      return requestContext.getProviderInstance(clazz);
     }
-    else {
-      this.contracts = null;
+    catch (final IOException e) {
+      throw new UncheckedIOException(e);
+    }
+    catch (final IllegalAccessException | InstantiationException e) {
+      throw new ProviderInstantiationException(e);
+    }
+    catch (final InvocationTargetException e) {
+      final Throwable cause = e.getCause();
+      if (cause instanceof RuntimeException)
+        throw (RuntimeException)cause;
+
+      throw new ProviderInstantiationException(cause);
     }
   }
 
   @Override
-  public int hashCode() {
-    return 31 + (instance != null ? instance.hashCode() : cls.hashCode());
-  }
-
-  @Override
-  public boolean equals(final Object obj) {
-    if (obj == this)
-      return true;
-
-    if (!(obj instanceof Component))
-      return false;
-
-    final Component that = (Component)obj;
-    return instance != null ? instance.equals(that.instance) : cls.equals(that.cls);
+  public String toString() {
+    return "Class: " + getProviderClass().getName() + ", Priority: " + getPriority();
   }
 }
