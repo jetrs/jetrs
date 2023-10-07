@@ -170,7 +170,7 @@ class ResponseImpl extends Response {
       throw new IllegalStateException("Response has been closed");
 
     try {
-      final ArrayList<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories = requestContext.getReaderInterceptorFactoryList();
+      final ArrayList<MessageBodyComponent<ReaderInterceptor>> readerInterceptorProviderFactories = requestContext.getReaderInterceptorFactoryList();
       if (readerInterceptorProviderFactories == null)
         return (messageBodyReader.readFrom(rawType, genericType, annotations, mediaType, headers, entityStream));
 

@@ -34,9 +34,9 @@ class ProvidersImpl implements Providers {
     this.requestContext = requestContext;
   }
 
-  private <T> Object getProvider(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final ArrayList<? extends MessageBodyProviderFactory<?>> factories, final boolean asHolder) {
+  private <T> Object getProvider(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final ArrayList<? extends MessageBodyComponent<?>> factories, final boolean asHolder) {
     for (int i = 0, i$ = factories.size(); i < i$; ++i) { // [RA]
-      final MessageBodyProviderFactory<?> factory = factories.get(i);
+      final MessageBodyComponent<?> factory = factories.get(i);
       final MediaType[] compatibleMediaType = factory.getCompatibleMediaType(requestContext, type, genericType, annotations, mediaType);
       if (compatibleMediaType.length > 0) {
         final Object provider = factory.getSingletonOrFromRequestContext(requestContext);
@@ -84,9 +84,9 @@ class ProvidersImpl implements Providers {
   @Override
   @SuppressWarnings("unchecked")
   public <T extends Throwable> ExceptionMapper<T> getExceptionMapper(final Class<T> type) {
-    final ArrayList<TypeProviderFactory<ExceptionMapper<?>>> factories = requestContext.getExceptionMapperProviderFactoryList();
+    final ArrayList<TypeComponent<ExceptionMapper<?>>> factories = requestContext.getExceptionMapperComponentList();
     for (int i = 0, i$ = factories.size(); i < i$; ++i) { // [RA]
-      final TypeProviderFactory<ExceptionMapper<?>> factory = factories.get(i);
+      final TypeComponent<ExceptionMapper<?>> factory = factories.get(i);
       if (factory.getType().isAssignableFrom(type))
         return (ExceptionMapper<T>)factory.getSingletonOrFromRequestContext(requestContext);
     }

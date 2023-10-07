@@ -128,7 +128,7 @@ class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImpl> {
 
   private DefaultValueImpl[] defaultValues;
 
-  void initDefaultValues(final ArrayList<ProviderFactory<ParamConverterProvider>> paramConverterProviderFactories) {
+  void initDefaultValues(final ArrayList<Component<ParamConverterProvider>> paramConverterProviderFactories) {
     if (defaultValues != null)
       throw new IllegalStateException();
 

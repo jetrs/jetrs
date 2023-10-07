@@ -122,7 +122,7 @@ abstract class RequestContext<R extends RuntimeContext> extends InterceptorConte
 
   private boolean readerInterceptorCalled = false;
 
-  ArrayList<MessageBodyProviderFactory<ReaderInterceptor>> getReaderInterceptorFactoryList() {
+  ArrayList<MessageBodyComponent<ReaderInterceptor>> getReaderInterceptorFactoryList() {
     if (readerInterceptorCalled)
       throw new IllegalStateException();
 
@@ -132,7 +132,7 @@ abstract class RequestContext<R extends RuntimeContext> extends InterceptorConte
 
   private boolean writerInterceptorCalled = false;
 
-  ArrayList<MessageBodyProviderFactory<WriterInterceptor>> getWriterInterceptorFactoryList() {
+  ArrayList<MessageBodyComponent<WriterInterceptor>> getWriterInterceptorFactoryList() {
     if (writerInterceptorCalled)
       throw new IllegalStateException();
 
@@ -140,15 +140,15 @@ abstract class RequestContext<R extends RuntimeContext> extends InterceptorConte
     return runtimeContext.getWriterInterceptorProviderFactories();
   }
 
-  ArrayList<MessageBodyProviderFactory<MessageBodyReader<?>>> getMessageBodyReaderFactoryList() {
+  ArrayList<MessageBodyComponent<MessageBodyReader<?>>> getMessageBodyReaderFactoryList() {
     return runtimeContext.getMessageBodyReaderProviderFactories();
   }
 
-  ArrayList<MessageBodyProviderFactory<MessageBodyWriter<?>>> getMessageBodyWriterFactoryList() {
+  ArrayList<MessageBodyComponent<MessageBodyWriter<?>>> getMessageBodyWriterFactoryList() {
     return runtimeContext.getMessageBodyWriterProviderFactories();
   }
 
-  ArrayList<TypeProviderFactory<ExceptionMapper<?>>> getExceptionMapperProviderFactoryList() {
+  ArrayList<TypeComponent<ExceptionMapper<?>>> getExceptionMapperComponentList() {
     return runtimeContext.getExceptionMapperProviderFactories();
   }
 

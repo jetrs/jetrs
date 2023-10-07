@@ -49,7 +49,7 @@ import org.slf4j.LoggerFactory;
 
 class Bootstrap<R extends ArrayList<? extends Comparable<?>>> {
   static final Logger logger = LoggerFactory.getLogger(Bootstrap.class);
-  static final Comparator<TypeProviderFactory<?>> providerResourceComparator = Comparator.nullsFirst((o1, o2) -> o1.getType() == o2.getType() ? Integer.compare(o1.getPriority(), o2.getPriority()) : o1.getType().isAssignableFrom(o2.getType()) ? 1 : -1);
+  static final Comparator<TypeComponent<?>> providerResourceComparator = Comparator.nullsFirst((o1, o2) -> o1.getType() == o2.getType() ? Integer.compare(o1.getPriority(), o2.getPriority()) : o1.getType().isAssignableFrom(o2.getType()) ? 1 : -1);
   private static final String[] excludeStartsWith = {"jdk.", "java.", "javax.", "com.sun.", "sun.", "org.w3c.", "org.xml.", "org.jvnet.", "org.joda.", "org.jcp.", "apple.security."};
 
   static boolean acceptPackage(final Package pkg) {
@@ -68,18 +68,18 @@ class Bootstrap<R extends ArrayList<? extends Comparable<?>>> {
     return false;
   }
 
-  private final ArrayList<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories;
-  private final ArrayList<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorProviderFactories;
-  private final ArrayList<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderProviderFactories;
-  private final ArrayList<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterProviderFactories;
-  private final ArrayList<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperProviderFactories;
+  private final ArrayList<MessageBodyComponent<ReaderInterceptor>> readerInterceptorProviderFactories;
+  private final ArrayList<MessageBodyComponent<WriterInterceptor>> writerInterceptorProviderFactories;
+  private final ArrayList<MessageBodyComponent<MessageBodyReader<?>>> messageBodyReaderProviderFactories;
+  private final ArrayList<MessageBodyComponent<MessageBodyWriter<?>>> messageBodyWriterProviderFactories;
+  private final ArrayList<TypeComponent<ExceptionMapper<?>>> exceptionMapperProviderFactories;
 
   Bootstrap(
-    final ArrayList<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories,
-    final ArrayList<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorProviderFactories,
-    final ArrayList<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderProviderFactories,
-    final ArrayList<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterProviderFactories,
-    final ArrayList<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperProviderFactories
+    final ArrayList<MessageBodyComponent<ReaderInterceptor>> readerInterceptorProviderFactories,
+    final ArrayList<MessageBodyComponent<WriterInterceptor>> writerInterceptorProviderFactories,
+    final ArrayList<MessageBodyComponent<MessageBodyReader<?>>> messageBodyReaderProviderFactories,
+    final ArrayList<MessageBodyComponent<MessageBodyWriter<?>>> messageBodyWriterProviderFactories,
+    final ArrayList<TypeComponent<ExceptionMapper<?>>> exceptionMapperProviderFactories
   ) {
     this.readerInterceptorProviderFactories = readerInterceptorProviderFactories;
     this.writerInterceptorProviderFactories = writerInterceptorProviderFactories;
@@ -91,19 +91,19 @@ class Bootstrap<R extends ArrayList<? extends Comparable<?>>> {
   @SuppressWarnings("unchecked")
   <T> boolean addResourceOrProvider(final ArrayList<Consumer<Set<Class<?>>>> afterAdds, final R resourceInfos, final Class<? extends T> clazz, final T singleton, final boolean scanned) throws IllegalAccessException, InstantiationException, InvocationTargetException {
     if (ReaderInterceptor.class.isAssignableFrom(clazz))
-      readerInterceptorProviderFactories.add(new ReaderInterceptorProviderFactory((Class<ReaderInterceptor>)clazz, (ReaderInterceptor)singleton));
+      readerInterceptorProviderFactories.add(new ReaderInterceptorComponent((Class<ReaderInterceptor>)clazz, (ReaderInterceptor)singleton));
 
     if (WriterInterceptor.class.isAssignableFrom(clazz))
-      writerInterceptorProviderFactories.add(new WriterInterceptorProviderFactory((Class<WriterInterceptor>)clazz, (WriterInterceptor)singleton));
+      writerInterceptorProviderFactories.add(new WriterInterceptorComponent((Class<WriterInterceptor>)clazz, (WriterInterceptor)singleton));
 
     if (MessageBodyReader.class.isAssignableFrom(clazz))
-      messageBodyReaderProviderFactories.add(new MessageBodyReaderProviderFactory((Class<MessageBodyReader<?>>)clazz, (MessageBodyReader<?>)singleton));
+      messageBodyReaderProviderFactories.add(new MessageBodyReaderComponent((Class<MessageBodyReader<?>>)clazz, (MessageBodyReader<?>)singleton));
 
     if (MessageBodyWriter.class.isAssignableFrom(clazz))
-      messageBodyWriterProviderFactories.add(new MessageBodyWriterProviderFactory((Class<MessageBodyWriter<?>>)clazz, (MessageBodyWriter<?>)singleton));
+      messageBodyWriterProviderFactories.add(new MessageBodyWriterComponent((Class<MessageBodyWriter<?>>)clazz, (MessageBodyWriter<?>)singleton));
 
     if (ExceptionMapper.class.isAssignableFrom(clazz))
-      exceptionMapperProviderFactories.add(new ExceptionMapperProviderFactory((Class<ExceptionMapper<?>>)clazz, (ExceptionMapper<?>)singleton));
+      exceptionMapperProviderFactories.add(new ExceptionMapperComponent((Class<ExceptionMapper<?>>)clazz, (ExceptionMapper<?>)singleton));
 
     return false;
   }
@@ -113,14 +113,14 @@ class Bootstrap<R extends ArrayList<? extends Comparable<?>>> {
       return false;
 
     Class<?> type = (Class<?>)Classes.getGenericInterfaceTypeArguments(providerClass, interfaceClass)[0];
-    do {
+    do
       if (disabledProviderClassNames.contains(type.getCanonicalName()))
         return true;
-    }
     while ((type = type.getSuperclass()) != null);
     return false;
   }
 
+  @SuppressWarnings("rawtypes")
   private static void loadDefaultProviders(final Set<Object> singletons, final Set<Class<?>> classes) throws IOException {
     final String disableDefaultProviders = System.getProperty(CommonProperties.DISABLE_STANDARD_PROVIDER);
     final Set<String> disabledProviderClassNames;
@@ -140,142 +140,172 @@ class Bootstrap<R extends ArrayList<? extends Comparable<?>>> {
       @Override
       public boolean add(final Class<?> e) {
         // Don't add the class if a subclass instance of it is already present in `singletons`
-        for (final Object singleton : singletons) // [S]
-          if (singleton != null)
-            if (e.isAssignableFrom(singleton.getClass()))
-              return false;
+        if (singletons.size() > 0)
+          for (final Object singleton : singletons) // [S]
+            if (singleton != null)
+              if (e.isAssignableFrom(singleton.getClass()))
+                return false;
 
         // Don't add the class if a subclass of it is already present in `classes`
-        for (final Class<?> cls : classes) // [S]
-          if (cls != null)
-            if (e.isAssignableFrom(cls))
-              return false;
+        if (classes.size() > 0)
+          for (final Class<?> cls : classes) // [S]
+            if (cls != null)
+              if (e.isAssignableFrom(cls))
+                return false;
 
         return super.add(e);
       }
     };
 
-    ServiceLoaders.load(ExceptionMapper.class, classLoader, e -> {
+    ServiceLoaders.load(ExceptionMapper.class, classLoader, (final Class<? super ExceptionMapper> e) -> {
       if (!contains(disabledProviderClassNames, e, ExceptionMapper.class))
         providerClasses.add(e);
     });
-    ServiceLoaders.load(MessageBodyReader.class, classLoader, e -> {
+    ServiceLoaders.load(MessageBodyReader.class, classLoader, (final Class<? super MessageBodyReader> e) -> {
       if (!contains(disabledProviderClassNames, e, MessageBodyReader.class))
         providerClasses.add(e);
     });
-    ServiceLoaders.load(MessageBodyWriter.class, classLoader, e -> {
+    ServiceLoaders.load(MessageBodyWriter.class, classLoader, (final Class<? super MessageBodyWriter> e) -> {
       if (!contains(disabledProviderClassNames, e, MessageBodyWriter.class))
         providerClasses.add(e);
     });
 
-    for (final Class<?> providerClass : providerClasses) { // [S]
-      try {
-        if (hasContextFields(providerClass))
-          classes.add(providerClass);
-        else
-          singletons.add(providerClass.getDeclaredConstructor().newInstance());
+    if (providerClasses.size() > 0) {
+      for (final Class<?> providerClass : providerClasses) { // [S]
+        try {
+          if (hasContextFields(providerClass))
+            classes.add(providerClass);
+          else
+            singletons.add(providerClass.getDeclaredConstructor().newInstance());
 
-        if (logger.isDebugEnabled()) {
-          final StringBuilder b = new StringBuilder();
-          final Consumes c = providerClass.getAnnotation(Consumes.class);
-          if (c != null)
-            b.append(c).append(' ');
+          if (logger.isDebugEnabled()) {
+            final StringBuilder b = new StringBuilder();
+            final Consumes c = providerClass.getAnnotation(Consumes.class);
+            if (c != null)
+              b.append(c).append(' ');
 
-          final Produces p = providerClass.getAnnotation(Produces.class);
-          if (p != null)
-            b.append(p).append(' ');
+            final Produces p = providerClass.getAnnotation(Produces.class);
+            if (p != null)
+              b.append(p).append(' ');
 
-          b.append("-> ").append(providerClass.getSimpleName());
-          logger.debug(b.toString());
+            b.append("-> ").append(providerClass.getSimpleName());
+            logger.debug(b.toString());
+          }
         }
-      }
-      catch (final Exception | ServiceConfigurationError e) {
-        if (logger.isWarnEnabled()) { logger.warn("Failed to load provider " + providerClass + ".", e); }
+        catch (final Exception | ServiceConfigurationError e) {
+          if (logger.isWarnEnabled()) { logger.warn("Failed to load provider " + providerClass, e); }
+        }
       }
     }
   }
 
-  @SuppressWarnings({"null", "unchecked"})
-  void init(final Set<Object> singletons, final Set<Class<?>> classes, final R resourceInfos) throws IllegalAccessException, InstantiationException, InvocationTargetException, PackageNotFoundException, IOException {
+  @SuppressWarnings("unchecked")
+  void init(Set<Object> singletons, Set<Class<?>> classes, final R resourceInfos) throws IllegalAccessException, InstantiationException, InvocationTargetException, IOException {
     final ArrayList<Consumer<Set<Class<?>>>> afterAdds = new ArrayList<>();
-    if (singletons != null || classes != null) {
-      loadDefaultProviders(singletons, classes);
 
-      final int noSingletons = singletons.size();
-      final int noClasses = classes.size();
+    // Only scan the classpath if both singletons and classes are null
+    if (singletons == null) {
+      if (classes == null) {
+        final HashSet<Class<?>>[] resourceClasses = new HashSet[1];
+        final HashSet<Class<?>> initedClasses = new HashSet<>();
+        final Predicate<Class<?>> initialize = cls -> {
+          if (!Modifier.isAbstract(cls.getModifiers()) && !initedClasses.contains(cls)) {
+            try {
+              if (addResourceOrProvider(afterAdds, resourceInfos, cls, null, true)) {
+                HashSet<Class<?>> resourceClass1 = resourceClasses[1];
+                if (resourceClass1 == null)
+                  resourceClass1 = resourceClasses[1] = new HashSet<>(2);
 
-      final boolean hasSingletons = noSingletons > 0;
-      final boolean hasClasses = noClasses > 0;
-      if (hasSingletons) {
-        for (final Object singleton : singletons) { // [S]
-          if (singleton != null) {
-            final Class<? extends Object> cls = singleton.getClass();
-            if (logger.isWarnEnabled() && !cls.isAnnotationPresent(Singleton.class))
-              logger.warn("Object of class " + cls.getName() + " without @Singleton annotation is member of Application.getSingletons()");
-
-            addResourceOrProvider(afterAdds, resourceInfos, cls, singleton, false);
-          }
-        }
-      }
-
-      if (hasClasses)
-        for (final Class<?> cls : classes) // [S]
-          if (cls != null)
-            addResourceOrProvider(afterAdds, resourceInfos, cls, null, false);
-
-      if (afterAdds.size() > 0) {
-        final Set<Class<?>> resourceClasses;
-        if (!hasSingletons) {
-          resourceClasses = classes;
-        }
-        else if (hasClasses) {
-          resourceClasses = new HashSet<>(noClasses + noSingletons);
-          resourceClasses.addAll(classes);
-          for (final Object singleton : singletons) // [S]
-            resourceClasses.add(singleton.getClass());
-        }
-        else {
-          resourceClasses = null;
-        }
-
-        for (int i = 0, i$ = afterAdds.size(); i < i$; ++i) // [RA]
-          afterAdds.get(i).accept(resourceClasses);
-      }
-    }
-    else {
-      final Set<Class<?>>[] resourceClasses = new Set[1];
-      final Set<Class<?>> initedClasses = new HashSet<>();
-      final Predicate<Class<?>> initialize = cls -> {
-        if (!Modifier.isAbstract(cls.getModifiers()) && !initedClasses.contains(cls)) {
-          try {
-            if (addResourceOrProvider(afterAdds, resourceInfos, cls, null, true)) {
-              Set<Class<?>> resourceClass1 = resourceClasses[1];
-              if (resourceClass1 == null)
-                resourceClass1 = resourceClasses[1] = new HashSet<>(2);
-
-              resourceClass1.add(cls);
+                resourceClass1.add(cls);
+              }
+            }
+            catch (final IllegalAccessException | InstantiationException e) {
+              throw new ProviderInstantiationException(e);
+            }
+            catch (final InvocationTargetException e) {
+              throw new ProviderInstantiationException(e.getCause());
             }
           }
-          catch (final IllegalAccessException | InstantiationException e) {
-            throw new ProviderInstantiationException(e);
-          }
-          catch (final InvocationTargetException e) {
-            throw new ProviderInstantiationException(e.getCause());
+
+          initedClasses.add(cls);
+          return false;
+        };
+
+        for (final Package pkg : Package.getPackages()) { // [A]
+          if (acceptPackage(pkg)) {
+            try {
+              PackageLoader.getContextPackageLoader().loadPackage(pkg, initialize);
+            }
+            catch (final PackageNotFoundException e) {
+              if (logger.isDebugEnabled()) { logger.debug(e.getMessage(), e); }
+            }
           }
         }
 
-        initedClasses.add(cls);
-        return false;
-      };
+        final Set<Class<?>> resourceClasses0 = resourceClasses[0];
+        if (resourceClasses0 != null)
+          for (int i = 0, i$ = afterAdds.size(); i < i$; ++i) // [RA]
+            afterAdds.get(i).accept(resourceClasses0);
 
-      for (final Package pkg : Package.getPackages()) // [A]
-        if (acceptPackage(pkg))
-          PackageLoader.getContextPackageLoader().loadPackage(pkg, initialize);
+        singletons = new HashSet<>();
+        classes = new HashSet<>();
+      }
+      else {
+        singletons = new HashSet<>();
+        classes = new HashSet<>(classes);
+      }
+    }
+    else if (classes == null) {
+      classes = new HashSet<>();
+      singletons = new HashSet<>(singletons);
+    }
+    else {
+      singletons = new HashSet<>(singletons);
+      classes = new HashSet<>(classes);
+    }
 
-      final Set<Class<?>> resourceClasses0 = resourceClasses[0];
-      if (resourceClasses0 != null)
-        for (int i = 0, i$ = afterAdds.size(); i < i$; ++i) // [RA]
-          afterAdds.get(i).accept(resourceClasses0);
+    loadDefaultProviders(singletons, classes);
+
+    final int noClasses = classes.size();
+    final boolean hasClasses = noClasses > 0;
+
+    final int noSingletons = singletons.size();
+    final boolean hasSingletons = noSingletons > 0;
+
+    if (hasSingletons) {
+      for (final Object singleton : singletons) { // [S]
+        if (singleton != null) {
+          final Class<? extends Object> cls = singleton.getClass();
+          if (logger.isWarnEnabled() && !cls.isAnnotationPresent(Singleton.class))
+            logger.warn("Object of class " + cls.getName() + " without @Singleton annotation is member of Application.getSingletons()");
+
+          addResourceOrProvider(afterAdds, resourceInfos, cls, singleton, false);
+        }
+      }
+    }
+
+    if (hasClasses)
+      for (final Class<?> cls : classes) // [S]
+        if (cls != null)
+          addResourceOrProvider(afterAdds, resourceInfos, cls, null, false);
+
+    if (afterAdds.size() > 0) {
+      final Set<Class<?>> resourceClasses;
+      if (!hasSingletons) {
+        resourceClasses = classes;
+      }
+      else if (hasClasses) {
+        resourceClasses = new HashSet<>(noClasses + noSingletons);
+        resourceClasses.addAll(classes);
+        for (final Object singleton : singletons) // [S]
+          resourceClasses.add(singleton.getClass());
+      }
+      else {
+        resourceClasses = null;
+      }
+
+      for (int i = 0, i$ = afterAdds.size(); i < i$; ++i) // [RA]
+        afterAdds.get(i).accept(resourceClasses);
     }
 
     if (resourceInfos != null)

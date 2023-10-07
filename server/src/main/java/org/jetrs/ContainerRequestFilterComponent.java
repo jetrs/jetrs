@@ -18,8 +18,8 @@ package org.jetrs;
 
 import javax.ws.rs.container.ContainerRequestFilter;
 
-final class ContainerRequestFilterProviderFactory extends ProviderFactory<ContainerRequestFilter> {
-  ContainerRequestFilterProviderFactory(final Class<ContainerRequestFilter> clazz, final ContainerRequestFilter singleton) {
+final class ContainerRequestFilterComponent extends Component<ContainerRequestFilter> {
+  ContainerRequestFilterComponent(final Class<ContainerRequestFilter> clazz, final ContainerRequestFilter singleton) {
     super(clazz, singleton);
   }
 }

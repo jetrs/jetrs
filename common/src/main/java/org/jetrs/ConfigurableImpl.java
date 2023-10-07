@@ -17,6 +17,7 @@
 package org.jetrs;
 
 import java.util.Map;
+import java.util.Objects;
 
 import javax.ws.rs.core.Configurable;
 
@@ -28,51 +29,95 @@ interface ConfigurableImpl<C extends Configurable<? super C>> extends Configurab
     return (C)this;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @throws NullPointerException If {@code component} is null.
+   */
   @Override
+  @SuppressWarnings("rawtypes")
   default C register(final Object component) {
-    ((ConfigurationImpl)getConfiguration()).components().add(new Component(component.getClass(), component));
+    ((ConfigurationImpl)getConfiguration()).getOrCreateComponents().add(new Component(component.getClass(), component));
     return (C)this;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @throws NullPointerException If {@code component} is null.
+   */
   @Override
+  @SuppressWarnings("rawtypes")
   default C register(final Object component, final int priority) {
-    ((ConfigurationImpl)getConfiguration()).components().add(new Component(component.getClass(), component, priority));
+    ((ConfigurationImpl)getConfiguration()).getOrCreateComponents().add(new Component(component.getClass(), component, priority));
     return (C)this;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @throws NullPointerException If {@code component} is null.
+   */
   @Override
+  @SuppressWarnings("rawtypes")
   default C register(final Object component, final Class<?> ... contracts) {
-    ((ConfigurationImpl)getConfiguration()).components().add(new Component(null, component, contracts));
+    ((ConfigurationImpl)getConfiguration()).getOrCreateComponents().add(new Component(component.getClass(), component, contracts));
     return (C)this;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @throws NullPointerException If {@code component} is null.
+   */
   @Override
+  @SuppressWarnings("rawtypes")
   default C register(final Object component, final Map<Class<?>,Integer> contracts) {
-    ((ConfigurationImpl)getConfiguration()).components().add(new Component(null, component, contracts));
+    ((ConfigurationImpl)getConfiguration()).getOrCreateComponents().add(new Component(component.getClass(), component, contracts));
     return (C)this;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @throws NullPointerException If {@code componentClass} is null.
+   */
   @Override
   default C register(final Class<?> componentClass) {
-    ((ConfigurationImpl)getConfiguration()).components().add(new Component(componentClass, null));
+    ((ConfigurationImpl)getConfiguration()).getOrCreateComponents().add(new Component<>(Objects.requireNonNull(componentClass), null));
     return (C)this;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @throws NullPointerException If {@code componentClass} is null.
+   */
   @Override
   default C register(final Class<?> componentClass, final int priority) {
-    ((ConfigurationImpl)getConfiguration()).components().add(new Component(componentClass, null, priority));
+    ((ConfigurationImpl)getConfiguration()).getOrCreateComponents().add(new Component<>(Objects.requireNonNull(componentClass), null, priority));
     return (C)this;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @throws NullPointerException If {@code componentClass} is null.
+   */
   @Override
   default C register(final Class<?> componentClass, final Class<?> ... contracts) {
-    ((ConfigurationImpl)getConfiguration()).components().add(new Component(componentClass, null, contracts));
+    ((ConfigurationImpl)getConfiguration()).getOrCreateComponents().add(new Component<>(Objects.requireNonNull(componentClass), null, contracts));
     return (C)this;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @throws NullPointerException If {@code componentClass} is null.
+   */
   @Override
   default C register(final Class<?> componentClass, final Map<Class<?>,Integer> contracts) {
-    ((ConfigurationImpl)getConfiguration()).components().add(new Component(componentClass, null, contracts));
+    ((ConfigurationImpl)getConfiguration()).getOrCreateComponents().add(new Component<>(Objects.requireNonNull(componentClass), null, contracts));
     return (C)this;
   }
 }

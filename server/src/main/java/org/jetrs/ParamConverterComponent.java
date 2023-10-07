@@ -18,8 +18,8 @@ package org.jetrs;
 
 import javax.ws.rs.ext.ParamConverterProvider;
 
-final class ParamConverterProviderFactory extends ProviderFactory<ParamConverterProvider> {
-  ParamConverterProviderFactory(final Class<ParamConverterProvider> clazz, final ParamConverterProvider singleton) {
+final class ParamConverterComponent extends Component<ParamConverterProvider> {
+  ParamConverterComponent(final Class<ParamConverterProvider> clazz, final ParamConverterProvider singleton) {
     super(clazz, singleton);
   }
 }

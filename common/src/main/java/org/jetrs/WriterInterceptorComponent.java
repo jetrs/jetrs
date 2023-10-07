@@ -20,8 +20,8 @@ import java.lang.reflect.InvocationTargetException;
 
 import javax.ws.rs.ext.WriterInterceptor;
 
-final class WriterInterceptorProviderFactory extends MessageBodyProviderFactory<WriterInterceptor> {
-  WriterInterceptorProviderFactory(final Class<WriterInterceptor> clazz, final WriterInterceptor singleton) throws IllegalAccessException, InstantiationException, InvocationTargetException {
+final class WriterInterceptorComponent extends MessageBodyComponent<WriterInterceptor> {
+  WriterInterceptorComponent(final Class<WriterInterceptor> clazz, final WriterInterceptor singleton) throws IllegalAccessException, InstantiationException, InvocationTargetException {
     super(clazz, singleton, WriterInterceptor.class);
   }
 }

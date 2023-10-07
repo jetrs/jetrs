@@ -20,8 +20,8 @@ import java.lang.reflect.InvocationTargetException;
 
 import javax.ws.rs.ext.ExceptionMapper;
 
-final class ExceptionMapperProviderFactory extends TypeProviderFactory<ExceptionMapper<?>> {
-  ExceptionMapperProviderFactory(final Class<ExceptionMapper<?>> clazz, final ExceptionMapper<?> singleton) throws IllegalAccessException, InstantiationException, InvocationTargetException {
+final class ExceptionMapperComponent extends TypeComponent<ExceptionMapper<?>> {
+  ExceptionMapperComponent(final Class<ExceptionMapper<?>> clazz, final ExceptionMapper<?> singleton) throws IllegalAccessException, InstantiationException, InvocationTargetException {
     super(clazz, singleton, getGenericInterfaceFirstTypeArgument(clazz, ExceptionMapper.class, Throwable.class));
   }
 }

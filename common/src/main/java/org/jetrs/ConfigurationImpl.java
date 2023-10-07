@@ -31,6 +31,8 @@ import javax.ws.rs.core.Feature;
 
 class ConfigurationImpl implements Cloneable, Configuration, Serializable {
   private final RuntimeType runtimeType;
+  private Set<Class<?>> classes;
+  private Set<Object> instances;
   private Map<String,Object> properties;
 
   ConfigurationImpl(final Application application) {
@@ -64,61 +66,49 @@ class ConfigurationImpl implements Cloneable, Configuration, Serializable {
     return getProperties().keySet();
   }
 
-  private Set<Feature> features;
-
-  Set<Feature> features() {
-    return features == null ? features = new HashSet<>() : features;
-  }
-
   @Override
   public boolean isEnabled(final Feature feature) {
-    return features().contains(feature);
+    return isRegistered(feature);
   }
 
   @Override
   public boolean isEnabled(final Class<? extends Feature> featureClass) {
-    final Set<Feature> features = features();
-    if (features.size() > 0)
-      for (final Feature feature : features) // [S]
-        if (featureClass.isInstance(feature))
-          return true;
-
-    return false;
+    return isRegistered(featureClass);
   }
 
   @Override
   public boolean isRegistered(final Object component) {
-    return components().contains(component);
+    return components != null && components.contains(component);
   }
 
-  private ComponentSet components;
+  private Components components;
 
-  ComponentSet components() {
-    return components == null ? components = new ComponentSet() : components;
+  final Components getOrCreateComponents() {
+    return components == null ? components = new Components() : components;
+  }
+
+  final Components getComponents() {
+    return components;
   }
 
   @Override
   public boolean isRegistered(final Class<?> componentClass) {
-    return components().contains(componentClass);
+    return components != null && components.contains(componentClass);
   }
 
   @Override
   public Map<Class<?>,Integer> getContracts(final Class<?> componentClass) {
-    return components().getContracts(componentClass);
+    return components == null ? Collections.EMPTY_MAP : components.getContracts(componentClass);
   }
-
-  private Set<Class<?>> classes;
 
   @Override
   public Set<Class<?>> getClasses() {
-    return classes == null ? classes = Collections.unmodifiableSet(components().classes()) : classes;
+    return classes != null ? classes : components == null ? Collections.EMPTY_SET : Collections.unmodifiableSet(components.classes());
   }
-
-  private Set<Object> instances;
 
   @Override
   public Set<Object> getInstances() {
-    return instances == null ? instances = Collections.unmodifiableSet(components().instances()) : instances;
+    return instances != null ? instances : components == null ? Collections.EMPTY_SET : Collections.unmodifiableSet(components.instances());
   }
 
   @Override
@@ -126,8 +116,15 @@ class ConfigurationImpl implements Cloneable, Configuration, Serializable {
     try {
       final ConfigurationImpl clone = (ConfigurationImpl)super.clone();
       clone.components = components.clone();
-      clone.classes = null;
-      clone.instances = null;
+      if (classes != null)
+        clone.classes = new HashSet<>(classes);
+
+      if (instances != null)
+        clone.instances = new HashSet<>(instances);
+
+      if (properties != null)
+        clone.properties = new HashMap<>(properties);
+
       return clone;
     }
     catch (final CloneNotSupportedException e) {

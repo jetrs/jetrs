@@ -23,10 +23,10 @@ import java.lang.reflect.Type;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.core.MediaType;
 
-abstract class MessageBodyProviderFactory<T> extends TypeProviderFactory<T> {
+abstract class MessageBodyComponent<T> extends TypeComponent<T> {
   private final ServerMediaType[] allowedTypes;
 
-  MessageBodyProviderFactory(final Class<T> clazz, final T singleton, final Class<?> interfaceType) throws IllegalAccessException, InstantiationException, InvocationTargetException {
+  MessageBodyComponent(final Class<T> clazz, final T singleton, final Class<?> interfaceType) throws IllegalAccessException, InstantiationException, InvocationTargetException {
     super(clazz, singleton, getGenericInterfaceFirstTypeArgument(clazz, interfaceType, Object.class));
     final Consumes consumes = AnnotationUtil.getAnnotation(clazz, Consumes.class);
     this.allowedTypes = consumes != null ? ServerMediaType.valueOf(consumes.value()) : MediaTypes.WILDCARD_SERVER_TYPE;

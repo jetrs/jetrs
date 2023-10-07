@@ -33,10 +33,10 @@ import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
 
 class ServerRuntimeContext extends RuntimeContext {
-  private final ArrayList<ProviderFactory<ParamConverterProvider>> paramConverterProviderFactories;
-  private final ArrayList<ProviderFactory<ContainerRequestFilter>> preMatchContainerRequestFilterProviderFactories;
-  private final ArrayList<ProviderFactory<ContainerRequestFilter>> containerRequestFilterProviderFactories;
-  private final ArrayList<ProviderFactory<ContainerResponseFilter>> containerResponseFilterProviderFactories;
+  private final ArrayList<Component<ParamConverterProvider>> paramConverterProviderFactories;
+  private final ArrayList<Component<ContainerRequestFilter>> preMatchContainerRequestFilterProviderFactories;
+  private final ArrayList<Component<ContainerRequestFilter>> containerRequestFilterProviderFactories;
+  private final ArrayList<Component<ContainerResponseFilter>> containerResponseFilterProviderFactories;
 
   private final ServletConfig servletConfig;
   private final ServletContext servletContext;
@@ -44,15 +44,15 @@ class ServerRuntimeContext extends RuntimeContext {
   private final ArrayList<ResourceInfoImpl> resourceInfos;
 
   ServerRuntimeContext(
-    final ArrayList<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories,
-    final ArrayList<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorProviderFactories,
-    final ArrayList<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderProviderFactories,
-    final ArrayList<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterProviderFactories,
-    final ArrayList<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperProviderFactories,
-    final ArrayList<ProviderFactory<ParamConverterProvider>> paramConverterProviderFactories,
-    final ArrayList<ProviderFactory<ContainerRequestFilter>> preMatchContainerRequestFilterProviderFactories,
-    final ArrayList<ProviderFactory<ContainerRequestFilter>> containerRequestFilterProviderFactories,
-    final ArrayList<ProviderFactory<ContainerResponseFilter>> containerResponseFilterProviderFactories,
+    final ArrayList<MessageBodyComponent<ReaderInterceptor>> readerInterceptorProviderFactories,
+    final ArrayList<MessageBodyComponent<WriterInterceptor>> writerInterceptorProviderFactories,
+    final ArrayList<MessageBodyComponent<MessageBodyReader<?>>> messageBodyReaderProviderFactories,
+    final ArrayList<MessageBodyComponent<MessageBodyWriter<?>>> messageBodyWriterProviderFactories,
+    final ArrayList<TypeComponent<ExceptionMapper<?>>> exceptionMapperProviderFactories,
+    final ArrayList<Component<ParamConverterProvider>> paramConverterProviderFactories,
+    final ArrayList<Component<ContainerRequestFilter>> preMatchContainerRequestFilterProviderFactories,
+    final ArrayList<Component<ContainerRequestFilter>> containerRequestFilterProviderFactories,
+    final ArrayList<Component<ContainerResponseFilter>> containerResponseFilterProviderFactories,
     final ServletConfig servletConfig,
     final ServletContext servletContext,
     final Application application,
@@ -85,19 +85,19 @@ class ServerRuntimeContext extends RuntimeContext {
     return resourceInfos;
   }
 
-  ArrayList<ProviderFactory<ParamConverterProvider>> getParamConverterProviderFactories() {
+  ArrayList<Component<ParamConverterProvider>> getParamConverterProviderFactories() {
     return paramConverterProviderFactories;
   }
 
-  ArrayList<ProviderFactory<ContainerRequestFilter>> getPreMatchContainerRequestFilterProviderFactories() {
+  ArrayList<Component<ContainerRequestFilter>> getPreMatchContainerRequestFilterProviderFactories() {
     return preMatchContainerRequestFilterProviderFactories;
   }
 
-  ArrayList<ProviderFactory<ContainerRequestFilter>> getContainerRequestFilterProviderFactories() {
+  ArrayList<Component<ContainerRequestFilter>> getContainerRequestFilterProviderFactories() {
     return containerRequestFilterProviderFactories;
   }
 
-  ArrayList<ProviderFactory<ContainerResponseFilter>> getContainerResponseFilterProviderFactories() {
+  ArrayList<Component<ContainerResponseFilter>> getContainerResponseFilterProviderFactories() {
     return containerResponseFilterProviderFactories;
   }
 

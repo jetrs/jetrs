@@ -23,8 +23,8 @@ import java.lang.reflect.Type;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.MessageBodyReader;
 
-final class MessageBodyReaderProviderFactory extends MessageBodyProviderFactory<MessageBodyReader<?>> {
-  MessageBodyReaderProviderFactory(final Class<MessageBodyReader<?>> clazz, final MessageBodyReader<?> singleton) throws IllegalAccessException, InstantiationException, InvocationTargetException {
+final class MessageBodyReaderComponent extends MessageBodyComponent<MessageBodyReader<?>> {
+  MessageBodyReaderComponent(final Class<MessageBodyReader<?>> clazz, final MessageBodyReader<?> singleton) throws IllegalAccessException, InstantiationException, InvocationTargetException {
     super(clazz, singleton, MessageBodyReader.class);
     if (getType() == null)
       throw new IllegalStateException("type is null");

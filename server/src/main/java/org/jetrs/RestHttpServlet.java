@@ -16,8 +16,8 @@
 
 package org.jetrs;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
-import java.util.Set;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -36,11 +36,26 @@ import javax.ws.rs.ext.RuntimeDelegate;
 import javax.ws.rs.ext.WriterInterceptor;
 
 abstract class RestHttpServlet extends HttpServlet {
+  private static final String applicationClassName = "javax.ws.rs.Application";
   private final Application application;
   private ServerRuntimeContext runtimeContext;
 
   RestHttpServlet(final Application application) {
-    this.application = application;
+    if (application != null) {
+      this.application = application;
+    }
+    else {
+      final String applicationSpec = getInitParameter(applicationClassName);
+      if (applicationSpec == null)
+        throw new IllegalStateException("Could not find " + applicationClassName);
+
+      try {
+        this.application = (Application)Class.forName(applicationSpec).getDeclaredConstructor().newInstance();
+      }
+      catch (final ClassNotFoundException | IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException e) {
+        throw new IllegalStateException("Could not find " + applicationClassName, e);
+      }
+    }
   }
 
   final ServerRuntimeContext getRuntimeContext() {
@@ -62,10 +77,11 @@ abstract class RestHttpServlet extends HttpServlet {
       final WebServlet webServlet = getClass().getAnnotation(WebServlet.class);
       if (webServlet != null) {
         servletPath = webServlet.urlPatterns()[0];
+        final int length = servletPath.length();
         if (servletPath.endsWith("/*"))
-          servletPath = servletPath.substring(0, servletPath.length() - 2);
+          servletPath = servletPath.substring(0, length - 2);
         else if (servletPath.endsWith("/"))
-          servletPath = servletPath.substring(0, servletPath.length() - 1);
+          servletPath = servletPath.substring(0, length - 1);
       }
       else {
         servletPath = config.getServletContext().getContextPath();
@@ -73,15 +89,15 @@ abstract class RestHttpServlet extends HttpServlet {
     }
 
     final ResourceInfos resourceInfos = new ResourceInfos();
-    final ArrayList<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories = new ArrayList<>();
-    final ArrayList<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorProviderFactories = new ArrayList<>();
-    final ArrayList<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderProviderFactories = new ArrayList<>();
-    final ArrayList<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterProviderFactories = new ArrayList<>();
-    final ArrayList<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperProviderFactories = new ArrayList<>();
-    final ArrayList<ProviderFactory<ParamConverterProvider>> paramConverterProviderFactories = new ArrayList<>();
-    final ArrayList<ProviderFactory<ContainerRequestFilter>> preMatchContainerRequestFilterProviderFactories = new ArrayList<>();
-    final ArrayList<ProviderFactory<ContainerRequestFilter>> containerRequestFilterProviderFactories = new ArrayList<>();
-    final ArrayList<ProviderFactory<ContainerResponseFilter>> containerResponseFilterProviderFactories = new ArrayList<>();
+    final ArrayList<MessageBodyComponent<ReaderInterceptor>> readerInterceptorProviderFactories = new ArrayList<>();
+    final ArrayList<MessageBodyComponent<WriterInterceptor>> writerInterceptorProviderFactories = new ArrayList<>();
+    final ArrayList<MessageBodyComponent<MessageBodyReader<?>>> messageBodyReaderProviderFactories = new ArrayList<>();
+    final ArrayList<MessageBodyComponent<MessageBodyWriter<?>>> messageBodyWriterProviderFactories = new ArrayList<>();
+    final ArrayList<TypeComponent<ExceptionMapper<?>>> exceptionMapperProviderFactories = new ArrayList<>();
+    final ArrayList<Component<ParamConverterProvider>> paramConverterProviderFactories = new ArrayList<>();
+    final ArrayList<Component<ContainerRequestFilter>> preMatchContainerRequestFilterProviderFactories = new ArrayList<>();
+    final ArrayList<Component<ContainerRequestFilter>> containerRequestFilterProviderFactories = new ArrayList<>();
+    final ArrayList<Component<ContainerResponseFilter>> containerResponseFilterProviderFactories = new ArrayList<>();
 
     final ServerBootstrap bootstrap = new ServerBootstrap(servletPath,
       readerInterceptorProviderFactories,
@@ -95,30 +111,10 @@ abstract class RestHttpServlet extends HttpServlet {
       containerResponseFilterProviderFactories);
 
     try {
-      final Application application;
-      if (this.application != null) {
-        application = this.application;
-      }
-      else {
-        final String applicationSpec = getInitParameter("javax.ws.rs.Application");
-        application = applicationSpec == null ? null : (Application)Class.forName(applicationSpec).getDeclaredConstructor().newInstance();
-      }
-
-      final Set<Object> singletons;
-      final Set<Class<?>> classes;
-      if (application != null) {
-        singletons = application.getSingletons();
-        classes = application.getClasses();
-      }
-      else {
-        singletons = null;
-        classes = null;
-      }
-
       readerInterceptorProviderFactories.sort(Bootstrap.providerResourceComparator);
       writerInterceptorProviderFactories.sort(Bootstrap.providerResourceComparator);
 
-      bootstrap.init(singletons, classes, resourceInfos);
+      bootstrap.init(application.getSingletons(), application.getClasses(), resourceInfos);
 
       runtimeContext = new ServerRuntimeContext(
         readerInterceptorProviderFactories,

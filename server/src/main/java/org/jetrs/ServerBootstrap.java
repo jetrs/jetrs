@@ -45,12 +45,10 @@ import javax.ws.rs.ext.ParamConverterProvider;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
 
-import org.libj.lang.PackageNotFoundException;
-
 class ServerBootstrap extends Bootstrap<ResourceInfos> {
   private static final int defaultPriority = Priorities.USER;
 
-  private static final Comparator<ProviderFactory<?>> priorityComparator = Comparator.nullsFirst((o1, o2) -> {
+  private static final Comparator<Component<?>> priorityComparator = Comparator.nullsFirst((o1, o2) -> {
     final Priority p1 = o1.getProviderClass().getAnnotation(Priority.class);
     final Priority p2 = o2.getProviderClass().getAnnotation(Priority.class);
     final int v1 = p1 != null ? p1.value() : defaultPriority;
@@ -72,8 +70,7 @@ class ServerBootstrap extends Bootstrap<ResourceInfos> {
       return true;
 
     try {
-      final Method[] methods = cls.getMethods();
-      for (final Method method : methods) // [A]
+      for (final Method method : cls.getMethods()) // [A]
         if (!Modifier.isAbstract(method.getModifiers()) && !Modifier.isStatic(method.getModifiers()) && !Modifier.isNative(method.getModifiers()) && AnnotationUtil.isAnyAnnotationPresent(method, Path.class, GET.class, POST.class, PUT.class, DELETE.class, HEAD.class))
           return true;
 
@@ -91,22 +88,22 @@ class ServerBootstrap extends Bootstrap<ResourceInfos> {
   }
 
   private final String baseUri;
-  private final ArrayList<ProviderFactory<ParamConverterProvider>> paramConverterProviderFactories;
-  private final ArrayList<ProviderFactory<ContainerRequestFilter>> preMatchContainerRequestFilterProviderFactories;
-  private final ArrayList<ProviderFactory<ContainerRequestFilter>> containerRequestFilterProviderFactories;
-  private final ArrayList<ProviderFactory<ContainerResponseFilter>> containerResponseFilterProviderFactories;
+  private final ArrayList<Component<ParamConverterProvider>> paramConverterProviderFactories;
+  private final ArrayList<Component<ContainerRequestFilter>> preMatchContainerRequestFilterProviderFactories;
+  private final ArrayList<Component<ContainerRequestFilter>> containerRequestFilterProviderFactories;
+  private final ArrayList<Component<ContainerResponseFilter>> containerResponseFilterProviderFactories;
 
   ServerBootstrap(
     final String baseUri,
-    final ArrayList<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories,
-    final ArrayList<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorProviderFactories,
-    final ArrayList<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderProviderFactories,
-    final ArrayList<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterProviderFactories,
-    final ArrayList<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperProviderFactories,
-    final ArrayList<ProviderFactory<ParamConverterProvider>> paramConverterProviderFactories,
-    final ArrayList<ProviderFactory<ContainerRequestFilter>> preMatchContainerRequestFilterProviderFactories,
-    final ArrayList<ProviderFactory<ContainerRequestFilter>> containerRequestFilterProviderFactories,
-    final ArrayList<ProviderFactory<ContainerResponseFilter>> containerResponseFilterProviderFactories
+    final ArrayList<MessageBodyComponent<ReaderInterceptor>> readerInterceptorProviderFactories,
+    final ArrayList<MessageBodyComponent<WriterInterceptor>> writerInterceptorProviderFactories,
+    final ArrayList<MessageBodyComponent<MessageBodyReader<?>>> messageBodyReaderProviderFactories,
+    final ArrayList<MessageBodyComponent<MessageBodyWriter<?>>> messageBodyWriterProviderFactories,
+    final ArrayList<TypeComponent<ExceptionMapper<?>>> exceptionMapperProviderFactories,
+    final ArrayList<Component<ParamConverterProvider>> paramConverterProviderFactories,
+    final ArrayList<Component<ContainerRequestFilter>> preMatchContainerRequestFilterProviderFactories,
+    final ArrayList<Component<ContainerRequestFilter>> containerRequestFilterProviderFactories,
+    final ArrayList<Component<ContainerResponseFilter>> containerResponseFilterProviderFactories
   ) {
     super(readerInterceptorProviderFactories, writerInterceptorProviderFactories, messageBodyReaderProviderFactories, messageBodyWriterProviderFactories, exceptionMapperProviderFactories);
     this.baseUri = baseUri;
@@ -120,13 +117,13 @@ class ServerBootstrap extends Bootstrap<ResourceInfos> {
   @SuppressWarnings("unchecked")
   <T> boolean addResourceOrProvider(final ArrayList<Consumer<Set<Class<?>>>> afterAdd, final ResourceInfos resourceInfos, final Class<? extends T> clazz, final T singleton, final boolean scanned) throws IllegalAccessException, InstantiationException, InvocationTargetException {
     if (ParamConverterProvider.class.isAssignableFrom(clazz))
-      paramConverterProviderFactories.add(new ParamConverterProviderFactory((Class<ParamConverterProvider>)clazz, (ParamConverterProvider)singleton));
+      paramConverterProviderFactories.add(new ParamConverterComponent((Class<ParamConverterProvider>)clazz, (ParamConverterProvider)singleton));
 
     if (ContainerRequestFilter.class.isAssignableFrom(clazz))
-      (AnnotationUtil.isAnnotationPresent(clazz, PreMatching.class) ? preMatchContainerRequestFilterProviderFactories : containerRequestFilterProviderFactories).add(new ContainerRequestFilterProviderFactory((Class<ContainerRequestFilter>)clazz, (ContainerRequestFilter)singleton));
+      (AnnotationUtil.isAnnotationPresent(clazz, PreMatching.class) ? preMatchContainerRequestFilterProviderFactories : containerRequestFilterProviderFactories).add(new ContainerRequestFilterComponent((Class<ContainerRequestFilter>)clazz, (ContainerRequestFilter)singleton));
 
     if (ContainerResponseFilter.class.isAssignableFrom(clazz)) {
-      containerResponseFilterProviderFactories.add(new ContainerResponseFilterProviderFactory((Class<ContainerResponseFilter>)clazz, (ContainerResponseFilter)singleton));
+      containerResponseFilterProviderFactories.add(new ContainerResponseFilterComponent((Class<ContainerResponseFilter>)clazz, (ContainerResponseFilter)singleton));
       if (logger.isDebugEnabled() && AnnotationUtil.isAnnotationPresent(clazz, PreMatching.class))
         logger.debug("@PreMatching annotation is not applicable to ContainerResponseFilter");
     }
@@ -166,7 +163,7 @@ class ServerBootstrap extends Bootstrap<ResourceInfos> {
   }
 
   @Override
-  void init(final Set<Object> singletons, final Set<Class<?>> classes, final ResourceInfos resourceInfos) throws IllegalAccessException, InstantiationException, InvocationTargetException, PackageNotFoundException, IOException {
+  void init(final Set<Object> singletons, final Set<Class<?>> classes, final ResourceInfos resourceInfos) throws IllegalAccessException, InstantiationException, InvocationTargetException, IOException {
     super.init(singletons, classes, resourceInfos);
     preMatchContainerRequestFilterProviderFactories.sort(priorityComparator);
     containerRequestFilterProviderFactories.sort(priorityComparator);

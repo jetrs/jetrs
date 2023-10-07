@@ -20,8 +20,8 @@ import java.lang.reflect.InvocationTargetException;
 
 import javax.ws.rs.ext.ReaderInterceptor;
 
-final class ReaderInterceptorProviderFactory extends MessageBodyProviderFactory<ReaderInterceptor> {
-  ReaderInterceptorProviderFactory(final Class<ReaderInterceptor> clazz, final ReaderInterceptor singleton) throws IllegalAccessException, InstantiationException, InvocationTargetException {
+final class ReaderInterceptorComponent extends MessageBodyComponent<ReaderInterceptor> {
+  ReaderInterceptorComponent(final Class<ReaderInterceptor> clazz, final ReaderInterceptor singleton) throws IllegalAccessException, InstantiationException, InvocationTargetException {
     super(clazz, singleton, ReaderInterceptor.class);
   }
 }

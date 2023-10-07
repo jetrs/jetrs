@@ -20,10 +20,10 @@ import static org.libj.lang.Assertions.*;
 
 import java.lang.reflect.InvocationTargetException;
 
-abstract class TypeProviderFactory<T> extends ProviderFactory<T> {
+abstract class TypeComponent<T> extends Component<T> {
   private final Class<?> type;
 
-  TypeProviderFactory(final Class<T> clazz, final T singleton, final Class<?> type) throws IllegalAccessException, InstantiationException, InvocationTargetException {
+  TypeComponent(final Class<T> clazz, final T singleton, final Class<?> type) throws IllegalAccessException, InstantiationException, InvocationTargetException {
     super(clazz, singleton);
     this.type = assertNotNull(type, "type is null");
   }

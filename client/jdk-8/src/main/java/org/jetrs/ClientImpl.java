@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -38,8 +37,6 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
-
-import org.libj.lang.PackageNotFoundException;
 
 class ClientImpl implements Client, ConfigurableImpl<Client> {
   private final ConfigurationImpl configuration;
@@ -62,11 +59,11 @@ class ClientImpl implements Client, ConfigurableImpl<Client> {
 
   private ClientRuntimeContext newClientRuntimeContext() {
     try {
-      final ArrayList<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories = new ArrayList<>();
-      final ArrayList<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorProviderFactories = new ArrayList<>();
-      final ArrayList<MessageBodyProviderFactory<MessageBodyReader<?>>> messageBodyReaderProviderFactories = new ArrayList<>();
-      final ArrayList<MessageBodyProviderFactory<MessageBodyWriter<?>>> messageBodyWriterProviderFactories = new ArrayList<>();
-      final ArrayList<TypeProviderFactory<ExceptionMapper<?>>> exceptionMapperProviderFactories = new ArrayList<>();
+      final ArrayList<MessageBodyComponent<ReaderInterceptor>> readerInterceptorProviderFactories = new ArrayList<>();
+      final ArrayList<MessageBodyComponent<WriterInterceptor>> writerInterceptorProviderFactories = new ArrayList<>();
+      final ArrayList<MessageBodyComponent<MessageBodyReader<?>>> messageBodyReaderProviderFactories = new ArrayList<>();
+      final ArrayList<MessageBodyComponent<MessageBodyWriter<?>>> messageBodyWriterProviderFactories = new ArrayList<>();
+      final ArrayList<TypeComponent<ExceptionMapper<?>>> exceptionMapperProviderFactories = new ArrayList<>();
 
       final Bootstrap<?> bootstrap = new Bootstrap<>(
         readerInterceptorProviderFactories,
@@ -75,11 +72,11 @@ class ClientImpl implements Client, ConfigurableImpl<Client> {
         messageBodyWriterProviderFactories,
         exceptionMapperProviderFactories);
 
-      final ComponentSet components = configuration.components();
-      bootstrap.init(new HashSet<>(components.instances()), new HashSet<>(components.classes()), null);
+      final Components components = configuration.getComponents();
+      bootstrap.init(components == null ? null : components.instances(), components == null ? null : components.classes(), null);
       return new ClientRuntimeContext(configuration, readerInterceptorProviderFactories, writerInterceptorProviderFactories, messageBodyReaderProviderFactories, messageBodyWriterProviderFactories, exceptionMapperProviderFactories);
     }
-    catch (final IllegalAccessException | PackageNotFoundException e) {
+    catch (final IllegalAccessException e) {
       throw new RuntimeException(e);
     }
     catch (final InstantiationException | IOException e) {

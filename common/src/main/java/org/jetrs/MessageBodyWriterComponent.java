@@ -23,8 +23,8 @@ import java.lang.reflect.Type;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.MessageBodyWriter;
 
-final class MessageBodyWriterProviderFactory extends MessageBodyProviderFactory<MessageBodyWriter<?>> {
-  MessageBodyWriterProviderFactory(final Class<MessageBodyWriter<?>> clazz, final MessageBodyWriter<?> singleton) throws IllegalAccessException, InstantiationException, InvocationTargetException {
+final class MessageBodyWriterComponent extends MessageBodyComponent<MessageBodyWriter<?>> {
+  MessageBodyWriterComponent(final Class<MessageBodyWriter<?>> clazz, final MessageBodyWriter<?> singleton) throws IllegalAccessException, InstantiationException, InvocationTargetException {
     super(clazz, singleton, MessageBodyWriter.class);
   }
 

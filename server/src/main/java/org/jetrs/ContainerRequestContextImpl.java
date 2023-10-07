@@ -132,7 +132,7 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> i
     return result;
   }
 
-  private ArrayList<MessageBodyProviderFactory<ReaderInterceptor>> readerInterceptorProviderFactories;
+  private ArrayList<MessageBodyComponent<ReaderInterceptor>> readerInterceptorProviderFactories;
 
   private HttpServletRequest httpServletRequest;
   private HttpServletResponse httpServletResponse;
@@ -213,7 +213,7 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> i
 
   private boolean paramConverterProviderCalled = false;
 
-  ArrayList<ProviderFactory<ParamConverterProvider>> getParamConverterProviderFactoryList() {
+  ArrayList<Component<ParamConverterProvider>> getParamConverterComponentList() {
     if (paramConverterProviderCalled)
       throw new IllegalStateException();
 
@@ -228,7 +228,7 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> i
       throw new IllegalStateException();
 
     preMatchRequestFilterCalled = true;
-    final ArrayList<ProviderFactory<ContainerRequestFilter>> preMatchContainerRequestFilterProviderFactories = runtimeContext.getPreMatchContainerRequestFilterProviderFactories();
+    final ArrayList<Component<ContainerRequestFilter>> preMatchContainerRequestFilterProviderFactories = runtimeContext.getPreMatchContainerRequestFilterProviderFactories();
     final int i$ = preMatchContainerRequestFilterProviderFactories.size();
     for (int i = 0; i < i$; ++i) // [RA]
       preMatchContainerRequestFilterProviderFactories.get(i).getSingletonOrFromRequestContext(this).filter(this);
@@ -241,13 +241,13 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> i
       throw new IllegalStateException();
 
     requestFilterCalled = true;
-    final ArrayList<ProviderFactory<ContainerRequestFilter>> containerRequestFilterProviderFactories = runtimeContext.getContainerRequestFilterProviderFactories();
+    final ArrayList<Component<ContainerRequestFilter>> containerRequestFilterProviderFactories = runtimeContext.getContainerRequestFilterProviderFactories();
     for (int i = 0, i$ = containerRequestFilterProviderFactories.size(); i < i$; ++i) // [RA]
       containerRequestFilterProviderFactories.get(i).getSingletonOrFromRequestContext(this).filter(this);
   }
 
   void filterContainerResponse() throws IOException {
-    final ArrayList<ProviderFactory<ContainerResponseFilter>> containerResponseFilterProviderFactories = runtimeContext.getContainerResponseFilterProviderFactories();
+    final ArrayList<Component<ContainerResponseFilter>> containerResponseFilterProviderFactories = runtimeContext.getContainerResponseFilterProviderFactories();
     for (int i = 0, i$ = containerResponseFilterProviderFactories.size(); i < i$; ++i) // [RA]
       containerResponseFilterProviderFactories.get(i).getSingletonOrFromRequestContext(this).filter(this, containerResponseContext);
   }

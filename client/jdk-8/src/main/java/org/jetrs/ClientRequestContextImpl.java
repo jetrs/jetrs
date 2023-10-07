@@ -72,7 +72,7 @@ abstract class ClientRequestContextImpl extends RequestContext<ClientRuntimeCont
   private static final Logger logger = LoggerFactory.getLogger(ClientRequestContextImpl.class);
 
   final ClientImpl client;
-  private final ArrayList<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorProviderFactories;
+  private final ArrayList<MessageBodyComponent<WriterInterceptor>> writerInterceptorProviderFactories;
   final URI uri;
   final String method;
   final HttpHeadersImpl requestHeaders;

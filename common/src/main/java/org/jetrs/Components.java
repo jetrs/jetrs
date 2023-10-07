@@ -25,59 +25,97 @@ import java.util.TreeSet;
 
 import org.libj.util.TransSet;
 
-class ComponentSet implements Cloneable, Serializable {
-  private static final Comparator<Component> comparator = new Comparator<Component>() {
+class Components implements Cloneable, Serializable {
+  // FIXME: I don't think sorting by priority here is necessary
+  private static final Comparator<Component<?>> comparator = new Comparator<Component<?>>() {
     @Override
-    public int compare(final Component o1, final Component o2) {
-      final int comparison = Integer.compare(o1.priority, o2.priority);
-      if (comparison != 0)
-        return comparison;
-
-      return o1.equals(o2) ? 0 : 1;
+    public int compare(final Component<?> o1, final Component<?> o2) {
+      final int c = Integer.compare(o1.priority, o2.priority);
+      return c != 0 ? c : o1.equals(o2) ? 0 : 1;
     }
   };
 
-  private TreeSet<Component> components = new TreeSet<>(comparator);
+  private TreeSet<Component<?>> classComponents;
+  private TreeSet<Component<?>> instanceComponents;
 
-  void add(final Component component) {
-    components.add(component);
+  void add(final Component<?> component) {
+    if (classComponents != null)
+      for (final Component<?> classComponent : classComponents)
+        if (classComponent.clazz.equals(component.clazz))
+          throw new IllegalArgumentException("A class component of class " + classComponent.clazz.getName() + " is already present in this configuration");
+
+    if (instanceComponents != null)
+      for (final Component<?> instanceComponent : instanceComponents)
+        if (instanceComponent.clazz.equals(component.clazz))
+          throw new IllegalArgumentException("An instance component of class " + instanceComponent.clazz.getName() + " is already present in this configuration");
+
+    if (component.isSingleton) {
+      if (instanceComponents == null)
+        instanceComponents = new TreeSet<>(comparator);
+
+      instanceComponents.add(component);
+    }
+    else {
+      if (classComponents == null)
+        classComponents = new TreeSet<>(comparator);
+
+      classComponents.add(component);
+    }
   }
 
   private Set<Class<?>> classes;
 
   Set<Class<?>> classes() {
-    return classes == null ? classes = new TransSet<>(components, c -> c.cls, null) : classes;
+    return classes != null ? classes : classComponents != null ? classes = new TransSet<>(classComponents, (final Component<?> c) -> c.clazz, null) : null;
   }
 
   private Set<Object> instances;
 
   Set<Object> instances() {
-    return instances == null ? instances = new TransSet<>(components, c -> c.instance, null) : instances;
+    return instances != null ? instances : instanceComponents != null ? instances = new TransSet<>(instanceComponents, (final Component<?> c) -> c.instance, null) : null;
   }
 
   boolean contains(final Class<?> componentClass) {
-    return classes().contains(componentClass);
+    if (classComponents.size() > 0)
+      for (final Component<?> classComponent : classComponents) // [S]
+        if (componentClass.equals(classComponent.clazz))
+          return true;
+
+    return false;
   }
 
   boolean contains(final Object component) {
-    return instances().contains(component);
+    if (component instanceof Class)
+      return contains((Class<?>)component);
+
+    if (instanceComponents.size() > 0)
+      for (final Component<?> instanceComponent : instanceComponents) // [S]
+        if (component.equals(instanceComponent.instance))
+          return true;
+
+    return false;
   }
 
   Map<Class<?>,Integer> getContracts(final Class<?> componentClass) {
-    if (components.size() > 0)
-      for (final Component component : components) // [S]
-        if (componentClass.equals(component.cls))
-          return component.contracts;
+    if (classComponents.size() > 0)
+      for (final Component<?> classComponent : classComponents) // [S]
+        if (componentClass.equals(classComponent.clazz))
+          return classComponent.contracts;
 
     return Collections.EMPTY_MAP;
   }
 
   @Override
   @SuppressWarnings("unchecked")
-  protected ComponentSet clone() {
+  protected Components clone() {
     try {
-      final ComponentSet clone = (ComponentSet)super.clone();
-      clone.components = (TreeSet<Component>)components.clone();
+      final Components clone = (Components)super.clone();
+      if (classComponents != null)
+        clone.classComponents = (TreeSet<Component<?>>)classComponents.clone();
+
+      if (instanceComponents != null)
+        clone.instanceComponents = (TreeSet<Component<?>>)instanceComponents.clone();
+
       clone.classes = null;
       clone.instances = null;
       return clone;

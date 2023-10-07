@@ -82,7 +82,7 @@ class ContainerResponseContextImpl extends InterceptorContextImpl implements Con
   private HttpHeadersImpl headers;
   private Response.StatusType status;
   private ContainerRequestContextImpl requestContext;
-  private ArrayList<MessageBodyProviderFactory<WriterInterceptor>> writerInterceptorProviderFactories;
+  private ArrayList<MessageBodyComponent<WriterInterceptor>> writerInterceptorProviderFactories;
 
   ContainerResponseContextImpl(final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse, final ContainerRequestContextImpl requestContext) {
     this.httpServletRequest = httpServletRequest;

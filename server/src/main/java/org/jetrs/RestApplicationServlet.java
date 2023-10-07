@@ -51,8 +51,6 @@ abstract class RestApplicationServlet extends RestHttpServlet {
 
   RestApplicationServlet(final Application application) {
     super(application);
-    if (application != null && !getClass().isAnnotationPresent(WebServlet.class))
-      throw new UnsupportedOperationException("@WebServlet annotation is missing");
   }
 
   @Override
