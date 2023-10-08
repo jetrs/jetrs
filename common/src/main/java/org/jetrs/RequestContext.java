@@ -33,11 +33,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
-import javax.inject.Singleton;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MediaType;
@@ -63,7 +60,7 @@ import org.slf4j.LoggerFactory;
  */
 abstract class RequestContext<R extends RuntimeContext> extends InterceptorContextImpl {
   private static final Logger logger = LoggerFactory.getLogger(RequestContext.class);
-  private static final Comparator<Constructor<?>> parameterCountComparator = Comparator.comparingInt(c -> -c.getParameterCount());
+  private static final Comparator<Constructor<?>> parameterCountComparator = Comparator.comparingInt((final Constructor<?> c) -> -c.getParameterCount());
   @SuppressWarnings("rawtypes")
   private static final HashMap<Class<?>,Constructor[]> classToConstructors = new HashMap<>();
 
@@ -226,10 +223,6 @@ abstract class RequestContext<R extends RuntimeContext> extends InterceptorConte
   }
 
   private static final Object[] NULL = {};
-  private static final Predicate<Field> injectableFieldPredicate = (final Field field) -> {
-    final int modifiers = field.getModifiers();
-    return !Modifier.isStatic(modifiers) && !Modifier.isFinal(modifiers);
-  };
   private Map<Class<?>,Object[]> contextInsances;
 
   @SuppressWarnings("unchecked")
@@ -254,27 +247,9 @@ abstract class RequestContext<R extends RuntimeContext> extends InterceptorConte
 
     final T instance = newInstanceSansFields(clazz, false);
     if (instance != null) {
-      final Field[] fields = Classes.getDeclaredFieldsDeep(instance.getClass(), injectableFieldPredicate);
+      final Field[] fields = Classes.getDeclaredFieldsDeep(clazz, Component.injectableFieldPredicate);
       final Field[] uninjectedFields = injectFields(instance, fields);
       contextInsances.put(clazz, new Object[] {instance, uninjectedFields});
-      if (clazz.isAnnotationPresent(Singleton.class)) { // Warn if this @Singleton has @Context fields
-        StringBuilder builder = null;
-        for (final Field field : fields) { // [A]
-          if (field.isAnnotationPresent(Context.class)) {
-            if (builder == null)
-              builder = new StringBuilder();
-
-            builder.append(", ").append(field.getName());
-          }
-        }
-
-        if (builder != null) {
-          builder.setCharAt(0, ':');
-          builder.setCharAt(1, ' ');
-          if (logger.isWarnEnabled()) { logger.warn("Class " + clazz.getName() + " with @Singleton annotation has @Context fields" + builder); }
-        }
-      }
-
       postConstruct(instance);
     }
     else {
@@ -300,7 +275,7 @@ abstract class RequestContext<R extends RuntimeContext> extends InterceptorConte
         final Annotation[] annotations = parameterAnnotations[i];
         final Annotation annotation = findInjectableAnnotation(annotations, isResource);
         if (annotation == null) {
-          if (logger.isWarnEnabled()) { logger.warn("Unsupported parameter type: " + parameter.getName() + " on: " + clazz.getName() + "(" + Arrays.stream(parameters).map(p -> p.getType().getSimpleName()).collect(Collectors.joining(",")) + ")"); }
+          if (logger.isWarnEnabled()) { logger.warn("Unsupported parameter " + parameter.getName() + " on " + constructor); }
           continue OUT;
         }
 

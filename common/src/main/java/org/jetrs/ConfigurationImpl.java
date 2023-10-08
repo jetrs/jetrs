@@ -16,7 +16,6 @@
 
 package org.jetrs;
 
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -29,7 +28,7 @@ import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Feature;
 
-class ConfigurationImpl implements Cloneable, Configuration, Serializable {
+class ConfigurationImpl implements Cloneable, Configuration {
   private final RuntimeType runtimeType;
   private Set<Class<?>> classes;
   private Set<Object> instances;

@@ -73,7 +73,11 @@ class ClientImpl implements Client, ConfigurableImpl<Client> {
         exceptionMapperProviderFactories);
 
       final Components components = configuration.getComponents();
-      bootstrap.init(components == null ? null : components.instances(), components == null ? null : components.classes(), null);
+      if (components != null)
+        bootstrap.init(components.instances(), components.classes(), null);
+      else
+        bootstrap.init(null, null, null);
+
       return new ClientRuntimeContext(configuration, readerInterceptorProviderFactories, writerInterceptorProviderFactories, messageBodyReaderProviderFactories, messageBodyWriterProviderFactories, exceptionMapperProviderFactories);
     }
     catch (final IllegalAccessException e) {

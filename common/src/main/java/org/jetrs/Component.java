@@ -18,16 +18,19 @@ package org.jetrs;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Predicate;
 
 import javax.annotation.Priority;
 import javax.inject.Singleton;
 import javax.ws.rs.Priorities;
+import javax.ws.rs.core.Context;
 
 import org.libj.lang.Classes;
 import org.slf4j.Logger;
@@ -62,10 +65,11 @@ class Component<T> {
     if (contracts == null)
       return null;
 
-    if (contracts.size() == 0)
+    final int size = contracts.size();
+    if (size == 0)
       return Collections.EMPTY_MAP;
 
-    final HashMap<Class<?>,Integer> assignableContracts = new HashMap<>(contracts.size());
+    final HashMap<Class<?>,Integer> assignableContracts = new HashMap<>(size);
     for (final Map.Entry<Class<?>,Integer> entry : contracts.entrySet()) // [S]
       if (checkAssignable(componentClass, entry.getKey()))
         assignableContracts.put(entry.getKey(), entry.getValue());
@@ -78,7 +82,11 @@ class Component<T> {
     return typeArguments.length > 0 && typeArguments[0] instanceof Class ? (Class<?>)typeArguments[0] : defaultValue;
   }
 
-  private final AtomicBoolean checkedInstanceAnnotation = new AtomicBoolean(false);
+  static final Predicate<Field> injectableFieldPredicate = (final Field field) -> {
+    final int modifiers = field.getModifiers();
+    return !Modifier.isStatic(modifiers) && !Modifier.isFinal(modifiers);
+  };
+
   final Class<T> clazz;
   final T instance;
   private T singleton;
@@ -104,11 +112,59 @@ class Component<T> {
 
   private Component(final Class<T> clazz, final T instance, final Map<Class<?>,Integer> contracts, final int priority) {
     this.clazz = clazz;
-    this.instance = instance;
-    this.singleton = instance;
-    this.isSingleton = instance != null;
     this.contracts = contracts;
     this.priority = priority;
+
+    // Check whether this class has @Singleton annotation. If it also has @Context fields, then it cannot be a singleton.
+    final Field[] fields = Classes.getDeclaredFieldsDeep(clazz, injectableFieldPredicate);
+    if (logger.isWarnEnabled()) {
+      StringBuilder log = null;
+      for (final Field field : fields) { // [A]
+        if (field.isAnnotationPresent(Context.class)) {
+          if (log == null)
+            log = new StringBuilder();
+
+          log.append(", ").append(field.getName());
+        }
+      }
+
+      final boolean hasSingletonAnnotation = clazz.isAnnotationPresent(Singleton.class);
+      if (log != null) {
+        log.setCharAt(0, ':');
+        log.setCharAt(1, ' ');
+        if (hasSingletonAnnotation)
+          logger.warn("Ignoring @Singleton annotation for component class " + clazz.getName() + " due to presence of @Context fields" + log);
+        else if (instance != null)
+          logger.warn("Considering instance of component class " + clazz.getName() + " as non-singleton due to presence of @Context fields" + log);
+
+        this.instance = null;
+        this.singleton = null;
+        this.isSingleton = false;
+      }
+      else {
+        this.instance = instance;
+        this.singleton = instance;
+        if ((this.isSingleton = instance != null) && !hasSingletonAnnotation && !clazz.isAnonymousClass())
+          logger.warn("Instance of component class " + clazz.getName() + " is missing @Singleton annotation");
+      }
+    }
+    else {
+      boolean hasContextFields = false;
+      for (final Field field : fields) // [A]
+        if (hasContextFields = field.isAnnotationPresent(Context.class))
+          break;
+
+      if (hasContextFields) {
+        this.instance = null;
+        this.singleton = null;
+        this.isSingleton = false;
+      }
+      else {
+        this.instance = instance;
+        this.singleton = instance;
+        this.isSingleton = instance != null;
+      }
+    }
   }
 
   final Class<T> getProviderClass() {
@@ -124,19 +180,6 @@ class Component<T> {
       return singleton;
 
     try {
-      if (!checkedInstanceAnnotation.get()) {
-        synchronized (checkedInstanceAnnotation) {
-          if (singleton != null)
-            return singleton;
-
-          if (!checkedInstanceAnnotation.get()) {
-            checkedInstanceAnnotation.set(true);
-            if (clazz.isAnnotationPresent(Singleton.class))
-              return this.singleton = requestContext.getProviderInstance(clazz);
-          }
-        }
-      }
-
       return requestContext.getProviderInstance(clazz);
     }
     catch (final IOException e) {

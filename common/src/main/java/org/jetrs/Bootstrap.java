@@ -29,7 +29,6 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
@@ -60,8 +59,9 @@ class Bootstrap<R extends ArrayList<? extends Comparable<?>>> {
     return true;
   }
 
-  private static final boolean hasContextFields(final Class<?> cls) {
-    for (final Field field : Classes.getDeclaredFieldsDeep(cls)) // [F]
+  private static final boolean hasContextFields(final Class<?> clazz) {
+    final Field[] fields = Classes.getDeclaredFieldsDeep(clazz, Component.injectableFieldPredicate);
+    for (final Field field : fields) // [A]
       if (field.isAnnotationPresent(Context.class))
         return true;
 
@@ -148,9 +148,9 @@ class Bootstrap<R extends ArrayList<? extends Comparable<?>>> {
 
         // Don't add the class if a subclass of it is already present in `classes`
         if (classes.size() > 0)
-          for (final Class<?> cls : classes) // [S]
-            if (cls != null)
-              if (e.isAssignableFrom(cls))
+          for (final Class<?> clazz : classes) // [S]
+            if (clazz != null)
+              if (e.isAssignableFrom(clazz))
                 return false;
 
         return super.add(e);
@@ -208,15 +208,15 @@ class Bootstrap<R extends ArrayList<? extends Comparable<?>>> {
       if (classes == null) {
         final HashSet<Class<?>>[] resourceClasses = new HashSet[1];
         final HashSet<Class<?>> initedClasses = new HashSet<>();
-        final Predicate<Class<?>> initialize = cls -> {
-          if (!Modifier.isAbstract(cls.getModifiers()) && !initedClasses.contains(cls)) {
+        final Predicate<Class<?>> initialize = (final Class<?> clazz) -> {
+          if (!Modifier.isAbstract(clazz.getModifiers()) && !initedClasses.contains(clazz)) {
             try {
-              if (addResourceOrProvider(afterAdds, resourceInfos, cls, null, true)) {
+              if (addResourceOrProvider(afterAdds, resourceInfos, clazz, null, true)) {
                 HashSet<Class<?>> resourceClass1 = resourceClasses[1];
                 if (resourceClass1 == null)
                   resourceClass1 = resourceClasses[1] = new HashSet<>(2);
 
-                resourceClass1.add(cls);
+                resourceClass1.add(clazz);
               }
             }
             catch (final IllegalAccessException | InstantiationException e) {
@@ -227,7 +227,7 @@ class Bootstrap<R extends ArrayList<? extends Comparable<?>>> {
             }
           }
 
-          initedClasses.add(cls);
+          initedClasses.add(clazz);
           return false;
         };
 
@@ -272,22 +272,15 @@ class Bootstrap<R extends ArrayList<? extends Comparable<?>>> {
     final int noSingletons = singletons.size();
     final boolean hasSingletons = noSingletons > 0;
 
-    if (hasSingletons) {
-      for (final Object singleton : singletons) { // [S]
-        if (singleton != null) {
-          final Class<? extends Object> cls = singleton.getClass();
-          if (logger.isWarnEnabled() && !cls.isAnnotationPresent(Singleton.class))
-            logger.warn("Object of class " + cls.getName() + " without @Singleton annotation is member of Application.getSingletons()");
-
-          addResourceOrProvider(afterAdds, resourceInfos, cls, singleton, false);
-        }
-      }
-    }
+    if (hasSingletons)
+      for (final Object singleton : singletons) // [S]
+        if (singleton != null)
+          addResourceOrProvider(afterAdds, resourceInfos, singleton.getClass(), singleton, false);
 
     if (hasClasses)
-      for (final Class<?> cls : classes) // [S]
-        if (cls != null)
-          addResourceOrProvider(afterAdds, resourceInfos, cls, null, false);
+      for (final Class<?> clazz : classes) // [S]
+        if (clazz != null)
+          addResourceOrProvider(afterAdds, resourceInfos, clazz, null, false);
 
     if (afterAdds.size() > 0) {
       final Set<Class<?>> resourceClasses;

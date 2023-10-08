@@ -16,7 +16,6 @@
 
 package org.jetrs;
 
-import java.io.Serializable;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Map;
@@ -25,7 +24,7 @@ import java.util.TreeSet;
 
 import org.libj.util.TransSet;
 
-class Components implements Cloneable, Serializable {
+class Components implements Cloneable {
   // FIXME: I don't think sorting by priority here is necessary
   private static final Comparator<Component<?>> comparator = new Comparator<Component<?>>() {
     @Override
