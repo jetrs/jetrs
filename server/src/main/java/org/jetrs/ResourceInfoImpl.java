@@ -128,11 +128,11 @@ class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImpl> {
 
   private DefaultValueImpl[] defaultValues;
 
-  void initDefaultValues(final ArrayList<Component<ParamConverterProvider>> paramConverterProviderFactories) {
+  void initDefaultValues(final ArrayList<Component<ParamConverterProvider>> paramConverterComponents) throws IOException {
     if (defaultValues != null)
       throw new IllegalStateException();
 
-    resourceInfos.initDefaultValues(resourceClass, paramConverterProviderFactories);
+    resourceInfos.initDefaultValues(resourceClass, paramConverterComponents);
     final int length = methodParameters.length;
     if (length == 0) {
       defaultValues = DefaultValueImpl.EMPTY_ARRAY;
@@ -144,7 +144,7 @@ class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImpl> {
       final Annotation[] parameterAnnotations = methodParameterAnnotations[i];
       for (final Annotation parameterAnnotation : parameterAnnotations) { // [A]
         if (parameterAnnotation instanceof DefaultValue) {
-          defaultValues[i] = ResourceInfos.digestDefaultValue((DefaultValue)parameterAnnotation, methodParameterTypes[i], methodGenericParameterTypes[i], parameterAnnotations, paramConverterProviderFactories);
+          defaultValues[i] = ResourceInfos.digestDefaultValue((DefaultValue)parameterAnnotation, methodParameterTypes[i], methodGenericParameterTypes[i], parameterAnnotations, paramConverterComponents);
           break;
         }
       }

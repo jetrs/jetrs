@@ -27,26 +27,26 @@ import javax.ws.rs.ext.WriterInterceptor;
 
 abstract class RuntimeContext {
   private final Configuration configuration;
-  final ArrayList<MessageBodyComponent<ReaderInterceptor>> readerInterceptorProviderFactories;
-  final ArrayList<MessageBodyComponent<WriterInterceptor>> writerInterceptorProviderFactories;
-  final ArrayList<MessageBodyComponent<MessageBodyReader<?>>> messageBodyReaderProviderFactories;
-  final ArrayList<MessageBodyComponent<MessageBodyWriter<?>>> messageBodyWriterProviderFactories;
-  final ArrayList<TypeComponent<ExceptionMapper<?>>> exceptionMapperProviderFactories;
+  final ArrayList<MessageBodyComponent<ReaderInterceptor>> readerInterceptorComponents;
+  final ArrayList<MessageBodyComponent<WriterInterceptor>> writerInterceptorComponents;
+  final ArrayList<MessageBodyComponent<MessageBodyReader<?>>> messageBodyReaderComponents;
+  final ArrayList<MessageBodyComponent<MessageBodyWriter<?>>> messageBodyWriterComponents;
+  final ArrayList<TypeComponent<ExceptionMapper<?>>> exceptionMapperComponents;
 
   RuntimeContext(
     final Configuration configuration,
-    final ArrayList<MessageBodyComponent<ReaderInterceptor>> readerInterceptorProviderFactories,
-    final ArrayList<MessageBodyComponent<WriterInterceptor>> writerInterceptorProviderFactories,
-    final ArrayList<MessageBodyComponent<MessageBodyReader<?>>> messageBodyReaderProviderFactories,
-    final ArrayList<MessageBodyComponent<MessageBodyWriter<?>>> messageBodyWriterProviderFactories,
-    final ArrayList<TypeComponent<ExceptionMapper<?>>> exceptionMapperProviderFactories
+    final ArrayList<MessageBodyComponent<ReaderInterceptor>> readerInterceptorComponents,
+    final ArrayList<MessageBodyComponent<WriterInterceptor>> writerInterceptorComponents,
+    final ArrayList<MessageBodyComponent<MessageBodyReader<?>>> messageBodyReaderComponents,
+    final ArrayList<MessageBodyComponent<MessageBodyWriter<?>>> messageBodyWriterComponents,
+    final ArrayList<TypeComponent<ExceptionMapper<?>>> exceptionMapperComponents
   ) {
     this.configuration = configuration;
-    this.readerInterceptorProviderFactories = readerInterceptorProviderFactories;
-    this.writerInterceptorProviderFactories = writerInterceptorProviderFactories;
-    this.messageBodyReaderProviderFactories = messageBodyReaderProviderFactories;
-    this.messageBodyWriterProviderFactories = messageBodyWriterProviderFactories;
-    this.exceptionMapperProviderFactories = exceptionMapperProviderFactories;
+    this.readerInterceptorComponents = readerInterceptorComponents;
+    this.writerInterceptorComponents = writerInterceptorComponents;
+    this.messageBodyReaderComponents = messageBodyReaderComponents;
+    this.messageBodyWriterComponents = messageBodyWriterComponents;
+    this.exceptionMapperComponents = exceptionMapperComponents;
   }
 
   abstract RequestContext<?> localRequestContext();
@@ -55,23 +55,23 @@ abstract class RuntimeContext {
     return configuration;
   }
 
-  ArrayList<MessageBodyComponent<ReaderInterceptor>> getReaderInterceptorProviderFactories() {
-    return readerInterceptorProviderFactories;
+  ArrayList<MessageBodyComponent<ReaderInterceptor>> getReaderInterceptorComponents() {
+    return readerInterceptorComponents;
   }
 
-  ArrayList<MessageBodyComponent<WriterInterceptor>> getWriterInterceptorProviderFactories() {
-    return writerInterceptorProviderFactories;
+  ArrayList<MessageBodyComponent<WriterInterceptor>> getWriterInterceptorComponents() {
+    return writerInterceptorComponents;
   }
 
-  ArrayList<MessageBodyComponent<MessageBodyReader<?>>> getMessageBodyReaderProviderFactories() {
-    return messageBodyReaderProviderFactories;
+  ArrayList<MessageBodyComponent<MessageBodyReader<?>>> getMessageBodyReaderComponents() {
+    return messageBodyReaderComponents;
   }
 
-  ArrayList<MessageBodyComponent<MessageBodyWriter<?>>> getMessageBodyWriterProviderFactories() {
-    return messageBodyWriterProviderFactories;
+  ArrayList<MessageBodyComponent<MessageBodyWriter<?>>> getMessageBodyWriterComponents() {
+    return messageBodyWriterComponents;
   }
 
-  ArrayList<TypeComponent<ExceptionMapper<?>>> getExceptionMapperProviderFactories() {
-    return exceptionMapperProviderFactories;
+  ArrayList<TypeComponent<ExceptionMapper<?>>> getExceptionMapperComponents() {
+    return exceptionMapperComponents;
   }
 }

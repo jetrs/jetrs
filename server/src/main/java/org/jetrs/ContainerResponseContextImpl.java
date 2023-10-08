@@ -82,14 +82,14 @@ class ContainerResponseContextImpl extends InterceptorContextImpl implements Con
   private HttpHeadersImpl headers;
   private Response.StatusType status;
   private ContainerRequestContextImpl requestContext;
-  private ArrayList<MessageBodyComponent<WriterInterceptor>> writerInterceptorProviderFactories;
+  private ArrayList<MessageBodyComponent<WriterInterceptor>> writerInterceptorComponents;
 
   ContainerResponseContextImpl(final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse, final ContainerRequestContextImpl requestContext) {
     this.httpServletRequest = httpServletRequest;
     this.headers = new HttpHeadersImpl(httpServletResponse);
     this.status = Responses.from(httpServletResponse.getStatus());
     this.requestContext = requestContext;
-    this.writerInterceptorProviderFactories = requestContext.getWriterInterceptorFactoryList();
+    this.writerInterceptorComponents = requestContext.getWriterInterceptorComponents();
   }
 
   @Override
@@ -285,9 +285,9 @@ class ContainerResponseContextImpl extends InterceptorContextImpl implements Con
   @Override
   @SuppressWarnings("unchecked")
   public void proceed() throws IOException {
-    final int size = writerInterceptorProviderFactories.size();
+    final int size = writerInterceptorComponents.size();
     if (++interceptorIndex < size) {
-      writerInterceptorProviderFactories.get(interceptorIndex).getSingletonOrFromRequestContext(requestContext).aroundWriteTo(this);
+      writerInterceptorComponents.get(interceptorIndex).getSingletonOrFromRequestContext(requestContext).aroundWriteTo(this);
     }
     else if (interceptorIndex == size) {
       // This is deliberately not using try-with-resource, because we don't want to close the OutputStream in case there is an exception
@@ -555,6 +555,6 @@ class ContainerResponseContextImpl extends InterceptorContextImpl implements Con
     messageBodyWriter = null;
     requestContext = null;
     status = null;
-    writerInterceptorProviderFactories = null;
+    writerInterceptorComponents = null;
   }
 }

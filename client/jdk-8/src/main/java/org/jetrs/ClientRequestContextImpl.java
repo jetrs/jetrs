@@ -72,7 +72,7 @@ abstract class ClientRequestContextImpl extends RequestContext<ClientRuntimeCont
   private static final Logger logger = LoggerFactory.getLogger(ClientRequestContextImpl.class);
 
   final ClientImpl client;
-  private final ArrayList<MessageBodyComponent<WriterInterceptor>> writerInterceptorProviderFactories;
+  private final ArrayList<MessageBodyComponent<WriterInterceptor>> writerInterceptorComponents;
   final URI uri;
   final String method;
   final HttpHeadersImpl requestHeaders;
@@ -87,7 +87,7 @@ abstract class ClientRequestContextImpl extends RequestContext<ClientRuntimeCont
   ClientRequestContextImpl(final ClientImpl client, final ClientRuntimeContext runtimeContext, final URI uri, final String method, final HttpHeadersImpl requestHeaders, final ArrayList<Cookie> cookies, final CacheControl cacheControl, final Entity<?> entity, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final HashMap<String,Object> properties, final long connectTimeout, final long readTimeout) {
     super(runtimeContext, new RequestImpl(method));
     this.client = client;
-    this.writerInterceptorProviderFactories = getWriterInterceptorFactoryList();
+    this.writerInterceptorComponents = getWriterInterceptorComponents();
     this.uri = uri;
     this.method = method;
     this.requestHeaders = requestHeaders;
@@ -251,9 +251,9 @@ abstract class ClientRequestContextImpl extends RequestContext<ClientRuntimeCont
   @Override
   @SuppressWarnings("unchecked")
   public void proceed() throws IOException, WebApplicationException {
-    final int size = writerInterceptorProviderFactories.size();
+    final int size = writerInterceptorComponents.size();
     if (++interceptorIndex < size) {
-      writerInterceptorProviderFactories.get(interceptorIndex).getSingletonOrFromRequestContext(this).aroundWriteTo(this);
+      writerInterceptorComponents.get(interceptorIndex).getSingletonOrFromRequestContext(this).aroundWriteTo(this);
     }
     else if (interceptorIndex == size) {
       try (final OutputStream entityStream = getOutputStream()) {

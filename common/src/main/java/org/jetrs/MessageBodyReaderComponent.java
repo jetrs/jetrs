@@ -16,6 +16,7 @@
 
 package org.jetrs;
 
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
@@ -31,7 +32,7 @@ final class MessageBodyReaderComponent extends MessageBodyComponent<MessageBodyR
   }
 
   @Override
-  public MediaType[] getCompatibleMediaType(final RequestContext<?> requestContext, final Class<?> type, final Type genericType, final Annotation[] annotations, MediaType mediaType) {
+  public MediaType[] getCompatibleMediaType(final RequestContext<?> requestContext, final Class<?> type, final Type genericType, final Annotation[] annotations, MediaType mediaType) throws IOException {
     // SPEC: 4.2.1 Message Body Reader
     if (mediaType == null)
       mediaType = MediaType.APPLICATION_OCTET_STREAM_TYPE;

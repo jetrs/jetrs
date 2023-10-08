@@ -59,18 +59,18 @@ class ClientImpl implements Client, ConfigurableImpl<Client> {
 
   private ClientRuntimeContext newClientRuntimeContext() {
     try {
-      final ArrayList<MessageBodyComponent<ReaderInterceptor>> readerInterceptorProviderFactories = new ArrayList<>();
-      final ArrayList<MessageBodyComponent<WriterInterceptor>> writerInterceptorProviderFactories = new ArrayList<>();
-      final ArrayList<MessageBodyComponent<MessageBodyReader<?>>> messageBodyReaderProviderFactories = new ArrayList<>();
-      final ArrayList<MessageBodyComponent<MessageBodyWriter<?>>> messageBodyWriterProviderFactories = new ArrayList<>();
-      final ArrayList<TypeComponent<ExceptionMapper<?>>> exceptionMapperProviderFactories = new ArrayList<>();
+      final ArrayList<MessageBodyComponent<ReaderInterceptor>> readerInterceptorComponents = new ArrayList<>();
+      final ArrayList<MessageBodyComponent<WriterInterceptor>> writerInterceptorComponents = new ArrayList<>();
+      final ArrayList<MessageBodyComponent<MessageBodyReader<?>>> messageBodyReaderComponents = new ArrayList<>();
+      final ArrayList<MessageBodyComponent<MessageBodyWriter<?>>> messageBodyWriterComponents = new ArrayList<>();
+      final ArrayList<TypeComponent<ExceptionMapper<?>>> exceptionMapperComponents = new ArrayList<>();
 
       final Bootstrap<?> bootstrap = new Bootstrap<>(
-        readerInterceptorProviderFactories,
-        writerInterceptorProviderFactories,
-        messageBodyReaderProviderFactories,
-        messageBodyWriterProviderFactories,
-        exceptionMapperProviderFactories);
+        readerInterceptorComponents,
+        writerInterceptorComponents,
+        messageBodyReaderComponents,
+        messageBodyWriterComponents,
+        exceptionMapperComponents);
 
       final Components components = configuration.getComponents();
       if (components != null)
@@ -78,7 +78,7 @@ class ClientImpl implements Client, ConfigurableImpl<Client> {
       else
         bootstrap.init(null, null, null);
 
-      return new ClientRuntimeContext(configuration, readerInterceptorProviderFactories, writerInterceptorProviderFactories, messageBodyReaderProviderFactories, messageBodyWriterProviderFactories, exceptionMapperProviderFactories);
+      return new ClientRuntimeContext(configuration, readerInterceptorComponents, writerInterceptorComponents, messageBodyReaderComponents, messageBodyWriterComponents, exceptionMapperComponents);
     }
     catch (final IllegalAccessException e) {
       throw new RuntimeException(e);

@@ -16,10 +16,12 @@
 
 package org.jetrs;
 
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 
+import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.ExceptionMapper;
@@ -35,34 +37,39 @@ class ProvidersImpl implements Providers {
   }
 
   private <T> Object getProvider(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final ArrayList<? extends MessageBodyComponent<?>> factories, final boolean asHolder) {
-    for (int i = 0, i$ = factories.size(); i < i$; ++i) { // [RA]
-      final MessageBodyComponent<?> factory = factories.get(i);
-      final MediaType[] compatibleMediaType = factory.getCompatibleMediaType(requestContext, type, genericType, annotations, mediaType);
-      if (compatibleMediaType.length > 0) {
-        final Object provider = factory.getSingletonOrFromRequestContext(requestContext);
-        return asHolder ? new MessageBodyProviderHolder<>(provider, compatibleMediaType) : provider;
+    try {
+      for (int i = 0, i$ = factories.size(); i < i$; ++i) { // [RA]
+        final MessageBodyComponent<?> factory = factories.get(i);
+        final MediaType[] compatibleMediaType = factory.getCompatibleMediaType(requestContext, type, genericType, annotations, mediaType);
+        if (compatibleMediaType.length > 0) {
+          final Object provider = factory.getSingletonOrFromRequestContext(requestContext);
+          return asHolder ? new MessageBodyProviderHolder<>(provider, compatibleMediaType) : provider;
+        }
       }
-    }
 
-    return null;
+      return null;
+    }
+    catch (final IOException e) {
+      throw new InternalServerErrorException(e);
+    }
   }
 
   @Override
   @SuppressWarnings("unchecked")
   public <T> MessageBodyReader<T> getMessageBodyReader(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
-    return (MessageBodyReader<T>)getProvider(type, genericType, annotations, mediaType, requestContext.getMessageBodyReaderFactoryList(), false);
+    return (MessageBodyReader<T>)getProvider(type, genericType, annotations, mediaType, requestContext.getMessageBodyReaderComponents(), false);
   }
 
   @Override
   @SuppressWarnings("unchecked")
   public <T> MessageBodyWriter<T> getMessageBodyWriter(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
-    return (MessageBodyWriter<T>)getProvider(type, genericType, annotations, mediaType, requestContext.getMessageBodyWriterFactoryList(), false);
+    return (MessageBodyWriter<T>)getProvider(type, genericType, annotations, mediaType, requestContext.getMessageBodyWriterComponents(), false);
   }
 
   @SuppressWarnings("unchecked")
   <T> MessageBodyProviderHolder<T> getMessageBodyReader(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType[] mediaTypes) {
     for (final MediaType mediaType : mediaTypes) { // [A]
-      final Object provider = getProvider(type, genericType, annotations, mediaType, requestContext.getMessageBodyReaderFactoryList(), true);
+      final Object provider = getProvider(type, genericType, annotations, mediaType, requestContext.getMessageBodyReaderComponents(), true);
       if (provider != null)
         return (MessageBodyProviderHolder<T>)provider;
     }
@@ -73,7 +80,7 @@ class ProvidersImpl implements Providers {
   @SuppressWarnings("unchecked")
   <T> MessageBodyProviderHolder<T> getMessageBodyWriter(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType[] mediaTypes) {
     for (final MediaType mediaType : mediaTypes) { // [A]
-      final Object provider = getProvider(type, genericType, annotations, mediaType, requestContext.getMessageBodyWriterFactoryList(), true);
+      final Object provider = getProvider(type, genericType, annotations, mediaType, requestContext.getMessageBodyWriterComponents(), true);
       if (provider != null)
         return (MessageBodyProviderHolder<T>)provider;
     }
@@ -84,14 +91,19 @@ class ProvidersImpl implements Providers {
   @Override
   @SuppressWarnings("unchecked")
   public <T extends Throwable> ExceptionMapper<T> getExceptionMapper(final Class<T> type) {
-    final ArrayList<TypeComponent<ExceptionMapper<?>>> factories = requestContext.getExceptionMapperComponentList();
-    for (int i = 0, i$ = factories.size(); i < i$; ++i) { // [RA]
-      final TypeComponent<ExceptionMapper<?>> factory = factories.get(i);
-      if (factory.getType().isAssignableFrom(type))
-        return (ExceptionMapper<T>)factory.getSingletonOrFromRequestContext(requestContext);
-    }
+    try {
+      final ArrayList<TypeComponent<ExceptionMapper<?>>> components = requestContext.getExceptionMapperComponents();
+      for (int i = 0, i$ = components.size(); i < i$; ++i) { // [RA]
+        final TypeComponent<ExceptionMapper<?>> factory = components.get(i);
+        if (factory.getType().isAssignableFrom(type))
+          return (ExceptionMapper<T>)factory.getSingletonOrFromRequestContext(requestContext);
+      }
 
-    return null;
+      return null;
+    }
+    catch (final IOException e) {
+      throw new InternalServerErrorException(e);
+    }
   }
 
   @Override

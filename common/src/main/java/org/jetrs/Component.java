@@ -17,7 +17,6 @@
 package org.jetrs;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
@@ -175,15 +174,12 @@ class Component<T> {
     return priority;
   }
 
-  final T getSingletonOrFromRequestContext(final RequestContext<?> requestContext) {
+  final T getSingletonOrFromRequestContext(final RequestContext<?> requestContext) throws IOException {
     if (singleton != null || requestContext == null)
       return singleton;
 
     try {
       return requestContext.getProviderInstance(clazz);
-    }
-    catch (final IOException e) {
-      throw new UncheckedIOException(e);
     }
     catch (final IllegalAccessException | InstantiationException e) {
       throw new ProviderInstantiationException(e);

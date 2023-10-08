@@ -17,7 +17,6 @@
 package org.jetrs;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -45,15 +44,9 @@ class FormServletInputStream extends FilterServletInputStream {
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
-  MultivaluedArrayHashMap<String,String> getFormParameterMap(final boolean decoded) {
-    if (formParameterEncodedMap == null) {
-      try {
-        formParameterEncodedMap = EntityUtil.readFormParamsEncoded(in, getCharacterEncoding());
-      }
-      catch (final IOException e) {
-        throw new UncheckedIOException(e);
-      }
-    }
+  MultivaluedArrayHashMap<String,String> getFormParameterMap(final boolean decoded) throws IOException {
+    if (formParameterEncodedMap == null)
+      formParameterEncodedMap = EntityUtil.readFormParamsEncoded(in, getCharacterEncoding());
 
     if (!decoded)
       return formParameterEncodedMap;

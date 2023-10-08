@@ -33,10 +33,10 @@ import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
 
 class ServerRuntimeContext extends RuntimeContext {
-  private final ArrayList<Component<ParamConverterProvider>> paramConverterProviderFactories;
-  private final ArrayList<Component<ContainerRequestFilter>> preMatchContainerRequestFilterProviderFactories;
-  private final ArrayList<Component<ContainerRequestFilter>> containerRequestFilterProviderFactories;
-  private final ArrayList<Component<ContainerResponseFilter>> containerResponseFilterProviderFactories;
+  private final ArrayList<Component<ParamConverterProvider>> paramConverterComponents;
+  private final ArrayList<Component<ContainerRequestFilter>> preMatchContainerRequestFilterComponents;
+  private final ArrayList<Component<ContainerRequestFilter>> containerRequestFilterComponents;
+  private final ArrayList<Component<ContainerResponseFilter>> containerResponseFilterComponents;
 
   private final ServletConfig servletConfig;
   private final ServletContext servletContext;
@@ -44,25 +44,25 @@ class ServerRuntimeContext extends RuntimeContext {
   private final ArrayList<ResourceInfoImpl> resourceInfos;
 
   ServerRuntimeContext(
-    final ArrayList<MessageBodyComponent<ReaderInterceptor>> readerInterceptorProviderFactories,
-    final ArrayList<MessageBodyComponent<WriterInterceptor>> writerInterceptorProviderFactories,
-    final ArrayList<MessageBodyComponent<MessageBodyReader<?>>> messageBodyReaderProviderFactories,
-    final ArrayList<MessageBodyComponent<MessageBodyWriter<?>>> messageBodyWriterProviderFactories,
-    final ArrayList<TypeComponent<ExceptionMapper<?>>> exceptionMapperProviderFactories,
-    final ArrayList<Component<ParamConverterProvider>> paramConverterProviderFactories,
-    final ArrayList<Component<ContainerRequestFilter>> preMatchContainerRequestFilterProviderFactories,
-    final ArrayList<Component<ContainerRequestFilter>> containerRequestFilterProviderFactories,
-    final ArrayList<Component<ContainerResponseFilter>> containerResponseFilterProviderFactories,
+    final ArrayList<MessageBodyComponent<ReaderInterceptor>> readerInterceptorComponents,
+    final ArrayList<MessageBodyComponent<WriterInterceptor>> writerInterceptorComponents,
+    final ArrayList<MessageBodyComponent<MessageBodyReader<?>>> messageBodyReaderComponents,
+    final ArrayList<MessageBodyComponent<MessageBodyWriter<?>>> messageBodyWriterComponents,
+    final ArrayList<TypeComponent<ExceptionMapper<?>>> exceptionMapperComponents,
+    final ArrayList<Component<ParamConverterProvider>> paramConverterComponents,
+    final ArrayList<Component<ContainerRequestFilter>> preMatchContainerRequestFilterComponents,
+    final ArrayList<Component<ContainerRequestFilter>> containerRequestFilterComponents,
+    final ArrayList<Component<ContainerResponseFilter>> containerResponseFilterComponents,
     final ServletConfig servletConfig,
     final ServletContext servletContext,
     final Application application,
     final ArrayList<ResourceInfoImpl> resourceInfos
   ) {
-    super(new ConfigurationImpl(application), readerInterceptorProviderFactories, writerInterceptorProviderFactories, messageBodyReaderProviderFactories, messageBodyWriterProviderFactories, exceptionMapperProviderFactories);
-    this.paramConverterProviderFactories = paramConverterProviderFactories;
-    this.preMatchContainerRequestFilterProviderFactories = preMatchContainerRequestFilterProviderFactories;
-    this.containerRequestFilterProviderFactories = containerRequestFilterProviderFactories;
-    this.containerResponseFilterProviderFactories = containerResponseFilterProviderFactories;
+    super(new ConfigurationImpl(application), readerInterceptorComponents, writerInterceptorComponents, messageBodyReaderComponents, messageBodyWriterComponents, exceptionMapperComponents);
+    this.paramConverterComponents = paramConverterComponents;
+    this.preMatchContainerRequestFilterComponents = preMatchContainerRequestFilterComponents;
+    this.containerRequestFilterComponents = containerRequestFilterComponents;
+    this.containerResponseFilterComponents = containerResponseFilterComponents;
     this.resourceInfos = resourceInfos;
     this.servletConfig = servletConfig;
     this.servletContext = servletContext;
@@ -85,20 +85,20 @@ class ServerRuntimeContext extends RuntimeContext {
     return resourceInfos;
   }
 
-  ArrayList<Component<ParamConverterProvider>> getParamConverterProviderFactories() {
-    return paramConverterProviderFactories;
+  ArrayList<Component<ParamConverterProvider>> getParamConverterComponents() {
+    return paramConverterComponents;
   }
 
-  ArrayList<Component<ContainerRequestFilter>> getPreMatchContainerRequestFilterProviderFactories() {
-    return preMatchContainerRequestFilterProviderFactories;
+  ArrayList<Component<ContainerRequestFilter>> getPreMatchContainerRequestFilterComponents() {
+    return preMatchContainerRequestFilterComponents;
   }
 
-  ArrayList<Component<ContainerRequestFilter>> getContainerRequestFilterProviderFactories() {
-    return containerRequestFilterProviderFactories;
+  ArrayList<Component<ContainerRequestFilter>> getContainerRequestFilterComponents() {
+    return containerRequestFilterComponents;
   }
 
-  ArrayList<Component<ContainerResponseFilter>> getContainerResponseFilterProviderFactories() {
-    return containerResponseFilterProviderFactories;
+  ArrayList<Component<ContainerResponseFilter>> getContainerResponseFilterComponents() {
+    return containerResponseFilterComponents;
   }
 
   private final ThreadLocal<ContainerRequestContextImpl> threadLocalRequestContext = new ThreadLocal<>();

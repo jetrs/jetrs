@@ -89,43 +89,43 @@ abstract class RestHttpServlet extends HttpServlet {
     }
 
     final ResourceInfos resourceInfos = new ResourceInfos();
-    final ArrayList<MessageBodyComponent<ReaderInterceptor>> readerInterceptorProviderFactories = new ArrayList<>();
-    final ArrayList<MessageBodyComponent<WriterInterceptor>> writerInterceptorProviderFactories = new ArrayList<>();
-    final ArrayList<MessageBodyComponent<MessageBodyReader<?>>> messageBodyReaderProviderFactories = new ArrayList<>();
-    final ArrayList<MessageBodyComponent<MessageBodyWriter<?>>> messageBodyWriterProviderFactories = new ArrayList<>();
-    final ArrayList<TypeComponent<ExceptionMapper<?>>> exceptionMapperProviderFactories = new ArrayList<>();
-    final ArrayList<Component<ParamConverterProvider>> paramConverterProviderFactories = new ArrayList<>();
-    final ArrayList<Component<ContainerRequestFilter>> preMatchContainerRequestFilterProviderFactories = new ArrayList<>();
-    final ArrayList<Component<ContainerRequestFilter>> containerRequestFilterProviderFactories = new ArrayList<>();
-    final ArrayList<Component<ContainerResponseFilter>> containerResponseFilterProviderFactories = new ArrayList<>();
+    final ArrayList<MessageBodyComponent<ReaderInterceptor>> readerInterceptorComponents = new ArrayList<>();
+    final ArrayList<MessageBodyComponent<WriterInterceptor>> writerInterceptorComponents = new ArrayList<>();
+    final ArrayList<MessageBodyComponent<MessageBodyReader<?>>> messageBodyReaderComponents = new ArrayList<>();
+    final ArrayList<MessageBodyComponent<MessageBodyWriter<?>>> messageBodyWriterComponents = new ArrayList<>();
+    final ArrayList<TypeComponent<ExceptionMapper<?>>> exceptionMapperComponents = new ArrayList<>();
+    final ArrayList<Component<ParamConverterProvider>> paramConverterComponents = new ArrayList<>();
+    final ArrayList<Component<ContainerRequestFilter>> preMatchContainerRequestFilterComponents = new ArrayList<>();
+    final ArrayList<Component<ContainerRequestFilter>> containerRequestFilterComponents = new ArrayList<>();
+    final ArrayList<Component<ContainerResponseFilter>> containerResponseFilterComponents = new ArrayList<>();
 
     final ServerBootstrap bootstrap = new ServerBootstrap(servletPath,
-      readerInterceptorProviderFactories,
-      writerInterceptorProviderFactories,
-      messageBodyReaderProviderFactories,
-      messageBodyWriterProviderFactories,
-      exceptionMapperProviderFactories,
-      paramConverterProviderFactories,
-      preMatchContainerRequestFilterProviderFactories,
-      containerRequestFilterProviderFactories,
-      containerResponseFilterProviderFactories);
+      readerInterceptorComponents,
+      writerInterceptorComponents,
+      messageBodyReaderComponents,
+      messageBodyWriterComponents,
+      exceptionMapperComponents,
+      paramConverterComponents,
+      preMatchContainerRequestFilterComponents,
+      containerRequestFilterComponents,
+      containerResponseFilterComponents);
 
     try {
-      readerInterceptorProviderFactories.sort(Bootstrap.providerResourceComparator);
-      writerInterceptorProviderFactories.sort(Bootstrap.providerResourceComparator);
+      readerInterceptorComponents.sort(Bootstrap.providerResourceComparator);
+      writerInterceptorComponents.sort(Bootstrap.providerResourceComparator);
 
       bootstrap.init(application.getSingletons(), application.getClasses(), resourceInfos);
 
       runtimeContext = new ServerRuntimeContext(
-        readerInterceptorProviderFactories,
-        writerInterceptorProviderFactories,
-        messageBodyReaderProviderFactories,
-        messageBodyWriterProviderFactories,
-        exceptionMapperProviderFactories,
-        paramConverterProviderFactories,
-        preMatchContainerRequestFilterProviderFactories,
-        containerRequestFilterProviderFactories,
-        containerResponseFilterProviderFactories,
+        readerInterceptorComponents,
+        writerInterceptorComponents,
+        messageBodyReaderComponents,
+        messageBodyWriterComponents,
+        exceptionMapperComponents,
+        paramConverterComponents,
+        preMatchContainerRequestFilterComponents,
+        containerRequestFilterComponents,
+        containerResponseFilterComponents,
         config,
         getServletContext(),
         application,

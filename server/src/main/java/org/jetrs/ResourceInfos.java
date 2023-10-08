@@ -16,6 +16,7 @@
 
 package org.jetrs;
 
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
@@ -31,19 +32,19 @@ import org.libj.lang.Classes;
 class ResourceInfos extends ArrayList<ResourceInfoImpl> {
   private final HashMap<Class<?>,HashMap<AnnotatedElement,DefaultValueImpl>> classToDefaultValues = new HashMap<>();
 
-  static DefaultValueImpl digestDefaultValue(final DefaultValue defaultValue, final Class<?> clazz, final Type type, final Annotation[] annotations, final ArrayList<Component<ParamConverterProvider>> paramConverterProviderFactories) {
+  static DefaultValueImpl digestDefaultValue(final DefaultValue defaultValue, final Class<?> clazz, final Type type, final Annotation[] annotations, final ArrayList<Component<ParamConverterProvider>> paramConverterComponents) throws IOException {
     final String annotatedValue = defaultValue.value();
-    final Object convertedValue = DefaultParamConverterProvider.convertParameter(clazz, type, annotations, ParamPlurality.fromClass(clazz), annotatedValue, null, true, paramConverterProviderFactories, null);
+    final Object convertedValue = DefaultParamConverterProvider.convertParameter(clazz, type, annotations, ParamPlurality.fromClass(clazz), annotatedValue, null, true, paramConverterComponents, null);
     return new DefaultValueImpl(convertedValue != null, annotatedValue, convertedValue);
   }
 
-  void initDefaultValues(final Class<?> cls, final ArrayList<Component<ParamConverterProvider>> paramConverterProviderFactories) {
+  void initDefaultValues(final Class<?> cls, final ArrayList<Component<ParamConverterProvider>> paramConverterComponents) throws IOException {
     if (!classToDefaultValues.containsKey(cls)) {
       HashMap<AnnotatedElement,DefaultValueImpl> defaultValues = null;
       DefaultValue defaultValue = AnnotationUtil.getAnnotation(cls, DefaultValue.class);
       if (defaultValue != null) {
         classToDefaultValues.put(cls, defaultValues = new HashMap<>());
-        defaultValues.put(cls, digestDefaultValue(defaultValue, cls, cls.getGenericSuperclass(), AnnotationUtil.getAnnotations(cls), paramConverterProviderFactories)); // FIXME: Is cls.getGenericSuperclass() correct here?
+        defaultValues.put(cls, digestDefaultValue(defaultValue, cls, cls.getGenericSuperclass(), AnnotationUtil.getAnnotations(cls), paramConverterComponents)); // FIXME: Is cls.getGenericSuperclass() correct here?
       }
 
       for (final Field field : ContainerRequestContextImpl.getContextFields(cls)) { // [A]
@@ -52,7 +53,7 @@ class ResourceInfos extends ArrayList<ResourceInfoImpl> {
           if (defaultValues == null)
             classToDefaultValues.put(cls, defaultValues = new HashMap<>());
 
-          defaultValues.put(field, digestDefaultValue(defaultValue, field.getType(), field.getGenericType(), Classes.getAnnotations(field), paramConverterProviderFactories));
+          defaultValues.put(field, digestDefaultValue(defaultValue, field.getType(), field.getGenericType(), Classes.getAnnotations(field), paramConverterComponents));
         }
       }
     }

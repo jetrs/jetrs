@@ -170,8 +170,8 @@ class ResponseImpl extends Response {
       throw new IllegalStateException("Response has been closed");
 
     try {
-      final ArrayList<MessageBodyComponent<ReaderInterceptor>> readerInterceptorProviderFactories = requestContext.getReaderInterceptorFactoryList();
-      if (readerInterceptorProviderFactories == null)
+      final ArrayList<MessageBodyComponent<ReaderInterceptor>> readerInterceptorComponents = requestContext.getReaderInterceptorComponents();
+      if (readerInterceptorComponents == null)
         return (messageBodyReader.readFrom(rawType, genericType, annotations, mediaType, headers, entityStream));
 
       try (final ReaderInterceptorContextImpl readerInterceptorContext = new ReaderInterceptorContextImpl(rawType, genericType, annotations, headers, entityStream) {
@@ -180,9 +180,9 @@ class ResponseImpl extends Response {
 
         @Override
         public Object proceed() throws IOException {
-          final int size = readerInterceptorProviderFactories.size();
+          final int size = readerInterceptorComponents.size();
           if (++interceptorIndex < size)
-            return lastProceeded = (readerInterceptorProviderFactories.get(interceptorIndex).getSingletonOrFromRequestContext(requestContext)).aroundReadFrom(this);
+            return lastProceeded = (readerInterceptorComponents.get(interceptorIndex).getSingletonOrFromRequestContext(requestContext)).aroundReadFrom(this);
 
           if (interceptorIndex == size && getInputStream() != null)
             lastProceeded = ((MessageBodyReader)messageBodyReader).readFrom(getType(), getGenericType(), getAnnotations(), getMediaType(), getHeaders(), getInputStream());

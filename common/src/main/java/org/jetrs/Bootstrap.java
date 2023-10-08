@@ -68,42 +68,42 @@ class Bootstrap<R extends ArrayList<? extends Comparable<?>>> {
     return false;
   }
 
-  private final ArrayList<MessageBodyComponent<ReaderInterceptor>> readerInterceptorProviderFactories;
-  private final ArrayList<MessageBodyComponent<WriterInterceptor>> writerInterceptorProviderFactories;
-  private final ArrayList<MessageBodyComponent<MessageBodyReader<?>>> messageBodyReaderProviderFactories;
-  private final ArrayList<MessageBodyComponent<MessageBodyWriter<?>>> messageBodyWriterProviderFactories;
-  private final ArrayList<TypeComponent<ExceptionMapper<?>>> exceptionMapperProviderFactories;
+  private final ArrayList<MessageBodyComponent<ReaderInterceptor>> readerInterceptorComponents;
+  private final ArrayList<MessageBodyComponent<WriterInterceptor>> writerInterceptorComponents;
+  private final ArrayList<MessageBodyComponent<MessageBodyReader<?>>> messageBodyReaderComponents;
+  private final ArrayList<MessageBodyComponent<MessageBodyWriter<?>>> messageBodyWriterComponents;
+  private final ArrayList<TypeComponent<ExceptionMapper<?>>> exceptionMapperComponents;
 
   Bootstrap(
-    final ArrayList<MessageBodyComponent<ReaderInterceptor>> readerInterceptorProviderFactories,
-    final ArrayList<MessageBodyComponent<WriterInterceptor>> writerInterceptorProviderFactories,
-    final ArrayList<MessageBodyComponent<MessageBodyReader<?>>> messageBodyReaderProviderFactories,
-    final ArrayList<MessageBodyComponent<MessageBodyWriter<?>>> messageBodyWriterProviderFactories,
-    final ArrayList<TypeComponent<ExceptionMapper<?>>> exceptionMapperProviderFactories
+    final ArrayList<MessageBodyComponent<ReaderInterceptor>> readerInterceptorComponents,
+    final ArrayList<MessageBodyComponent<WriterInterceptor>> writerInterceptorComponents,
+    final ArrayList<MessageBodyComponent<MessageBodyReader<?>>> messageBodyReaderComponents,
+    final ArrayList<MessageBodyComponent<MessageBodyWriter<?>>> messageBodyWriterComponents,
+    final ArrayList<TypeComponent<ExceptionMapper<?>>> exceptionMapperComponents
   ) {
-    this.readerInterceptorProviderFactories = readerInterceptorProviderFactories;
-    this.writerInterceptorProviderFactories = writerInterceptorProviderFactories;
-    this.messageBodyReaderProviderFactories = messageBodyReaderProviderFactories;
-    this.messageBodyWriterProviderFactories = messageBodyWriterProviderFactories;
-    this.exceptionMapperProviderFactories = exceptionMapperProviderFactories;
+    this.readerInterceptorComponents = readerInterceptorComponents;
+    this.writerInterceptorComponents = writerInterceptorComponents;
+    this.messageBodyReaderComponents = messageBodyReaderComponents;
+    this.messageBodyWriterComponents = messageBodyWriterComponents;
+    this.exceptionMapperComponents = exceptionMapperComponents;
   }
 
   @SuppressWarnings("unchecked")
   <T> boolean addResourceOrProvider(final ArrayList<Consumer<Set<Class<?>>>> afterAdds, final R resourceInfos, final Class<? extends T> clazz, final T singleton, final boolean scanned) throws IllegalAccessException, InstantiationException, InvocationTargetException {
     if (ReaderInterceptor.class.isAssignableFrom(clazz))
-      readerInterceptorProviderFactories.add(new ReaderInterceptorComponent((Class<ReaderInterceptor>)clazz, (ReaderInterceptor)singleton));
+      readerInterceptorComponents.add(new ReaderInterceptorComponent((Class<ReaderInterceptor>)clazz, (ReaderInterceptor)singleton));
 
     if (WriterInterceptor.class.isAssignableFrom(clazz))
-      writerInterceptorProviderFactories.add(new WriterInterceptorComponent((Class<WriterInterceptor>)clazz, (WriterInterceptor)singleton));
+      writerInterceptorComponents.add(new WriterInterceptorComponent((Class<WriterInterceptor>)clazz, (WriterInterceptor)singleton));
 
     if (MessageBodyReader.class.isAssignableFrom(clazz))
-      messageBodyReaderProviderFactories.add(new MessageBodyReaderComponent((Class<MessageBodyReader<?>>)clazz, (MessageBodyReader<?>)singleton));
+      messageBodyReaderComponents.add(new MessageBodyReaderComponent((Class<MessageBodyReader<?>>)clazz, (MessageBodyReader<?>)singleton));
 
     if (MessageBodyWriter.class.isAssignableFrom(clazz))
-      messageBodyWriterProviderFactories.add(new MessageBodyWriterComponent((Class<MessageBodyWriter<?>>)clazz, (MessageBodyWriter<?>)singleton));
+      messageBodyWriterComponents.add(new MessageBodyWriterComponent((Class<MessageBodyWriter<?>>)clazz, (MessageBodyWriter<?>)singleton));
 
     if (ExceptionMapper.class.isAssignableFrom(clazz))
-      exceptionMapperProviderFactories.add(new ExceptionMapperComponent((Class<ExceptionMapper<?>>)clazz, (ExceptionMapper<?>)singleton));
+      exceptionMapperComponents.add(new ExceptionMapperComponent((Class<ExceptionMapper<?>>)clazz, (ExceptionMapper<?>)singleton));
 
     return false;
   }
@@ -304,8 +304,8 @@ class Bootstrap<R extends ArrayList<? extends Comparable<?>>> {
     if (resourceInfos != null)
       resourceInfos.sort(null);
 
-    exceptionMapperProviderFactories.sort(providerResourceComparator);
-    messageBodyReaderProviderFactories.sort(providerResourceComparator);
-    messageBodyWriterProviderFactories.sort(providerResourceComparator);
+    exceptionMapperComponents.sort(providerResourceComparator);
+    messageBodyReaderComponents.sort(providerResourceComparator);
+    messageBodyWriterComponents.sort(providerResourceComparator);
   }
 }

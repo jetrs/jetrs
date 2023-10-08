@@ -119,34 +119,34 @@ abstract class RequestContext<R extends RuntimeContext> extends InterceptorConte
 
   private boolean readerInterceptorCalled = false;
 
-  ArrayList<MessageBodyComponent<ReaderInterceptor>> getReaderInterceptorFactoryList() {
+  ArrayList<MessageBodyComponent<ReaderInterceptor>> getReaderInterceptorComponents() {
     if (readerInterceptorCalled)
       throw new IllegalStateException();
 
     readerInterceptorCalled = true;
-    return runtimeContext.getReaderInterceptorProviderFactories();
+    return runtimeContext.getReaderInterceptorComponents();
   }
 
   private boolean writerInterceptorCalled = false;
 
-  ArrayList<MessageBodyComponent<WriterInterceptor>> getWriterInterceptorFactoryList() {
+  ArrayList<MessageBodyComponent<WriterInterceptor>> getWriterInterceptorComponents() {
     if (writerInterceptorCalled)
       throw new IllegalStateException();
 
     writerInterceptorCalled = true;
-    return runtimeContext.getWriterInterceptorProviderFactories();
+    return runtimeContext.getWriterInterceptorComponents();
   }
 
-  ArrayList<MessageBodyComponent<MessageBodyReader<?>>> getMessageBodyReaderFactoryList() {
-    return runtimeContext.getMessageBodyReaderProviderFactories();
+  ArrayList<MessageBodyComponent<MessageBodyReader<?>>> getMessageBodyReaderComponents() {
+    return runtimeContext.getMessageBodyReaderComponents();
   }
 
-  ArrayList<MessageBodyComponent<MessageBodyWriter<?>>> getMessageBodyWriterFactoryList() {
-    return runtimeContext.getMessageBodyWriterProviderFactories();
+  ArrayList<MessageBodyComponent<MessageBodyWriter<?>>> getMessageBodyWriterComponents() {
+    return runtimeContext.getMessageBodyWriterComponents();
   }
 
-  ArrayList<TypeComponent<ExceptionMapper<?>>> getExceptionMapperComponentList() {
-    return runtimeContext.getExceptionMapperProviderFactories();
+  ArrayList<TypeComponent<ExceptionMapper<?>>> getExceptionMapperComponents() {
+    return runtimeContext.getExceptionMapperComponents();
   }
 
   final ProvidersImpl getProviders() {

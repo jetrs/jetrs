@@ -28,13 +28,13 @@ import javax.ws.rs.ext.WriterInterceptor;
 class ClientRuntimeContext extends RuntimeContext {
   ClientRuntimeContext(
     final Configuration configuration,
-    final ArrayList<MessageBodyComponent<ReaderInterceptor>> readerInterceptorProviderFactories,
-    final ArrayList<MessageBodyComponent<WriterInterceptor>> writerInterceptorProviderFactories,
-    final ArrayList<MessageBodyComponent<MessageBodyReader<?>>> messageBodyReaderProviderFactories,
-    final ArrayList<MessageBodyComponent<MessageBodyWriter<?>>> messageBodyWriterProviderFactories,
-    final ArrayList<TypeComponent<ExceptionMapper<?>>> exceptionMapperProviderFactories
+    final ArrayList<MessageBodyComponent<ReaderInterceptor>> readerInterceptorComponents,
+    final ArrayList<MessageBodyComponent<WriterInterceptor>> writerInterceptorComponents,
+    final ArrayList<MessageBodyComponent<MessageBodyReader<?>>> messageBodyReaderComponents,
+    final ArrayList<MessageBodyComponent<MessageBodyWriter<?>>> messageBodyWriterComponents,
+    final ArrayList<TypeComponent<ExceptionMapper<?>>> exceptionMapperComponents
   ) {
-    super(configuration, readerInterceptorProviderFactories, writerInterceptorProviderFactories, messageBodyReaderProviderFactories, messageBodyWriterProviderFactories, exceptionMapperProviderFactories);
+    super(configuration, readerInterceptorComponents, writerInterceptorComponents, messageBodyReaderComponents, messageBodyWriterComponents, exceptionMapperComponents);
   }
 
   @Override

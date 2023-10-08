@@ -62,15 +62,15 @@ class ServerBootstrap extends Bootstrap<ResourceInfos> {
    * {@code @PUT}, {@code @POST}, or {@code @DELETE}. Resource methods are methods of a resource class annotated with a request method
    * designator. This section explains how to use JAX-RS to annotate Java classes to create RESTful web services.
    */
-  private static boolean isRootResource(final Class<?> cls) {
-    if (Modifier.isAbstract(cls.getModifiers()) || Modifier.isInterface(cls.getModifiers()))
+  private static boolean isRootResource(final Class<?> clazz) {
+    if (Modifier.isAbstract(clazz.getModifiers()) || Modifier.isInterface(clazz.getModifiers()))
       return false;
 
-    if (AnnotationUtil.isAnnotationPresent(cls, Path.class))
+    if (AnnotationUtil.isAnnotationPresent(clazz, Path.class))
       return true;
 
     try {
-      for (final Method method : cls.getMethods()) // [A]
+      for (final Method method : clazz.getMethods()) // [A]
         if (!Modifier.isAbstract(method.getModifiers()) && !Modifier.isStatic(method.getModifiers()) && !Modifier.isNative(method.getModifiers()) && AnnotationUtil.isAnyAnnotationPresent(method, Path.class, GET.class, POST.class, PUT.class, DELETE.class, HEAD.class))
           return true;
 
@@ -88,42 +88,42 @@ class ServerBootstrap extends Bootstrap<ResourceInfos> {
   }
 
   private final String baseUri;
-  private final ArrayList<Component<ParamConverterProvider>> paramConverterProviderFactories;
-  private final ArrayList<Component<ContainerRequestFilter>> preMatchContainerRequestFilterProviderFactories;
-  private final ArrayList<Component<ContainerRequestFilter>> containerRequestFilterProviderFactories;
-  private final ArrayList<Component<ContainerResponseFilter>> containerResponseFilterProviderFactories;
+  private final ArrayList<Component<ParamConverterProvider>> paramConverterComponents;
+  private final ArrayList<Component<ContainerRequestFilter>> preMatchContainerRequestFilterComponents;
+  private final ArrayList<Component<ContainerRequestFilter>> containerRequestFilterComponents;
+  private final ArrayList<Component<ContainerResponseFilter>> containerResponseFilterComponents;
 
   ServerBootstrap(
     final String baseUri,
-    final ArrayList<MessageBodyComponent<ReaderInterceptor>> readerInterceptorProviderFactories,
-    final ArrayList<MessageBodyComponent<WriterInterceptor>> writerInterceptorProviderFactories,
-    final ArrayList<MessageBodyComponent<MessageBodyReader<?>>> messageBodyReaderProviderFactories,
-    final ArrayList<MessageBodyComponent<MessageBodyWriter<?>>> messageBodyWriterProviderFactories,
-    final ArrayList<TypeComponent<ExceptionMapper<?>>> exceptionMapperProviderFactories,
-    final ArrayList<Component<ParamConverterProvider>> paramConverterProviderFactories,
-    final ArrayList<Component<ContainerRequestFilter>> preMatchContainerRequestFilterProviderFactories,
-    final ArrayList<Component<ContainerRequestFilter>> containerRequestFilterProviderFactories,
-    final ArrayList<Component<ContainerResponseFilter>> containerResponseFilterProviderFactories
+    final ArrayList<MessageBodyComponent<ReaderInterceptor>> readerInterceptorComponents,
+    final ArrayList<MessageBodyComponent<WriterInterceptor>> writerInterceptorComponents,
+    final ArrayList<MessageBodyComponent<MessageBodyReader<?>>> messageBodyReaderComponents,
+    final ArrayList<MessageBodyComponent<MessageBodyWriter<?>>> messageBodyWriterComponents,
+    final ArrayList<TypeComponent<ExceptionMapper<?>>> exceptionMapperComponents,
+    final ArrayList<Component<ParamConverterProvider>> paramConverterComponents,
+    final ArrayList<Component<ContainerRequestFilter>> preMatchContainerRequestFilterComponents,
+    final ArrayList<Component<ContainerRequestFilter>> containerRequestFilterComponents,
+    final ArrayList<Component<ContainerResponseFilter>> containerResponseFilterComponents
   ) {
-    super(readerInterceptorProviderFactories, writerInterceptorProviderFactories, messageBodyReaderProviderFactories, messageBodyWriterProviderFactories, exceptionMapperProviderFactories);
+    super(readerInterceptorComponents, writerInterceptorComponents, messageBodyReaderComponents, messageBodyWriterComponents, exceptionMapperComponents);
     this.baseUri = baseUri;
-    this.paramConverterProviderFactories = paramConverterProviderFactories;
-    this.preMatchContainerRequestFilterProviderFactories = preMatchContainerRequestFilterProviderFactories;
-    this.containerRequestFilterProviderFactories = containerRequestFilterProviderFactories;
-    this.containerResponseFilterProviderFactories = containerResponseFilterProviderFactories;
+    this.paramConverterComponents = paramConverterComponents;
+    this.preMatchContainerRequestFilterComponents = preMatchContainerRequestFilterComponents;
+    this.containerRequestFilterComponents = containerRequestFilterComponents;
+    this.containerResponseFilterComponents = containerResponseFilterComponents;
   }
 
   @Override
   @SuppressWarnings("unchecked")
   <T> boolean addResourceOrProvider(final ArrayList<Consumer<Set<Class<?>>>> afterAdd, final ResourceInfos resourceInfos, final Class<? extends T> clazz, final T singleton, final boolean scanned) throws IllegalAccessException, InstantiationException, InvocationTargetException {
     if (ParamConverterProvider.class.isAssignableFrom(clazz))
-      paramConverterProviderFactories.add(new ParamConverterComponent((Class<ParamConverterProvider>)clazz, (ParamConverterProvider)singleton));
+      paramConverterComponents.add(new ParamConverterComponent((Class<ParamConverterProvider>)clazz, (ParamConverterProvider)singleton));
 
     if (ContainerRequestFilter.class.isAssignableFrom(clazz))
-      (AnnotationUtil.isAnnotationPresent(clazz, PreMatching.class) ? preMatchContainerRequestFilterProviderFactories : containerRequestFilterProviderFactories).add(new ContainerRequestFilterComponent((Class<ContainerRequestFilter>)clazz, (ContainerRequestFilter)singleton));
+      (AnnotationUtil.isAnnotationPresent(clazz, PreMatching.class) ? preMatchContainerRequestFilterComponents : containerRequestFilterComponents).add(new ContainerRequestFilterComponent((Class<ContainerRequestFilter>)clazz, (ContainerRequestFilter)singleton));
 
     if (ContainerResponseFilter.class.isAssignableFrom(clazz)) {
-      containerResponseFilterProviderFactories.add(new ContainerResponseFilterComponent((Class<ContainerResponseFilter>)clazz, (ContainerResponseFilter)singleton));
+      containerResponseFilterComponents.add(new ContainerResponseFilterComponent((Class<ContainerResponseFilter>)clazz, (ContainerResponseFilter)singleton));
       if (logger.isDebugEnabled() && AnnotationUtil.isAnnotationPresent(clazz, PreMatching.class))
         logger.debug("@PreMatching annotation is not applicable to ContainerResponseFilter");
     }
@@ -165,11 +165,11 @@ class ServerBootstrap extends Bootstrap<ResourceInfos> {
   @Override
   void init(final Set<Object> singletons, final Set<Class<?>> classes, final ResourceInfos resourceInfos) throws IllegalAccessException, InstantiationException, InvocationTargetException, IOException {
     super.init(singletons, classes, resourceInfos);
-    preMatchContainerRequestFilterProviderFactories.sort(priorityComparator);
-    containerRequestFilterProviderFactories.sort(priorityComparator);
-    containerResponseFilterProviderFactories.sort(priorityComparator);
-    paramConverterProviderFactories.sort(priorityComparator);
+    preMatchContainerRequestFilterComponents.sort(priorityComparator);
+    containerRequestFilterComponents.sort(priorityComparator);
+    containerResponseFilterComponents.sort(priorityComparator);
+    paramConverterComponents.sort(priorityComparator);
     for (int i = 0, i$ = resourceInfos.size(); i < i$; ++i) // [RA]
-      resourceInfos.get(i).initDefaultValues(paramConverterProviderFactories);
+      resourceInfos.get(i).initDefaultValues(paramConverterComponents);
   }
 }
