@@ -26,7 +26,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -119,34 +118,34 @@ abstract class RequestContext<R extends RuntimeContext> extends InterceptorConte
 
   private boolean readerInterceptorCalled = false;
 
-  ArrayList<MessageBodyComponent<ReaderInterceptor>> getReaderInterceptorComponents() {
+  ComponentSet<MessageBodyComponent<ReaderInterceptor>> getReaderInterceptorComponents() {
     if (readerInterceptorCalled)
       throw new IllegalStateException();
 
     readerInterceptorCalled = true;
-    return runtimeContext.getReaderInterceptorComponents();
+    return runtimeContext.getComponents().getReaderInterceptorComponents();
   }
 
   private boolean writerInterceptorCalled = false;
 
-  ArrayList<MessageBodyComponent<WriterInterceptor>> getWriterInterceptorComponents() {
+  ComponentSet<MessageBodyComponent<WriterInterceptor>> getWriterInterceptorComponents() {
     if (writerInterceptorCalled)
       throw new IllegalStateException();
 
     writerInterceptorCalled = true;
-    return runtimeContext.getWriterInterceptorComponents();
+    return runtimeContext.getComponents().getWriterInterceptorComponents();
   }
 
-  ArrayList<MessageBodyComponent<MessageBodyReader<?>>> getMessageBodyReaderComponents() {
-    return runtimeContext.getMessageBodyReaderComponents();
+  ComponentSet<MessageBodyComponent<MessageBodyReader<?>>> getMessageBodyReaderComponents() {
+    return runtimeContext.getComponents().getMessageBodyReaderComponents();
   }
 
-  ArrayList<MessageBodyComponent<MessageBodyWriter<?>>> getMessageBodyWriterComponents() {
-    return runtimeContext.getMessageBodyWriterComponents();
+  ComponentSet<MessageBodyComponent<MessageBodyWriter<?>>> getMessageBodyWriterComponents() {
+    return runtimeContext.getComponents().getMessageBodyWriterComponents();
   }
 
-  ArrayList<TypeComponent<ExceptionMapper<?>>> getExceptionMapperComponents() {
-    return runtimeContext.getExceptionMapperComponents();
+  ComponentSet<TypeComponent<ExceptionMapper<?>>> getExceptionMapperComponents() {
+    return runtimeContext.getComponents().getExceptionMapperComponents();
   }
 
   final ProvidersImpl getProviders() {

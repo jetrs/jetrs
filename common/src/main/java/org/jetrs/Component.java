@@ -35,7 +35,7 @@ import org.libj.lang.Classes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class Component<T> {
+abstract class Component<T> {
   private static final Logger logger = LoggerFactory.getLogger(Component.class);
 
   private static int getPriority(final Class<?> clazz) {
@@ -51,7 +51,7 @@ class Component<T> {
     return false;
   }
 
-  private static <T> Map<Class<?>,Integer> filterAssignable(final Class<T> componentClass, final Class<?>[] contracts) {
+  static <T> Map<Class<?>,Integer> filterAssignable(final Class<T> componentClass, final Class<?>[] contracts) {
     final HashMap<Class<?>,Integer> assignableContracts = new HashMap<>(contracts.length);
     for (final Class<?> contract : contracts) // [A]
       if (checkAssignable(componentClass, contract))
@@ -60,7 +60,7 @@ class Component<T> {
     return assignableContracts;
   }
 
-  private static <T> Map<Class<?>,Integer> filterAssignable(final Class<T> componentClass, final Map<Class<?>,Integer> contracts) {
+  static <T> Map<Class<?>,Integer> filterAssignable(final Class<T> componentClass, final Map<Class<?>,Integer> contracts) {
     if (contracts == null)
       return null;
 
@@ -93,26 +93,10 @@ class Component<T> {
   final int priority;
   final Map<Class<?>,Integer> contracts;
 
-  Component(final Class<T> clazz, final T instance) {
-    this(clazz, instance, null, getPriority(clazz));
-  }
-
-  Component(final Class<T> clazz, final T instance, final int priority) {
-    this(clazz, instance, null, priority);
-  }
-
-  Component(final Class<T> clazz, final T instance, final Map<Class<?>,Integer> contracts) {
-    this(clazz, instance, filterAssignable(clazz, contracts), getPriority(clazz));
-  }
-
-  Component(final Class<T> clazz, final T instance, final Class<?>[] contracts) {
-    this(clazz, instance, contracts == null ? null : filterAssignable(clazz, contracts), getPriority(clazz));
-  }
-
-  private Component(final Class<T> clazz, final T instance, final Map<Class<?>,Integer> contracts, final int priority) {
+  Component(final Class<T> clazz, final T instance, final Map<Class<?>,Integer> contracts, final int priority) {
     this.clazz = clazz;
     this.contracts = contracts;
-    this.priority = priority;
+    this.priority = priority < 0 ? getPriority(clazz) : priority;
 
     // Check whether this class has @Singleton annotation. If it also has @Context fields, then it cannot be a singleton.
     final Field[] fields = Classes.getDeclaredFieldsDeep(clazz, injectableFieldPredicate);

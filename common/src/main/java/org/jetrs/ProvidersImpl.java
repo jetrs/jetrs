@@ -19,7 +19,6 @@ package org.jetrs;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
 
 import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.core.MediaType;
@@ -36,7 +35,7 @@ class ProvidersImpl implements Providers {
     this.requestContext = requestContext;
   }
 
-  private <T> Object getProvider(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final ArrayList<? extends MessageBodyComponent<?>> factories, final boolean asHolder) {
+  private <T> Object getProvider(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final ComponentSet<? extends MessageBodyComponent<?>> factories, final boolean asHolder) {
     try {
       for (int i = 0, i$ = factories.size(); i < i$; ++i) { // [RA]
         final MessageBodyComponent<?> factory = factories.get(i);
@@ -92,7 +91,7 @@ class ProvidersImpl implements Providers {
   @SuppressWarnings("unchecked")
   public <T extends Throwable> ExceptionMapper<T> getExceptionMapper(final Class<T> type) {
     try {
-      final ArrayList<TypeComponent<ExceptionMapper<?>>> components = requestContext.getExceptionMapperComponents();
+      final ComponentSet<TypeComponent<ExceptionMapper<?>>> components = requestContext.getExceptionMapperComponents();
       for (int i = 0, i$ = components.size(); i < i$; ++i) { // [RA]
         final TypeComponent<ExceptionMapper<?>> factory = components.get(i);
         if (factory.getType().isAssignableFrom(type))

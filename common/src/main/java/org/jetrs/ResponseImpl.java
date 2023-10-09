@@ -21,7 +21,6 @@ import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -170,7 +169,7 @@ class ResponseImpl extends Response {
       throw new IllegalStateException("Response has been closed");
 
     try {
-      final ArrayList<MessageBodyComponent<ReaderInterceptor>> readerInterceptorComponents = requestContext.getReaderInterceptorComponents();
+      final ComponentSet<MessageBodyComponent<ReaderInterceptor>> readerInterceptorComponents = requestContext.getReaderInterceptorComponents();
       if (readerInterceptorComponents == null)
         return (messageBodyReader.readFrom(rawType, genericType, annotations, mediaType, headers, entityStream));
 

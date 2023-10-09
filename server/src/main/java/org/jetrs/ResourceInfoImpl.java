@@ -24,7 +24,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -128,7 +127,7 @@ class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImpl> {
 
   private DefaultValueImpl[] defaultValues;
 
-  void initDefaultValues(final ArrayList<Component<ParamConverterProvider>> paramConverterComponents) throws IOException {
+  void initDefaultValues(final ComponentSet<Component<ParamConverterProvider>> paramConverterComponents) throws IOException {
     if (defaultValues != null)
       throw new IllegalStateException();
 

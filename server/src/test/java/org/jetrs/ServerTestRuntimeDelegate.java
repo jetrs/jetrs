@@ -16,28 +16,13 @@
 
 package org.jetrs;
 
-import java.util.ArrayList;
+import java.io.IOException;
 
 import javax.ws.rs.core.Application;
 
-@SuppressWarnings({"rawtypes", "unchecked"})
 public class ServerTestRuntimeDelegate extends RuntimeDelegateImpl {
-  final ArrayList EMPTY_LIST = new ArrayList<>(0);
-
-  public ServerTestRuntimeDelegate() {
-    setRuntimeContext(new ServerRuntimeContext(
-      EMPTY_LIST,
-      EMPTY_LIST,
-      EMPTY_LIST,
-      EMPTY_LIST,
-      EMPTY_LIST,
-      EMPTY_LIST,
-      EMPTY_LIST,
-      EMPTY_LIST,
-      EMPTY_LIST,
-      null,
-      null,
-      new Application(),
-      null));
+  public ServerTestRuntimeDelegate() throws IOException {
+    final ConfigurationImpl configuration = new ConfigurationImpl(new Components(), null);
+    setRuntimeContext(new ServerRuntimeContext(configuration, null, null, new Application(), null));
   }
 }

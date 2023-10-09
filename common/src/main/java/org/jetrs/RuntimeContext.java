@@ -16,62 +16,24 @@
 
 package org.jetrs;
 
-import java.util.ArrayList;
-
 import javax.ws.rs.core.Configuration;
-import javax.ws.rs.ext.ExceptionMapper;
-import javax.ws.rs.ext.MessageBodyReader;
-import javax.ws.rs.ext.MessageBodyWriter;
-import javax.ws.rs.ext.ReaderInterceptor;
-import javax.ws.rs.ext.WriterInterceptor;
 
 abstract class RuntimeContext {
   private final Configuration configuration;
-  final ArrayList<MessageBodyComponent<ReaderInterceptor>> readerInterceptorComponents;
-  final ArrayList<MessageBodyComponent<WriterInterceptor>> writerInterceptorComponents;
-  final ArrayList<MessageBodyComponent<MessageBodyReader<?>>> messageBodyReaderComponents;
-  final ArrayList<MessageBodyComponent<MessageBodyWriter<?>>> messageBodyWriterComponents;
-  final ArrayList<TypeComponent<ExceptionMapper<?>>> exceptionMapperComponents;
+  private final Components components;
 
-  RuntimeContext(
-    final Configuration configuration,
-    final ArrayList<MessageBodyComponent<ReaderInterceptor>> readerInterceptorComponents,
-    final ArrayList<MessageBodyComponent<WriterInterceptor>> writerInterceptorComponents,
-    final ArrayList<MessageBodyComponent<MessageBodyReader<?>>> messageBodyReaderComponents,
-    final ArrayList<MessageBodyComponent<MessageBodyWriter<?>>> messageBodyWriterComponents,
-    final ArrayList<TypeComponent<ExceptionMapper<?>>> exceptionMapperComponents
-  ) {
+  RuntimeContext(final ConfigurationImpl configuration) {
     this.configuration = configuration;
-    this.readerInterceptorComponents = readerInterceptorComponents;
-    this.writerInterceptorComponents = writerInterceptorComponents;
-    this.messageBodyReaderComponents = messageBodyReaderComponents;
-    this.messageBodyWriterComponents = messageBodyWriterComponents;
-    this.exceptionMapperComponents = exceptionMapperComponents;
+    this.components = configuration.getOrCreateComponents();
+  }
+
+  Components getComponents() {
+    return components;
   }
 
   abstract RequestContext<?> localRequestContext();
 
   Configuration getConfiguration() {
     return configuration;
-  }
-
-  ArrayList<MessageBodyComponent<ReaderInterceptor>> getReaderInterceptorComponents() {
-    return readerInterceptorComponents;
-  }
-
-  ArrayList<MessageBodyComponent<WriterInterceptor>> getWriterInterceptorComponents() {
-    return writerInterceptorComponents;
-  }
-
-  ArrayList<MessageBodyComponent<MessageBodyReader<?>>> getMessageBodyReaderComponents() {
-    return messageBodyReaderComponents;
-  }
-
-  ArrayList<MessageBodyComponent<MessageBodyWriter<?>>> getMessageBodyWriterComponents() {
-    return messageBodyWriterComponents;
-  }
-
-  ArrayList<TypeComponent<ExceptionMapper<?>>> getExceptionMapperComponents() {
-    return exceptionMapperComponents;
   }
 }

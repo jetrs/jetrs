@@ -31,7 +31,7 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Configuration;
 
 public class ClientBuilderImpl extends ClientBuilder implements ConfigurableImpl<ClientBuilder> {
-  private ConfigurationImpl config;
+  private ConfigurationImpl configuration;
   private SSLContext sslContext;
   private KeyStore keyStore;
   private char[] password;
@@ -44,12 +44,14 @@ public class ClientBuilderImpl extends ClientBuilder implements ConfigurableImpl
 
   private SSLContext newSSLContext() {
     try {
+      final String defaultAlgorithm = TrustManagerFactory.getDefaultAlgorithm();
+
       // Get a KeyManager and initialize it
-      final KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+      final KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(defaultAlgorithm);
       keyManagerFactory.init(keyStore, password);
 
       // Get a TrustManagerFactory with the DEFAULT KEYSTORE, so we have all the certificates in cacerts trusted
-      final TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+      final TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(defaultAlgorithm);
       trustManagerFactory.init(trustStore);
 
       // Get the SSLContext to help create SSLSocketFactory
@@ -64,15 +66,15 @@ public class ClientBuilderImpl extends ClientBuilder implements ConfigurableImpl
 
   @Override
   public Configuration getConfiguration() {
-    return config == null ? config = new ConfigurationImpl() : config;
+    return configuration == null ? configuration = new ConfigurationImpl() : configuration;
   }
 
   @Override
   public ClientBuilder withConfig(final Configuration config) {
-    if (!(config instanceof ConfigurationImpl))
+    if (!(config instanceof ConfigurationImpl)) // FIXME: Is this the right way to do this?
       throw new UnsupportedOperationException("Unsupported type: " + config.getClass().getName());
 
-    this.config = (ConfigurationImpl)config;
+    this.configuration = (ConfigurationImpl)config;
     return this;
   }
 
@@ -133,6 +135,6 @@ public class ClientBuilderImpl extends ClientBuilder implements ConfigurableImpl
 
   @Override
   public Client build() {
-    return new ClientImpl(config == null ? new ConfigurationImpl() : config.clone(), sslContext == null ? sslContext = newSSLContext() : sslContext, verifier, executorService, scheduledExecutorService, connectTimeout, readTimeout);
+    return new ClientImpl(configuration == null ? new ConfigurationImpl() : configuration.clone(), sslContext == null ? sslContext = newSSLContext() : sslContext, verifier, executorService, scheduledExecutorService, connectTimeout, readTimeout);
   }
 }

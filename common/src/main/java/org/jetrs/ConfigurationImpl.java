@@ -19,26 +19,24 @@ package org.jetrs;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 import javax.ws.rs.RuntimeType;
-import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Feature;
 
-class ConfigurationImpl implements Cloneable, Configuration {
+final class ConfigurationImpl implements Cloneable, Configuration {
   private final RuntimeType runtimeType;
+  private Components components;
+  private Map<String,Object> properties;
   private Set<Class<?>> classes;
   private Set<Object> instances;
-  private Map<String,Object> properties;
 
-  ConfigurationImpl(final Application application) {
+  ConfigurationImpl(final Components components, final Map<String,Object> properties) {
     this.runtimeType = RuntimeType.SERVER;
-    this.classes = application.getClasses();
-    this.instances = application.getSingletons();
-    this.properties = application.getProperties();
+    this.components = components;
+    this.properties = properties;
   }
 
   ConfigurationImpl() {
@@ -52,17 +50,21 @@ class ConfigurationImpl implements Cloneable, Configuration {
 
   @Override
   public Map<String,Object> getProperties() {
+    return properties == null ? Collections.EMPTY_MAP : Collections.unmodifiableMap(properties);
+  }
+
+  Map<String,Object> getOrCreateProperties() {
     return properties == null ? properties = new HashMap<>() : properties;
   }
 
   @Override
   public Object getProperty(final String name) {
-    return getProperties().get(name);
+    return properties == null ? null : properties.get(name);
   }
 
   @Override
   public Collection<String> getPropertyNames() {
-    return getProperties().keySet();
+    return properties == null ? Collections.EMPTY_LIST : properties.keySet();
   }
 
   @Override
@@ -79,8 +81,6 @@ class ConfigurationImpl implements Cloneable, Configuration {
   public boolean isRegistered(final Object component) {
     return components != null && components.contains(component);
   }
-
-  private Components components;
 
   final Components getOrCreateComponents() {
     return components == null ? components = new Components() : components;
@@ -102,25 +102,23 @@ class ConfigurationImpl implements Cloneable, Configuration {
 
   @Override
   public Set<Class<?>> getClasses() {
-    return classes != null ? classes : components == null ? Collections.EMPTY_SET : Collections.unmodifiableSet(components.classes());
+    return classes != null ? classes : components != null ? classes = components.classes() : Collections.EMPTY_SET;
   }
 
   @Override
   public Set<Object> getInstances() {
-    return instances != null ? instances : components == null ? Collections.EMPTY_SET : Collections.unmodifiableSet(components.instances());
+    return instances != null ? instances : components != null ? instances = components.instances() : Collections.EMPTY_SET;
   }
 
   @Override
   public ConfigurationImpl clone() {
     try {
       final ConfigurationImpl clone = (ConfigurationImpl)super.clone();
-      clone.components = components.clone();
-      if (classes != null)
-        clone.classes = new HashSet<>(classes);
+      if (components != null)
+        clone.components = components.clone();
 
-      if (instances != null)
-        clone.instances = new HashSet<>(instances);
-
+      clone.classes = null;
+      clone.instances = null;
       if (properties != null)
         clone.properties = new HashMap<>(properties);
 

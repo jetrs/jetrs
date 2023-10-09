@@ -16,10 +16,12 @@
 
 package org.jetrs;
 
+import java.util.Map;
+
 import javax.ws.rs.container.ContainerRequestFilter;
 
 final class ContainerRequestFilterComponent extends Component<ContainerRequestFilter> {
-  ContainerRequestFilterComponent(final Class<ContainerRequestFilter> clazz, final ContainerRequestFilter singleton) {
-    super(clazz, singleton);
+  ContainerRequestFilterComponent(final Class<ContainerRequestFilter> clazz, final ContainerRequestFilter singleton, final Map<Class<?>,Integer> contracts, final int priority) {
+    super(clazz, singleton, contracts, priority);
   }
 }

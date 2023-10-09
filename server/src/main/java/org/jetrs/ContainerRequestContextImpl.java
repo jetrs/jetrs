@@ -132,7 +132,7 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> i
     return result;
   }
 
-  private ArrayList<MessageBodyComponent<ReaderInterceptor>> readerInterceptorComponents;
+  private ComponentSet<MessageBodyComponent<ReaderInterceptor>> readerInterceptorComponents;
 
   private HttpServletRequest httpServletRequest;
   private HttpServletResponse httpServletResponse;
@@ -213,12 +213,12 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> i
 
   private boolean paramConverterProviderCalled = false;
 
-  ArrayList<Component<ParamConverterProvider>> getParamConverterComponents() {
+  ComponentSet<Component<ParamConverterProvider>> getParamConverterComponents() {
     if (paramConverterProviderCalled)
       throw new IllegalStateException();
 
     paramConverterProviderCalled = true;
-    return runtimeContext.getParamConverterComponents();
+    return runtimeContext.getComponents().getParamConverterComponents();
   }
 
   private boolean preMatchRequestFilterCalled = false;
@@ -228,7 +228,7 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> i
       throw new IllegalStateException();
 
     preMatchRequestFilterCalled = true;
-    final ArrayList<Component<ContainerRequestFilter>> components = runtimeContext.getPreMatchContainerRequestFilterComponents();
+    final ComponentSet<Component<ContainerRequestFilter>> components = runtimeContext.getComponents().getPreMatchContainerRequestFilterComponents();
     for (int i = 0, i$ = components.size(); i < i$; ++i) // [RA]
       components.get(i).getSingletonOrFromRequestContext(this).filter(this);
   }
@@ -240,13 +240,13 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> i
       throw new IllegalStateException();
 
     requestFilterCalled = true;
-    final ArrayList<Component<ContainerRequestFilter>> components = runtimeContext.getContainerRequestFilterComponents();
+    final ComponentSet<Component<ContainerRequestFilter>> components = runtimeContext.getComponents().getContainerRequestFilterComponents();
     for (int i = 0, i$ = components.size(); i < i$; ++i) // [RA]
       components.get(i).getSingletonOrFromRequestContext(this).filter(this);
   }
 
   void filterContainerResponse() throws IOException {
-    final ArrayList<Component<ContainerResponseFilter>> components = runtimeContext.getContainerResponseFilterComponents();
+    final ComponentSet<Component<ContainerResponseFilter>> components = runtimeContext.getComponents().getContainerResponseFilterComponents();
     for (int i = 0, i$ = components.size(); i < i$; ++i) // [RA]
       components.get(i).getSingletonOrFromRequestContext(this).filter(this, containerResponseContext);
   }
@@ -415,7 +415,7 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> i
       final String firstValue = defaultValue.annotatedValue;
 
       // FIXME: Param types other than `Cookie` still need to be implemented.
-      return DefaultParamConverterProvider.convertParameter(rawType, genericType, annotations, paramPlurality, firstValue, null, false, runtimeContext.getParamConverterComponents(), this);
+      return DefaultParamConverterProvider.convertParameter(rawType, genericType, annotations, paramPlurality, firstValue, null, false, runtimeContext.getComponents().getParamConverterComponents(), this);
     }
 
     if (annotationType == HeaderParam.class) {
@@ -463,7 +463,7 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> i
       if (rawType.isInstance(obj))
         return obj;
 
-      final Object converted = DefaultParamConverterProvider.convertParameter(rawType, genericType, annotations, paramPlurality, firstValue, null, false, runtimeContext.getParamConverterComponents(), this);
+      final Object converted = DefaultParamConverterProvider.convertParameter(rawType, genericType, annotations, paramPlurality, firstValue, null, false, runtimeContext.getComponents().getParamConverterComponents(), this);
       if (converted != null)
         return converted;
 
@@ -491,7 +491,7 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> i
         firstValue = defaultValue.annotatedValue;
       }
 
-      return DefaultParamConverterProvider.convertParameter(rawType, genericType, annotations, paramPlurality, firstValue, values, false, runtimeContext.getParamConverterComponents(), this);
+      return DefaultParamConverterProvider.convertParameter(rawType, genericType, annotations, paramPlurality, firstValue, values, false, runtimeContext.getComponents().getParamConverterComponents(), this);
     }
 
     if (annotationType == QueryParam.class) {
@@ -511,7 +511,7 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> i
         firstValue = defaultValue.annotatedValue;
       }
 
-      return DefaultParamConverterProvider.convertParameter(rawType, genericType, annotations, paramPlurality, firstValue, values, false, runtimeContext.getParamConverterComponents(), this);
+      return DefaultParamConverterProvider.convertParameter(rawType, genericType, annotations, paramPlurality, firstValue, values, false, runtimeContext.getComponents().getParamConverterComponents(), this);
     }
 
     if (annotationType == PathParam.class) {
@@ -604,7 +604,7 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> i
         }
       }
 
-      return DefaultParamConverterProvider.convertParameter(rawType, genericType, annotations, paramPlurality, value, values, false, runtimeContext.getParamConverterComponents(), this);
+      return DefaultParamConverterProvider.convertParameter(rawType, genericType, annotations, paramPlurality, value, values, false, runtimeContext.getComponents().getParamConverterComponents(), this);
     }
 
     if (annotationType == MatrixParam.class) {
@@ -637,7 +637,7 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> i
         firstValue = values.get(0);
       }
 
-      return DefaultParamConverterProvider.convertParameter(rawType, genericType, annotations, paramPlurality, firstValue, values, false, runtimeContext.getParamConverterComponents(), this);
+      return DefaultParamConverterProvider.convertParameter(rawType, genericType, annotations, paramPlurality, firstValue, values, false, runtimeContext.getComponents().getParamConverterComponents(), this);
     }
 
     throw new UnsupportedOperationException("Unsupported param annotation type: " + annotationType);
@@ -1050,9 +1050,9 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> i
     if (++interceptorIndex < size)
       return lastProceeded = readerInterceptorComponents.get(interceptorIndex).getSingletonOrFromRequestContext(this).aroundReadFrom(this);
 
-    final InputStream inputStream;
-    if (interceptorIndex == size && (inputStream = getInputStream()) != null)
-      lastProceeded = messageBodyReader.readFrom(getType(), getGenericType(), getAnnotations(), getMediaType(), getHeaders(), inputStream);
+    final InputStream entityStream;
+    if (interceptorIndex == size && (entityStream = getEntityStream()) != null)
+      lastProceeded = messageBodyReader.readFrom(getType(), getGenericType(), getAnnotations(), getMediaType(), getHeaders(), entityStream);
 
     return lastProceeded;
   }

@@ -16,12 +16,12 @@
 
 package org.jetrs;
 
-import java.lang.reflect.InvocationTargetException;
+import java.util.Map;
 
 import javax.ws.rs.ext.WriterInterceptor;
 
 final class WriterInterceptorComponent extends MessageBodyComponent<WriterInterceptor> {
-  WriterInterceptorComponent(final Class<WriterInterceptor> clazz, final WriterInterceptor singleton) throws IllegalAccessException, InstantiationException, InvocationTargetException {
-    super(clazz, singleton, WriterInterceptor.class);
+  WriterInterceptorComponent(final Class<WriterInterceptor> clazz, final WriterInterceptor singleton, final Map<Class<?>,Integer> contracts, final int priority) {
+    super(clazz, singleton, contracts, priority, WriterInterceptor.class);
   }
 }

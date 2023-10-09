@@ -21,52 +21,26 @@ import java.util.ArrayList;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
-import javax.ws.rs.container.ContainerRequestFilter;
-import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Request;
-import javax.ws.rs.ext.ExceptionMapper;
-import javax.ws.rs.ext.MessageBodyReader;
-import javax.ws.rs.ext.MessageBodyWriter;
-import javax.ws.rs.ext.ParamConverterProvider;
-import javax.ws.rs.ext.ReaderInterceptor;
-import javax.ws.rs.ext.WriterInterceptor;
 
 class ServerRuntimeContext extends RuntimeContext {
-  private final ArrayList<Component<ParamConverterProvider>> paramConverterComponents;
-  private final ArrayList<Component<ContainerRequestFilter>> preMatchContainerRequestFilterComponents;
-  private final ArrayList<Component<ContainerRequestFilter>> containerRequestFilterComponents;
-  private final ArrayList<Component<ContainerResponseFilter>> containerResponseFilterComponents;
-
   private final ServletConfig servletConfig;
   private final ServletContext servletContext;
   private final Application application;
   private final ArrayList<ResourceInfoImpl> resourceInfos;
 
-  ServerRuntimeContext(
-    final ArrayList<MessageBodyComponent<ReaderInterceptor>> readerInterceptorComponents,
-    final ArrayList<MessageBodyComponent<WriterInterceptor>> writerInterceptorComponents,
-    final ArrayList<MessageBodyComponent<MessageBodyReader<?>>> messageBodyReaderComponents,
-    final ArrayList<MessageBodyComponent<MessageBodyWriter<?>>> messageBodyWriterComponents,
-    final ArrayList<TypeComponent<ExceptionMapper<?>>> exceptionMapperComponents,
-    final ArrayList<Component<ParamConverterProvider>> paramConverterComponents,
-    final ArrayList<Component<ContainerRequestFilter>> preMatchContainerRequestFilterComponents,
-    final ArrayList<Component<ContainerRequestFilter>> containerRequestFilterComponents,
-    final ArrayList<Component<ContainerResponseFilter>> containerResponseFilterComponents,
-    final ServletConfig servletConfig,
-    final ServletContext servletContext,
-    final Application application,
-    final ArrayList<ResourceInfoImpl> resourceInfos
-  ) {
-    super(new ConfigurationImpl(application), readerInterceptorComponents, writerInterceptorComponents, messageBodyReaderComponents, messageBodyWriterComponents, exceptionMapperComponents);
-    this.paramConverterComponents = paramConverterComponents;
-    this.preMatchContainerRequestFilterComponents = preMatchContainerRequestFilterComponents;
-    this.containerRequestFilterComponents = containerRequestFilterComponents;
-    this.containerResponseFilterComponents = containerResponseFilterComponents;
+  ServerRuntimeContext(final ConfigurationImpl configuration, final ServletConfig servletConfig, final ServletContext servletContext, final Application application, final ArrayList<ResourceInfoImpl> resourceInfos) throws IOException {
+    super(configuration);
     this.resourceInfos = resourceInfos;
     this.servletConfig = servletConfig;
     this.servletContext = servletContext;
     this.application = application;
+  }
+
+  @Override
+  ServerComponents getComponents() {
+    return (ServerComponents)super.getComponents();
   }
 
   ServletConfig getServletConfig() {
@@ -83,22 +57,6 @@ class ServerRuntimeContext extends RuntimeContext {
 
   ArrayList<ResourceInfoImpl> getResourceInfos() {
     return resourceInfos;
-  }
-
-  ArrayList<Component<ParamConverterProvider>> getParamConverterComponents() {
-    return paramConverterComponents;
-  }
-
-  ArrayList<Component<ContainerRequestFilter>> getPreMatchContainerRequestFilterComponents() {
-    return preMatchContainerRequestFilterComponents;
-  }
-
-  ArrayList<Component<ContainerRequestFilter>> getContainerRequestFilterComponents() {
-    return containerRequestFilterComponents;
-  }
-
-  ArrayList<Component<ContainerResponseFilter>> getContainerResponseFilterComponents() {
-    return containerResponseFilterComponents;
   }
 
   private final ThreadLocal<ContainerRequestContextImpl> threadLocalRequestContext = new ThreadLocal<>();

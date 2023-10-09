@@ -18,15 +18,15 @@ package org.jetrs;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
+import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.MessageBodyReader;
 
 final class MessageBodyReaderComponent extends MessageBodyComponent<MessageBodyReader<?>> {
-  MessageBodyReaderComponent(final Class<MessageBodyReader<?>> clazz, final MessageBodyReader<?> singleton) throws IllegalAccessException, InstantiationException, InvocationTargetException {
-    super(clazz, singleton, MessageBodyReader.class);
+  MessageBodyReaderComponent(final Class<MessageBodyReader<?>> clazz, final MessageBodyReader<?> singleton, final Map<Class<?>,Integer> contracts, final int priority) {
+    super(clazz, singleton, contracts, priority, MessageBodyReader.class);
     if (getType() == null)
       throw new IllegalStateException("type is null");
   }

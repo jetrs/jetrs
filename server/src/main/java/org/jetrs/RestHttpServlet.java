@@ -17,23 +17,14 @@
 package org.jetrs;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.container.ContainerRequestFilter;
-import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.Application;
-import javax.ws.rs.ext.ExceptionMapper;
-import javax.ws.rs.ext.MessageBodyReader;
-import javax.ws.rs.ext.MessageBodyWriter;
-import javax.ws.rs.ext.ParamConverterProvider;
-import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.RuntimeDelegate;
-import javax.ws.rs.ext.WriterInterceptor;
 
 abstract class RestHttpServlet extends HttpServlet {
   private static final String applicationClassName = "javax.ws.rs.Application";
@@ -63,8 +54,8 @@ abstract class RestHttpServlet extends HttpServlet {
   }
 
   @Override
-  public void init(final ServletConfig config) throws ServletException {
-    super.init(config);
+  public void init(final ServletConfig servletConfig) throws ServletException {
+    super.init(servletConfig);
     String servletPath;
     // FIXME: URL-Encode baseUri, but don't double-encode %-encoded values
     final ApplicationPath applicationPath = AnnotationUtil.getAnnotation(application.getClass(), ApplicationPath.class);
@@ -84,52 +75,14 @@ abstract class RestHttpServlet extends HttpServlet {
           servletPath = servletPath.substring(0, length - 1);
       }
       else {
-        servletPath = config.getServletContext().getContextPath();
+        servletPath = servletConfig.getServletContext().getContextPath();
       }
     }
 
-    final ResourceInfos resourceInfos = new ResourceInfos();
-    final ArrayList<MessageBodyComponent<ReaderInterceptor>> readerInterceptorComponents = new ArrayList<>();
-    final ArrayList<MessageBodyComponent<WriterInterceptor>> writerInterceptorComponents = new ArrayList<>();
-    final ArrayList<MessageBodyComponent<MessageBodyReader<?>>> messageBodyReaderComponents = new ArrayList<>();
-    final ArrayList<MessageBodyComponent<MessageBodyWriter<?>>> messageBodyWriterComponents = new ArrayList<>();
-    final ArrayList<TypeComponent<ExceptionMapper<?>>> exceptionMapperComponents = new ArrayList<>();
-    final ArrayList<Component<ParamConverterProvider>> paramConverterComponents = new ArrayList<>();
-    final ArrayList<Component<ContainerRequestFilter>> preMatchContainerRequestFilterComponents = new ArrayList<>();
-    final ArrayList<Component<ContainerRequestFilter>> containerRequestFilterComponents = new ArrayList<>();
-    final ArrayList<Component<ContainerResponseFilter>> containerResponseFilterComponents = new ArrayList<>();
-
-    final ServerBootstrap bootstrap = new ServerBootstrap(servletPath,
-      readerInterceptorComponents,
-      writerInterceptorComponents,
-      messageBodyReaderComponents,
-      messageBodyWriterComponents,
-      exceptionMapperComponents,
-      paramConverterComponents,
-      preMatchContainerRequestFilterComponents,
-      containerRequestFilterComponents,
-      containerResponseFilterComponents);
-
     try {
-      readerInterceptorComponents.sort(Bootstrap.providerResourceComparator);
-      writerInterceptorComponents.sort(Bootstrap.providerResourceComparator);
-
-      bootstrap.init(application.getSingletons(), application.getClasses(), resourceInfos);
-
-      runtimeContext = new ServerRuntimeContext(
-        readerInterceptorComponents,
-        writerInterceptorComponents,
-        messageBodyReaderComponents,
-        messageBodyWriterComponents,
-        exceptionMapperComponents,
-        paramConverterComponents,
-        preMatchContainerRequestFilterComponents,
-        containerRequestFilterComponents,
-        containerResponseFilterComponents,
-        config,
-        getServletContext(),
-        application,
-        resourceInfos);
+      final ResourceInfos resourceInfos = new ResourceInfos();
+      final ConfigurationImpl configuration = new ConfigurationImpl(new ServerComponents(application, resourceInfos, servletPath), application.getProperties());
+      runtimeContext = new ServerRuntimeContext(configuration, servletConfig, getServletContext(), application, resourceInfos);
 
       final RuntimeDelegate runtimeDelegate = RuntimeDelegate.getInstance();
       if (!(runtimeDelegate instanceof RuntimeDelegateImpl))

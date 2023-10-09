@@ -16,12 +16,12 @@
 
 package org.jetrs;
 
-import java.lang.reflect.InvocationTargetException;
+import java.util.Map;
 
 import javax.ws.rs.ext.ReaderInterceptor;
 
 final class ReaderInterceptorComponent extends MessageBodyComponent<ReaderInterceptor> {
-  ReaderInterceptorComponent(final Class<ReaderInterceptor> clazz, final ReaderInterceptor singleton) throws IllegalAccessException, InstantiationException, InvocationTargetException {
-    super(clazz, singleton, ReaderInterceptor.class);
+  ReaderInterceptorComponent(final Class<ReaderInterceptor> clazz, final ReaderInterceptor singleton, final Map<Class<?>,Integer> contracts, final int priority) {
+    super(clazz, singleton, contracts, priority, ReaderInterceptor.class);
   }
 }

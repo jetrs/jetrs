@@ -24,7 +24,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.AbstractMap;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -82,7 +81,7 @@ class ContainerResponseContextImpl extends InterceptorContextImpl implements Con
   private HttpHeadersImpl headers;
   private Response.StatusType status;
   private ContainerRequestContextImpl requestContext;
-  private ArrayList<MessageBodyComponent<WriterInterceptor>> writerInterceptorComponents;
+  private ComponentSet<MessageBodyComponent<WriterInterceptor>> writerInterceptorComponents;
 
   ContainerResponseContextImpl(final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse, final ContainerRequestContextImpl requestContext) {
     this.httpServletRequest = httpServletRequest;

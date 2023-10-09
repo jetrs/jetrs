@@ -18,13 +18,13 @@ package org.jetrs;
 
 import static org.libj.lang.Assertions.*;
 
-import java.lang.reflect.InvocationTargetException;
+import java.util.Map;
 
 abstract class TypeComponent<T> extends Component<T> {
   private final Class<?> type;
 
-  TypeComponent(final Class<T> clazz, final T singleton, final Class<?> type) throws IllegalAccessException, InstantiationException, InvocationTargetException {
-    super(clazz, singleton);
+  TypeComponent(final Class<T> clazz, final T singleton, final Map<Class<?>,Integer> contracts, final int priority, final Class<?> type) {
+    super(clazz, singleton, contracts, priority);
     this.type = assertNotNull(type, "type is null");
   }
 

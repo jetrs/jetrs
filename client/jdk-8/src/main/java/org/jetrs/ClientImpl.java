@@ -16,27 +16,18 @@
 
 package org.jetrs;
 
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
-import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.ext.ExceptionMapper;
-import javax.ws.rs.ext.MessageBodyReader;
-import javax.ws.rs.ext.MessageBodyWriter;
-import javax.ws.rs.ext.ReaderInterceptor;
-import javax.ws.rs.ext.WriterInterceptor;
 
 class ClientImpl implements Client, ConfigurableImpl<Client> {
   private final ConfigurationImpl configuration;
@@ -58,41 +49,7 @@ class ClientImpl implements Client, ConfigurableImpl<Client> {
   }
 
   private ClientRuntimeContext newClientRuntimeContext() {
-    try {
-      final ArrayList<MessageBodyComponent<ReaderInterceptor>> readerInterceptorComponents = new ArrayList<>();
-      final ArrayList<MessageBodyComponent<WriterInterceptor>> writerInterceptorComponents = new ArrayList<>();
-      final ArrayList<MessageBodyComponent<MessageBodyReader<?>>> messageBodyReaderComponents = new ArrayList<>();
-      final ArrayList<MessageBodyComponent<MessageBodyWriter<?>>> messageBodyWriterComponents = new ArrayList<>();
-      final ArrayList<TypeComponent<ExceptionMapper<?>>> exceptionMapperComponents = new ArrayList<>();
-
-      final Bootstrap<?> bootstrap = new Bootstrap<>(
-        readerInterceptorComponents,
-        writerInterceptorComponents,
-        messageBodyReaderComponents,
-        messageBodyWriterComponents,
-        exceptionMapperComponents);
-
-      final Components components = configuration.getComponents();
-      if (components != null)
-        bootstrap.init(components.instances(), components.classes(), null);
-      else
-        bootstrap.init(null, null, null);
-
-      return new ClientRuntimeContext(configuration, readerInterceptorComponents, writerInterceptorComponents, messageBodyReaderComponents, messageBodyWriterComponents, exceptionMapperComponents);
-    }
-    catch (final IllegalAccessException e) {
-      throw new RuntimeException(e);
-    }
-    catch (final InstantiationException | IOException e) {
-      throw new ProcessingException(e);
-    }
-    catch (final InvocationTargetException e) {
-      final Throwable cause = e.getCause();
-      if (cause instanceof RuntimeException)
-        throw (RuntimeException)cause;
-
-      throw new ProcessingException(cause);
-    }
+    return new ClientRuntimeContext(configuration);
   }
 
   private boolean closed;

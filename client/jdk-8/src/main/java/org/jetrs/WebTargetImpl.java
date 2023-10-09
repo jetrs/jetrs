@@ -32,17 +32,17 @@ import javax.ws.rs.core.UriBuilder;
 class WebTargetImpl implements ConfigurableImpl<WebTarget>, WebTarget {
   private final ClientImpl client;
   private final ClientRuntimeContext runtimeContext;
-  private final Configuration config;
+  private final Configuration configuration;
   private final UriBuilder uriBuilder;
   private final ExecutorService executorService;
   private final ScheduledExecutorService scheduledExecutorService;
   private final long connectTimeout;
   private final long readTimeout;
 
-  WebTargetImpl(final ClientImpl client, final ClientRuntimeContext runtimeContext, final Configuration config, final UriBuilder uriBuilder, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final long connectTimeout, final long readTimeout) {
+  WebTargetImpl(final ClientImpl client, final ClientRuntimeContext runtimeContext, final Configuration configuration, final UriBuilder uriBuilder, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final long connectTimeout, final long readTimeout) {
     this.client = client;
     this.runtimeContext = runtimeContext;
-    this.config = config;
+    this.configuration = configuration;
     this.uriBuilder = uriBuilder;
     this.executorService = executorService;
     this.scheduledExecutorService = scheduledExecutorService;
@@ -54,7 +54,7 @@ class WebTargetImpl implements ConfigurableImpl<WebTarget>, WebTarget {
 
   @Override
   public Configuration getConfiguration() {
-    return config;
+    return configuration;
   }
 
   @Override

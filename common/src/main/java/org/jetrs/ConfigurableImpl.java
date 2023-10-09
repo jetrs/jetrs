@@ -25,7 +25,7 @@ import javax.ws.rs.core.Configurable;
 interface ConfigurableImpl<C extends Configurable<? super C>> extends Configurable<C> {
   @Override
   default C property(final String name, final Object value) {
-    getConfiguration().getProperties().put(name, value);
+    ((ConfigurationImpl)getConfiguration()).getOrCreateProperties().put(name, value);
     return (C)this;
   }
 
@@ -35,9 +35,8 @@ interface ConfigurableImpl<C extends Configurable<? super C>> extends Configurab
    * @throws NullPointerException If {@code component} is null.
    */
   @Override
-  @SuppressWarnings("rawtypes")
   default C register(final Object component) {
-    ((ConfigurationImpl)getConfiguration()).getOrCreateComponents().add(new Component(component.getClass(), component));
+    ((ConfigurationImpl)getConfiguration()).getOrCreateComponents().add(component.getClass(), component, null, -1);
     return (C)this;
   }
 
@@ -47,9 +46,8 @@ interface ConfigurableImpl<C extends Configurable<? super C>> extends Configurab
    * @throws NullPointerException If {@code component} is null.
    */
   @Override
-  @SuppressWarnings("rawtypes")
   default C register(final Object component, final int priority) {
-    ((ConfigurationImpl)getConfiguration()).getOrCreateComponents().add(new Component(component.getClass(), component, priority));
+    ((ConfigurationImpl)getConfiguration()).getOrCreateComponents().add(component.getClass(), component, null, priority);
     return (C)this;
   }
 
@@ -59,9 +57,9 @@ interface ConfigurableImpl<C extends Configurable<? super C>> extends Configurab
    * @throws NullPointerException If {@code component} is null.
    */
   @Override
-  @SuppressWarnings("rawtypes")
   default C register(final Object component, final Class<?> ... contracts) {
-    ((ConfigurationImpl)getConfiguration()).getOrCreateComponents().add(new Component(component.getClass(), component, contracts));
+    final Class<? extends Object> clazz = component.getClass();
+    ((ConfigurationImpl)getConfiguration()).getOrCreateComponents().add(clazz, component, Component.filterAssignable(clazz, contracts), -1);
     return (C)this;
   }
 
@@ -71,9 +69,9 @@ interface ConfigurableImpl<C extends Configurable<? super C>> extends Configurab
    * @throws NullPointerException If {@code component} is null.
    */
   @Override
-  @SuppressWarnings("rawtypes")
   default C register(final Object component, final Map<Class<?>,Integer> contracts) {
-    ((ConfigurationImpl)getConfiguration()).getOrCreateComponents().add(new Component(component.getClass(), component, contracts));
+    final Class<? extends Object> clazz = component.getClass();
+    ((ConfigurationImpl)getConfiguration()).getOrCreateComponents().add(clazz, component, Component.filterAssignable(clazz, contracts), -1);
     return (C)this;
   }
 
@@ -84,7 +82,7 @@ interface ConfigurableImpl<C extends Configurable<? super C>> extends Configurab
    */
   @Override
   default C register(final Class<?> componentClass) {
-    ((ConfigurationImpl)getConfiguration()).getOrCreateComponents().add(new Component<>(Objects.requireNonNull(componentClass), null));
+    ((ConfigurationImpl)getConfiguration()).getOrCreateComponents().add(Objects.requireNonNull(componentClass), null, null, -1);
     return (C)this;
   }
 
@@ -95,7 +93,7 @@ interface ConfigurableImpl<C extends Configurable<? super C>> extends Configurab
    */
   @Override
   default C register(final Class<?> componentClass, final int priority) {
-    ((ConfigurationImpl)getConfiguration()).getOrCreateComponents().add(new Component<>(Objects.requireNonNull(componentClass), null, priority));
+    ((ConfigurationImpl)getConfiguration()).getOrCreateComponents().add(Objects.requireNonNull(componentClass), null, null, priority);
     return (C)this;
   }
 
@@ -106,7 +104,7 @@ interface ConfigurableImpl<C extends Configurable<? super C>> extends Configurab
    */
   @Override
   default C register(final Class<?> componentClass, final Class<?> ... contracts) {
-    ((ConfigurationImpl)getConfiguration()).getOrCreateComponents().add(new Component<>(Objects.requireNonNull(componentClass), null, contracts));
+    ((ConfigurationImpl)getConfiguration()).getOrCreateComponents().add(Objects.requireNonNull(componentClass), null, Component.filterAssignable(componentClass, contracts), -1);
     return (C)this;
   }
 
@@ -117,7 +115,7 @@ interface ConfigurableImpl<C extends Configurable<? super C>> extends Configurab
    */
   @Override
   default C register(final Class<?> componentClass, final Map<Class<?>,Integer> contracts) {
-    ((ConfigurationImpl)getConfiguration()).getOrCreateComponents().add(new Component<>(Objects.requireNonNull(componentClass), null, contracts));
+    ((ConfigurationImpl)getConfiguration()).getOrCreateComponents().add(Objects.requireNonNull(componentClass), null, Component.filterAssignable(componentClass, contracts), -1);
     return (C)this;
   }
 }

@@ -16,25 +16,9 @@
 
 package org.jetrs;
 
-import java.util.ArrayList;
-
-import javax.ws.rs.core.Configuration;
-import javax.ws.rs.ext.ExceptionMapper;
-import javax.ws.rs.ext.MessageBodyReader;
-import javax.ws.rs.ext.MessageBodyWriter;
-import javax.ws.rs.ext.ReaderInterceptor;
-import javax.ws.rs.ext.WriterInterceptor;
-
 class ClientRuntimeContext extends RuntimeContext {
-  ClientRuntimeContext(
-    final Configuration configuration,
-    final ArrayList<MessageBodyComponent<ReaderInterceptor>> readerInterceptorComponents,
-    final ArrayList<MessageBodyComponent<WriterInterceptor>> writerInterceptorComponents,
-    final ArrayList<MessageBodyComponent<MessageBodyReader<?>>> messageBodyReaderComponents,
-    final ArrayList<MessageBodyComponent<MessageBodyWriter<?>>> messageBodyWriterComponents,
-    final ArrayList<TypeComponent<ExceptionMapper<?>>> exceptionMapperComponents
-  ) {
-    super(configuration, readerInterceptorComponents, writerInterceptorComponents, messageBodyReaderComponents, messageBodyWriterComponents, exceptionMapperComponents);
+  ClientRuntimeContext(final ConfigurationImpl configuration) {
+    super(configuration);
   }
 
   @Override

@@ -18,15 +18,15 @@ package org.jetrs;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
+import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.MessageBodyWriter;
 
 final class MessageBodyWriterComponent extends MessageBodyComponent<MessageBodyWriter<?>> {
-  MessageBodyWriterComponent(final Class<MessageBodyWriter<?>> clazz, final MessageBodyWriter<?> singleton) throws IllegalAccessException, InstantiationException, InvocationTargetException {
-    super(clazz, singleton, MessageBodyWriter.class);
+  MessageBodyWriterComponent(final Class<MessageBodyWriter<?>> clazz, final MessageBodyWriter<?> singleton, final Map<Class<?>,Integer> contracts, final int priority) {
+    super(clazz, singleton, contracts, priority, MessageBodyWriter.class);
   }
 
   @Override
