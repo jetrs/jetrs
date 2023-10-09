@@ -36,7 +36,7 @@ import org.jetrs.server.app.service.MediaTypeService;
 import org.junit.AfterClass;
 import org.junit.Test;
 
-public class MediaTypeServerTest {
+public class MediaTypeServerITest {
   static {
     System.setProperty(CommonProperties.DISABLE_STANDARD_PROVIDER, "*");
   }

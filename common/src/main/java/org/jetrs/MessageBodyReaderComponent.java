@@ -25,8 +25,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.MessageBodyReader;
 
 final class MessageBodyReaderComponent extends MessageBodyComponent<MessageBodyReader<?>> {
-  MessageBodyReaderComponent(final Class<MessageBodyReader<?>> clazz, final MessageBodyReader<?> singleton, final Map<Class<?>,Integer> contracts, final int priority) {
-    super(clazz, singleton, contracts, priority, MessageBodyReader.class);
+  MessageBodyReaderComponent(final Class<MessageBodyReader<?>> clazz, final MessageBodyReader<?> instance, final boolean isDefaultProvider, final Map<Class<?>,Integer> contracts, final int priority) {
+    super(clazz, instance, isDefaultProvider, contracts, priority, MessageBodyReader.class);
     if (getType() == null)
       throw new IllegalStateException("type is null");
   }

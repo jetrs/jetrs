@@ -17,7 +17,6 @@
 package org.jetrs;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.HashSet;
@@ -75,12 +74,16 @@ class Components implements Cloneable {
     return false;
   }
 
-  Components() {
-    loadDefaultProviders();
-  }
+  private static final HashSet<Class<?>> defaultProviderClasses = new HashSet<Class<?>>() {
+    @Override
+    public boolean add(final Class<?> e) {
+      // Don't add the class if a subclass instance of it is already present in `singletons` // FIXME: "subclass"?
+      return contains(e) || super.add(e);
+    }
+  };
 
   @SuppressWarnings("rawtypes")
-  private void loadDefaultProviders() {
+  private static void loadDefaultProviders() throws IOException {
     final String disableDefaultProviders = System.getProperty(CommonProperties.DISABLE_STANDARD_PROVIDER);
     final Set<String> disabledProviderClassNames;
     if (disableDefaultProviders != null) {
@@ -94,96 +97,101 @@ class Components implements Cloneable {
       disabledProviderClassNames = Collections.EMPTY_SET;
     }
 
-    final HashSet<Class<?>> providerClasses = new HashSet<Class<?>>() {
-      @Override
-      public boolean add(final Class<?> e) {
-        // Don't add the class if a subclass instance of it is already present in `singletons` // FIXME: "subclass"?
-        return contains(e) || super.add(e);
-      }
-    };
+    final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+    ServiceLoaders.load(ExceptionMapper.class, classLoader, (final Class<? super ExceptionMapper> e) -> {
+      if (!contains(disabledProviderClassNames, e, ExceptionMapper.class))
+        defaultProviderClasses.add(e);
+    });
+    ServiceLoaders.load(MessageBodyReader.class, classLoader, (final Class<? super MessageBodyReader> e) -> {
+      if (!contains(disabledProviderClassNames, e, MessageBodyReader.class))
+        defaultProviderClasses.add(e);
+    });
+    ServiceLoaders.load(MessageBodyWriter.class, classLoader, (final Class<? super MessageBodyWriter> e) -> {
+      if (!contains(disabledProviderClassNames, e, MessageBodyWriter.class))
+        defaultProviderClasses.add(e);
+    });
+  }
 
+  static {
     try {
-      final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-      ServiceLoaders.load(ExceptionMapper.class, classLoader, (final Class<? super ExceptionMapper> e) -> {
-        if (!contains(disabledProviderClassNames, e, ExceptionMapper.class))
-          providerClasses.add(e);
-      });
-      ServiceLoaders.load(MessageBodyReader.class, classLoader, (final Class<? super MessageBodyReader> e) -> {
-        if (!contains(disabledProviderClassNames, e, MessageBodyReader.class))
-          providerClasses.add(e);
-      });
-      ServiceLoaders.load(MessageBodyWriter.class, classLoader, (final Class<? super MessageBodyWriter> e) -> {
-        if (!contains(disabledProviderClassNames, e, MessageBodyWriter.class))
-          providerClasses.add(e);
-      });
+      loadDefaultProviders();
     }
     catch (final IOException e) {
-      throw new UncheckedIOException(e);
+      throw new ExceptionInInitializerError(e);
     }
+  }
 
-    if (providerClasses.size() > 0) {
-      for (final Class<?> providerClass : providerClasses) { // [S]
+  Components() {
+    if (defaultProviderClasses.size() > 0) {
+      for (final Class<?> defaultProviderClass : defaultProviderClasses) { // [S]
         try {
-          add(providerClass, hasContextFields(providerClass) ? null : providerClass.getConstructor().newInstance(), null, -1);
-          if (logger.isDebugEnabled()) {
+          if (register(defaultProviderClass, hasContextFields(defaultProviderClass) ? null : defaultProviderClass.getConstructor().newInstance(), true, null, -1) && logger.isDebugEnabled()) {
             final StringBuilder b = new StringBuilder();
-            final Consumes c = providerClass.getAnnotation(Consumes.class);
+            final Consumes c = defaultProviderClass.getAnnotation(Consumes.class);
             if (c != null)
               b.append(c).append(' ');
 
-            final Produces p = providerClass.getAnnotation(Produces.class);
+            final Produces p = defaultProviderClass.getAnnotation(Produces.class);
             if (p != null)
               b.append(p).append(' ');
 
-            b.append("-> ").append(providerClass.getSimpleName());
+            b.append("-> ").append(defaultProviderClass.getSimpleName());
             logger.debug(b.toString());
           }
         }
+        catch (final IllegalArgumentException e) {
+        }
         catch (final Exception | ServiceConfigurationError e) {
-          if (logger.isWarnEnabled()) { logger.warn("Failed to load provider " + providerClass, e); }
+          if (logger.isWarnEnabled()) { logger.warn("Failed to load provider " + defaultProviderClass, e); }
         }
       }
     }
   }
 
   @SuppressWarnings("unchecked")
-  <T> boolean add(final Class<? extends T> clazz, final T singleton, final Map<Class<?>,Integer> contracts, final int priority) {
+  <T> boolean register(final Class<? extends T> clazz, final T instance, final boolean isDefaultProvider, final Map<Class<?>,Integer> contracts, final int priority) {
+    boolean added = false;
     if (ReaderInterceptor.class.isAssignableFrom(clazz)) {
       if (readerInterceptorComponents == null)
         readerInterceptorComponents = new ComponentSet.Typed<>();
 
-      readerInterceptorComponents.add(new ReaderInterceptorComponent((Class<ReaderInterceptor>)clazz, (ReaderInterceptor)singleton, contracts, priority));
+      readerInterceptorComponents.register(new ReaderInterceptorComponent((Class<ReaderInterceptor>)clazz, (ReaderInterceptor)instance, isDefaultProvider, contracts, priority));
+      added = true;
     }
 
     if (WriterInterceptor.class.isAssignableFrom(clazz)) {
       if (writerInterceptorComponents == null)
         writerInterceptorComponents = new ComponentSet.Typed<>();
 
-      writerInterceptorComponents.add(new WriterInterceptorComponent((Class<WriterInterceptor>)clazz, (WriterInterceptor)singleton, contracts, priority));
+      writerInterceptorComponents.register(new WriterInterceptorComponent((Class<WriterInterceptor>)clazz, (WriterInterceptor)instance, isDefaultProvider, contracts, priority));
+      added = true;
     }
 
     if (MessageBodyReader.class.isAssignableFrom(clazz)) {
       if (messageBodyReaderComponents == null)
         messageBodyReaderComponents = new ComponentSet.Typed<>();
 
-      messageBodyReaderComponents.add(new MessageBodyReaderComponent((Class<MessageBodyReader<?>>)clazz, (MessageBodyReader<?>)singleton, contracts, priority));
+      messageBodyReaderComponents.register(new MessageBodyReaderComponent((Class<MessageBodyReader<?>>)clazz, (MessageBodyReader<?>)instance, isDefaultProvider, contracts, priority));
+      added = true;
     }
 
     if (MessageBodyWriter.class.isAssignableFrom(clazz)) {
       if (messageBodyWriterComponents == null)
         messageBodyWriterComponents = new ComponentSet.Typed<>();
 
-      messageBodyWriterComponents.add(new MessageBodyWriterComponent((Class<MessageBodyWriter<?>>)clazz, (MessageBodyWriter<?>)singleton, contracts, priority));
+      messageBodyWriterComponents.register(new MessageBodyWriterComponent((Class<MessageBodyWriter<?>>)clazz, (MessageBodyWriter<?>)instance, isDefaultProvider, contracts, priority));
+      added = true;
     }
 
     if (ExceptionMapper.class.isAssignableFrom(clazz)) {
       if (exceptionMapperComponents == null)
         exceptionMapperComponents = new ComponentSet.Typed<>();
 
-      exceptionMapperComponents.add(new ExceptionMapperComponent((Class<ExceptionMapper<?>>)clazz, (ExceptionMapper<?>)singleton, contracts, priority));
+      exceptionMapperComponents.register(new ExceptionMapperComponent((Class<ExceptionMapper<?>>)clazz, (ExceptionMapper<?>)instance, isDefaultProvider, contracts, priority));
+      added = true;
     }
 
-    return false;
+    return added;
   }
 
   private ComponentSet<MessageBodyComponent<ReaderInterceptor>> readerInterceptorComponents;

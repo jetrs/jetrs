@@ -27,8 +27,8 @@ import javax.ws.rs.core.MediaType;
 abstract class MessageBodyComponent<T> extends TypeComponent<T> {
   private final ServerMediaType[] allowedTypes;
 
-  MessageBodyComponent(final Class<T> clazz, final T singleton, final Map<Class<?>,Integer> contracts, final int priority, final Class<?> interfaceType) {
-    super(clazz, singleton, contracts, priority, getGenericInterfaceFirstTypeArgument(clazz, interfaceType, Object.class));
+  MessageBodyComponent(final Class<T> clazz, final T instance, final boolean isDefaultProvider, final Map<Class<?>,Integer> contracts, final int priority, final Class<?> interfaceType) {
+    super(clazz, instance, isDefaultProvider, contracts, priority, getGenericInterfaceFirstTypeArgument(clazz, interfaceType, Object.class));
     final Consumes consumes = AnnotationUtil.getAnnotation(clazz, Consumes.class);
     this.allowedTypes = consumes != null ? ServerMediaType.valueOf(consumes.value()) : MediaTypes.WILDCARD_SERVER_TYPE;
   }

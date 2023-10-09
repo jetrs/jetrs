@@ -72,7 +72,7 @@ final class ServerComponents extends Components {
     }
   }
 
-  private static <T> void add(final HttpMethod httpMethodAnnotation, final Method method, final String baseUri, final Path classPath, final Path methodPath, final ResourceInfos resourceInfos, final Class<? extends T> clazz, final T singleton) {
+  private static <T> void register(final HttpMethod httpMethodAnnotation, final Method method, final String baseUri, final Path classPath, final Path methodPath, final ResourceInfos resourceInfos, final Class<? extends T> clazz, final T singleton) {
     final ResourceInfoImpl resourceInfo = new ResourceInfoImpl(resourceInfos, httpMethodAnnotation, method, baseUri, classPath, methodPath, singleton);
     if (logger.isDebugEnabled()) { logger.debug((httpMethodAnnotation != null ? httpMethodAnnotation.value() : "*") + " " + resourceInfo.getUriTemplate() + " -> " + clazz.getSimpleName() + "." + method.getName() + "()"); }
     resourceInfos.add(resourceInfo);
@@ -98,7 +98,7 @@ final class ServerComponents extends Components {
       final HashSet<Class<?>> initedClasses = new HashSet<>();
       final Predicate<Class<?>> initialize = (final Class<?> clazz) -> {
         if (!Modifier.isAbstract(clazz.getModifiers()) && !initedClasses.contains(clazz))
-          add(clazz, null, null, -1);
+          register(clazz, null, false, null, -1);
 
         initedClasses.add(clazz);
         return false;
@@ -120,12 +120,12 @@ final class ServerComponents extends Components {
       if (singletons != null && singletons.size() > 0)
         for (final Object singleton : singletons) // [S]
           if (singleton != null)
-            add(singleton.getClass(), singleton, null, -1);
+            register(singleton.getClass(), singleton, false, null, -1);
 
       if (classes != null && classes.size() > 0)
         for (final Class<?> clazz : classes) // [S]
           if (clazz != null)
-            add(clazz, null, null, -1);
+            register(clazz, null, false, null, -1);
     }
 
     if (afterAdds != null)
@@ -221,12 +221,14 @@ final class ServerComponents extends Components {
 
   @Override
   @SuppressWarnings("unchecked")
-  <T> boolean add(final Class<? extends T> clazz, final T singleton, final Map<Class<?>,Integer> contracts, final int priority) {
+  <T> boolean register(final Class<? extends T> clazz, final T instance, final boolean isDefaultProvider, final Map<Class<?>,Integer> contracts, final int priority) {
+    boolean added = false;
     if (ParamConverterProvider.class.isAssignableFrom(clazz)) {
       if (paramConverterComponents == null)
         paramConverterComponents = new ComponentSet.Untyped<>();
 
-      paramConverterComponents.add(new ParamConverterComponent((Class<ParamConverterProvider>)clazz, (ParamConverterProvider)singleton, contracts, priority));
+      paramConverterComponents.register(new ParamConverterComponent((Class<ParamConverterProvider>)clazz, (ParamConverterProvider)instance, isDefaultProvider, contracts, priority));
+      added = true;
     }
 
     if (ContainerRequestFilter.class.isAssignableFrom(clazz)) {
@@ -244,33 +246,35 @@ final class ServerComponents extends Components {
         requestFilterComponents = containerRequestFilterComponents;
       }
 
-      requestFilterComponents.add(new ContainerRequestFilterComponent((Class<ContainerRequestFilter>)clazz, (ContainerRequestFilter)singleton, contracts, priority));
+      requestFilterComponents.register(new ContainerRequestFilterComponent((Class<ContainerRequestFilter>)clazz, (ContainerRequestFilter)instance, isDefaultProvider, contracts, priority));
+      added = true;
     }
 
     if (ContainerResponseFilter.class.isAssignableFrom(clazz)) {
       if (containerResponseFilterComponents == null)
         containerResponseFilterComponents = new ComponentSet.Untyped<>();
 
-      containerResponseFilterComponents.add(new ContainerResponseFilterComponent((Class<ContainerResponseFilter>)clazz, (ContainerResponseFilter)singleton, contracts, priority));
       if (logger.isDebugEnabled() && AnnotationUtil.isAnnotationPresent(clazz, PreMatching.class))
         logger.debug("@PreMatching annotation is not applicable to ContainerResponseFilter");
+
+      containerResponseFilterComponents.register(new ContainerResponseFilterComponent((Class<ContainerResponseFilter>)clazz, (ContainerResponseFilter)instance, isDefaultProvider, contracts, priority));
+      added = true;
     }
 
     if (!isRootResource(clazz))
-      return super.add(singleton == null ? clazz : singleton.getClass(), singleton, contracts, priority);
+      return super.register(instance == null ? clazz : instance.getClass(), instance, isDefaultProvider, contracts, priority) || added;
 
     final Method[] methods = clazz.getMethods();
     if (methods.length == 0)
-      return false;
+      return added;
 
-    boolean added = false;
     final HashSet<HttpMethod> httpMethodAnnotations = new HashSet<>();
     for (final Method method : clazz.getMethods()) { // [A]
       final Path methodPath = AnnotationUtil.digestAnnotations(method, httpMethodAnnotations);
       final Path classPath = AnnotationUtil.getAnnotation(clazz, Path.class);
       if (httpMethodAnnotations.size() > 0) {
         for (final HttpMethod httpMethodAnnotation : httpMethodAnnotations) // [S]
-          add(httpMethodAnnotation, method, baseUri, classPath, methodPath, resourceInfos, clazz, singleton);
+          register(httpMethodAnnotation, method, baseUri, classPath, methodPath, resourceInfos, clazz, instance);
 
         httpMethodAnnotations.clear();
         added = true;
@@ -286,7 +290,7 @@ final class ServerComponents extends Components {
           afterAdds.add(() -> {
             for (final ResourceInfo resourceInfo : resourceInfos) {
               if (resourceInfo.getResourceClass() == returnType) {
-                add(null, method, baseUri, classPath, methodPath, resourceInfos, clazz, singleton);
+                register(null, method, baseUri, classPath, methodPath, resourceInfos, clazz, instance);
                 break;
               }
             }

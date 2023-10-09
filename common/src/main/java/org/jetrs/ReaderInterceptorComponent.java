@@ -21,7 +21,7 @@ import java.util.Map;
 import javax.ws.rs.ext.ReaderInterceptor;
 
 final class ReaderInterceptorComponent extends MessageBodyComponent<ReaderInterceptor> {
-  ReaderInterceptorComponent(final Class<ReaderInterceptor> clazz, final ReaderInterceptor singleton, final Map<Class<?>,Integer> contracts, final int priority) {
-    super(clazz, singleton, contracts, priority, ReaderInterceptor.class);
+  ReaderInterceptorComponent(final Class<ReaderInterceptor> clazz, final ReaderInterceptor instance, final boolean isDefaultProvider, final Map<Class<?>,Integer> contracts, final int priority) {
+    super(clazz, instance, isDefaultProvider, contracts, priority, ReaderInterceptor.class);
   }
 }

@@ -90,11 +90,13 @@ abstract class Component<T> {
   final T instance;
   private T singleton;
   final boolean isSingleton;
-  final int priority;
+  final boolean isDefaultProvider;
   final Map<Class<?>,Integer> contracts;
+  final int priority;
 
-  Component(final Class<T> clazz, final T instance, final Map<Class<?>,Integer> contracts, final int priority) {
+  Component(final Class<T> clazz, final T instance, final boolean isDefaultProvider, final Map<Class<?>,Integer> contracts, final int priority) {
     this.clazz = clazz;
+    this.isDefaultProvider = isDefaultProvider;
     this.contracts = contracts;
     this.priority = priority < 0 ? getPriority(clazz) : priority;
 

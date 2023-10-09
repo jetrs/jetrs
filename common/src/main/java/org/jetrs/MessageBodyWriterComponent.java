@@ -25,8 +25,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.MessageBodyWriter;
 
 final class MessageBodyWriterComponent extends MessageBodyComponent<MessageBodyWriter<?>> {
-  MessageBodyWriterComponent(final Class<MessageBodyWriter<?>> clazz, final MessageBodyWriter<?> singleton, final Map<Class<?>,Integer> contracts, final int priority) {
-    super(clazz, singleton, contracts, priority, MessageBodyWriter.class);
+  MessageBodyWriterComponent(final Class<MessageBodyWriter<?>> clazz, final MessageBodyWriter<?> instance, final boolean isDefaultProvider, final Map<Class<?>,Integer> contracts, final int priority) {
+    super(clazz, instance, isDefaultProvider, contracts, priority, MessageBodyWriter.class);
   }
 
   @Override

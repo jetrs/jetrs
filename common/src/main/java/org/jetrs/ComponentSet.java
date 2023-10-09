@@ -20,9 +20,14 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Map;
 
+import org.libj.logging.LoggerUtil;
 import org.libj.util.SortedSetArrayList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.event.Level;
 
 abstract class ComponentSet<T extends Component<?>> extends SortedSetArrayList<T> {
+  private static final Logger logger = LoggerFactory.getLogger(ComponentSet.class);
   private static final Comparator<TypeComponent<?>> typeComponentComparator = Comparator.nullsFirst((o1, o2) -> o1.getType() == o2.getType() ? Integer.compare(o1.getPriority(), o2.getPriority()) : o1.getType().isAssignableFrom(o2.getType()) ? 1 : -1);
   private static final Comparator<Component<?>> componentComparator = Comparator.nullsFirst((o1, o2) -> Integer.compare(o1.getPriority(), o2.getPriority()));
   @SuppressWarnings("rawtypes")
@@ -44,15 +49,31 @@ abstract class ComponentSet<T extends Component<?>> extends SortedSetArrayList<T
     super(comparator);
   }
 
-  @Override
-  public boolean add(final T e) {
-    for (int i = 0, i$ = size(); i < i$; ++i) { // [RA]
+  boolean register(final T e) {
+    for (int i = size() - 1; i >= 0; --i) { // [RA]
       final Component<?> component = get(i);
-      if (e.clazz.equals(component.clazz))
-        throw new IllegalArgumentException(e.instance != null ? "An instance component of class " + component.clazz.getName() + " is already present in this configuration" : "A class component of class " + component.clazz.getName() + " is already present in this configuration"); // FIXME: "this configuration"?
+      if (e.clazz.equals(component.clazz)) {
+        if (e.isDefaultProvider) {
+          LoggerUtil.log(logger, component.isDefaultProvider ? Level.WARN : Level.DEBUG, e.instance != null ? "A default provider instance component of default provider class " + component.clazz.getName() + " is already present in this configuration" : "A default provider class component of class " + component.clazz.getName() + " is already present in this configuration"); // FIXME: "this configuration"?
+          return false;
+        }
+
+        LoggerUtil.log(logger, component.isDefaultProvider ? Level.WARN : Level.DEBUG, e.instance != null ? "An instance component of %sclass " + component.clazz.getName() + " is already present in this configuration" : "A class component of %sclass " + component.clazz.getName() + " is already present in this configuration"); // FIXME: "this configuration"?
+        if (!component.isDefaultProvider)
+          return false;
+
+        // An explicitly set (custom) provider can take the place of a default (standard) provider.
+        remove(i);
+        break;
+      }
     }
 
     return super.add(e);
+  }
+
+  @Override
+  public boolean add(final T e) {
+    throw new UnsupportedOperationException();
   }
 
   boolean containsComponent(final Class<?> clazz) {

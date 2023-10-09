@@ -21,7 +21,7 @@ import java.util.Map;
 import javax.ws.rs.ext.ParamConverterProvider;
 
 final class ParamConverterComponent extends Component<ParamConverterProvider> {
-  ParamConverterComponent(final Class<ParamConverterProvider> clazz, final ParamConverterProvider singleton, final Map<Class<?>,Integer> contracts, final int priority) {
-    super(clazz, singleton, contracts, priority);
+  ParamConverterComponent(final Class<ParamConverterProvider> clazz, final ParamConverterProvider instance, final boolean isDefaultProvider, final Map<Class<?>,Integer> contracts, final int priority) {
+    super(clazz, instance, isDefaultProvider, contracts, priority);
   }
 }

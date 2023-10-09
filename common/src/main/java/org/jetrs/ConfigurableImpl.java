@@ -36,7 +36,7 @@ interface ConfigurableImpl<C extends Configurable<? super C>> extends Configurab
    */
   @Override
   default C register(final Object component) {
-    ((ConfigurationImpl)getConfiguration()).getOrCreateComponents().add(component.getClass(), component, null, -1);
+    ((ConfigurationImpl)getConfiguration()).getOrCreateComponents().register(component.getClass(), component, false, null, -1);
     return (C)this;
   }
 
@@ -47,7 +47,7 @@ interface ConfigurableImpl<C extends Configurable<? super C>> extends Configurab
    */
   @Override
   default C register(final Object component, final int priority) {
-    ((ConfigurationImpl)getConfiguration()).getOrCreateComponents().add(component.getClass(), component, null, priority);
+    ((ConfigurationImpl)getConfiguration()).getOrCreateComponents().register(component.getClass(), component, false, null, priority);
     return (C)this;
   }
 
@@ -59,7 +59,7 @@ interface ConfigurableImpl<C extends Configurable<? super C>> extends Configurab
   @Override
   default C register(final Object component, final Class<?> ... contracts) {
     final Class<? extends Object> clazz = component.getClass();
-    ((ConfigurationImpl)getConfiguration()).getOrCreateComponents().add(clazz, component, Component.filterAssignable(clazz, contracts), -1);
+    ((ConfigurationImpl)getConfiguration()).getOrCreateComponents().register(clazz, component, false, Component.filterAssignable(clazz, contracts), -1);
     return (C)this;
   }
 
@@ -71,7 +71,7 @@ interface ConfigurableImpl<C extends Configurable<? super C>> extends Configurab
   @Override
   default C register(final Object component, final Map<Class<?>,Integer> contracts) {
     final Class<? extends Object> clazz = component.getClass();
-    ((ConfigurationImpl)getConfiguration()).getOrCreateComponents().add(clazz, component, Component.filterAssignable(clazz, contracts), -1);
+    ((ConfigurationImpl)getConfiguration()).getOrCreateComponents().register(clazz, component, false, Component.filterAssignable(clazz, contracts), -1);
     return (C)this;
   }
 
@@ -82,7 +82,7 @@ interface ConfigurableImpl<C extends Configurable<? super C>> extends Configurab
    */
   @Override
   default C register(final Class<?> componentClass) {
-    ((ConfigurationImpl)getConfiguration()).getOrCreateComponents().add(Objects.requireNonNull(componentClass), null, null, -1);
+    ((ConfigurationImpl)getConfiguration()).getOrCreateComponents().register(Objects.requireNonNull(componentClass), null, false, null, -1);
     return (C)this;
   }
 
@@ -93,7 +93,7 @@ interface ConfigurableImpl<C extends Configurable<? super C>> extends Configurab
    */
   @Override
   default C register(final Class<?> componentClass, final int priority) {
-    ((ConfigurationImpl)getConfiguration()).getOrCreateComponents().add(Objects.requireNonNull(componentClass), null, null, priority);
+    ((ConfigurationImpl)getConfiguration()).getOrCreateComponents().register(Objects.requireNonNull(componentClass), null, false, null, priority);
     return (C)this;
   }
 
@@ -104,7 +104,7 @@ interface ConfigurableImpl<C extends Configurable<? super C>> extends Configurab
    */
   @Override
   default C register(final Class<?> componentClass, final Class<?> ... contracts) {
-    ((ConfigurationImpl)getConfiguration()).getOrCreateComponents().add(Objects.requireNonNull(componentClass), null, Component.filterAssignable(componentClass, contracts), -1);
+    ((ConfigurationImpl)getConfiguration()).getOrCreateComponents().register(Objects.requireNonNull(componentClass), null, false, Component.filterAssignable(componentClass, contracts), -1);
     return (C)this;
   }
 
@@ -115,7 +115,7 @@ interface ConfigurableImpl<C extends Configurable<? super C>> extends Configurab
    */
   @Override
   default C register(final Class<?> componentClass, final Map<Class<?>,Integer> contracts) {
-    ((ConfigurationImpl)getConfiguration()).getOrCreateComponents().add(Objects.requireNonNull(componentClass), null, Component.filterAssignable(componentClass, contracts), -1);
+    ((ConfigurationImpl)getConfiguration()).getOrCreateComponents().register(Objects.requireNonNull(componentClass), null, false, Component.filterAssignable(componentClass, contracts), -1);
     return (C)this;
   }
 }

@@ -28,6 +28,7 @@ import org.junit.Test;
 
 @SuppressWarnings("unused")
 public class UriTemplateTest {
+  @SuppressWarnings("all")
   static class TestPath implements Path {
     private final String value;
 

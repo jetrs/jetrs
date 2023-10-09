@@ -21,7 +21,7 @@ import java.util.Map;
 import javax.ws.rs.container.ContainerRequestFilter;
 
 final class ContainerRequestFilterComponent extends Component<ContainerRequestFilter> {
-  ContainerRequestFilterComponent(final Class<ContainerRequestFilter> clazz, final ContainerRequestFilter singleton, final Map<Class<?>,Integer> contracts, final int priority) {
-    super(clazz, singleton, contracts, priority);
+  ContainerRequestFilterComponent(final Class<ContainerRequestFilter> clazz, final ContainerRequestFilter instance, final boolean isDefaultProvider, final Map<Class<?>,Integer> contracts, final int priority) {
+    super(clazz, instance, isDefaultProvider, contracts, priority);
   }
 }
