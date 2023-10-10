@@ -24,7 +24,7 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Variant;
 
-class RequestImpl implements Request {
+final class RequestImpl implements Request {
   private final String method;
 
   RequestImpl(final String method) {

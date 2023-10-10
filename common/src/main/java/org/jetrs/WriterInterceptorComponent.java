@@ -21,6 +21,16 @@ import java.util.Map;
 import javax.ws.rs.ext.WriterInterceptor;
 
 final class WriterInterceptorComponent extends MessageBodyComponent<WriterInterceptor> {
+  static ComponentSet<MessageBodyComponent<WriterInterceptor>> register(ComponentSet<MessageBodyComponent<WriterInterceptor>> components, final Class<WriterInterceptor> clazz, final WriterInterceptor instance, final boolean isDefaultProvider, final Map<Class<?>,Integer> contracts, final int priority) {
+    if (components == null)
+      components = new ComponentSet.Typed<>();
+    else if (components.contains(clazz, isDefaultProvider))
+      return components;
+
+    components.add(new WriterInterceptorComponent(clazz, instance, isDefaultProvider, contracts, priority));
+    return components;
+  }
+
   WriterInterceptorComponent(final Class<WriterInterceptor> clazz, final WriterInterceptor instance, final boolean isDefaultProvider, final Map<Class<?>,Integer> contracts, final int priority) {
     super(clazz, instance, isDefaultProvider, contracts, priority, WriterInterceptor.class);
   }

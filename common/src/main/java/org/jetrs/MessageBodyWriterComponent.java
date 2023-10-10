@@ -25,6 +25,16 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.MessageBodyWriter;
 
 final class MessageBodyWriterComponent extends MessageBodyComponent<MessageBodyWriter<?>> {
+  static ComponentSet<MessageBodyComponent<MessageBodyWriter<?>>> register(ComponentSet<MessageBodyComponent<MessageBodyWriter<?>>> components, final Class<MessageBodyWriter<?>> clazz, final MessageBodyWriter<?> instance, final boolean isDefaultProvider, final Map<Class<?>,Integer> contracts, final int priority) {
+    if (components == null)
+      components = new ComponentSet.Typed<>();
+    else if (components.contains(clazz, isDefaultProvider))
+      return components;
+
+    components.add(new MessageBodyWriterComponent(clazz, instance, isDefaultProvider, contracts, priority));
+    return components;
+  }
+
   MessageBodyWriterComponent(final Class<MessageBodyWriter<?>> clazz, final MessageBodyWriter<?> instance, final boolean isDefaultProvider, final Map<Class<?>,Integer> contracts, final int priority) {
     super(clazz, instance, isDefaultProvider, contracts, priority, MessageBodyWriter.class);
   }

@@ -119,9 +119,6 @@ abstract class InterceptorContextImpl implements Closeable, InterceptorContext {
     annotations = null;
     type = null;
     genericType = null;
-    if (properties != null) {
-      properties.clear();
-      properties = null;
-    }
+    properties = null;
   }
 }

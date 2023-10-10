@@ -39,22 +39,32 @@ final class ConfigurationImpl implements Cloneable, Configuration {
     this.properties = properties;
   }
 
+  ConfigurationImpl(final Configuration configuration) {
+    this.runtimeType = configuration.getRuntimeType();
+    this.components = new Components(configuration);
+    final Map<String,Object> properties = configuration.getProperties();
+    this.properties = properties == null ? null : new HashMap<>(properties);
+  }
+
   ConfigurationImpl() {
     this.runtimeType = RuntimeType.CLIENT;
   }
 
-  @Override
-  public RuntimeType getRuntimeType() {
-    return runtimeType;
+  final Components getOrCreateComponents() {
+    return components == null ? components = new Components() : components;
+  }
+
+  final Components getComponents() {
+    return components;
+  }
+
+  Map<String,Object> getOrCreateProperties() {
+    return properties == null ? properties = new HashMap<>() : properties;
   }
 
   @Override
   public Map<String,Object> getProperties() {
     return properties == null ? Collections.EMPTY_MAP : Collections.unmodifiableMap(properties);
-  }
-
-  Map<String,Object> getOrCreateProperties() {
-    return properties == null ? properties = new HashMap<>() : properties;
   }
 
   @Override
@@ -82,14 +92,6 @@ final class ConfigurationImpl implements Cloneable, Configuration {
     return components != null && components.contains(component);
   }
 
-  final Components getOrCreateComponents() {
-    return components == null ? components = new Components() : components;
-  }
-
-  final Components getComponents() {
-    return components;
-  }
-
   @Override
   public boolean isRegistered(final Class<?> componentClass) {
     return components != null && components.contains(componentClass);
@@ -111,17 +113,22 @@ final class ConfigurationImpl implements Cloneable, Configuration {
   }
 
   @Override
+  public RuntimeType getRuntimeType() {
+    return runtimeType;
+  }
+
+  @Override
   public ConfigurationImpl clone() {
     try {
       final ConfigurationImpl clone = (ConfigurationImpl)super.clone();
       if (components != null)
         clone.components = components.clone();
 
-      clone.classes = null;
-      clone.instances = null;
       if (properties != null)
         clone.properties = new HashMap<>(properties);
 
+      clone.classes = null;
+      clone.instances = null;
       return clone;
     }
     catch (final CloneNotSupportedException e) {

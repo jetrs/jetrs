@@ -75,12 +75,14 @@ abstract class RequestContext<R extends RuntimeContext> extends InterceptorConte
   }
 
   final R runtimeContext;
-  private final Request request;
-  private final ProvidersImpl providers;
+  private Components components;
+  private Request request;
+  ProvidersImpl providers;
 
   RequestContext(final R runtimeContext, final Request request) {
     this.method = request.getMethod();
     this.runtimeContext = runtimeContext;
+    this.components = runtimeContext.getComponents();
     this.request = request;
     this.providers = new ProvidersImpl(this);
   }
@@ -123,7 +125,7 @@ abstract class RequestContext<R extends RuntimeContext> extends InterceptorConte
       throw new IllegalStateException();
 
     readerInterceptorCalled = true;
-    return runtimeContext.getComponents().getReaderInterceptorComponents();
+    return components.getReaderInterceptorComponents();
   }
 
   private boolean writerInterceptorCalled = false;
@@ -133,26 +135,29 @@ abstract class RequestContext<R extends RuntimeContext> extends InterceptorConte
       throw new IllegalStateException();
 
     writerInterceptorCalled = true;
-    return runtimeContext.getComponents().getWriterInterceptorComponents();
+    return components.getWriterInterceptorComponents();
   }
 
   ComponentSet<MessageBodyComponent<MessageBodyReader<?>>> getMessageBodyReaderComponents() {
-    return runtimeContext.getComponents().getMessageBodyReaderComponents();
+    return components.getMessageBodyReaderComponents();
   }
 
   ComponentSet<MessageBodyComponent<MessageBodyWriter<?>>> getMessageBodyWriterComponents() {
-    return runtimeContext.getComponents().getMessageBodyWriterComponents();
+    return components.getMessageBodyWriterComponents();
   }
 
   ComponentSet<TypeComponent<ExceptionMapper<?>>> getExceptionMapperComponents() {
-    return runtimeContext.getComponents().getExceptionMapperComponents();
+    return components.getExceptionMapperComponents();
   }
 
-  final ProvidersImpl getProviders() {
-    return providers;
-  }
-
-  Annotation findInjectableAnnotation(final Annotation[] annotations, final boolean isResource) {
+  /**
+   * Return the injectable annotation from the provided array of {@code annotations}.
+   *
+   * @param annotations The annotations in which to find and return the injectable annotation.
+   * @param isFromRootResource Whether the array of annotations is from a root resource.
+   * @return The injectable annotation from the provided array of {@code annotations}.
+   */
+  Annotation findInjectableAnnotation(final Annotation[] annotations, final boolean isFromRootResource) {
     for (final Annotation annotation : annotations) // [A]
       if (annotation.annotationType() == Context.class)
         return annotation;
@@ -173,42 +178,54 @@ abstract class RequestContext<R extends RuntimeContext> extends InterceptorConte
     return (T)CONTEXT_NOT_FOUND;
   }
 
-  private static List<Object> makeCacheKey(final Annotation[] annotations, final Class<?> clazz, final Type type) {
+  private static List<Object> makeCacheKey(final Annotation[] annotations, final Class<?> rawType, final Type genericType) {
     final Object[] key = new Object[annotations.length + 2];
     int i = 0;
     while (i < annotations.length)
       key[i] = annotations[i++];
 
-    key[i] = clazz;
-    key[++i] = type;
+    key[i] = rawType;
+    key[++i] = genericType;
     return Arrays.asList(key);
   }
 
   private Map<List<Object>,Object> injectedValueCache;
 
   @SuppressWarnings("unchecked")
-  <T> T findInjectableValueFromCache(final AnnotatedElement element, final int parameterIndex, final Annotation[] annotations, final Class<T> clazz, final Type type) throws IOException {
+  <T> T findInjectableValueFromCache(final AnnotatedElement element, final int parameterIndex, final Annotation[] annotations, final Class<T> rawType, final Type genericType) throws IOException {
     if (injectedValueCache == null) {
       injectedValueCache = new HashMap<>();
     }
     else {
-      final List<Object> key = makeCacheKey(annotations, clazz, type);
+      final List<Object> key = makeCacheKey(annotations, rawType, genericType);
       final Object instance = injectedValueCache.get(key);
       if (instance != null)
         return (T)instance;
     }
 
-    final T instance = findInjectableValue(element, parameterIndex, annotations, clazz, type);
+    final T instance = findInjectableValue(element, parameterIndex, annotations, rawType, genericType);
     if (instance == null)
       return null;
 
-    final List<Object> key = makeCacheKey(annotations, clazz, type);
+    final List<Object> key = makeCacheKey(annotations, rawType, genericType);
     injectedValueCache.put(key, instance);
     return instance;
   }
 
-  <T> T findInjectableValue(final AnnotatedElement element, final int parameterIndex, final Annotation[] annotations, final Class<T> clazz, final Type type) throws IOException {
-    return findInjectableContextValue(clazz);
+  /**
+   * Returns the injectable value in the given {@code element} with the provided parameters.
+   *
+   * @param <T> The type parameter of the injectable value.
+   * @param element The {@link AnnotatedElement} in which to find the injectable value.
+   * @param parameterIndex The index of the parameter for which to find the injectable value.
+   * @param annotations The annotations provided on the {@code element}.
+   * @param rawType The class of the injectable value to return.
+   * @param genericType The generic type of the injectable value to return.
+   * @return The injectable value in the given {@code element} with the provided parameters.
+   * @throws IOException If an I/O error has occurred.
+   */
+  <T> T findInjectableValue(final AnnotatedElement element, final int parameterIndex, final Annotation[] annotations, final Class<T> rawType, final Type genericType) throws IOException {
+    return findInjectableContextValue(rawType);
   }
 
   final <T> T newResourceInstance(final Class<T> clazz) throws IllegalAccessException, InstantiationException, IOException, InvocationTargetException {
@@ -246,7 +263,7 @@ abstract class RequestContext<R extends RuntimeContext> extends InterceptorConte
 
     final T instance = newInstanceSansFields(clazz, false);
     if (instance != null) {
-      final Field[] fields = Classes.getDeclaredFieldsDeep(clazz, Component.injectableFieldPredicate);
+      final Field[] fields = Classes.getDeclaredFieldsDeep(clazz, Component::isFieldInjectable);
       final Field[] uninjectedFields = injectFields(instance, fields);
       contextInsances.put(clazz, new Object[] {instance, uninjectedFields});
       postConstruct(instance);
@@ -304,7 +321,6 @@ abstract class RequestContext<R extends RuntimeContext> extends InterceptorConte
       method.invoke(instance);
     }
     catch (final Exception e) {
-      e.printStackTrace();
       final InstantiationException ie = new InstantiationException();
       ie.initCause(e.getCause());
       throw ie;
@@ -352,5 +368,14 @@ abstract class RequestContext<R extends RuntimeContext> extends InterceptorConte
 
       return false;
     }));
+  }
+
+  @Override
+  public void close() throws IOException {
+    super.close();
+
+    components = null;
+    request = null;
+    providers = null;
   }
 }

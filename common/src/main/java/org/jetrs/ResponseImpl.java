@@ -55,13 +55,12 @@ class ResponseImpl extends Response {
   private final boolean hasEntity;
   private InputStream entityStream;
   private Object entityObject;
-  final Annotation[] annotations; // FIXME: annotations are not being used, but they need to be used by the MessageBodyWriter.. there's no API to get them out of this
-                                  // class
+  final Annotation[] annotations; // FIXME: annotations are not used, but they need to be used by the MessageBodyWriter; there's no API to get them out of this class
   private boolean closed;
 
   ResponseImpl(final RequestContext<?> requestContext, final int statusCode, final Response.StatusType statusInfo, final HttpHeadersImpl headers, final Map<String,NewCookie> cookies, final Object entity, final Annotation[] annotations) {
     this.requestContext = requestContext;
-    this.providers = requestContext.getProviders();
+    this.providers = requestContext.providers;
     this.statusCode = statusCode;
     this.statusInfo = statusInfo;
     this.headers = headers;

@@ -277,9 +277,9 @@ class ContainerResponseContextImpl extends InterceptorContextImpl implements Con
     return getStringHeaders().getLength();
   }
 
-  private int interceptorIndex = -1;
   @SuppressWarnings("rawtypes")
   private MessageBodyWriter messageBodyWriter;
+  private int interceptorIndex = -1;
 
   @Override
   @SuppressWarnings("unchecked")
@@ -428,7 +428,7 @@ class ContainerResponseContextImpl extends InterceptorContextImpl implements Con
       return;
     }
 
-    final MessageBodyProviderHolder<?> messageBodyProviderHolder = requestContext.getProviders().getMessageBodyWriter(getEntityClass(), getGenericType(), getAnnotations(), compatibleMediaTypes);
+    final MessageBodyProviderHolder<?> messageBodyProviderHolder = requestContext.providers.getMessageBodyWriter(getEntityClass(), getGenericType(), getAnnotations(), compatibleMediaTypes);
     if (messageBodyProviderHolder == null)
       throw new InternalServerErrorException("Could not find MessageBodyWriter for {type=" + getEntityClass().getName() + ", genericType=" + (getGenericType() == null ? "null" : getGenericType().getTypeName()) + ", annotations=" + Arrays.toString(getAnnotations()) + ", mediaTypes=" + Arrays.toString(compatibleMediaTypes) + "}"); // [JAX-RS
 
@@ -532,6 +532,7 @@ class ContainerResponseContextImpl extends InterceptorContextImpl implements Con
   @Override
   public void close() throws IOException {
     super.close();
+
     firstOutputStream = null;
     noopOutputStream = null;
     if (outputStream != null) {

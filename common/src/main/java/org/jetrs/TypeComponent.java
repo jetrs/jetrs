@@ -23,8 +23,8 @@ import java.util.Map;
 abstract class TypeComponent<T> extends Component<T> {
   private final Class<?> type;
 
-  TypeComponent(final Class<T> clazz, final T instance, final boolean isDefaultProvider,final Map<Class<?>,Integer> contracts, final int priority, final Class<?> type) {
-    super(clazz, instance, isDefaultProvider, contracts, priority);
+  TypeComponent(final Class<T> clazz, final T singleton, final boolean isDefaultProvider,final Map<Class<?>,Integer> contracts, final int priority, final Class<?> type) {
+    super(clazz, singleton, isDefaultProvider, contracts, priority);
     this.type = assertNotNull(type, "type is null");
   }
 

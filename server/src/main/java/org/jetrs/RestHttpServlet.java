@@ -93,8 +93,8 @@ abstract class RestHttpServlet extends HttpServlet {
     catch (final RuntimeException e) {
       throw e;
     }
-    catch (final Throwable t) {
-      throw new ServletException(t);
+    catch (final Exception e) {
+      throw new ServletException(e);
     }
   }
 }

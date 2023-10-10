@@ -25,6 +25,16 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.MessageBodyReader;
 
 final class MessageBodyReaderComponent extends MessageBodyComponent<MessageBodyReader<?>> {
+  static ComponentSet<MessageBodyComponent<MessageBodyReader<?>>> register(ComponentSet<MessageBodyComponent<MessageBodyReader<?>>> components, final Class<MessageBodyReader<?>> clazz, final MessageBodyReader<?> instance, final boolean isDefaultProvider, final Map<Class<?>,Integer> contracts, final int priority) {
+    if (components == null)
+      components = new ComponentSet.Typed<>();
+    else if (components.contains(clazz, isDefaultProvider))
+      return components;
+
+    components.add(new MessageBodyReaderComponent(clazz, instance, isDefaultProvider, contracts, priority));
+    return components;
+  }
+
   MessageBodyReaderComponent(final Class<MessageBodyReader<?>> clazz, final MessageBodyReader<?> instance, final boolean isDefaultProvider, final Map<Class<?>,Integer> contracts, final int priority) {
     super(clazz, instance, isDefaultProvider, contracts, priority, MessageBodyReader.class);
     if (getType() == null)

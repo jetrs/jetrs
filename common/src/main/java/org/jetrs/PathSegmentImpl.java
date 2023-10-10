@@ -22,7 +22,7 @@ import javax.ws.rs.core.PathSegment;
 
 import org.libj.net.URLs;
 
-class PathSegmentImpl implements PathSegment {
+final class PathSegmentImpl implements PathSegment {
   private static final MultivaluedArrayHashMap<String,String> emptyMap = new MultivaluedArrayHashMap<>(0); // FIXME: Make this unmodifiable
 
   private final String pathEncoded;

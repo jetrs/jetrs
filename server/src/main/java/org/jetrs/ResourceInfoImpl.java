@@ -91,6 +91,7 @@ class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImpl> {
   private final UriTemplate uriTemplate;
   private MediaTypeAnnotationProcessor<Consumes> consumesMatcher;
   private MediaTypeAnnotationProcessor<Produces> producesMatcher;
+  private DefaultValueImpl[] defaultValues;
 
   ResourceInfoImpl(final ResourceInfos resourceInfos, final HttpMethod httpMethod, final Method method, final String baseUri, final Path classPath, final Path methodPath, final Object singleton) {
     this.resourceInfos = resourceInfos;
@@ -124,8 +125,6 @@ class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImpl> {
   private MediaTypeAnnotationProcessor<Produces> getProducesMatcher() {
     return producesMatcher == null ? producesMatcher = new MediaTypeAnnotationProcessor<>(this, Produces.class) : producesMatcher;
   }
-
-  private DefaultValueImpl[] defaultValues;
 
   void initDefaultValues(final ComponentSet<Component<ParamConverterProvider>> paramConverterComponents) throws IOException {
     if (defaultValues != null)

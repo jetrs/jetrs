@@ -16,6 +16,8 @@
 
 package org.jetrs;
 
+import static org.libj.lang.Assertions.*;
+
 import java.util.Map;
 import java.util.Objects;
 
@@ -44,10 +46,11 @@ interface ConfigurableImpl<C extends Configurable<? super C>> extends Configurab
    * {@inheritDoc}
    *
    * @throws NullPointerException If {@code component} is null.
+   * @throws IllegalArgumentException If {@code priority} is negative.
    */
   @Override
   default C register(final Object component, final int priority) {
-    ((ConfigurationImpl)getConfiguration()).getOrCreateComponents().register(component.getClass(), component, false, null, priority);
+    ((ConfigurationImpl)getConfiguration()).getOrCreateComponents().register(component.getClass(), component, false, null, assertNotNegative(priority));
     return (C)this;
   }
 
@@ -90,10 +93,11 @@ interface ConfigurableImpl<C extends Configurable<? super C>> extends Configurab
    * {@inheritDoc}
    *
    * @throws NullPointerException If {@code componentClass} is null.
+   * @throws IllegalArgumentException If {@code priority} is negative.
    */
   @Override
   default C register(final Class<?> componentClass, final int priority) {
-    ((ConfigurationImpl)getConfiguration()).getOrCreateComponents().register(Objects.requireNonNull(componentClass), null, false, null, priority);
+    ((ConfigurationImpl)getConfiguration()).getOrCreateComponents().register(Objects.requireNonNull(componentClass), null, false, null, assertNotNegative(priority));
     return (C)this;
   }
 

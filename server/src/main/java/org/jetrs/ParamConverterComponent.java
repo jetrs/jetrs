@@ -21,6 +21,16 @@ import java.util.Map;
 import javax.ws.rs.ext.ParamConverterProvider;
 
 final class ParamConverterComponent extends Component<ParamConverterProvider> {
+  static ComponentSet<Component<ParamConverterProvider>> register(ComponentSet<Component<ParamConverterProvider>> components, final Class<ParamConverterProvider> clazz, final ParamConverterProvider instance, final boolean isDefaultProvider, final Map<Class<?>,Integer> contracts, final int priority) {
+    if (components == null)
+      components = new ComponentSet.Untyped<>();
+    else if (components.contains(clazz, isDefaultProvider))
+      return components;
+
+    components.add(new ParamConverterComponent(clazz, instance, isDefaultProvider, contracts, priority));
+    return components;
+  }
+
   ParamConverterComponent(final Class<ParamConverterProvider> clazz, final ParamConverterProvider instance, final boolean isDefaultProvider, final Map<Class<?>,Integer> contracts, final int priority) {
     super(clazz, instance, isDefaultProvider, contracts, priority);
   }

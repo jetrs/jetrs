@@ -21,6 +21,16 @@ import java.util.Map;
 import javax.ws.rs.ext.ExceptionMapper;
 
 final class ExceptionMapperComponent extends TypeComponent<ExceptionMapper<?>> {
+  static ComponentSet<TypeComponent<ExceptionMapper<?>>> register(ComponentSet<TypeComponent<ExceptionMapper<?>>> components, final Class<ExceptionMapper<?>> clazz, final ExceptionMapper<?> instance, final boolean isDefaultProvider, final Map<Class<?>,Integer> contracts, final int priority) {
+    if (components == null)
+      components = new ComponentSet.Typed<>();
+    else if (components.contains(clazz, isDefaultProvider))
+      return components;
+
+    components.add(new ExceptionMapperComponent(clazz, instance, isDefaultProvider, contracts, priority));
+    return components;
+  }
+
   ExceptionMapperComponent(final Class<ExceptionMapper<?>> clazz, final ExceptionMapper<?> instance, final boolean isDefaultProvider, final Map<Class<?>,Integer> contracts, final int priority) {
     super(clazz, instance, isDefaultProvider, contracts, priority, getGenericInterfaceFirstTypeArgument(clazz, ExceptionMapper.class, Throwable.class));
   }

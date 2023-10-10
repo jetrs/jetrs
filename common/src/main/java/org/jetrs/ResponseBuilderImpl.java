@@ -43,7 +43,7 @@ import javax.ws.rs.ext.RuntimeDelegate;
 import org.libj.util.CollectionUtil;
 
 // FIXME: It is implied that a ResponseBuilderImpl instance only exists in Server Runtime. Is this correct?
-class ResponseBuilderImpl extends Response.ResponseBuilder implements Cloneable {
+final class ResponseBuilderImpl extends Response.ResponseBuilder implements Cloneable {
   private final RequestContext<?> requestContext;
   private final HttpHeadersImpl headers;
 

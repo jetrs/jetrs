@@ -16,7 +16,7 @@
 
 package org.jetrs;
 
-class ClientRuntimeContext extends RuntimeContext {
+final class ClientRuntimeContext extends RuntimeContext {
   ClientRuntimeContext(final ConfigurationImpl configuration) {
     super(configuration);
   }

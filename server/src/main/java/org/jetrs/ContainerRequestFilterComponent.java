@@ -21,6 +21,16 @@ import java.util.Map;
 import javax.ws.rs.container.ContainerRequestFilter;
 
 final class ContainerRequestFilterComponent extends Component<ContainerRequestFilter> {
+  static ComponentSet<Component<ContainerRequestFilter>> register(ComponentSet<Component<ContainerRequestFilter>> components, final Class<ContainerRequestFilter> clazz, final ContainerRequestFilter instance, final boolean isDefaultProvider, final Map<Class<?>,Integer> contracts, final int priority) {
+    if (components == null)
+      components = new ComponentSet.Untyped<>();
+    else if (components.contains(clazz, isDefaultProvider))
+      return components;
+
+    components.add(new ContainerRequestFilterComponent(clazz, instance, isDefaultProvider, contracts, priority));
+    return components;
+  }
+
   ContainerRequestFilterComponent(final Class<ContainerRequestFilter> clazz, final ContainerRequestFilter instance, final boolean isDefaultProvider, final Map<Class<?>,Integer> contracts, final int priority) {
     super(clazz, instance, isDefaultProvider, contracts, priority);
   }

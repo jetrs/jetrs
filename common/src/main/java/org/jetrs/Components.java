@@ -17,8 +17,8 @@
 package org.jetrs;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.ServiceConfigurationError;
@@ -26,7 +26,7 @@ import java.util.Set;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
@@ -43,24 +43,6 @@ import org.slf4j.LoggerFactory;
 
 class Components implements Cloneable {
   private static final Logger logger = LoggerFactory.getLogger(Components.class);
-  private static final String[] excludeStartsWith = {"jdk.", "java.", "javax.", "com.sun.", "sun.", "org.w3c.", "org.xml.", "org.jvnet.", "org.joda.", "org.jcp.", "apple.security."};
-
-  static boolean acceptPackage(final Package pkg) {
-    for (int i = 0, i$ = excludeStartsWith.length; i < i$; ++i) // [A]
-      if (pkg.getName().startsWith(excludeStartsWith[i]))
-        return false;
-
-    return true;
-  }
-
-  private static final boolean hasContextFields(final Class<?> clazz) {
-    final Field[] fields = Classes.getDeclaredFieldsDeep(clazz, Component.injectableFieldPredicate);
-    for (final Field field : fields) // [A]
-      if (field.isAnnotationPresent(Context.class))
-        return true;
-
-    return false;
-  }
 
   private static boolean contains(final Set<String> disabledProviderClassNames, final Class<?> providerClass, final Class<?> interfaceClass) {
     if (disabledProviderClassNames.size() == 0)
@@ -74,13 +56,7 @@ class Components implements Cloneable {
     return false;
   }
 
-  private static final HashSet<Class<?>> defaultProviderClasses = new HashSet<Class<?>>() {
-    @Override
-    public boolean add(final Class<?> e) {
-      // Don't add the class if a subclass instance of it is already present in `singletons` // FIXME: "subclass"?
-      return contains(e) || super.add(e);
-    }
-  };
+  static final HashMap<Class<?>,Object> defaultProviderClasses = new HashMap<>();
 
   @SuppressWarnings("rawtypes")
   private static void loadDefaultProviders() throws IOException {
@@ -100,15 +76,15 @@ class Components implements Cloneable {
     final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
     ServiceLoaders.load(ExceptionMapper.class, classLoader, (final Class<? super ExceptionMapper> e) -> {
       if (!contains(disabledProviderClassNames, e, ExceptionMapper.class))
-        defaultProviderClasses.add(e);
+        defaultProviderClasses.put(e, null);
     });
     ServiceLoaders.load(MessageBodyReader.class, classLoader, (final Class<? super MessageBodyReader> e) -> {
       if (!contains(disabledProviderClassNames, e, MessageBodyReader.class))
-        defaultProviderClasses.add(e);
+        defaultProviderClasses.put(e, null);
     });
     ServiceLoaders.load(MessageBodyWriter.class, classLoader, (final Class<? super MessageBodyWriter> e) -> {
       if (!contains(disabledProviderClassNames, e, MessageBodyWriter.class))
-        defaultProviderClasses.add(e);
+        defaultProviderClasses.put(e, null);
     });
   }
 
@@ -121,11 +97,39 @@ class Components implements Cloneable {
     }
   }
 
+  private ComponentSet<MessageBodyComponent<ReaderInterceptor>> readerInterceptorComponents;
+  private ComponentSet<MessageBodyComponent<WriterInterceptor>> writerInterceptorComponents;
+  private ComponentSet<MessageBodyComponent<MessageBodyReader<?>>> messageBodyReaderComponents;
+  private ComponentSet<MessageBodyComponent<MessageBodyWriter<?>>> messageBodyWriterComponents;
+  private ComponentSet<TypeComponent<ExceptionMapper<?>>> exceptionMapperComponents;
+
+  Components(final Configuration configuration) {
+    register(configuration.getClasses(), configuration.getInstances());
+    registerDefaultProviders();
+  }
+
   Components() {
+    registerDefaultProviders();
+  }
+
+  final void register(final Set<Class<?>> classes, final Set<Object> singletons) {
+    if (singletons != null && singletons.size() > 0)
+      for (final Object singleton : singletons) // [S]
+        if (singleton != null)
+          register(singleton.getClass(), singleton, false, null, -1);
+
+    if (classes != null && classes.size() > 0)
+      for (final Class<?> clazz : classes) // [S]
+        if (clazz != null)
+          register(clazz, null, false, null, -1);
+  }
+
+  final void registerDefaultProviders() {
     if (defaultProviderClasses.size() > 0) {
-      for (final Class<?> defaultProviderClass : defaultProviderClasses) { // [S]
+      for (final Map.Entry<Class<?>,Object> entry : defaultProviderClasses.entrySet()) { // [S]
+        final Class<?> defaultProviderClass = entry.getKey();
         try {
-          if (register(defaultProviderClass, hasContextFields(defaultProviderClass) ? null : defaultProviderClass.getConstructor().newInstance(), true, null, -1) && logger.isDebugEnabled()) {
+          if (register(defaultProviderClass, entry.getValue(), true, null, -1) && logger.isDebugEnabled()) {
             final StringBuilder b = new StringBuilder();
             final Consumes c = defaultProviderClass.getAnnotation(Consumes.class);
             if (c != null)
@@ -142,63 +146,42 @@ class Components implements Cloneable {
         catch (final IllegalArgumentException e) {
         }
         catch (final Exception | ServiceConfigurationError e) {
-          if (logger.isWarnEnabled()) { logger.warn("Failed to load provider " + defaultProviderClass, e); }
+          if (logger.isWarnEnabled()) { logger.warn("Failed to register provider " + defaultProviderClass, e); }
         }
       }
     }
   }
 
   @SuppressWarnings("unchecked")
-  <T> boolean register(final Class<? extends T> clazz, final T instance, final boolean isDefaultProvider, final Map<Class<?>,Integer> contracts, final int priority) {
-    boolean added = false;
+  <T> boolean register(final Class<? extends T> clazz, final T singleton, final boolean isDefaultProvider, final Map<Class<?>,Integer> contracts, final int priority) {
+    boolean changed = false;
     if (ReaderInterceptor.class.isAssignableFrom(clazz)) {
-      if (readerInterceptorComponents == null)
-        readerInterceptorComponents = new ComponentSet.Typed<>();
-
-      readerInterceptorComponents.register(new ReaderInterceptorComponent((Class<ReaderInterceptor>)clazz, (ReaderInterceptor)instance, isDefaultProvider, contracts, priority));
-      added = true;
+      readerInterceptorComponents = ReaderInterceptorComponent.register(readerInterceptorComponents, (Class<ReaderInterceptor>)clazz, (ReaderInterceptor)singleton, isDefaultProvider, contracts, priority);
+      changed = true;
     }
 
     if (WriterInterceptor.class.isAssignableFrom(clazz)) {
-      if (writerInterceptorComponents == null)
-        writerInterceptorComponents = new ComponentSet.Typed<>();
-
-      writerInterceptorComponents.register(new WriterInterceptorComponent((Class<WriterInterceptor>)clazz, (WriterInterceptor)instance, isDefaultProvider, contracts, priority));
-      added = true;
+      writerInterceptorComponents = WriterInterceptorComponent.register(writerInterceptorComponents, (Class<WriterInterceptor>)clazz, (WriterInterceptor)singleton, isDefaultProvider, contracts, priority);
+      changed = true;
     }
 
     if (MessageBodyReader.class.isAssignableFrom(clazz)) {
-      if (messageBodyReaderComponents == null)
-        messageBodyReaderComponents = new ComponentSet.Typed<>();
-
-      messageBodyReaderComponents.register(new MessageBodyReaderComponent((Class<MessageBodyReader<?>>)clazz, (MessageBodyReader<?>)instance, isDefaultProvider, contracts, priority));
-      added = true;
+      messageBodyReaderComponents = MessageBodyReaderComponent.register(messageBodyReaderComponents, (Class<MessageBodyReader<?>>)clazz, (MessageBodyReader<?>)singleton, isDefaultProvider, contracts, priority);
+      changed = true;
     }
 
     if (MessageBodyWriter.class.isAssignableFrom(clazz)) {
-      if (messageBodyWriterComponents == null)
-        messageBodyWriterComponents = new ComponentSet.Typed<>();
-
-      messageBodyWriterComponents.register(new MessageBodyWriterComponent((Class<MessageBodyWriter<?>>)clazz, (MessageBodyWriter<?>)instance, isDefaultProvider, contracts, priority));
-      added = true;
+      messageBodyWriterComponents = MessageBodyWriterComponent.register(messageBodyWriterComponents, (Class<MessageBodyWriter<?>>)clazz, (MessageBodyWriter<?>)singleton, isDefaultProvider, contracts, priority);
+      changed = true;
     }
 
     if (ExceptionMapper.class.isAssignableFrom(clazz)) {
-      if (exceptionMapperComponents == null)
-        exceptionMapperComponents = new ComponentSet.Typed<>();
-
-      exceptionMapperComponents.register(new ExceptionMapperComponent((Class<ExceptionMapper<?>>)clazz, (ExceptionMapper<?>)instance, isDefaultProvider, contracts, priority));
-      added = true;
+      exceptionMapperComponents = ExceptionMapperComponent.register(exceptionMapperComponents, (Class<ExceptionMapper<?>>)clazz, (ExceptionMapper<?>)singleton, isDefaultProvider, contracts, priority);
+      changed = true;
     }
 
-    return added;
+    return changed;
   }
-
-  private ComponentSet<MessageBodyComponent<ReaderInterceptor>> readerInterceptorComponents;
-  private ComponentSet<MessageBodyComponent<WriterInterceptor>> writerInterceptorComponents;
-  private ComponentSet<MessageBodyComponent<MessageBodyReader<?>>> messageBodyReaderComponents;
-  private ComponentSet<MessageBodyComponent<MessageBodyWriter<?>>> messageBodyWriterComponents;
-  private ComponentSet<TypeComponent<ExceptionMapper<?>>> exceptionMapperComponents;
 
   final ComponentSet<MessageBodyComponent<ReaderInterceptor>> getReaderInterceptorComponents() {
     return readerInterceptorComponents != null ? readerInterceptorComponents : ComponentSet.EMPTY;
@@ -255,7 +238,7 @@ class Components implements Cloneable {
   private Set<Object> instances;
 
   final Set<Object> instances() {
-    return instances == null ? instances = new TransSet<>(compositeSet(), (final Component<?> c) -> c.instance, null) : instances;
+    return instances == null ? instances = new TransSet<>(compositeSet(), (final Component<?> c) -> c.singleton, null) : instances;
   }
 
   boolean contains(final Class<?> componentClass) {

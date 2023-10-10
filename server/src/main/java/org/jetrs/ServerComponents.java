@@ -17,18 +17,20 @@
 package org.jetrs;
 
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Predicate;
 
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.HEAD;
 import javax.ws.rs.HttpMethod;
+import javax.ws.rs.OPTIONS;
+import javax.ws.rs.PATCH;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -41,11 +43,25 @@ import javax.ws.rs.ext.ParamConverterProvider;
 
 import org.libj.lang.PackageLoader;
 import org.libj.lang.PackageNotFoundException;
+import org.libj.util.function.ThrowingPredicate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 final class ServerComponents extends Components {
   private static final Logger logger = LoggerFactory.getLogger(ServerComponents.class);
+  @SuppressWarnings("unchecked")
+  private static final Class<Annotation>[] rootResourceAnnotations = new Class[] {Path.class, GET.class, POST.class, PUT.class, DELETE.class, OPTIONS.class, HEAD.class, PATCH.class};
+  private static final String[] excludeStartsWith = {"jdk.", "java.", "javax.", "com.sun.", "sun.", "org.w3c.", "org.xml.", "org.jvnet.", "org.joda.", "org.jcp.", "apple.security."};
+
+  // FIXME: Can use a RadixTree here
+  private static boolean acceptPackage(final Package pkg) {
+    final String name = pkg.getName();
+    for (int i = 0, i$ = excludeStartsWith.length; i < i$; ++i) // [A]
+      if (name.startsWith(excludeStartsWith[i]))
+        return false;
+
+    return true;
+  }
 
   /**
    * http://docs.oracle.com/javaee/6/tutorial/doc/gilik.html Root resource classes are POJOs that are either annotated with
@@ -54,7 +70,8 @@ final class ServerComponents extends Components {
    * designator. This section explains how to use JAX-RS to annotate Java classes to create RESTful web services.
    */
   private static boolean isRootResource(final Class<?> clazz) {
-    if (Modifier.isAbstract(clazz.getModifiers()) || Modifier.isInterface(clazz.getModifiers()))
+    final int modifiers = clazz.getModifiers();
+    if (Modifier.isAbstract(modifiers) || Modifier.isInterface(modifiers))
       return false;
 
     if (AnnotationUtil.isAnnotationPresent(clazz, Path.class))
@@ -62,7 +79,7 @@ final class ServerComponents extends Components {
 
     try {
       for (final Method method : clazz.getMethods()) // [A]
-        if (!Modifier.isAbstract(method.getModifiers()) && !Modifier.isStatic(method.getModifiers()) && !Modifier.isNative(method.getModifiers()) && AnnotationUtil.isAnyAnnotationPresent(method, Path.class, GET.class, POST.class, PUT.class, DELETE.class, HEAD.class))
+        if (!Modifier.isAbstract(method.getModifiers()) && !Modifier.isStatic(method.getModifiers()) && !Modifier.isNative(method.getModifiers()) && AnnotationUtil.isAnnotationPresent(method, rootResourceAnnotations))
           return true;
 
       return false;
@@ -84,23 +101,23 @@ final class ServerComponents extends Components {
   private ComponentSet<Component<ContainerRequestFilter>> preMatchContainerRequestFilterComponents;
   private ComponentSet<Component<ContainerRequestFilter>> containerRequestFilterComponents;
   private ComponentSet<Component<ContainerResponseFilter>> containerResponseFilterComponents;
-  private ArrayList<Runnable> afterAdds;
+  private ArrayList<Runnable> afterRegister;
 
   ServerComponents(final Application application, final ResourceInfos resourceInfos, final String baseUri) throws IOException {
-    super();
     this.resourceInfos = resourceInfos;
     this.baseUri = baseUri;
 
-    final Set<Object> singletons = application.getSingletons();
+    register(application.getClasses(), application.getSingletons());
+
     final Set<Class<?>> classes = application.getClasses();
+    final Set<Object> singletons = application.getSingletons();
     if (singletons == null && classes == null) {
       // Only scan the classpath if both singletons and classes are null
       final HashSet<Class<?>> initedClasses = new HashSet<>();
-      final Predicate<Class<?>> initialize = (final Class<?> clazz) -> {
-        if (!Modifier.isAbstract(clazz.getModifiers()) && !initedClasses.contains(clazz))
+      final ThrowingPredicate<Class<?>,ReflectiveOperationException> initialize = (final Class<?> clazz) -> {
+        if (!Modifier.isAbstract(clazz.getModifiers()) && initedClasses.add(clazz))
           register(clazz, null, false, null, -1);
 
-        initedClasses.add(clazz);
         return false;
       };
 
@@ -116,21 +133,15 @@ final class ServerComponents extends Components {
         }
       }
     }
-    else {
-      if (singletons != null && singletons.size() > 0)
-        for (final Object singleton : singletons) // [S]
-          if (singleton != null)
-            register(singleton.getClass(), singleton, false, null, -1);
 
-      if (classes != null && classes.size() > 0)
-        for (final Class<?> clazz : classes) // [S]
-          if (clazz != null)
-            register(clazz, null, false, null, -1);
+    registerDefaultProviders();
+
+    if (afterRegister != null) {
+      for (int i = 0, i$ = afterRegister.size(); i < i$; ++i) // [RA]
+        afterRegister.get(i).run();
+
+      afterRegister = null;
     }
-
-    if (afterAdds != null)
-      for (int i = 0, i$ = afterAdds.size(); i < i$; ++i) // [RA]
-        afterAdds.get(i).run();
 
     if (resourceInfos != null) {
       resourceInfos.sort(null);
@@ -216,57 +227,41 @@ final class ServerComponents extends Components {
 
   @Override
   boolean isEmpty() {
-    return super.isEmpty() && paramConverterComponents == null && preMatchContainerRequestFilterComponents == null && containerRequestFilterComponents == null && containerResponseFilterComponents == null;
+    return paramConverterComponents == null && preMatchContainerRequestFilterComponents == null && containerRequestFilterComponents == null && containerResponseFilterComponents == null && super.isEmpty();
   }
 
   @Override
   @SuppressWarnings("unchecked")
-  <T> boolean register(final Class<? extends T> clazz, final T instance, final boolean isDefaultProvider, final Map<Class<?>,Integer> contracts, final int priority) {
-    boolean added = false;
+  <T> boolean register(final Class<? extends T> clazz, final T singleton, final boolean isDefaultProvider, final Map<Class<?>,Integer> contracts, final int priority) {
+    boolean changed = false;
     if (ParamConverterProvider.class.isAssignableFrom(clazz)) {
-      if (paramConverterComponents == null)
-        paramConverterComponents = new ComponentSet.Untyped<>();
-
-      paramConverterComponents.register(new ParamConverterComponent((Class<ParamConverterProvider>)clazz, (ParamConverterProvider)instance, isDefaultProvider, contracts, priority));
-      added = true;
+      paramConverterComponents = ParamConverterComponent.register(paramConverterComponents, (Class<ParamConverterProvider>)clazz, (ParamConverterProvider)singleton, isDefaultProvider, contracts, priority);
+      changed = true;
     }
 
     if (ContainerRequestFilter.class.isAssignableFrom(clazz)) {
-      final ComponentSet<Component<ContainerRequestFilter>> requestFilterComponents;
-      if (AnnotationUtil.isAnnotationPresent(clazz, PreMatching.class)) {
-        if (preMatchContainerRequestFilterComponents == null)
-          preMatchContainerRequestFilterComponents = new ComponentSet.Untyped<>();
+      if (AnnotationUtil.isAnnotationPresent(clazz, PreMatching.class))
+        preMatchContainerRequestFilterComponents = ContainerRequestFilterComponent.register(preMatchContainerRequestFilterComponents, (Class<ContainerRequestFilter>)clazz, (ContainerRequestFilter)singleton, isDefaultProvider, contracts, priority);
+      else
+        containerRequestFilterComponents = ContainerRequestFilterComponent.register(containerRequestFilterComponents, (Class<ContainerRequestFilter>)clazz, (ContainerRequestFilter)singleton, isDefaultProvider, contracts, priority);
 
-        requestFilterComponents = preMatchContainerRequestFilterComponents;
-      }
-      else {
-        if (containerRequestFilterComponents == null)
-          containerRequestFilterComponents = new ComponentSet.Untyped<>();
-
-        requestFilterComponents = containerRequestFilterComponents;
-      }
-
-      requestFilterComponents.register(new ContainerRequestFilterComponent((Class<ContainerRequestFilter>)clazz, (ContainerRequestFilter)instance, isDefaultProvider, contracts, priority));
-      added = true;
+      changed = true;
     }
 
     if (ContainerResponseFilter.class.isAssignableFrom(clazz)) {
-      if (containerResponseFilterComponents == null)
-        containerResponseFilterComponents = new ComponentSet.Untyped<>();
-
       if (logger.isDebugEnabled() && AnnotationUtil.isAnnotationPresent(clazz, PreMatching.class))
         logger.debug("@PreMatching annotation is not applicable to ContainerResponseFilter");
 
-      containerResponseFilterComponents.register(new ContainerResponseFilterComponent((Class<ContainerResponseFilter>)clazz, (ContainerResponseFilter)instance, isDefaultProvider, contracts, priority));
-      added = true;
+      containerResponseFilterComponents = ContainerResponseFilterComponent.register(containerResponseFilterComponents, (Class<ContainerResponseFilter>)clazz, (ContainerResponseFilter)singleton, isDefaultProvider, contracts, priority);
+      changed = true;
     }
 
     if (!isRootResource(clazz))
-      return super.register(instance == null ? clazz : instance.getClass(), instance, isDefaultProvider, contracts, priority) || added;
+      return super.register(clazz, singleton, isDefaultProvider, contracts, priority) || changed;
 
     final Method[] methods = clazz.getMethods();
     if (methods.length == 0)
-      return added;
+      return changed;
 
     final HashSet<HttpMethod> httpMethodAnnotations = new HashSet<>();
     for (final Method method : clazz.getMethods()) { // [A]
@@ -274,23 +269,23 @@ final class ServerComponents extends Components {
       final Path classPath = AnnotationUtil.getAnnotation(clazz, Path.class);
       if (httpMethodAnnotations.size() > 0) {
         for (final HttpMethod httpMethodAnnotation : httpMethodAnnotations) // [S]
-          register(httpMethodAnnotation, method, baseUri, classPath, methodPath, resourceInfos, clazz, instance);
+          register(httpMethodAnnotation, method, baseUri, classPath, methodPath, resourceInfos, clazz, singleton);
 
         httpMethodAnnotations.clear();
-        added = true;
+        changed = true;
       }
       else if (classPath != null || methodPath != null) {
         // FIXME: This is for the case of "JAX-RS 2.1 3.4.1: Sub-Resource Locator"
         // FIXME: Need to use a Digraph or RefDigraph
         final Class<?> returnType = method.getReturnType();
         if (!returnType.isAnnotation() && !returnType.isAnonymousClass() && !returnType.isArray() && !returnType.isEnum() && !returnType.isInterface() && !returnType.isPrimitive() && !returnType.isSynthetic() && returnType != Void.class && acceptPackage(returnType.getPackage())) {
-          if (afterAdds == null)
-            afterAdds = new ArrayList<>();
+          if (afterRegister == null)
+            afterRegister = new ArrayList<>();
 
-          afterAdds.add(() -> {
+          afterRegister.add(() -> {
             for (final ResourceInfo resourceInfo : resourceInfos) {
               if (resourceInfo.getResourceClass() == returnType) {
-                register(null, method, baseUri, classPath, methodPath, resourceInfos, clazz, instance);
+                register(null, method, baseUri, classPath, methodPath, resourceInfos, clazz, singleton);
                 break;
               }
             }
@@ -299,7 +294,7 @@ final class ServerComponents extends Components {
       }
     }
 
-    return added;
+    return changed;
   }
 
   @Override

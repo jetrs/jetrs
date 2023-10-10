@@ -71,10 +71,7 @@ public class ClientBuilderImpl extends ClientBuilder implements ConfigurableImpl
 
   @Override
   public ClientBuilder withConfig(final Configuration config) {
-    if (!(config instanceof ConfigurationImpl)) // FIXME: Is this the right way to do this?
-      throw new UnsupportedOperationException("Unsupported type: " + config.getClass().getName());
-
-    this.configuration = (ConfigurationImpl)config;
+    this.configuration = config instanceof ConfigurationImpl ? (ConfigurationImpl)config : new ConfigurationImpl(config);
     return this;
   }
 

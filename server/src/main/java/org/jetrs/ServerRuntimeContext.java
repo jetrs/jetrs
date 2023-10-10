@@ -24,13 +24,13 @@ import javax.servlet.ServletContext;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Request;
 
-class ServerRuntimeContext extends RuntimeContext {
+final class ServerRuntimeContext extends RuntimeContext {
   private final ServletConfig servletConfig;
   private final ServletContext servletContext;
   private final Application application;
   private final ArrayList<ResourceInfoImpl> resourceInfos;
 
-  ServerRuntimeContext(final ConfigurationImpl configuration, final ServletConfig servletConfig, final ServletContext servletContext, final Application application, final ArrayList<ResourceInfoImpl> resourceInfos) throws IOException {
+  ServerRuntimeContext(final ConfigurationImpl configuration, final ServletConfig servletConfig, final ServletContext servletContext, final Application application, final ArrayList<ResourceInfoImpl> resourceInfos) {
     super(configuration);
     this.resourceInfos = resourceInfos;
     this.servletConfig = servletConfig;

@@ -80,9 +80,9 @@ public class UriTemplateTest {
   }
 
   private static void assertRemoveSlashes(final String expected, final String path) {
-    final StringBuilder builder = new StringBuilder();
-    UriTemplate.addLeadingRemoveTrailing(builder, newPath(path));
-    assertEquals(expected, builder.toString());
+    final StringBuilder b = new StringBuilder();
+    UriTemplate.addLeadingRemoveTrailing(b, newPath(path));
+    assertEquals(expected, b.toString());
   }
 
   @Test

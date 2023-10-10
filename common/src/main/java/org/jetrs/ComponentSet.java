@@ -20,26 +20,24 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Map;
 
-import org.libj.logging.LoggerUtil;
 import org.libj.util.SortedSetArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.event.Level;
 
 abstract class ComponentSet<T extends Component<?>> extends SortedSetArrayList<T> {
   private static final Logger logger = LoggerFactory.getLogger(ComponentSet.class);
-  private static final Comparator<TypeComponent<?>> typeComponentComparator = Comparator.nullsFirst((o1, o2) -> o1.getType() == o2.getType() ? Integer.compare(o1.getPriority(), o2.getPriority()) : o1.getType().isAssignableFrom(o2.getType()) ? 1 : -1);
-  private static final Comparator<Component<?>> componentComparator = Comparator.nullsFirst((o1, o2) -> Integer.compare(o1.getPriority(), o2.getPriority()));
+  private static final Comparator<TypeComponent<?>> typeComponentComparator = Comparator.nullsFirst((o1, o2) -> o1.getType() == o2.getType() ? Integer.compare(o1.priority, o2.priority) : o1.getType().isAssignableFrom(o2.getType()) ? 1 : -1);
+  private static final Comparator<Component<?>> componentComparator = Comparator.nullsFirst((o1, o2) -> Integer.compare(o1.priority, o2.priority));
   @SuppressWarnings("rawtypes")
-  public static final ComponentSet EMPTY = new ComponentSet<Component<?>>(null) {};
+  static final ComponentSet EMPTY = new ComponentSet<Component<?>>(null) {};
 
-  static class Typed<T extends TypeComponent<?>> extends ComponentSet<T> {
+  static final class Typed<T extends TypeComponent<?>> extends ComponentSet<T> {
     Typed() {
       super(typeComponentComparator);
     }
   }
 
-  static class Untyped<T extends Component<?>> extends ComponentSet<T> {
+  static final class Untyped<T extends Component<?>> extends ComponentSet<T> {
     Untyped() {
       super(componentComparator);
     }
@@ -49,34 +47,36 @@ abstract class ComponentSet<T extends Component<?>> extends SortedSetArrayList<T
     super(comparator);
   }
 
-  boolean register(final T e) {
+  final boolean contains(final Class<?> clazz, final boolean isDefaultProvider) {
     for (int i = size() - 1; i >= 0; --i) { // [RA]
       final Component<?> component = get(i);
-      if (e.clazz.equals(component.clazz)) {
-        if (e.isDefaultProvider) {
-          LoggerUtil.log(logger, component.isDefaultProvider ? Level.WARN : Level.DEBUG, e.instance != null ? "A default provider instance component of default provider class " + component.clazz.getName() + " is already present in this configuration" : "A default provider class component of class " + component.clazz.getName() + " is already present in this configuration"); // FIXME: "this configuration"?
+      if (clazz.equals(component.clazz)) {
+        if (component.isDefaultProvider) {
+          if (isDefaultProvider) {
+            if (logger.isDebugEnabled()) { logger.debug("Skipped " + clazz.getName() + ", because a default provider component of class " + component.clazz.getName() + " is already present in this configuration"); } // FIXME: "this configuration"?
+            return true;
+          }
+
+          // An explicitly set (custom) provider can take the place of a default (standard) provider.
+          remove(i);
           return false;
         }
 
-        LoggerUtil.log(logger, component.isDefaultProvider ? Level.WARN : Level.DEBUG, e.instance != null ? "An instance component of %sclass " + component.clazz.getName() + " is already present in this configuration" : "A class component of %sclass " + component.clazz.getName() + " is already present in this configuration"); // FIXME: "this configuration"?
-        if (!component.isDefaultProvider)
-          return false;
+        if (isDefaultProvider) {
+          if (logger.isDebugEnabled()) { logger.debug("Skipped " + clazz.getName() + ", because a component of class " + component.clazz.getName() + " is already present in this configuration"); } // FIXME: "this configuration"?
+        }
+        else {
+          if (logger.isWarnEnabled()) { logger.warn("Skipped " + clazz.getName() + ", because a component of class " + component.clazz.getName() + " is already present in this configuration"); } // FIXME: "this configuration"?
+        }
 
-        // An explicitly set (custom) provider can take the place of a default (standard) provider.
-        remove(i);
-        break;
+        return true;
       }
     }
 
-    return super.add(e);
+    return false;
   }
 
-  @Override
-  public boolean add(final T e) {
-    throw new UnsupportedOperationException();
-  }
-
-  boolean containsComponent(final Class<?> clazz) {
+  final boolean containsComponent(final Class<?> clazz) {
     for (final T component : this)
       if (clazz.equals(component.clazz))
         return true;
@@ -84,15 +84,15 @@ abstract class ComponentSet<T extends Component<?>> extends SortedSetArrayList<T
     return false;
   }
 
-  boolean containsComponent(final Object instance) {
+  final boolean containsComponent(final Object instance) {
     for (final T component : this)
-      if (instance.equals(component.instance))
+      if (instance.equals(component.singleton))
         return true;
 
     return false;
   }
 
-  Map<Class<?>,Integer> getContracts(final Class<?> componentClass) {
+  final Map<Class<?>,Integer> getContracts(final Class<?> componentClass) {
     for (final T component : this)
       if (componentClass.equals(component.clazz))
         return component.contracts;
@@ -102,7 +102,7 @@ abstract class ComponentSet<T extends Component<?>> extends SortedSetArrayList<T
 
   @Override
   @SuppressWarnings("unchecked")
-  public ComponentSet<T> clone() {
+  public final ComponentSet<T> clone() {
     return (ComponentSet<T>)super.clone();
   }
 }

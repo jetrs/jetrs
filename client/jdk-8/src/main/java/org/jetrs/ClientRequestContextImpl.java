@@ -72,7 +72,7 @@ abstract class ClientRequestContextImpl extends RequestContext<ClientRuntimeCont
   private static final Logger logger = LoggerFactory.getLogger(ClientRequestContextImpl.class);
 
   final ClientImpl client;
-  private final ArrayList<MessageBodyComponent<WriterInterceptor>> writerInterceptorComponents;
+  private final ComponentSet<MessageBodyComponent<WriterInterceptor>> writerInterceptorComponents;
   final URI uri;
   final String method;
   final HttpHeadersImpl requestHeaders;
@@ -117,7 +117,7 @@ abstract class ClientRequestContextImpl extends RequestContext<ClientRuntimeCont
     if (mediaType == null)
       mediaType = MediaType.APPLICATION_OCTET_STREAM_TYPE;
 
-    final MessageBodyWriter<?> messageBodyWriter = getProviders().getMessageBodyWriter(getEntityClass(), getGenericType(), getAnnotations(), mediaType);
+    final MessageBodyWriter<?> messageBodyWriter = providers.getMessageBodyWriter(getEntityClass(), getGenericType(), getAnnotations(), mediaType);
     if (messageBodyWriter == null)
       throw new ProcessingException("Could not find MessageBodyWriter for {type=" + getEntityClass().getName() + ", genericType=" + (getGenericType() == null ? "null" : getGenericType().getTypeName()) + ", annotations=" + Arrays.toString(getAnnotations()) + ", mediaType=" + mediaType + "}");
 

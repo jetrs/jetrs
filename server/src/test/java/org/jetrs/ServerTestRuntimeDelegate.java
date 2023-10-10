@@ -16,12 +16,10 @@
 
 package org.jetrs;
 
-import java.io.IOException;
-
 import javax.ws.rs.core.Application;
 
 public class ServerTestRuntimeDelegate extends RuntimeDelegateImpl {
-  public ServerTestRuntimeDelegate() throws IOException {
+  public ServerTestRuntimeDelegate() {
     final ConfigurationImpl configuration = new ConfigurationImpl(new Components(), null);
     setRuntimeContext(new ServerRuntimeContext(configuration, null, null, new Application(), null));
   }

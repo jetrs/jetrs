@@ -21,6 +21,16 @@ import java.util.Map;
 import javax.ws.rs.ext.ReaderInterceptor;
 
 final class ReaderInterceptorComponent extends MessageBodyComponent<ReaderInterceptor> {
+  static ComponentSet<MessageBodyComponent<ReaderInterceptor>> register(ComponentSet<MessageBodyComponent<ReaderInterceptor>> components, final Class<ReaderInterceptor> clazz, final ReaderInterceptor instance, final boolean isDefaultProvider, final Map<Class<?>,Integer> contracts, final int priority) {
+    if (components == null)
+      components = new ComponentSet.Typed<>();
+    else if (components.contains(clazz, isDefaultProvider))
+      return components;
+
+    components.add(new ReaderInterceptorComponent(clazz, instance, isDefaultProvider, contracts, priority));
+    return components;
+  }
+
   ReaderInterceptorComponent(final Class<ReaderInterceptor> clazz, final ReaderInterceptor instance, final boolean isDefaultProvider, final Map<Class<?>,Integer> contracts, final int priority) {
     super(clazz, instance, isDefaultProvider, contracts, priority, ReaderInterceptor.class);
   }

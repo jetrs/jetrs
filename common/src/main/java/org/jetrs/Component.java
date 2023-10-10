@@ -24,7 +24,6 @@ import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Predicate;
 
 import javax.annotation.Priority;
 import javax.inject.Singleton;
@@ -37,6 +36,16 @@ import org.slf4j.LoggerFactory;
 
 abstract class Component<T> {
   private static final Logger logger = LoggerFactory.getLogger(Component.class);
+  private static final Object defaultSingleton = new Object();
+
+  private static final boolean hasContextFields(final Class<?> clazz) {
+    final Field[] fields = Classes.getDeclaredFieldsDeep(clazz, Component::isFieldInjectable);
+    for (final Field field : fields) // [A]
+      if (field.isAnnotationPresent(Context.class))
+        return true;
+
+    return false;
+  }
 
   private static int getPriority(final Class<?> clazz) {
     final Priority priority = clazz.getAnnotation(Priority.class);
@@ -52,6 +61,9 @@ abstract class Component<T> {
   }
 
   static <T> Map<Class<?>,Integer> filterAssignable(final Class<T> componentClass, final Class<?>[] contracts) {
+    if (contracts == null)
+      return null;
+
     final HashMap<Class<?>,Integer> assignableContracts = new HashMap<>(contracts.length);
     for (final Class<?> contract : contracts) // [A]
       if (checkAssignable(componentClass, contract))
@@ -81,83 +93,108 @@ abstract class Component<T> {
     return typeArguments.length > 0 && typeArguments[0] instanceof Class ? (Class<?>)typeArguments[0] : defaultValue;
   }
 
-  static final Predicate<Field> injectableFieldPredicate = (final Field field) -> {
+  static boolean isFieldInjectable(final Field field) {
     final int modifiers = field.getModifiers();
     return !Modifier.isStatic(modifiers) && !Modifier.isFinal(modifiers);
-  };
+  }
 
   final Class<T> clazz;
-  final T instance;
-  private T singleton;
+  final T singleton;
   final boolean isSingleton;
   final boolean isDefaultProvider;
   final Map<Class<?>,Integer> contracts;
   final int priority;
 
-  Component(final Class<T> clazz, final T instance, final boolean isDefaultProvider, final Map<Class<?>,Integer> contracts, final int priority) {
+  @SuppressWarnings("unchecked")
+  Component(final Class<T> clazz, final T singleton, final boolean isDefaultProvider, final Map<Class<?>,Integer> contracts, final int priority) {
     this.clazz = clazz;
     this.isDefaultProvider = isDefaultProvider;
     this.contracts = contracts;
     this.priority = priority < 0 ? getPriority(clazz) : priority;
 
-    // Check whether this class has @Singleton annotation. If it also has @Context fields, then it cannot be a singleton.
-    final Field[] fields = Classes.getDeclaredFieldsDeep(clazz, injectableFieldPredicate);
-    if (logger.isWarnEnabled()) {
-      StringBuilder log = null;
-      for (final Field field : fields) { // [A]
-        if (field.isAnnotationPresent(Context.class)) {
-          if (log == null)
-            log = new StringBuilder();
-
-          log.append(", ").append(field.getName());
-        }
+    // Only instantiate singleton for default providers
+    if (isDefaultProvider) {
+      if (singleton != null) {
+        this.isSingleton = true;
+        this.singleton = singleton;
       }
-
-      final boolean hasSingletonAnnotation = clazz.isAnnotationPresent(Singleton.class);
-      if (log != null) {
-        log.setCharAt(0, ':');
-        log.setCharAt(1, ' ');
-        if (hasSingletonAnnotation)
-          logger.warn("Ignoring @Singleton annotation for component class " + clazz.getName() + " due to presence of @Context fields" + log);
-        else if (instance != null)
-          logger.warn("Considering instance of component class " + clazz.getName() + " as non-singleton due to presence of @Context fields" + log);
-
-        this.instance = null;
-        this.singleton = null;
+      else if (hasContextFields(clazz)) {
         this.isSingleton = false;
+        this.singleton = null;
       }
       else {
-        this.instance = instance;
+        // See if there is already a mapping between the default provider class and its singleton
+        T instance = (T)Components.defaultProviderClasses.get(clazz);
+        if (instance == null) {
+          // If there is no mapping, then instantiate and map
+          try {
+            instance = clazz.getConstructor().newInstance();
+            Components.defaultProviderClasses.put(clazz, instance);
+          }
+          catch (final Exception e) {
+            // If the provider cannot be instantiated, issue a warning and mark it with defaultSingleton,
+            // so that attempts to instantiate are not repeated.
+            if (logger.isWarnEnabled()) { logger.warn("Unable to create instance of default provider class " + clazz.getName(), e); }
+            Components.defaultProviderClasses.put(clazz, defaultSingleton);
+            instance = null;
+          }
+        }
+        else if (instance == defaultSingleton) {
+          instance = null;
+        }
+
+        this.isSingleton = instance != null;
         this.singleton = instance;
-        if ((this.isSingleton = instance != null) && !hasSingletonAnnotation && !clazz.isAnonymousClass())
-          logger.warn("Instance of component class " + clazz.getName() + " is missing @Singleton annotation");
       }
     }
     else {
-      boolean hasContextFields = false;
-      for (final Field field : fields) // [A]
-        if (hasContextFields = field.isAnnotationPresent(Context.class))
-          break;
+      // Check whether this class has @Singleton annotation. If it also has @Context fields, then it cannot be a singleton.
+      final Field[] fields = Classes.getDeclaredFieldsDeep(clazz, Component::isFieldInjectable);
+      if (logger.isWarnEnabled()) {
+        StringBuilder log = null;
+        for (final Field field : fields) { // [A]
+          if (field.isAnnotationPresent(Context.class)) {
+            if (log == null)
+              log = new StringBuilder();
 
-      if (hasContextFields) {
-        this.instance = null;
-        this.singleton = null;
-        this.isSingleton = false;
+            log.append(", ").append(field.getName());
+          }
+        }
+
+        final boolean hasSingletonAnnotation = clazz.isAnnotationPresent(Singleton.class);
+        if (log != null) {
+          log.setCharAt(0, ':');
+          log.setCharAt(1, ' ');
+          if (hasSingletonAnnotation)
+            logger.warn("Ignoring @Singleton annotation for component class " + clazz.getName() + " due to presence of @Context fields" + log);
+          else if (singleton != null)
+            logger.warn("Considering instance of component class " + clazz.getName() + " as non-singleton due to presence of @Context fields" + log);
+
+          this.singleton = null;
+          this.isSingleton = false;
+        }
+        else {
+          this.singleton = singleton;
+          if ((this.isSingleton = singleton != null) && !hasSingletonAnnotation && !clazz.isAnonymousClass())
+            logger.warn("Instance of component class " + clazz.getName() + " is missing @Singleton annotation");
+        }
       }
       else {
-        this.instance = instance;
-        this.singleton = instance;
-        this.isSingleton = instance != null;
+        boolean hasContextFields = false;
+        for (final Field field : fields) // [A]
+          if (hasContextFields = field.isAnnotationPresent(Context.class))
+            break;
+
+        if (hasContextFields) {
+          this.singleton = null;
+          this.isSingleton = false;
+        }
+        else {
+          this.singleton = singleton;
+          this.isSingleton = singleton != null;
+        }
       }
     }
-  }
-
-  final Class<T> getProviderClass() {
-    return clazz;
-  }
-
-  final int getPriority() {
-    return priority;
   }
 
   final T getSingletonOrFromRequestContext(final RequestContext<?> requestContext) throws IOException {
@@ -181,6 +218,6 @@ abstract class Component<T> {
 
   @Override
   public String toString() {
-    return "Class: " + getProviderClass().getName() + ", Priority: " + getPriority();
+    return "Class: " + clazz.getName() + ", Priority: " + priority;
   }
 }
