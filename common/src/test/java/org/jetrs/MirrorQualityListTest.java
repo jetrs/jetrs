@@ -51,6 +51,17 @@ public class MirrorQualityListTest {
   }
 
   @Test
+  public void testUnsupported() {
+    final MirrorQualityList<String,Float> list = newList();
+    try {
+      list.sort(null);
+      fail("Expected UnsupportedOperationException");
+    }
+    catch (final UnsupportedOperationException e) {
+    }
+  }
+
+  @Test
   public void testListFist() {
     final MirrorQualityList<String,Float> list = newList();
     final MirrorQualityList<Float,String> mirror = list.getMirrorList();

@@ -16,7 +16,6 @@
 
 package org.jetrs;
 
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.ListIterator;
@@ -376,15 +375,12 @@ class MirrorQualityList<V,R> extends MirrorList<V,List<V>,R,List<R>> implements 
     return false;
   }
 
+  /**
+   * Not supported, because {@link MirrorQualityList} is auto-sorted.
+   */
   @Override
-  @SuppressWarnings({"rawtypes", "unchecked"})
   public void sort(final Comparator<? super V> c) {
-    final Object[] a = toArray();
-    Arrays.sort(a, (Comparator)c);
-    // Using index-based set, because MirrorQualityList's set() is overridden to remove() and add(), resulting in modCount += 2,
-    // which leads to ConcurrentModificationException via the iterator-based implementation in List.sort(Comparator)
-    for (int i = 0, i$ = size(); i < i$; ++i) // [A]
-      set(i, (V)a[i]);
+    throw new UnsupportedOperationException();
   }
 
   @Override
