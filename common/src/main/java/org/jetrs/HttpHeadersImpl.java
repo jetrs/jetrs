@@ -58,7 +58,7 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
     return entry.getKey() != null ? entry.getKey().getDelimiters() : HttpHeader.none;
   }
 
-  private static void parseHeaderValuesFromString(final List<String> values, final String headerValue, final char[] delimiters) {
+  static void parseHeaderValuesFromString(final List<String> values, final String headerValue, final char[] delimiters) {
     if (delimiters != null)
       parseMultiHeaderNoSort(values, headerValue, delimiters);
     else
@@ -93,27 +93,6 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
 
       if (end == -1)
         start = i;
-    }
-  }
-
-  /**
-   * Creates a new {@link HttpHeadersImpl} with the specified map of headers as lists of strings.
-   *
-   * @param headers The map of headers as lists of strings.
-   * @throws NullPointerException If the specified map is null.
-   */
-  HttpHeadersImpl(final Map<String,List<String>> headers) {
-    this();
-    if (headers.size() > 0) {
-      for (final Map.Entry<String,List<String>> entry : headers.entrySet()) { // [S]
-        final String headerName = entry.getKey();
-        if (headerName != null) {
-          final List<String> values = getValues(headerName);
-          final char[] delimiters = getHeaderValueDelimiters(headerName);
-          for (final String value : entry.getValue()) // [L]
-            parseHeaderValuesFromString(values, value, delimiters);
-        }
-      }
     }
   }
 

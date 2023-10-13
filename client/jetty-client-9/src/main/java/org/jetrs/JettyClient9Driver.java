@@ -180,8 +180,16 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
           final int statusCode = response.getStatus();
           final StatusType statusInfo = Responses.from(statusCode, response.getReason());
           final HttpHeadersImpl responseHeaders = new HttpHeadersImpl();
-          for (final HttpField header : response.getHeaders()) // [I]
-            responseHeaders.add(header.getName(), header.getValue());
+          final HttpFields headers = response.getHeaders();
+          if (headers.size() > 0) {
+            for (final HttpField header : headers) { // [I]
+              final String headerName = header.getName();
+              final List<String> headerValues = responseHeaders.getValues(headerName);
+              final char[] delimiters = HttpHeadersImpl.getHeaderValueDelimiters(headerName);
+              final String value = header.getValue();
+              HttpHeadersImpl.parseHeaderValuesFromString(headerValues, value, delimiters);
+            }
+          }
 
           final List<HttpCookie> httpCookies = Jdk8ClientDriver.cookieStore.getCookies();
           final HashMap<String,NewCookie> cookies;

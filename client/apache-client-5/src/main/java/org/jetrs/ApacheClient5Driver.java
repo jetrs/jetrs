@@ -337,8 +337,13 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
           final String reasonPhrase = response.getReasonPhrase();
           final StatusType statusInfo = Responses.from(statusCode, reasonPhrase);
           final HttpHeadersImpl responseHeaders = new HttpHeadersImpl();
-          for (final Header header : response.getHeaders()) // [A]
-            responseHeaders.add(header.getName(), header.getValue());
+          for (final Header header : response.getHeaders()) { // [A]
+            final String headerName = header.getName();
+            final List<String> headerValues = responseHeaders.getValues(headerName);
+            final char[] delimiters = HttpHeadersImpl.getHeaderValueDelimiters(headerName);
+            final String value = header.getValue();
+            HttpHeadersImpl.parseHeaderValuesFromString(headerValues, value, delimiters);
+          }
 
           final List<Cookie> httpCookies = cookieStore.getCookies();
           final Map<String,NewCookie> cookies;

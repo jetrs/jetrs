@@ -84,14 +84,15 @@ public class Jdk8ClientDriver extends ClientDriver {
       }
 
       private void setHeaders(final HttpURLConnection connection) {
-        if (requestHeaders.size() > 0) {
-          int size;
-          String name;
-          List<String> values;
-          for (final Map.Entry<String,List<String>> entry : requestHeaders.entrySet()) // [S]
-            if ((values = entry.getValue()) != null && (size = values.size()) > 0)
-              connection.setRequestProperty(name = entry.getKey(), size == 1 ? values.get(0).toString() : CollectionUtil.toString(values, HttpHeadersImpl.getHeaderValueDelimiters(name)[0]));
-        }
+        if (requestHeaders.size() == 0)
+          return;
+
+        int size;
+        String name;
+        List<String> values;
+        for (final Map.Entry<String,List<String>> entry : requestHeaders.entrySet()) // [S]
+          if ((values = entry.getValue()) != null && (size = values.size()) > 0)
+            connection.setRequestProperty(name = entry.getKey(), size == 1 ? values.get(0).toString() : CollectionUtil.toString(values, HttpHeadersImpl.getHeaderValueDelimiters(name)[0]));
       }
 
       @SuppressWarnings("rawtypes")
@@ -172,7 +173,21 @@ public class Jdk8ClientDriver extends ClientDriver {
 
           final String reasonPhrase = connection.getResponseMessage();
           final StatusType statusInfo = Responses.from(statusCode, reasonPhrase);
-          final HttpHeadersImpl responseHeaders = new HttpHeadersImpl(connection.getHeaderFields());
+          final Map<String,List<String>> headerFields = connection.getHeaderFields();
+          final HttpHeadersImpl responseHeaders = new HttpHeadersImpl();
+          if (headerFields.size() > 0) {
+            for (final Map.Entry<String,List<String>> entry : headerFields.entrySet()) { // [S]
+              final String headerName = entry.getKey();
+              if (headerName != null) {
+                final List<String> headerValues = responseHeaders.getValues(headerName);
+                final char[] delimiters = HttpHeadersImpl.getHeaderValueDelimiters(headerName);
+                final List<String> values = entry.getValue();
+                if (values.size() > 0)
+                  for (final String value : values) // [L]
+                    HttpHeadersImpl.parseHeaderValuesFromString(headerValues, value, delimiters);
+              }
+            }
+          }
 
           final List<HttpCookie> httpCookies = cookieStore.getCookies();
           final Map<String,NewCookie> cookies;

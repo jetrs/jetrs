@@ -25,6 +25,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -39,7 +41,6 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -53,6 +54,10 @@ import com.github.tomakehurst.wiremock.junit.WireMockRule;
 
 @SuppressWarnings("unused")
 public class Jdk8ClientTest {
+  public static final String[] exposeHeaders = {
+    HttpHeaders.AUTHORIZATION, HttpHeaders.CONTENT_DISPOSITION, HttpHeaders.CONTENT_ENCODING,
+    HttpHeaders.DATE, HttpHeaders.IF_MODIFIED_SINCE, HttpHeaders.WWW_AUTHENTICATE};
+
   private static byte[] createRandomBytes(final int length) {
     final byte[] bytes = new byte[length];
     final Random random = new Random();
@@ -88,9 +93,8 @@ public class Jdk8ClientTest {
       configServer(server);
 
       final Invocation.Builder builder = buildRequest("http://localhost:" + server.port());
-      for (int i = 0; i < tests; ++i) { // [N]
+      for (int i = 0; i < tests; ++i) // [N]
         assertResponse(entity != null ? builder.method(method, entity.get()) : builder.method(method));
-      }
 
       final ExecutorService executor = Executors.newFixedThreadPool(tests);
       final CountDownLatch latch = new CountDownLatch(tests);
@@ -134,6 +138,19 @@ public class Jdk8ClientTest {
     abstract void assertResponse(Response response) throws IOException;
   }
 
+  private static void assertResponse(final Response response, final String message) {
+    assertEquals(Response.Status.OK, response.getStatusInfo());
+    assertEquals(message, response.readEntity(String.class));
+
+    final Object[] actualString = response.getStringHeaders().get(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS).toArray();
+    Arrays.sort(actualString);
+    assertArrayEquals(exposeHeaders, actualString);
+
+    final Object[] actualObject = response.getHeaders().get(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS).toArray();
+    Arrays.sort(actualObject);
+    assertArrayEquals(exposeHeaders, actualObject);
+  }
+
   @Test
   public void testGet() throws InterruptedException, IOException {
     final String message = "{\"message\": \"SUCCESS\"}";
@@ -142,6 +159,7 @@ public class Jdk8ClientTest {
       void configServer(final WireMockRule server) {
         server.stubFor(get("/get")
           .willReturn(ok()
+            .withHeader(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, exposeHeaders)
             .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
             .withBody(message)));
       }
@@ -155,8 +173,7 @@ public class Jdk8ClientTest {
 
       @Override
       void assertResponse(final Response response) {
-        assertEquals(Response.Status.OK, response.getStatusInfo());
-        assertEquals(message, response.readEntity(String.class));
+        Jdk8ClientTest.assertResponse(response, message);
       }
     };
   }
@@ -170,8 +187,9 @@ public class Jdk8ClientTest {
         server.stubFor(put("/put")
           .withHeader(HttpHeaders.CONTENT_TYPE, containing(MediaType.TEXT_XML))
           .willReturn(ok()
-            .withBody(message)
-            .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_XML)));
+            .withHeader(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, exposeHeaders)
+            .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_XML)
+            .withBody(message)));
       }
 
       @Override
@@ -182,8 +200,7 @@ public class Jdk8ClientTest {
 
       @Override
       void assertResponse(final Response response) {
-        assertEquals(Response.Status.OK, response.getStatusInfo());
-        assertEquals(message, response.readEntity(String.class));
+        Jdk8ClientTest.assertResponse(response, message);
       }
     };
   }
@@ -197,8 +214,9 @@ public class Jdk8ClientTest {
         server.stubFor(post("/post")
           .withHeader(HttpHeaders.CONTENT_TYPE, containing(MediaType.APPLICATION_OCTET_STREAM))
           .willReturn(ok()
-            .withBody(message)
-            .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_XML)));
+            .withHeader(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, exposeHeaders)
+            .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_XML)
+            .withBody(message)));
       }
 
       @Override
@@ -209,8 +227,7 @@ public class Jdk8ClientTest {
 
       @Override
       void assertResponse(final Response response) {
-        assertEquals(Response.Status.OK, response.getStatusInfo());
-        assertEquals(message, response.readEntity(String.class));
+        Jdk8ClientTest.assertResponse(response, message);
       }
     };
   }
@@ -235,8 +252,9 @@ public class Jdk8ClientTest {
         server.stubFor(post("/post")
           .withHeader(HttpHeaders.CONTENT_TYPE, containing(MediaType.APPLICATION_FORM_URLENCODED))
           .willReturn(ok()
-            .withBody(entity.toByteArray())
-            .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_XML)));
+            .withHeader(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, exposeHeaders)
+            .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_XML)
+            .withBody(entity.toByteArray())));
       }
 
       @Override
@@ -265,8 +283,9 @@ public class Jdk8ClientTest {
         server.stubFor(post("/post")
           .withHeader(HttpHeaders.CONTENT_TYPE, containing(MediaType.APPLICATION_OCTET_STREAM))
           .willReturn(ok()
-            .withBody(testBytes)
-            .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_XML)));
+            .withHeader(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, exposeHeaders)
+            .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_XML)
+            .withBody(testBytes)));
       }
 
       @Override
