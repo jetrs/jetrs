@@ -77,7 +77,7 @@ public class BookService {
   }
 
   @GET
-  @Path("/query/a{a}/{a}a{b}b/c{c}c/b{b:[^/]+(/+[^/]+)*}")
+  @Path("/q*u[e+r}y/a{a}/{a}a{b}b/c{c}c/b{b:[^/]+(/+[^/]+)*}")
   @Produces(MediaType.TEXT_PLAIN)
   public Response getListOfBooksOrderBy(@PathParam("a") final String a0, @PathParam("a") final String[] a1, @PathParam("a") final List<String> a2, @PathParam("a") final PathSegment aSeg0, @PathParam("a") final PathSegment[] aSeg1, @PathParam("a") final List<PathSegment> aSeg2, @PathParam("b") final String b0, @PathParam("b") final String[] b1, @PathParam("b") final List<String> b2, @PathParam("b") final PathSegment bSeg0, @PathParam("b") final PathSegment[] bSeg1, @PathParam("b") final List<PathSegment> bSeg2, @MatrixParam("orderBy") final List<String> orderBy) {
     assertEquals(2, a1.length);

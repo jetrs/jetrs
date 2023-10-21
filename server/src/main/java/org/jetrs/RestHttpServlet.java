@@ -26,6 +26,8 @@ import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.ext.RuntimeDelegate;
 
+import org.libj.lang.Strings;
+
 abstract class RestHttpServlet extends HttpServlet {
   private static final String applicationClassName = "javax.ws.rs.Application";
   private final Application application;
@@ -61,7 +63,7 @@ abstract class RestHttpServlet extends HttpServlet {
     final ApplicationPath applicationPath = AnnotationUtil.getAnnotation(application.getClass(), ApplicationPath.class);
     if (applicationPath != null) {
       servletPath = applicationPath.value();
-      if (servletPath.endsWith("/"))
+      if (Strings.endsWith(servletPath, '/'))
         servletPath = servletPath.substring(0, servletPath.length() - 1);
     }
     else {
@@ -71,7 +73,7 @@ abstract class RestHttpServlet extends HttpServlet {
         final int length = servletPath.length();
         if (servletPath.endsWith("/*"))
           servletPath = servletPath.substring(0, length - 2);
-        else if (servletPath.endsWith("/"))
+        else if (Strings.endsWith(servletPath, '/'))
           servletPath = servletPath.substring(0, length - 1);
       }
       else {
@@ -82,7 +84,7 @@ abstract class RestHttpServlet extends HttpServlet {
     try {
       final ResourceInfos resourceInfos = new ResourceInfos();
       final ConfigurationImpl configuration = new ConfigurationImpl(new ServerComponents(application, resourceInfos, servletPath), application.getProperties());
-      runtimeContext = new ServerRuntimeContext(configuration, servletConfig, getServletContext(), application, resourceInfos);
+      this.runtimeContext = new ServerRuntimeContext(configuration, servletConfig, getServletContext(), application, resourceInfos);
 
       final RuntimeDelegate runtimeDelegate = RuntimeDelegate.getInstance();
       if (!(runtimeDelegate instanceof RuntimeDelegateImpl))

@@ -350,7 +350,7 @@ public class GeneralServerTest {
 
   @Test
   public void testBookService4() throws Exception {
-    final Invocation.Builder request = request("/books/query/aA/BaCb/cDc/ba///////test/bar/hi/hello/good/bye");
+    final Invocation.Builder request = request("/books/q*u[e+r}y/aA/BaCb/cDc/ba///////test/bar/hi/hello/good/bye");
     final Response getResponse = request.get();
 
     final String data = assertResponse(200, getResponse, String.class);

@@ -120,7 +120,7 @@ abstract class RequestContext<R extends RuntimeContext> extends InterceptorConte
 
   private boolean readerInterceptorCalled = false;
 
-  ComponentSet<MessageBodyComponent<ReaderInterceptor>> getReaderInterceptorComponents() {
+  final ComponentSet<MessageBodyComponent<ReaderInterceptor>> getReaderInterceptorComponents() {
     if (readerInterceptorCalled)
       throw new IllegalStateException();
 
@@ -130,7 +130,7 @@ abstract class RequestContext<R extends RuntimeContext> extends InterceptorConte
 
   private boolean writerInterceptorCalled = false;
 
-  ComponentSet<MessageBodyComponent<WriterInterceptor>> getWriterInterceptorComponents() {
+  final ComponentSet<MessageBodyComponent<WriterInterceptor>> getWriterInterceptorComponents() {
     if (writerInterceptorCalled)
       throw new IllegalStateException();
 
@@ -138,15 +138,15 @@ abstract class RequestContext<R extends RuntimeContext> extends InterceptorConte
     return components.getWriterInterceptorComponents();
   }
 
-  ComponentSet<MessageBodyComponent<MessageBodyReader<?>>> getMessageBodyReaderComponents() {
+  final ComponentSet<MessageBodyComponent<MessageBodyReader<?>>> getMessageBodyReaderComponents() {
     return components.getMessageBodyReaderComponents();
   }
 
-  ComponentSet<MessageBodyComponent<MessageBodyWriter<?>>> getMessageBodyWriterComponents() {
+  final ComponentSet<MessageBodyComponent<MessageBodyWriter<?>>> getMessageBodyWriterComponents() {
     return components.getMessageBodyWriterComponents();
   }
 
-  ComponentSet<TypeComponent<ExceptionMapper<?>>> getExceptionMapperComponents() {
+  final ComponentSet<TypeComponent<ExceptionMapper<?>>> getExceptionMapperComponents() {
     return components.getExceptionMapperComponents();
   }
 

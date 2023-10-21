@@ -95,7 +95,7 @@ final class PathSegmentImpl implements PathSegment {
   }
 
   String getPathEncoded() {
-    return this.pathEncoded;
+    return pathEncoded;
   }
 
   boolean hasMatrixParams() {

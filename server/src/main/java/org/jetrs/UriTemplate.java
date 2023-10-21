@@ -16,12 +16,13 @@
 
 package org.jetrs;
 
+import java.nio.charset.StandardCharsets;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.ws.rs.Path;
 
-import org.libj.net.URIComponent;
+import org.eclipse.jetty.util.UrlEncoded;
 import org.libj.util.Patterns;
 
 class UriTemplate implements Comparable<UriTemplate> {
@@ -109,25 +110,24 @@ class UriTemplate implements Comparable<UriTemplate> {
     return true;
   }
 
-  // FIXME: This does URI-Encode...
-  // FIXME: URL-Encode baseUri, but don't double-encode %-encoded values
   private static int appendLiteral(final StringBuilder b, final String uriTemplate, final int i$, final int start, final int end) {
     // Append the literal path, first with URI encode, then with regex escape
     int repeatedSlashes = 0;
     char ch, prev = '\0';
     for (int i = start; i < end; ++i, prev = ch) { // [N]
       ch = uriTemplate.charAt(i);
-      if (ch != '/') {
-        final String en = URIComponent.encode(ch);
-        if (en.length() > 1) {
-          b.append(en);
-        }
-        else {
-          if (Patterns.isMetaCharacter(ch))
-            b.append('\\');
-
-          b.append(ch);
-        }
+      if ('a' <= ch && ch <= 'z' || 'A' <= ch && ch < 'Z' || '0' <= ch && ch <= '9' || ch == '_' || ch == '~' || ch == '&' || ch == '\'' || ch == ',' || ch == ';' || ch == '=' || ch == ':' || ch == '@') {
+        // Characters that do not need to be URL-Encoded, and do not need to be regex-escaped
+        b.append(ch);
+      }
+      else if (ch == '.' || ch == '+' || ch == '-' || ch == '*' || ch == '!' || ch == '$' || ch == '(' || ch == ')') {
+        // Characters that do not need to be URL-Encoded, but need to be regex-escaped
+        b.append('\\');
+        b.append(ch);
+      }
+      else if (ch != '/') {
+        // Characters that need to be URL-Encoded
+        b.append(UrlEncoded.encodeString(String.valueOf(ch), StandardCharsets.UTF_8)); // FIXME: Can be made to be more efficient
       }
       else if (prev == '/') {
         ++repeatedSlashes;
@@ -187,7 +187,7 @@ class UriTemplate implements Comparable<UriTemplate> {
    * @return An array of regex name groups corresponding to path parameter names.
    * @see Path#value()
    */
-  String[] parsePathParams(final StringBuilder regex, StringBuilder value, final String uriTemplate, final int i$, int i, final int depth) {
+  private String[] parsePathParams(final StringBuilder regex, StringBuilder value, final String uriTemplate, final int i$, int i, final int depth) {
     int start = uriTemplate.indexOf('{', ++i);
     if (start < 0) {
       literalChars += appendLiteral(regex, uriTemplate, i$, i, i$);

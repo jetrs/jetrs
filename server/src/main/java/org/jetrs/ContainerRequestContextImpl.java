@@ -740,7 +740,7 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> i
     final StringBuilder requestUriBuilder = new StringBuilder(uriInfo.getBaseUri().getRawPath());
     final int baseUriLen = requestUriBuilder.length();
 
-    final String path = uriInfo.getPath();
+    final String path = uriInfo.getPath(false);
     normalizeUri(requestUriBuilder, path, path.length(), false, 0, 0);
 
     final String requestUriMatched = requestUriBuilder.toString();
