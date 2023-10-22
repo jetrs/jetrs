@@ -278,11 +278,11 @@ public class GeneralServerTest {
 
   @Test
   public void testBookService0() throws Exception {
-    final Invocation.Builder request = request("/books/aaabb;a=b/xxx;x=x/some;c=d/amazingly/cool/stuff");
+    final Invocation.Builder request = request("/books/aaabb;a=b/xxx;x=x/some;c=d/foo+bar@example.com/co[]ol/stuff/whatever");
     final Response getResponse = request.get();
 
     final String data = assertResponse(200, getResponse, String.class);
-    assertEquals("aaabb:bb:xxx:xxx|some|amazingly|cool", data);
+    assertEquals("aaabb:bb:xxx:xxx|some|foo+bar@example.com|co[]ol", data);
 
     final Response headResponse = request.head();
     assertGetHead(getResponse, headResponse);
@@ -290,11 +290,11 @@ public class GeneralServerTest {
 
   @Test
   public void testBookService01() throws Exception {
-    final Invocation.Builder request = request("/books/aaab/xxx;x=x/a/lot;r=r/of/stuff");
+    final Invocation.Builder request = request("/books/aaab/xxx;x=x/a/lot;r=r/o}乨{f/stuff");
     final Response getResponse = request.get();
 
     final String data = assertResponse(200, getResponse, String.class);
-    assertEquals("aaab:b:xxx:xxx|a|lot|of", data);
+    assertEquals("aaab:b:xxx:xxx|a|lot|o}乨{f", data);
 
     final Response headResponse = request.head();
     assertGetHead(getResponse, headResponse);

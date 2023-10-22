@@ -30,7 +30,16 @@ final class UriBuilderUtil {
   private static final String URI_PARAM_NAME_REGEX = "\\w[\\w.-]*";
   private static final String URI_PARAM_REGEX_REGEX = "[^{}][^{}]*";
   private static final String URI_PARAM_REGEX = "\\{\\s*(" + URI_PARAM_NAME_REGEX + ")\\s*(:\\s*(" + URI_PARAM_REGEX_REGEX + "))?\\}";
-  private static final Pattern URI_PARAM_PATTERN = Pattern.compile(URI_PARAM_REGEX);
+  private static final Pattern URI_PARAM_PATTERN = Pattern.compile(URI_PARAM_REGEX, Pattern.UNICODE_CHARACTER_CLASS);
+
+  static URI newURI(final String uri) {
+    try {
+      return new URI(uri);
+    }
+    catch (final URISyntaxException e) {
+      throw new UriBuilderException("Failed to create URI: " + uri, e);
+    }
+  }
 
   static String invalid(final String name, final Object value) {
     return "Invalid " + name + ": " + value;
@@ -42,15 +51,6 @@ final class UriBuilderUtil {
 
   static String pathParameterNotProvided(final String param) {
     return "Path parameter " + param + " is not provided by the parameter map";
-  }
-
-  static URI newURI(final String uri) {
-    try {
-      return new URI(uri);
-    }
-    catch (final URISyntaxException e) {
-      throw new UriBuilderException("Failed to create URI: " + uri, e);
-    }
   }
 
   static void replaceParameter(final Map<String,?> paramMap, final boolean fromEncodedMap, final boolean isTemplate, final String string, final StringBuilder builder, final UriEncoder uriEncoder) {

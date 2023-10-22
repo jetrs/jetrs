@@ -145,10 +145,11 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
 
     if (match.group(5) != null) {
       final String group = match.group(5);
-      if (!hasScheme && group.length() > 0 && !group.startsWith("/") && group.indexOf(':') > -1 && group.indexOf('/') > -1 && group.indexOf(':') < group.indexOf('/'))
+      final int length = group.length();
+      if (!hasScheme && length > 0 && !group.startsWith("/") && group.indexOf(':') > -1 && group.indexOf('/') > -1 && group.indexOf(':') < group.indexOf('/'))
         throw new IllegalArgumentException(invalid("uri template", uriTemplate));
 
-      if (group.length() > 0)
+      if (length > 0)
         replacePath(group);
     }
 
@@ -161,7 +162,7 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
     return this;
   }
 
-  UriBuilder uri(final CharSequence uriTemplate) {
+  private UriBuilder uri(final CharSequence uriTemplate) {
     assertNotNull(uriTemplate, "uriTemplate is null");
 
     final Matcher opaque = opaqueUri.matcher(uriTemplate);
@@ -240,12 +241,12 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
   }
 
   @Override
-  public UriBuilder uri(final String uriTemplate) throws IllegalArgumentException {
+  public UriBuilder uri(final String uriTemplate) {
     return uri((CharSequence)uriTemplate);
   }
 
   @Override
-  public UriBuilder uri(final URI uri) throws IllegalArgumentException {
+  public UriBuilder uri(final URI uri) {
     assertNotNull(uri, "uri is null");
 
     final String rawFragment = uri.getRawFragment();
@@ -305,13 +306,13 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
   }
 
   @Override
-  public UriBuilder scheme(final String scheme) throws IllegalArgumentException {
+  public UriBuilder scheme(final String scheme) {
     this.scheme = scheme;
     return this;
   }
 
   @Override
-  public UriBuilder schemeSpecificPart(final String ssp) throws IllegalArgumentException {
+  public UriBuilder schemeSpecificPart(final String ssp) {
     assertNotNull(ssp, "ssp is null");
 
     final StringBuilder builder = new StringBuilder();
@@ -347,7 +348,7 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
   }
 
   @Override
-  public UriBuilder host(final String host) throws IllegalArgumentException {
+  public UriBuilder host(final String host) {
     if (host != null && host.length() == 0)
       throw new IllegalArgumentException(invalidParam("host", "\"\""));
 
@@ -356,7 +357,7 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
   }
 
   @Override
-  public UriBuilder port(final int port) throws IllegalArgumentException {
+  public UriBuilder port(final int port) {
     if (port < -1)
       throw new IllegalArgumentException(invalidParam("port", port));
 
@@ -365,7 +366,7 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
   }
 
   @Override
-  public UriBuilder path(final String segment) throws IllegalArgumentException {
+  public UriBuilder path(final String segment) {
     if (segment == null)
       throw new IllegalArgumentException(invalidParam("segment", null));
 
@@ -374,7 +375,7 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
   }
 
   @Override
-  public UriBuilder path(final Class resource) throws IllegalArgumentException {
+  public UriBuilder path(final Class resource) {
     assertNotNull(resource, "resource is null");
 
     final Path annotation = AnnotationUtil.getAnnotation(resource, Path.class);
@@ -386,7 +387,7 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
   }
 
   @Override
-  public UriBuilder path(final Class resource, final String method) throws IllegalArgumentException {
+  public UriBuilder path(final Class resource, final String method) {
     assertNotNull(resource, "resource is null");
     assertNotNull(method, "method is null");
 
@@ -407,7 +408,7 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
   }
 
   @Override
-  public UriBuilder path(final Method method) throws IllegalArgumentException {
+  public UriBuilder path(final Method method) {
     assertNotNull(method, "method is null");
 
     final Path annotation = AnnotationUtil.getAnnotation(method, Path.class);
@@ -419,22 +420,19 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
   }
 
   @Override
-  public UriBuilder replaceMatrix(String matrix) throws IllegalArgumentException {
-    if (matrix == null)
+  public UriBuilder replaceMatrix(String matrix) {
+    if (matrix == null || matrix.length() == 0)
       matrix = ";";
-    else if (!matrix.startsWith(";"))
-      matrix = ";" + matrix;
+    else if (matrix.charAt(0) != ';')
+      matrix = ";" + UriEncoder.PATH.encode(matrix);
+    else
+      matrix = UriEncoder.PATH.encode(matrix);
 
-    matrix = UriEncoder.PATH.encode(matrix);
     if (path == null) {
       path = matrix;
     }
     else {
-      int start = path.lastIndexOf('/');
-      if (start < 0)
-        start = 0;
-
-      final int matrixIndex = path.indexOf(';', start);
+      final int matrixIndex = path.indexOf(';', path.lastIndexOf('/') + 1);
       if (matrixIndex > -1)
         path = path.substring(0, matrixIndex);
 
@@ -445,47 +443,47 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
   }
 
   @Override
-  public UriBuilder replaceQuery(final String query) throws IllegalArgumentException {
+  public UriBuilder replaceQuery(final String query) {
     this.query = query == null || query.length() == 0 ? null : UriEncoder.QUERY.encode(query);
     return this;
   }
 
   @Override
-  public UriBuilder fragment(final String fragment) throws IllegalArgumentException {
+  public UriBuilder fragment(final String fragment) {
     this.fragment = fragment == null ? null : UriEncoder.QUERY.encode(fragment);
     return this;
   }
 
   @Override
-  public URI build(final Object ... values) throws IllegalArgumentException, UriBuilderException {
+  public URI build(final Object ... values) {
     return build(values, true);
   }
 
   @Override
-  public URI build(final Object[] values, final boolean encodeSlashInPath) throws IllegalArgumentException, UriBuilderException {
+  public URI build(final Object[] values, final boolean encodeSlashInPath) {
     assertNotNull(values, "values is null");
     return newURI(buildFromParameters(new TemplateParametersMap(values), false, false, encodeSlashInPath).toString());
   }
 
   @Override
-  public URI buildFromMap(final Map<String,?> values) throws IllegalArgumentException, UriBuilderException {
+  public URI buildFromMap(final Map<String,?> values) {
     return buildFromMap(values, true);
   }
 
   @Override
-  public URI buildFromMap(final Map<String,?> values, final boolean encodeSlashInPath) throws IllegalArgumentException, UriBuilderException {
+  public URI buildFromMap(final Map<String,?> values, final boolean encodeSlashInPath) {
     assertNotNull(values, "values is null");
     return newURI(buildFromParameters(values, false, false, encodeSlashInPath).toString());
   }
 
   @Override
-  public URI buildFromEncodedMap(final Map<String,?> values) throws IllegalArgumentException, UriBuilderException {
+  public URI buildFromEncodedMap(final Map<String,?> values) {
     assertNotNull(values, "values is null");
     return newURI(buildFromParameters(values, true, false, false).toString());
   }
 
   @Override
-  public UriBuilder matrixParam(final String name, final Object ... values) throws IllegalArgumentException {
+  public UriBuilder matrixParam(final String name, final Object ... values) {
     assertNotNull(name, "name is null");
     assertNotNull(values, "values is null");
 
@@ -506,7 +504,7 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
   }
 
   @Override
-  public UriBuilder replaceMatrixParam(final String name, final Object ... values) throws IllegalArgumentException {
+  public UriBuilder replaceMatrixParam(final String name, final Object ... values) {
     assertNotNull(name, "name is null");
 
     if (path == null)
@@ -568,7 +566,7 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
   }
 
   @Override
-  public UriBuilder queryParam(final String name, final Object ... values) throws IllegalArgumentException {
+  public UriBuilder queryParam(final String name, final Object ... values) {
     assertNotNull(name, "name is null");
     assertNotNull(values, "values is null");
 
@@ -589,7 +587,7 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
   }
 
   @Override
-  public UriBuilder replaceQueryParam(final String name, final Object ... values) throws IllegalArgumentException {
+  public UriBuilder replaceQueryParam(final String name, final Object ... values) {
     assertNotNull(name, "name is null");
 
     if (query == null || query.length() == 0)
@@ -622,7 +620,7 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
   }
 
   @Override
-  public UriBuilder segment(final String ... segments) throws IllegalArgumentException {
+  public UriBuilder segment(final String ... segments) {
     if (segments == null)
       throw new IllegalArgumentException(invalidParam("segments", null));
 
@@ -635,7 +633,7 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
   }
 
   @Override
-  public URI buildFromEncoded(final Object ... values) throws IllegalArgumentException, UriBuilderException {
+  public URI buildFromEncoded(final Object ... values) {
     assertNotNull(values, "values is null");
     return newURI(buildFromParameters(new TemplateParametersMap(values), true, false, false).toString());
   }
@@ -652,31 +650,31 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
   }
 
   @Override
-  public UriBuilder resolveTemplateFromEncoded(final String name, final Object value) throws IllegalArgumentException {
+  public UriBuilder resolveTemplateFromEncoded(final String name, final Object value) {
     assertNotNull(name, "name is null");
     assertNotNull(value, "value is null");
     return uri(buildFromParameters(Collections.singletonMap(name, value), true, true, true));
   }
 
   @Override
-  public UriBuilder resolveTemplates(final Map<String,Object> templateValues) throws IllegalArgumentException {
+  public UriBuilder resolveTemplates(final Map<String,Object> templateValues) {
     return resolveTemplates(templateValues, true);
   }
 
   @Override
-  public UriBuilder resolveTemplate(final String name, final Object value) throws IllegalArgumentException {
+  public UriBuilder resolveTemplate(final String name, final Object value) {
     return resolveTemplate(name, value, true);
   }
 
   @Override
-  public UriBuilder resolveTemplate(final String name, final Object value, final boolean encodeSlashInPath) throws IllegalArgumentException {
+  public UriBuilder resolveTemplate(final String name, final Object value, final boolean encodeSlashInPath) {
     assertNotNull(name, "name is null");
     assertNotNull(value, "value is null");
     return resolveTemplates(Collections.singletonMap(name, value), encodeSlashInPath);
   }
 
   @Override
-  public UriBuilder resolveTemplates(final Map<String,Object> templateValues, final boolean encodeSlashInPath) throws IllegalArgumentException {
+  public UriBuilder resolveTemplates(final Map<String,Object> templateValues, final boolean encodeSlashInPath) {
     assertNotNull(templateValues, "templateValues is null");
     if (templateValues.containsKey(null))
       throw new IllegalArgumentException(invalidParam("key in templateValues map", null));
@@ -685,7 +683,7 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
   }
 
   @Override
-  public UriBuilder resolveTemplatesFromEncoded(final Map<String,Object> templateValues) throws IllegalArgumentException {
+  public UriBuilder resolveTemplatesFromEncoded(final Map<String,Object> templateValues) {
     return resolveTemplates(templateValues, true);
   }
 

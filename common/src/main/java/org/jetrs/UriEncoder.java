@@ -244,8 +244,7 @@ final class UriEncoder {
     int start = 0;
     for (int i = 0; matcher.find(); ++i) { // [N]
       builder.append(segment, start, matcher.start());
-      final String replacement = params.get(i);
-      builder.append(replacement);
+      builder.append(params.get(i));
       start = matcher.end();
     }
 
@@ -271,9 +270,10 @@ final class UriEncoder {
   static CharSequence replaceBraces(final String string) {
     CharSequence sequence = string;
     char[] chars = null;
-    for (int i = 0, open = 0, i$ = string.length(); i < i$; ++i) { // [N]
-      if (sequence.charAt(i) == '{') {
-        if (open++ != 0) {
+    for (int i = 0, depth = 0, i$ = string.length(); i < i$; ++i) { // [N]
+      final char ch = sequence.charAt(i);
+      if (ch == '{') {
+        if (depth++ != 0) {
           if (sequence == string) {
             chars = string.toCharArray();
             sequence = ArrayCharSequence.of(chars);
@@ -282,8 +282,8 @@ final class UriEncoder {
           chars[i] = openCurlyReplacement;
         }
       }
-      else if (sequence.charAt(i) == '}') {
-        if (--open != 0) {
+      else if (ch == '}') {
+        if (--depth != 0) {
           if (sequence == string) {
             chars = string.toCharArray();
             sequence = ArrayCharSequence.of(chars);
