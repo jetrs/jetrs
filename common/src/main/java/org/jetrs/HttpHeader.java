@@ -282,6 +282,7 @@ final class HttpHeader<T> {
    * @see <a href="https://httpwg.org/specs/rfc6265.html#cookie">Specification</a>
    */
   static final HttpHeader<Cookie> COOKIE = new HttpHeader<>(HttpHeaders.COOKIE, semiComma, false, HeaderDelegateImpl.COOKIE);
+
   /**
    * @see <a href="https://en.wikipedia.org/wiki/List_of_HTTP_header_fields#cite_ref-45">List of HTTP header fields</a>
    */

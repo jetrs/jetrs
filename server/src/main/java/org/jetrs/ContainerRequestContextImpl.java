@@ -86,6 +86,7 @@ import org.libj.lang.Classes;
 import org.libj.lang.Numbers;
 import org.libj.lang.Throwables;
 import org.libj.util.ArrayUtil;
+import org.libj.util.CollectionUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -289,7 +290,7 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> i
       return (T)runtimeContext.getServletContext();
 
     if (HttpHeaders.class.isAssignableFrom(clazz))
-      return (T)getHeaders();
+      return (T)getHttpHeaders();
 
     if (HttpServletRequest.class.isAssignableFrom(clazz))
       return (T)httpServletRequest;
@@ -399,21 +400,33 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> i
   private Object getParamObject(final AnnotatedElement element, final int parameterIndex, final Annotation annotation, final Annotation[] annotations, final Class<?> rawType, final Type genericType) throws IOException {
     final Class<? extends Annotation> annotationType = annotation.annotationType();
     if (annotationType == CookieParam.class) {
-      final Map<String,Cookie> cookies = getCookies();
-      final Object value;
-      if (cookies != null && (value = cookies.get(((CookieParam)annotation).value())) != null)
-        return value; // FIXME: This is wrong!
+      final List<String> cookies = getHttpHeaders().get(COOKIE);
+      final int size;
+      String firstValue = null;
+      if (cookies != null && (size = cookies.size()) > 0) {
+        assert(CollectionUtil.isRandomAccess(cookies));
+        for (int i = 0; i < size; ++i) { // [RA]
+          final String cookie = cookies.get(i);
+          final int index = cookie.indexOf('=');
+          if (index > -1 && cookie.regionMatches(0, ((CookieParam)annotation).value(), 0, index)) {
+            // Special case for String rawType, because in this case only the `value` of `name=value` is desired
+            firstValue = rawType == Cookie.class || rawType.isArray() && rawType.getComponentType() == Cookie.class || Collection.class.isAssignableFrom(rawType) && DefaultParamConverterProvider.getGenericClassArgument(genericType) == Cookie.class ? cookie : cookie.substring(index + 1);
+            break;
+          }
+        }
+      }
 
       final ParamPlurality<?> paramPlurality = ParamPlurality.fromClass(rawType);
+      if (firstValue == null) {
+        final DefaultValueImpl defaultValue = getDefaultValue(element, parameterIndex);
+        if (defaultValue == null)
+          return paramPlurality.getNullValue(rawType);
 
-      final DefaultValueImpl defaultValue = getDefaultValue(element, parameterIndex);
-      if (defaultValue == null)
-        return paramPlurality.getNullValue(rawType);
+        if (defaultValue.isConverted)
+          return defaultValue.convertedValue;
 
-      if (defaultValue.isConverted)
-        return defaultValue.convertedValue;
-
-      final String firstValue = defaultValue.annotatedValue;
+        firstValue = defaultValue.annotatedValue;
+      }
 
       // FIXME: Param types other than `Cookie` still need to be implemented.
       return DefaultParamConverterProvider.convertParameter(rawType, genericType, annotations, paramPlurality, firstValue, null, false, components.getParamConverterComponents(), this);
@@ -778,7 +791,7 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> i
         continue;
 
       maybeNotAcceptable = true;
-      final MediaType[] compatibleMediaTypes = resourceInfo.getCompatibleAccept(getAcceptableMediaTypes(), getHeaders().get(ACCEPT_CHARSET));
+      final MediaType[] compatibleMediaTypes = resourceInfo.getCompatibleAccept(getAcceptableMediaTypes(), getHttpHeaders().get(ACCEPT_CHARSET));
       if (compatibleMediaTypes.length == 0)
         continue;
 
@@ -822,7 +835,7 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> i
       for (final String header : maybeNotAllowed) // [S]
         response.header(ACCESS_CONTROL_ALLOW_METHODS, header).header(ALLOW, header);
 
-      final List<String> requestHeaders = getHeaders().get(ACCESS_CONTROL_REQUEST_HEADERS);
+      final List<String> requestHeaders = getHttpHeaders().get(ACCESS_CONTROL_REQUEST_HEADERS);
       final int i$;
       if (requestHeaders != null && (i$ = requestHeaders.size()) > 0)
         for (int i = 0; i < i$; ++i) // [RA]
@@ -1053,7 +1066,7 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> i
 
     final InputStream entityStream;
     if (interceptorIndex == size && (entityStream = getEntityStream()) != null)
-      lastProceeded = messageBodyReader.readFrom(getType(), getGenericType(), getAnnotations(), getMediaType(), getHeaders(), entityStream);
+      lastProceeded = messageBodyReader.readFrom(getType(), getGenericType(), getAnnotations(), getMediaType(), getHttpHeaders(), entityStream);
 
     return lastProceeded;
   }

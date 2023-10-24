@@ -138,7 +138,7 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
             .followRedirects(Systems.getProperty(ClientProperties.FOLLOW_REDIRECTS, ClientProperties.FOLLOW_REDIRECTS_DEFAULT));
 
           if (cookies != null)
-            request.header(HttpHeaders.COOKIE, CollectionUtil.toString(cookies, ';'));
+            request.header(HttpHeaders.COOKIE, StrictCookie.toHeader(cookies));
 
           if (cacheControl != null)
             request.header(HttpHeaders.CACHE_CONTROL, cacheControl.toString());
@@ -191,26 +191,31 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
             }
           }
 
-          final List<HttpCookie> httpCookies = Jdk8ClientDriver.cookieStore.getCookies();
           final HashMap<String,NewCookie> cookies;
-          final int noCookies = httpCookies.size();
-          if (noCookies == 0) {
+          if (Systems.hasProperty(ClientProperties.DISABLE_COOKIES)) {
             cookies = null;
           }
           else {
-            final Date date = responseHeaders.getDate();
-            cookies = new HashMap<>(noCookies);
-            if (httpCookies instanceof RandomAccess) {
-              int i = 0;
-              do // [RA]
-                Jdk8ClientDriver.addCookie(cookies, httpCookies.get(i), date);
-              while (++i < noCookies);
+            final List<HttpCookie> httpCookies = Jdk8ClientDriver.cookieStore.getCookies();
+            final int noCookies = httpCookies.size();
+            if (noCookies == 0) {
+              cookies = null;
             }
             else {
-              final Iterator<HttpCookie> i = httpCookies.iterator();
-              do // [I]
-                Jdk8ClientDriver.addCookie(cookies, i.next(), date);
-              while (i.hasNext());
+              final Date date = responseHeaders.getDate();
+              cookies = new HashMap<>(noCookies);
+              if (httpCookies instanceof RandomAccess) {
+                int i = 0;
+                do // [RA]
+                  Jdk8ClientDriver.addCookie(cookies, httpCookies.get(i), date);
+                while (++i < noCookies);
+              }
+              else {
+                final Iterator<HttpCookie> i = httpCookies.iterator();
+                do // [I]
+                  Jdk8ClientDriver.addCookie(cookies, i.next(), date);
+                while (i.hasNext());
+              }
             }
           }
 

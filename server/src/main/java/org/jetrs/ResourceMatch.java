@@ -122,7 +122,11 @@ class ResourceMatch implements Comparable<ResourceMatch> {
     if (c != 0)
       return c;
 
-    return ArrayUtil.compare(compatibleMediaTypes, o.compatibleMediaTypes, MediaTypes.QUALITY_COMPARATOR);
+    c = ArrayUtil.compare(compatibleMediaTypes, o.compatibleMediaTypes, MediaTypes.QUALITY_COMPARATOR);
+    if (c != 0)
+      return c;
+
+    return ArrayUtil.compare(resourceInfo.getProducesMediaTypes(), o.resourceInfo.getProducesMediaTypes(), MediaTypes.QUALITY_COMPARATOR);
   }
 
   @Override

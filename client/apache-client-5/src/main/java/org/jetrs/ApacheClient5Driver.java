@@ -184,7 +184,7 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
           request.setConfig(requestConfig);
 
           if (cookies != null)
-            request.setHeader(HttpHeaders.COOKIE, CollectionUtil.toString(cookies, ';'));
+            request.setHeader(HttpHeaders.COOKIE, StrictCookie.toHeader(cookies));
 
           if (cacheControl != null)
             request.setHeader(HttpHeaders.CACHE_CONTROL, cacheControl.toString());
@@ -345,25 +345,30 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
             HttpHeadersImpl.parseHeaderValuesFromString(headerValues, value, delimiters);
           }
 
-          final List<Cookie> httpCookies = cookieStore.getCookies();
           final Map<String,NewCookie> cookies;
-          final int noCookies = httpCookies.size();
-          if (noCookies == 0) {
+          if (Systems.hasProperty(ClientProperties.DISABLE_COOKIES)) {
             cookies = null;
           }
           else {
-            cookies = new HashMap<>(noCookies);
-            if (httpCookies instanceof RandomAccess) {
-              int i = 0;
-              do // [RA]
-                addCookie(cookies, httpCookies.get(i));
-              while (++i < noCookies);
+            final List<Cookie> httpCookies = cookieStore.getCookies();
+            final int noCookies = httpCookies.size();
+            if (noCookies == 0) {
+              cookies = null;
             }
             else {
-              final Iterator<Cookie> i = httpCookies.iterator();
-              do // [I]
-                addCookie(cookies, i.next());
-              while (i.hasNext());
+              cookies = new HashMap<>(noCookies);
+              if (httpCookies instanceof RandomAccess) {
+                int i = 0;
+                do // [RA]
+                  addCookie(cookies, httpCookies.get(i));
+                while (++i < noCookies);
+              }
+              else {
+                final Iterator<Cookie> i = httpCookies.iterator();
+                do // [I]
+                  addCookie(cookies, i.next());
+                while (i.hasNext());
+              }
             }
           }
 

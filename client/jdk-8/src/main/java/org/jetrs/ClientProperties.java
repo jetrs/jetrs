@@ -18,6 +18,19 @@ package org.jetrs;
 
 public final class ClientProperties {
   /**
+   * Sets whether the client should handle cookies automatically, or whether to ignore all cookies.
+   * <p>
+   * The value MUST be an instance of {@link java.lang.Boolean}. If the property is absent the default value is {@code false}.
+   * <p>
+   * Default: {@code "false"}.
+   * <p>
+   * To disable cookies, set the property to {@code "true"}.
+   * <p>
+   * Configuration property: <tt>{@value}</tt>
+   */
+  public static final String DISABLE_COOKIES = "jetrs.client.disableCookies";
+
+  /**
    * Client-specific version of the common property {@link CommonProperties#CHUNKED_ENCODING_SIZE}, which, if present, overrides the
    * common property for the client runtime.
    */

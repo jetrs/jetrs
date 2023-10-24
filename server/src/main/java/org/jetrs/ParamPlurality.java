@@ -116,7 +116,19 @@ abstract class ParamPlurality<T> {
 
       @Override
       Collection<?> newSingleton(final Class<?> rawType, final Object obj) {
-        return newSingleton(rawType, obj);
+        if (rawType.isAssignableFrom(List.class))
+          return Collections.singletonList(obj);
+
+        if (rawType.isAssignableFrom(Set.class))
+          return Collections.singleton(obj);
+
+        if (rawType.isAssignableFrom(SortedSet.class)) {
+          final TreeSet<Object> set = new TreeSet<>();
+          set.add(obj);
+          return set;
+        }
+
+        return null;
       }
 
       @Override

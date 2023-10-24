@@ -1,4 +1,4 @@
-/* Copyright (c) 2021 JetRS
+/* Copyright (c) 2023 JetRS
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -16,33 +16,49 @@
 
 package org.jetrs;
 
-import java.util.Date;
+import java.util.ArrayList;
 
-import javax.ws.rs.core.NewCookie;
+import javax.ws.rs.core.Cookie;
 
-class StrictNewCookie extends NewCookie {
+class StrictCookie extends Cookie {
+  static String toHeader(final ArrayList<Cookie> cookies) {
+    final StringBuilder b = new StringBuilder();
+    for (int i = 0, i$ = cookies.size(); i < i$; ++i) { // [RA]
+      if (i > 0)
+        b.append(';');
+
+      final Cookie cookie = cookies.get(i);
+      b.append(cookie.getName()).append('=').append(cookie.getValue());
+    }
+
+    return b.toString();
+  }
+
   private final DirectiveList<CookieDirective> order;
   private final int valueWs;
   private final int pathWs;
   private final int domainWs;
-  private final int commentWs;
 
-  StrictNewCookie(final DirectiveList<CookieDirective> order, final String name, final String value, final int valueWs, final String path, final int pathWs, final String domain, final int domainWs, final int version, final String comment, final int commentWs, final int maxAge, final Date expiry, final boolean secure, final boolean httpOnly) {
-    super(name, value, path, domain, version, comment, maxAge, expiry, secure, httpOnly);
+  StrictCookie(final DirectiveList<CookieDirective> order, final String name, final String value, final int valueWs, final String path, final int pathWs, final String domain, final int domainWs, final int version) {
+    super(name, value, path, domain, version);
     this.order = order;
     this.valueWs = valueWs;
     this.pathWs = pathWs;
     this.domainWs = domainWs;
-    this.commentWs = commentWs;
   }
 
   @Override
   public String toString() {
     final StringBuilder b = new StringBuilder();
-    b.append(getName()).append('=').append(getValue());
+    b.append(getName()).append('=');
+    if (valueWs == 1)
+      b.append('"').append(getValue()).append('"');
+    else
+      b.append(getValue());
+
     final DirectiveList<CookieDirective> order = this.order;
     for (int i = 0, i$ = order.size(); i < i$; ++i) // [RA]
-      order.get(i).toString(this, valueWs, pathWs, domainWs, commentWs, b);
+      order.get(i).toString(this, valueWs, pathWs, domainWs, -1, b);
 
     return b.toString();
   }

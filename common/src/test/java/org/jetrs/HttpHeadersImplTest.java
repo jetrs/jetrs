@@ -402,11 +402,11 @@ public class HttpHeadersImplTest extends RuntimeDelegateTest {
   @Test
   public void testCookie() {
     testSimple(HttpHeader.COOKIE.getName(), Cookie.class,
-      "PHPSESSID=298zf09hf012fh2; csrftoken=u32t4o3tb3gg43; _gat=1",
-      "yummy_cookie=choco; tasty_cookie=strawberry",
-      "theme=light",
-      "sessionToken=abc123; Expires=Wed, 09 Jun 2021 10:18:14 GMT",
-      "theme=light; sessionToken=abc123");
+      "PHPSESSID=298zf09hf012fh2;Version=3",
+      "yummy_cookie=choco;Domain=.example.com",
+      "theme=light;Domain=.example.com;Version=3",
+      "sessionToken=abc123;Path=/some+path",
+      "theme=light");
   }
 
   @Test
@@ -1033,21 +1033,21 @@ public class HttpHeadersImplTest extends RuntimeDelegateTest {
     // GMT; path=/; domain=.something.d6.revealit.dk
     testSimple(HttpHeader.SET_COOKIE.getName(), NewCookie.class,
       "sessionId=38afes7a8",
-      "id=a3fWa; Expires=Wed, 21 Oct 2015 07:28:00 GMT",
-      "id=a3fWa; Max-Age=2592000",
-      "qwerty=219ffwef9w0f; Domain=somecompany.co.uk",
-      "sessionId=e8bb43229de9; Domain=foo.example.com",
-      "__Secure-ID=123; Secure; Domain=example.com",
-      "__Host-ID=123; Secure; Path=/",
+      "id=a3fWa;Expires=Wed, 21 Oct 2015 07:28:00 GMT",
+      "id=a3fWa;Max-Age=2592000",
+      "qwerty=219ffwef9w0f;Domain=somecompany.co.uk",
+      "sessionId=e8bb43229de9;Domain=foo.example.com",
+      "__Secure-ID=123;Secure;Domain=example.com",
+      "__Host-ID=123;Secure;Path=/",
       "__Secure-id=1",
-      "__Host-id=1; Secure",
-      "__Host-id=1; Secure; Path=/; Domain=example.com",
-      "LSID=DQAAAK…Eaem_vYg; Path=/accounts; Expires=Wed, 13 Jan 2021 22:23:01 GMT; Secure; HttpOnly",
-      "HSID=AYQEVn…DKrdst; Domain=.foo.com; Path=/; Expires=Wed, 13 Jan 2021 22:23:01 GMT; HttpOnly",
-      "SSID=Ap4P…GTEq; Domain=foo.com; Path=/; Expires=Wed, 13 Jan 2021 22:23:01 GMT; Secure; HttpOnly",
-      "lu=Rg3vHJZnehYLjVg7qi3bZjzg; Expires=Tue, 15 Jan 2013 21:47:38 GMT; Path=/; Domain=.example.com; HttpOnly",
-      "made_write_conn=1295214458; Path=/; Domain=.example.com",
-      "reg_fb_gate=deleted; Expires=Thu, 01 Jan 1970 00:00:01 GMT; Path=/; Domain=.example.com; HttpOnly");
+      "__Host-id=1;Secure",
+      "__Host-id=1;Secure;Path=/;Domain=example.com",
+      "LSID=DQAAAK…Eaem_vYg;Path=/accounts;Expires=Wed, 13 Jan 2021 22:23:01 GMT;Secure;HttpOnly",
+      "HSID=AYQEVn…DKrdst;Domain=.foo.com;Path=/;Expires=Wed, 13 Jan 2021 22:23:01 GMT;HttpOnly",
+      "SSID=Ap4P…GTEq;Domain=foo.com;Path=/;Expires=Wed, 13 Jan 2021 22:23:01 GMT;Secure;HttpOnly",
+      "lu=Rg3vHJZnehYLjVg7qi3bZjzg;Expires=Tue, 15 Jan 2013 21:47:38 GMT;Path=/;Domain=.example.com;HttpOnly",
+      "made_write_conn=1295214458;Path=/;Domain=.example.com",
+      "reg_fb_gate=deleted;Expires=Thu, 01 Jan 1970 00:00:01 GMT;Path=/;Domain=.example.com;HttpOnly");
   }
 
   @Test

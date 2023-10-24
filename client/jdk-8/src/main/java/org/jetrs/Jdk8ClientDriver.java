@@ -38,6 +38,7 @@ import java.util.concurrent.ScheduledExecutorService;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
+import javax.ws.rs.HttpMethod;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
@@ -65,7 +66,7 @@ public class Jdk8ClientDriver extends ClientDriver {
 
   static void addCookie(final Map<String,NewCookie> cookies, final HttpCookie cookie, final Date date) {
     final int maxAge = (int)cookie.getMaxAge();
-    final Date expiry = Dates.addTime(date, 0, 0, maxAge);
+    final Date expiry = maxAge == -1 || date == null ? null : Dates.addTime(date, 0, 0, maxAge);
     final NewCookie newCookie = new NewCookie(cookie.getName(), cookie.getValue(), cookie.getPath(), cookie.getDomain(), cookie.getVersion(), cookie.getComment(), maxAge, expiry, cookie.getSecure(), cookie.isHttpOnly());
     cookies.put(newCookie.getName(), newCookie);
   }
@@ -116,7 +117,7 @@ public class Jdk8ClientDriver extends ClientDriver {
         }
 
         if (cookies != null)
-          connection.setRequestProperty(HttpHeaders.COOKIE, CollectionUtil.toString(cookies, ';'));
+          connection.setRequestProperty(HttpHeaders.COOKIE, StrictCookie.toHeader(cookies));
 
         if (cacheControl != null)
           connection.setRequestProperty(HttpHeaders.CACHE_CONTROL, cacheControl.toString());
@@ -125,7 +126,7 @@ public class Jdk8ClientDriver extends ClientDriver {
 
         $span(Span.INIT);
 
-        if (entity == null) {
+        if (entity == null || HttpMethod.GET.equals(method)) { // Don't allow entity to be written for GET method, otherwise the driver resets the method to POST
           setHeaders(connection);
         }
         else {
@@ -189,26 +190,31 @@ public class Jdk8ClientDriver extends ClientDriver {
             }
           }
 
-          final List<HttpCookie> httpCookies = cookieStore.getCookies();
           final Map<String,NewCookie> cookies;
-          final int noCookies = httpCookies.size();
-          if (noCookies == 0) {
+          if (Systems.hasProperty(ClientProperties.DISABLE_COOKIES)) {
             cookies = null;
           }
           else {
-            final Date date = responseHeaders.getDate();
-            cookies = new HashMap<>(noCookies);
-            if (httpCookies instanceof RandomAccess) {
-              int i = 0;
-              do // [RA]
-                addCookie(cookies, httpCookies.get(i), date);
-              while (++i < noCookies);
+            final List<HttpCookie> httpCookies = cookieStore.getCookies();
+            final int noCookies = httpCookies.size();
+            if (noCookies == 0) {
+              cookies = null;
             }
             else {
-              final Iterator<HttpCookie> i = httpCookies.iterator();
-              do // [I]
-                addCookie(cookies, i.next(), date);
-              while (i.hasNext());
+              final Date date = responseHeaders.getDate();
+              cookies = new HashMap<>(noCookies);
+              if (httpCookies instanceof RandomAccess) {
+                int i = 0;
+                do // [RA]
+                  addCookie(cookies, httpCookies.get(i), date);
+                while (++i < noCookies);
+              }
+              else {
+                final Iterator<HttpCookie> i = httpCookies.iterator();
+                do // [I]
+                  addCookie(cookies, i.next(), date);
+                while (i.hasNext());
+              }
             }
           }
 
@@ -246,6 +252,7 @@ public class Jdk8ClientDriver extends ClientDriver {
           };
         }
         catch (final Exception e) {
+          e.printStackTrace();
           if (e instanceof ProcessingException)
             throw (ProcessingException)e;
 

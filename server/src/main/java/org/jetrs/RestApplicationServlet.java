@@ -31,7 +31,6 @@ import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.Consumes;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Application;
@@ -72,7 +71,7 @@ abstract class RestApplicationServlet extends RestHttpServlet {
             return;
 
           if (requestContext.getStage() != Stage.REQUEST_FILTER_PRE_MATCH)
-            requestContext.getResourceMatch().getResourceInfo().checkContentHeader(HttpHeader.CONTENT_TYPE, Consumes.class, requestContext);
+            requestContext.getResourceMatch().getResourceInfo().checkContentHeader(HttpHeader.CONTENT_TYPE, requestContext.getHttpHeaders());
 
           contentTypeChecked = true;
         }

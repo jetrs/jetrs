@@ -428,9 +428,15 @@ class ContainerResponseContextImpl extends InterceptorContextImpl implements Con
       return;
     }
 
-    final MessageBodyProviderHolder<?> messageBodyProviderHolder = requestContext.providers.getMessageBodyWriter(getEntityClass(), getGenericType(), getAnnotations(), compatibleMediaTypes);
-    if (messageBodyProviderHolder == null)
-      throw new InternalServerErrorException("Could not find MessageBodyWriter for {type=" + getEntityClass().getName() + ", genericType=" + (getGenericType() == null ? "null" : getGenericType().getTypeName()) + ", annotations=" + Arrays.toString(getAnnotations()) + ", mediaTypes=" + Arrays.toString(compatibleMediaTypes) + "}"); // [JAX-RS
+    final ProvidersImpl providers = requestContext.providers;
+    MessageBodyProviderHolder<?> messageBodyProviderHolder = providers.getMessageBodyWriter(getEntityClass(), getGenericType(), getAnnotations(), compatibleMediaTypes);
+    if (messageBodyProviderHolder == null) {
+      if (isException)
+        messageBodyProviderHolder = providers.getMessageBodyWriter(getEntityClass(), getGenericType(), getAnnotations(), requestContext.getAcceptableMediaTypes());
+
+      if (messageBodyProviderHolder == null)
+        throw new InternalServerErrorException("Could not find MessageBodyWriter for {type=" + getEntityClass().getName() + ", genericType=" + (getGenericType() == null ? "null" : getGenericType().getTypeName()) + ", annotations=" + Arrays.toString(getAnnotations()) + ", compatibleMediaTypes=" + Arrays.toString(compatibleMediaTypes) + ", acceptMediaTypes=" + requestContext.getAcceptableMediaTypes() + "}"); // [JAX-RS
+    }
 
     final MessageBodyWriter messageBodyWriter = (MessageBodyWriter)messageBodyProviderHolder.getProvider();
     final MediaType[] compatibleMediaTypesWithWriter = messageBodyProviderHolder.getMediaTypes();

@@ -110,7 +110,7 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
     final String authority = match.group(4);
     if (authority != null) {
       this.authority = null;
-      String host = match.group(4);
+      String host = authority;
       final int at = host.indexOf('@');
       if (at > -1) {
         final String user = host.substring(0, at);
@@ -143,8 +143,8 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
       }
     }
 
-    if (match.group(5) != null) {
-      final String group = match.group(5);
+    final String group = match.group(5);
+    if (group != null) {
       final int length = group.length();
       if (!hasScheme && length > 0 && !group.startsWith("/") && group.indexOf(':') > -1 && group.indexOf('/') > -1 && group.indexOf(':') < group.indexOf('/'))
         throw new IllegalArgumentException(invalid("uri template", uriTemplate));
@@ -597,7 +597,7 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
     query = null;
 
     final String encodedName = UriEncoder.QUERY_PARAM.encode(name);
-    for (final String param : params) { // [A]
+    for (String param : params) { // [A]
       final int eq = param.indexOf('=');
       if (eq >= 0) {
         final String paramName = param.substring(0, eq);
@@ -670,7 +670,7 @@ class UriBuilderImpl extends UriBuilder implements Cloneable {
   public UriBuilder resolveTemplate(final String name, final Object value, final boolean encodeSlashInPath) {
     assertNotNull(name, "name is null");
     assertNotNull(value, "value is null");
-    return resolveTemplates(Collections.singletonMap(name, value), encodeSlashInPath);
+    return uri(buildFromParameters(Collections.singletonMap(name, value), false, true, encodeSlashInPath));
   }
 
   @Override

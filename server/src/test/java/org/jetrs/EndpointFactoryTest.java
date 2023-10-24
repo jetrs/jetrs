@@ -43,8 +43,8 @@ public class EndpointFactoryTest {
     final WebServlet webServlet = cls.getAnnotation(WebServlet.class);
     assertEquals(1, webServlet.urlPatterns().length);
     assertEquals("/*", webServlet.urlPatterns()[0]);
-    assertTrue(webServlet.name(), webServlet.name().matches(packageName.replace('.', '/') + "/Endpoint\\dServlet"));
-    assertTrue(webServlet.displayName(), webServlet.displayName().matches("JetRS Endpoint \\d: " + App.class.getName().replace("$", "\\$")));
+    assertTrue(webServlet.name(), webServlet.name().matches(packageName.replace('.', '/') + "/Endpoint\\d+Servlet"));
+    assertTrue(webServlet.displayName(), webServlet.displayName().matches("JetRS Endpoint \\d+: " + App.class.getName().replace("$", "\\$")));
   }
 
   @Test

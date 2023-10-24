@@ -19,6 +19,7 @@ package org.jetrs;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.util.List;
 
 import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.core.MediaType;
@@ -27,6 +28,8 @@ import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Providers;
+
+import org.libj.util.CollectionUtil;
 
 final class ProvidersImpl implements Providers {
   private final RequestContext<?> requestContext;
@@ -79,6 +82,19 @@ final class ProvidersImpl implements Providers {
   @SuppressWarnings("unchecked")
   <T> MessageBodyProviderHolder<T> getMessageBodyWriter(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType[] mediaTypes) {
     for (final MediaType mediaType : mediaTypes) { // [A]
+      final Object provider = getProvider(type, genericType, annotations, mediaType, requestContext.getMessageBodyWriterComponents(), true);
+      if (provider != null)
+        return (MessageBodyProviderHolder<T>)provider;
+    }
+
+    return null;
+  }
+
+  @SuppressWarnings("unchecked")
+  <T> MessageBodyProviderHolder<T> getMessageBodyWriter(final Class<T> type, final Type genericType, final Annotation[] annotations, final List<MediaType> mediaTypes) {
+    assert(CollectionUtil.isRandomAccess(mediaTypes));
+    for (int i = 0, i$ = mediaTypes.size(); i < i$; ++i) { // [RA]
+      final MediaType mediaType = mediaTypes.get(i);
       final Object provider = getProvider(type, genericType, annotations, mediaType, requestContext.getMessageBodyWriterComponents(), true);
       if (provider != null)
         return (MessageBodyProviderHolder<T>)provider;

@@ -24,6 +24,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.net.URI;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -54,7 +55,7 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
     return null;
   }
 
-  private static Class<?> getGenericClassArgument(final Type genericType) {
+  static Class<?> getGenericClassArgument(final Type genericType) {
     if (genericType instanceof ParameterizedType) {
       final Type[] typeArguments = ((ParameterizedType)genericType).getActualTypeArguments();
       return typeArguments.length > 0 && typeArguments[0] instanceof Class<?> ? (Class<?>)typeArguments[0] : String.class;
@@ -857,6 +858,12 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
       @Override
       public BigDecimal fromString(final String value) {
         return new BigDecimal(value);
+      }
+    },
+    new TypedParamConverter<URI>(URI.class) {
+      @Override
+      public URI fromString(final String value) {
+        return URI.create(value);
       }
     }
   };

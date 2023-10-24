@@ -48,6 +48,7 @@ import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.ext.ParamConverterProvider;
 
 import org.libj.lang.Classes;
+import org.libj.lang.IllegalAnnotationException;
 import org.libj.util.ArrayUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,8 +90,14 @@ class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImpl> {
   private final Class<?> resourceClass;
   private final Object singleton;
   private final UriTemplate uriTemplate;
-  private MediaTypeAnnotationProcessor<Consumes> consumesMatcher;
-  private MediaTypeAnnotationProcessor<Produces> producesMatcher;
+  private boolean consumesCalled;
+  private boolean producesCalled;
+  private Consumes consumes;
+  private Produces produces;
+  private boolean consumesMediaTypesCalled;
+  private boolean producesMediaTypesCalled;
+  private ServerMediaType[] consumesMediaTypes;
+  private ServerMediaType[] producesMediaTypes;
   private DefaultValueImpl[] defaultValues;
 
   ResourceInfoImpl(final ResourceInfos resourceInfos, final HttpMethod httpMethod, final Method method, final String baseUri, final Path classPath, final Path methodPath, final Object singleton) {
@@ -118,12 +125,68 @@ class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImpl> {
     this.uriTemplate = new UriTemplate(baseUri, classPath, methodPath);
   }
 
-  private MediaTypeAnnotationProcessor<Consumes> getConsumesMatcher() {
-    return consumesMatcher == null ? consumesMatcher = new MediaTypeAnnotationProcessor<>(this, Consumes.class) : consumesMatcher;
+  /**
+   * Tests whether the method of the specified resourceInfo contains an entity parameter.
+   *
+   * @return {@code true} if the specified method contains an entity parameter; otherwise {@code false}.
+   */
+  private boolean hasEntityParameter() {
+    OUT:
+    for (final Annotation[] annotations : getMethodParameterAnnotations()) { // [A]
+      for (final Annotation annotation : annotations) // [A]
+        for (final Class<?> paramAnnotation : ContainerRequestContextImpl.injectableAnnotationTypes) // [A]
+          if (paramAnnotation.equals(annotation.annotationType()))
+            continue OUT;
+
+      return true;
+    }
+
+    return false;
   }
 
-  private MediaTypeAnnotationProcessor<Produces> getProducesMatcher() {
-    return producesMatcher == null ? producesMatcher = new MediaTypeAnnotationProcessor<>(this, Produces.class) : producesMatcher;
+  private <T extends Annotation> T getMethodClassAnnotation(final Class<T> annotationClass) {
+    final T annotation = AnnotationUtil.getAnnotation(resourceMethod, annotationClass);
+    return annotation != null ? annotation : AnnotationUtil.getAnnotation(resourceMethod.getDeclaringClass(), annotationClass);
+  }
+
+  Consumes getConsumes() {
+    if (consumesCalled)
+      return consumes;
+
+    consumesCalled = true;
+    return consumes = getMethodClassAnnotation(Consumes.class);
+  }
+
+  Produces getProduces() {
+    if (producesCalled)
+      return produces;
+
+    producesCalled = true;
+    return produces = getMethodClassAnnotation(Produces.class);
+  }
+
+  ServerMediaType[] getConsumesMediaTypes() {
+    if (consumesMediaTypesCalled)
+      return consumesMediaTypes;
+
+    consumesMediaTypesCalled = true;
+    final Consumes annotation = getConsumes();
+    if (annotation != null && !hasEntityParameter())
+      throw new IllegalAnnotationException(annotation, getResourceClass().getName() + "." + getMethodName() + "(" + ArrayUtil.toString(getMethodParameterTypes(), ',', Class::getName) + ") does not specify entity parameters, and thus cannot declare @Consumes annotation");
+
+    return consumesMediaTypes = annotation != null ? ServerMediaType.valueOf(annotation.value()) : MediaTypes.WILDCARD_SERVER_TYPE;
+  }
+
+  ServerMediaType[] getProducesMediaTypes() {
+    if (producesMediaTypesCalled)
+      return producesMediaTypes;
+
+    producesMediaTypesCalled = true;
+    final Produces annotation = getProduces();
+    if (annotation != null && Void.TYPE.equals(getMethodReturnType()))
+      throw new IllegalAnnotationException(annotation, getResourceClass().getName() + "." + getMethodName() + "(" + ArrayUtil.toString(getMethodParameterTypes(), ',', Class::getName) + ") is void return type, and thus cannot declare @Produces annotation");
+
+    return producesMediaTypes = annotation != null ? ServerMediaType.valueOf(annotation.value()) : MediaTypes.WILDCARD_SERVER_TYPE;
   }
 
   void initDefaultValues(final ComponentSet<Component<ParamConverterProvider>> paramConverterComponents) throws IOException {
@@ -208,32 +271,20 @@ class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImpl> {
   }
 
   boolean isCompatibleContentType(final MediaType contentType) {
-    return getConsumesMatcher().getCompatibleMediaType(contentType, null).length != 0;
+    return MediaTypes.getCompatible(getConsumesMediaTypes(), contentType, null).length != 0;
   }
 
   MediaType[] getCompatibleAccept(final List<MediaType> acceptMediaTypes, final List<String> acceptCharsets) {
-    return getProducesMatcher().getCompatibleMediaType(acceptMediaTypes, acceptCharsets);
+    return MediaTypes.getCompatible(getProducesMediaTypes(), acceptMediaTypes, acceptCharsets);
   }
 
   @SuppressWarnings("unchecked")
-  boolean checkContentHeader(final HttpHeader<MediaType> httpHeader, final Class<? extends Annotation> annotationClass, final ContainerRequestContextImpl containerRequestContext) {
-    final Annotation annotation = getResourceAnnotationProcessor(annotationClass).getAnnotation();
-    if (annotation == null) {
-      final String message = "@" + annotationClass.getSimpleName() + " annotation missing for " + resourceMethod.getDeclaringClass().getName() + "." + resourceMethod.getName() + "(" + ArrayUtil.toString(resourceMethod.getParameterTypes(), ',', Class::getName) + ")";
-      if (annotationClass == Consumes.class)
-        throw new IllegalStateException(message);
-
-      if (logger.isWarnEnabled()) { logger.warn(message); }
-      return true;
-    }
-
-    final List<?> headerValue = containerRequestContext.getHttpHeaders().getMirrorMap().get(httpHeader.getName());
+  boolean checkContentHeader(final HttpHeader<MediaType> httpHeader, final HttpHeadersImpl httpHeaders) {
+    final List<?> headerValue = httpHeaders.getMirrorMap().get(httpHeader.getName());
     if (headerValue == null)
-      return logMissingHeaderWarning(httpHeader, annotationClass);
+      return logMissingHeaderWarning(httpHeader, Consumes.class);
 
-    final String[] annotationValue = annotationClass == Produces.class ? ((Produces)annotation).value() : annotationClass == Consumes.class ? ((Consumes)annotation).value() : null;
-    final ServerMediaType[] required = ServerMediaType.valueOf(annotationValue);
-    return MediaTypes.getCompatible(required, (List<MediaType>)headerValue, null) != null || logMissingHeaderWarning(httpHeader, annotationClass);
+    return MediaTypes.getCompatible(getConsumesMediaTypes(), (List<MediaType>)headerValue, null) != null || logMissingHeaderWarning(httpHeader, Consumes.class);
   }
 
   private static void checkAuthorized(final Annotation securityAnnotation, final ContainerRequestContext requestContext) {
@@ -307,11 +358,6 @@ class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImpl> {
 
   UriTemplate getUriTemplate() {
     return uriTemplate;
-  }
-
-  @SuppressWarnings("unchecked")
-  <T extends Annotation> MediaTypeAnnotationProcessor<T> getResourceAnnotationProcessor(final Class<T> annotationClass) {
-    return annotationClass == Consumes.class ? (MediaTypeAnnotationProcessor<T>)getConsumesMatcher() : annotationClass == Produces.class ? (MediaTypeAnnotationProcessor<T>)getProducesMatcher() : null;
   }
 
   boolean isRestricted() {

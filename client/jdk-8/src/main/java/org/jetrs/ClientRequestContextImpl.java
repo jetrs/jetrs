@@ -16,6 +16,8 @@
 
 package org.jetrs;
 
+import static org.libj.lang.Assertions.*;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
@@ -466,42 +468,93 @@ abstract class ClientRequestContextImpl extends RequestContext<ClientRuntimeCont
 
     @Override
     public Invocation.Builder accept(final String ... mediaTypes) {
-      getHeaders().put(HttpHeaders.ACCEPT, Arrays.asList(mediaTypes));
+      if (mediaTypes == null || mediaTypes.length == 0) {
+        getHeaders().remove(HttpHeaders.ACCEPT);
+      }
+      else {
+        for (final String mediaType : mediaTypes) // [A]
+          assertNotNull(mediaType);
+
+        getHeaders().put(HttpHeaders.ACCEPT, Arrays.asList(mediaTypes));
+      }
+
       return this;
     }
 
     @Override
     public Invocation.Builder accept(final MediaType ... mediaTypes) {
-      getHeaders().getMirrorMap().put(HttpHeaders.ACCEPT, Arrays.asList((Object[])mediaTypes));
+      if (mediaTypes == null || mediaTypes.length == 0) {
+        getHeaders().remove(HttpHeaders.ACCEPT);
+      }
+      else {
+        for (final Object mediaType : mediaTypes) // [A]
+          assertNotNull(mediaType);
+
+        getHeaders().getMirrorMap().put(HttpHeaders.ACCEPT, Arrays.asList((Object[])mediaTypes));
+      }
+
       return this;
     }
 
     @Override
     public Invocation.Builder acceptLanguage(final Locale ... locales) {
-      getHeaders().getMirrorMap().put(HttpHeaders.ACCEPT_LANGUAGE, Arrays.asList((Object[])locales));
+      if (locales == null || locales.length == 0) {
+        getHeaders().remove(HttpHeaders.ACCEPT_LANGUAGE);
+      }
+      else {
+        for (final Object locale : locales) // [A]
+          assertNotNull(locale);
+
+        getHeaders().getMirrorMap().put(HttpHeaders.ACCEPT_LANGUAGE, Arrays.asList((Object[])locales));
+      }
+
       return this;
     }
 
     @Override
     public Invocation.Builder acceptLanguage(final String ... locales) {
-      getHeaders().put(HttpHeaders.ACCEPT_LANGUAGE, Arrays.asList(locales));
+      if (locales == null || locales.length == 0) {
+        getHeaders().remove(HttpHeaders.ACCEPT_LANGUAGE);
+      }
+      else {
+        for (final Object locale : locales) // [A]
+          assertNotNull(locale);
+
+        getHeaders().put(HttpHeaders.ACCEPT_LANGUAGE, Arrays.asList(locales));
+      }
+
       return this;
     }
 
     @Override
     public Invocation.Builder acceptEncoding(final String ... encodings) {
-      getHeaders().put(HttpHeaders.ACCEPT_LANGUAGE, Arrays.asList(encodings));
+      if (encodings == null || encodings.length == 0) {
+        getHeaders().remove(HttpHeaders.ACCEPT_ENCODING);
+      }
+      else {
+        for (final Object encoding : encodings) // [A]
+          assertNotNull(encoding);
+
+        getHeaders().put(HttpHeaders.ACCEPT_ENCODING, Arrays.asList(encodings));
+      }
+
       return this;
     }
 
     @Override
     public Invocation.Builder cookie(final Cookie cookie) {
-      cookies.add(cookie);
+      if (cookies == null)
+        cookies = new ArrayList<>();
+
+      cookies.add(assertNotNull(cookie));
       return this;
     }
 
     @Override
     public Invocation.Builder cookie(final String name, final String value) {
+      if (cookies == null)
+        cookies = new ArrayList<>();
+
       cookies.add(new Cookie(name, value));
       return this;
     }

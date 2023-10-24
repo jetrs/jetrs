@@ -274,14 +274,121 @@ abstract class HeaderDelegateImpl<T> implements RuntimeDelegate.HeaderDelegate<T
     },
     COOKIE = new HeaderDelegateImpl<Cookie>(Cookie.class, true) {
       @Override
-      Cookie valueOf(final String value) {
-        final int index = value.indexOf('=');
-        return index == -1 ? null : new Cookie(value.substring(0, index).trim(), value.substring(index + 1).trim());
+      Cookie valueOf(final String string) {
+        final DirectiveList<CookieDirective> order = new DirectiveList<>();
+        int pathWs = 0;
+        int domainWs = 0;
+        int valueWs = 0;
+
+        String path = null;
+        String domain = null;
+        int version = 0;
+        String name0 = null;
+        String name1 = null;
+        String value0 = null;
+        String value1 = null;
+        char ch;
+        boolean isEnd, semi = true;
+        final int i$ = string.length();
+        int i = 0, idx0 = 0, idx1 = 0, off0, off1, q = 0, ws = 0;
+        do {
+          isEnd = i == i$;
+          if (isEnd || (ch = string.charAt(i)) == ';') {
+            off0 = string.charAt(idx0) == '$' ? 1 : 0;
+            if (string.regionMatches(true, idx0 + off0, "Path", 0, 4)) {
+              off1 = q == 2 ? 1 : 0;
+              path = string.substring(idx1 + off1, i - off1).trim();
+              final int len = path.length();
+              path = path.trim();
+              if (ws > len - path.length())
+                pathWs = 1;
+
+              order.add(CookieDirective.PATH);
+            }
+            else if (string.regionMatches(true, idx0 + off0, "Domain", 0, 6)) {
+              off1 = q == 2 ? 1 : 0;
+              domain = string.substring(idx1 + off1, i - off1);
+              final int len = domain.length();
+              domain = domain.trim();
+              if (ws > len - domain.length())
+                domainWs = 1;
+
+              order.add(CookieDirective.DOMAIN);
+            }
+            else if (string.regionMatches(true, idx0 + off0, "Version", 0, 7)) {
+              try {
+                off1 = q == 2 ? 1 : 0;
+                version = Integer.parseInt(string.substring(idx1 + off1, i - off1).trim());
+                order.add(CookieDirective.VERSION);
+              }
+              catch (final NumberFormatException e) {
+              }
+            }
+            else {
+              name1 = string.substring(idx0, idx1 - 1).trim();
+              off1 = q == 2 ? 1 : 0;
+              value1 = string.substring(idx1 + off1, i - off1);
+              final int len = value1.length();
+              value1 = value1.trim();
+              if (ws > len - value1.length())
+                valueWs = 1;
+
+              if (!name1.equals(name0) || value0 == null || value0.length() < value1.length())
+                value0 = value1;
+
+              name0 = name1;
+            }
+
+            if (isEnd)
+              break;
+
+            semi = true;
+            ws = 0;
+            q = 0;
+            idx0 = idx1 = ++i;
+          }
+          else if (ch == '=') {
+            idx1 = ++i;
+            ws = 0;
+          }
+          else if (ch == '"') {
+            ++q;
+            ++i;
+          }
+          else {
+            if (Character.isWhitespace(ch)) {
+              ++ws;
+              if (semi)
+                ++idx0;
+            }
+            else {
+              semi = false;
+            }
+
+            ++i;
+          }
+        }
+        while (true);
+        return name0 == null || value0 == null ? null : new StrictCookie(order, name0, value0, valueWs, path, pathWs, domain, domainWs, version);
       }
 
       @Override
-      public String toString(final Cookie value) {
-        return value.getName() + "=" + value.getValue();
+      public String toString(final Cookie cookie) {
+        if (cookie instanceof StrictCookie)
+          return ((StrictCookie)cookie).toString();
+
+        final StringBuilder b = new StringBuilder();
+        b.append(cookie.getName()).append('=');
+        final String value = cookie.getValue();
+        if (Strings.hasWhitespace(value))
+          b.append('"').append(value).append('"');
+        else
+          b.append(value);
+
+        CookieDirective.PATH.toString(cookie, -1, -1, -1, -1, b);
+        CookieDirective.DOMAIN.toString(cookie, -1, -1, -1, -1, b);
+        CookieDirective.VERSION.toString(cookie, -1, -1, -1, -1, b);
+        return b.toString();
       }
     },
     DATE = new HeaderDelegateImpl<Date>(Date.class, true) {
@@ -412,18 +519,13 @@ abstract class HeaderDelegateImpl<T> implements RuntimeDelegate.HeaderDelegate<T
       }
     },
     NEW_COOKIE = new HeaderDelegateImpl<NewCookie>(NewCookie.class, true) {
-      // FIXME: This should be re-implemented with a char-by-char algorithm
       @Override
       NewCookie valueOf(final String string) {
-        final String[] parts = Strings.split(string, ';');
-        final String part0 = parts[0];
-        int index = part0.indexOf('=');
-        if (index == -1)
-          return null;
-
-        final DirectiveList<StrictNewCookie.Directive> order = new DirectiveList<>();
-        final String name = Strings.trim(part0.substring(0, index).trim(), '"');
-        final String value = Strings.trim(part0.substring(index + 1).trim(), '"');
+        final DirectiveList<CookieDirective> order = new DirectiveList<>();
+        int pathWs = 0;
+        int domainWs = 0;
+        int valueWs = 0;
+        int commentWs = 0;
 
         String path = null;
         String domain = null;
@@ -433,77 +535,138 @@ abstract class HeaderDelegateImpl<T> implements RuntimeDelegate.HeaderDelegate<T
         Date expires = null;
         boolean secure = false;
         boolean httpOnly = false;
-        for (int i = 1, i$ = parts.length; i < i$; ++i) { // [A]
-          final String part = parts[i].trim();
-          if (part.startsWith("Path")) {
-            if ((index = part.indexOf('=')) != -1) {
-              path = Strings.trim(part.substring(index + 1).trim(), '"');
-              order.add(StrictNewCookie.Directive.PATH);
+        String name0 = null;
+        String name1 = null;
+        String value0 = null;
+        String value1 = null;
+        char ch;
+        boolean isEnd, semi = true;
+        final int i$ = string.length();
+        int i = 0, idx0 = 0, idx1 = 0, off0, off1, q = 0, ws = 0;
+        do {
+          isEnd = i == i$;
+          if (isEnd || (ch = string.charAt(i)) == ';') {
+            off0 = string.charAt(idx0) == '$' ? 1 : 0;
+            if (string.regionMatches(true, idx0 + off0, "Path", 0, 4)) {
+              off1 = q == 2 ? 1 : 0;
+              path = string.substring(idx1 + off1, i - off1).trim();
+              final int len = path.length();
+              path = path.trim();
+              if (ws > len - path.length())
+                pathWs = 1;
+
+              order.add(CookieDirective.PATH);
             }
-          }
-          else if (part.startsWith("Domain")) {
-            if ((index = part.indexOf('=')) != -1) {
-              domain = part.substring(index + 1).trim();
-              order.add(StrictNewCookie.Directive.DOMAIN);
+            else if (string.regionMatches(true, idx0 + off0, "Domain", 0, 6)) {
+              off1 = q == 2 ? 1 : 0;
+              domain = string.substring(idx1 + off1, i - off1);
+              final int len = domain.length();
+              domain = domain.trim();
+              if (ws > len - domain.length())
+                domainWs = 1;
+
+              order.add(CookieDirective.DOMAIN);
             }
-          }
-          else if (part.startsWith("Version")) {
-            if ((index = part.indexOf('=')) != -1) {
-              version = Integer.parseInt(Strings.trim(part.substring(index + 1).trim(), '"'));
-              order.add(StrictNewCookie.Directive.VERSION);
-            }
-          }
-          else if (part.startsWith("Comment")) {
-            if ((index = part.indexOf('=')) != -1) {
-              comment = part.substring(index + 1).trim();
-              order.add(StrictNewCookie.Directive.COMMENT);
-            }
-          }
-          else if (part.startsWith("Max-Age")) {
-            if ((index = part.indexOf('=')) != -1) {
-              maxAge = Integer.parseInt(part.substring(index + 1).trim());
-              order.add(StrictNewCookie.Directive.MAX_AGE);
-            }
-          }
-          else if (part.startsWith("Expires")) {
-            if ((index = part.indexOf('=')) != -1) {
+            else if (string.regionMatches(true, idx0 + off0, "Version", 0, 7)) {
               try {
-                expires = SimpleDateFormats.RFC_1123.get().parse(part.substring(index + 1).trim());
-                order.add(StrictNewCookie.Directive.EXPIRY);
+                off1 = q == 2 ? 1 : 0;
+                version = Integer.parseInt(string.substring(idx1 + off1, i - off1).trim());
+                order.add(CookieDirective.VERSION);
+              }
+              catch (final NumberFormatException e) {
+              }
+            }
+            else if (string.regionMatches(true, idx0 + off0, "Comment", 0, 7)) {
+              off1 = q == 2 ? 1 : 0;
+              comment = string.substring(idx1 + off1, i - off1);
+              final int len = comment.length();
+              comment = comment.trim();
+              if (ws > len - comment.length())
+                commentWs = 1;
+
+              order.add(CookieDirective.COMMENT);
+            }
+            else if (string.regionMatches(true, idx0 + off0, "Max-Age", 0, 7)) {
+              off1 = q == 2 ? 1 : 0;
+              maxAge = Integer.parseInt(string.substring(idx1 + off1, i - off1).trim());
+              order.add(CookieDirective.MAX_AGE);
+            }
+            else if (string.regionMatches(true, idx0 + off0, "Expires", 0, 7)) {
+              try {
+                off1 = q == 2 ? 1 : 0;
+                expires = SimpleDateFormats.RFC_1123.get().parse(string.substring(idx1 + off1, i - off1).trim());
+                order.add(CookieDirective.EXPIRY);
               }
               catch (final ParseException e) {
               }
             }
+            else if (string.regionMatches(true, idx0 + off0, "Secure", 0, 6)) {
+              secure = true;
+              order.add(CookieDirective.SECURE);
+            }
+            else if (string.regionMatches(true, idx0 + off0, "HttpOnly", 0, 8)) {
+              httpOnly = true;
+              order.add(CookieDirective.HTTP_ONLY);
+            }
+            else {
+              name1 = string.substring(idx0, idx1 - 1).trim();
+              off1 = q == 2 ? 1 : 0;
+              value1 = string.substring(idx1 + off1, i - off1);
+              final int len = value1.length();
+              value1 = value1.trim();
+              if (ws > len - value1.length())
+                valueWs = 1;
+
+              if (!name1.equals(name0) || value0 == null || value0.length() < value1.length())
+                value0 = value1;
+
+              name0 = name1;
+            }
+
+            if (isEnd)
+              break;
+
+            semi = true;
+            ws = 0;
+            q = 0;
+            idx0 = idx1 = ++i;
           }
-          else if (part.startsWith("Secure")) {
-            secure = true;
-            order.add(StrictNewCookie.Directive.SECURE);
+          else if (ch == '=') {
+            idx1 = ++i;
+            ws = 0;
           }
-          else if (part.startsWith("HttpOnly")) {
-            httpOnly = true;
-            order.add(StrictNewCookie.Directive.HTTP_ONLY);
+          else if (ch == '"') {
+            ++q;
+            ++i;
+          }
+          else {
+            if (Character.isWhitespace(ch)) {
+              ++ws;
+              if (semi)
+                ++idx0;
+            }
+            else {
+              semi = false;
+            }
+
+            ++i;
           }
         }
-
-        return new StrictNewCookie(order, name, value, path, domain, version, comment, maxAge, expires, secure, httpOnly);
+        while (true);
+        return name0 == null || value0 == null ? null : new StrictNewCookie(order, name0, value0, valueWs, path, pathWs, domain, domainWs, version, comment, commentWs, maxAge, expires, secure, httpOnly);
       }
 
       @Override
       public String toString(final NewCookie value) {
-        final StringBuilder builder = new StringBuilder();
-        builder.append(value.getName()).append('=').append(value.getValue());
-        if (value instanceof StrictNewCookie) {
-          final StrictNewCookie cacheControl = (StrictNewCookie)value;
-          final DirectiveList<StrictNewCookie.Directive> directives = cacheControl.order;
-          for (int i = 0, i$ = directives.size(); i < i$; ++i) // [RA]
-            directives.get(i).toString(cacheControl, builder);
-        }
-        else {
-          for (final StrictNewCookie.Directive directive : StrictNewCookie.Directive.values()) // [A]
-            directive.toString(value, builder);
-        }
+        if (value instanceof StrictNewCookie)
+          return ((StrictNewCookie)value).toString();
 
-        return builder.toString();
+        final StringBuilder b = new StringBuilder();
+        b.append(value.getName()).append('=').append(value.getValue());
+        for (final CookieDirective directive : CookieDirective.values()) // [A]
+          directive.toString(value, -1, -1, -1, -1, b);
+
+        return b.toString();
       }
     },
     DEFAULT_COMMA = new HeaderDelegateImpl<Object>(Object.class, false) {
