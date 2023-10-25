@@ -28,6 +28,7 @@ import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
+import org.eclipse.jetty.util.URIUtil;
 import org.eclipse.jetty.util.UrlEncoded;
 import org.libj.lang.Strings;
 import org.libj.net.URIs;
@@ -217,8 +218,10 @@ class UriInfoImpl implements UriInfo {
       for (final Map.Entry<String,List<String>> entry : pathParametersEncoded.entrySet()) { // [S]
         final String key = entry.getKey();
         final List<String> values = entry.getValue();
-        for (int i = 0, i$ = values.size(); i < i$; ++i) // [RA]
-          addDecoded(pathParametersDecoded, key, values.get(i));
+        for (int i = 0, i$ = values.size(); i < i$; ++i) { // [RA]
+          final String value = values.get(i);
+          pathParametersDecoded.add(key, value == null ? null : URIUtil.decodePath(value));
+        }
       }
     }
 
@@ -258,18 +261,16 @@ class UriInfoImpl implements UriInfo {
         }
         else {
           int i = 0;
-          do
-            addDecoded(queryParametersDecoded, key, values.get(i));
+          do {
+            final String value = values.get(i);
+            queryParametersDecoded.add(key, value == null ? null : UrlEncoded.decodeString(value, 0, value.length(), StandardCharsets.UTF_8));
+          }
           while (++i < i$);
         }
       }
     }
 
     return queryParametersDecoded;
-  }
-
-  private static void addDecoded(final MultivaluedArrayMap<String,String> map, final String key, final String value) {
-    map.add(key, value == null ? null : UrlEncoded.decodeString(value, 0, value.length(), StandardCharsets.UTF_8));
   }
 
   @Override

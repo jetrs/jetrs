@@ -110,5 +110,5 @@ enum CookieDirective {
     this.name = name;
   }
 
-  abstract void toString(Cookie cookie, final int valueWs, final int pathWs, final int domainWs, final int commentWs, StringBuilder builder);
+  abstract void toString(Cookie cookie, int valueWs, int pathWs, int domainWs, int commentWs, StringBuilder builder);
 }
