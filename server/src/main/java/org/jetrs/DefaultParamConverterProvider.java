@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
@@ -47,8 +48,8 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
   private static Method findParseMethod(final Class<?> type) {
     final String[] methodNames = type.isEnum() ? forEnums : forOther;
     for (final String methodName : methodNames) { // [A]
-      final Method method = Classes.getMethod(type, methodName, String.class);
-      if (method != null)
+      final Method method = Classes.getCompatibleMethod(type, methodName, String.class);
+      if (method != null && Modifier.isStatic(method.getModifiers()))
         return method;
     }
 

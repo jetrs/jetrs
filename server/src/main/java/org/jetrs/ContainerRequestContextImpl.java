@@ -348,6 +348,9 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> i
       if (argument instanceof Exception)
         throw new BadRequestException((Exception)argument);
 
+      if (!EntityUtil.validateNotNull(argument, annotations))
+        throw new BadRequestException("@NotNull argument " + element + " is null");
+
       return (T)argument;
     }
 
@@ -1054,7 +1057,11 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> i
 
   Object readBody(final MessageBodyReader<?> messageBodyReader) throws IOException {
     this.messageBodyReader = messageBodyReader;
-    return EntityUtil.checktNotNull(proceed(), getAnnotations());
+    final Object entity = proceed();
+    if (!EntityUtil.validateNotNull(entity, getAnnotations()))
+      throw new BadRequestException("Entity is null");
+
+    return entity;
   }
 
   @Override

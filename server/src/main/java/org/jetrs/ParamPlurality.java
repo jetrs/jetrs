@@ -56,7 +56,7 @@ abstract class ParamPlurality<T> {
   static final ParamPlurality<Void> SINGLE;
 
   private static final ParamPlurality<?>[] values = {
-    ARRAY = new ParamPlurality<Object[]>() {
+    ARRAY = new ParamPlurality<Object[]>("ARRAY") {
       @Override
       Object[] newContainer(final Class<?> rawType, final int size) {
         return (Object[])Array.newInstance(rawType.getComponentType(), size);
@@ -85,7 +85,7 @@ abstract class ParamPlurality<T> {
         return a;
       }
     },
-    COLLECTION = new ParamPlurality<Collection<?>>() {
+    COLLECTION = new ParamPlurality<Collection<?>>("COLLECTION") {
       @Override
       @SuppressWarnings("unchecked")
       Collection<?> newContainer(final Class<?> rawType, final int size) {
@@ -150,7 +150,7 @@ abstract class ParamPlurality<T> {
         return null;
       }
     },
-    SINGLE = new ParamPlurality<Void>() {
+    SINGLE = new ParamPlurality<Void>("SINGLE") {
       @Override
       Void newContainer(final Class<?> rawType, final int size) {
         return null;
@@ -197,6 +197,12 @@ abstract class ParamPlurality<T> {
     }
   };
 
+  private final String name;
+
+  private ParamPlurality(final String name) {
+    this.name = name;
+  }
+
   abstract T newContainer(Class<?> rawType, int size);
   abstract T newSingleton(Class<?> rawType, Object obj);
   abstract Class<?> getMemberClass(Class<?> rawType, Type genericType);
@@ -214,5 +220,10 @@ abstract class ParamPlurality<T> {
       return ARRAY;
 
     return SINGLE;
+  }
+
+  @Override
+  public String toString() {
+    return name;
   }
 }

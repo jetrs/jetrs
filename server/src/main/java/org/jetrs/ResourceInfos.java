@@ -35,6 +35,9 @@ class ResourceInfos extends ArrayList<ResourceInfoImpl> {
   static DefaultValueImpl digestDefaultValue(final DefaultValue defaultValue, final Class<?> clazz, final Type type, final Annotation[] annotations, final ComponentSet<Component<ParamConverterProvider>> paramConverterComponents) throws IOException {
     final String annotatedValue = defaultValue.value();
     final Object convertedValue = DefaultParamConverterProvider.convertParameter(clazz, type, annotations, ParamPlurality.fromClass(clazz), annotatedValue, null, true, paramConverterComponents, null);
+    if (!EntityUtil.validateNotNull(convertedValue, annotations))
+      throw new NullPointerException("ParamConverter.fromString(String) returned null for @NotNull @DefaultValue(" + defaultValue.value() + ")");
+
     return new DefaultValueImpl(convertedValue != null, annotatedValue, convertedValue);
   }
 

@@ -92,13 +92,13 @@ public final class EntityUtil {
     return _maxFormContentSize;
   }
 
-  public static <T> T checktNotNull(final T entity, final Annotation[] annotations) {
+  public static boolean validateNotNull(final Object entity, final Annotation[] annotations) {
     if (entity == null)
       for (final Annotation annotation : annotations) // [A]
         if (annotation.annotationType() == NotNull.class)
-          throw new BadRequestException("Entity is null");
+          return false;
 
-    return entity;
+    return true;
   }
 
   public static boolean shouldDecode(final Annotation[] annotations) {

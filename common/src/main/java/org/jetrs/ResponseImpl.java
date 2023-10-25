@@ -28,6 +28,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.ResponseProcessingException;
 import javax.ws.rs.core.EntityTag;
@@ -188,7 +189,11 @@ class ResponseImpl extends Response {
           return lastProceeded;
         }
       }) {
-        return EntityUtil.checktNotNull((T)readerInterceptorContext.proceed(), readerInterceptorContext.getAnnotations());
+        final T entity = (T)readerInterceptorContext.proceed();
+        if (!EntityUtil.validateNotNull(entity, readerInterceptorContext.getAnnotations()))
+          throw new BadRequestException("Entity is null");
+
+        return entity;
       }
     }
     catch (final Exception e) {
