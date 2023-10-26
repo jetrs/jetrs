@@ -37,7 +37,7 @@ abstract class SingleServiceTest {
   }
 
   void startServer(final Class<?> ... classes) {
-    server = new TestAppServer(null, classes);
+    server = new TestAppServer(new Object[] {}, classes);
   }
 
   @After

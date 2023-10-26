@@ -16,13 +16,11 @@
 
 package org.jetrs;
 
-import java.nio.charset.StandardCharsets;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.ws.rs.Path;
 
-import org.eclipse.jetty.util.UrlEncoded;
 import org.libj.util.Patterns;
 
 class UriTemplate implements Comparable<UriTemplate> {
@@ -120,14 +118,12 @@ class UriTemplate implements Comparable<UriTemplate> {
         // Characters that do not need to be URL-Encoded, and do not need to be regex-escaped
         b.append(ch);
       }
-      else if (ch == '.' || ch == '+' || ch == '-' || ch == '*' || ch == '!' || ch == '$' || ch == '(' || ch == ')') {
+      else if (Patterns.isMetaCharacter(ch)) {
         // Characters that do not need to be URL-Encoded, but need to be regex-escaped
-        b.append('\\');
-        b.append(ch);
+        b.append('\\').append(ch);
       }
       else if (ch != '/') {
-        // Characters that need to be URL-Encoded
-        b.append(UrlEncoded.encodeString(String.valueOf(ch), StandardCharsets.UTF_8)); // FIXME: Can be made to be more efficient
+        b.append(ch);
       }
       else if (prev == '/') {
         ++repeatedSlashes;

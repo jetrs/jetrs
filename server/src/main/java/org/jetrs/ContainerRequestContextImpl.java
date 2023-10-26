@@ -548,7 +548,7 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> i
 
             for (int i = 0, i$ = pathSegments.size(); i < i$; ++i) { // [RA]
               final PathSegment pathSegment = pathSegments.get(i);
-              final String path = ((PathSegmentImpl)pathSegment).getPathEncoded();
+              final String path = ((PathSegmentImpl)pathSegment).getPath();
               segEnd = segStart + path.length();
               if (rangeIntersects(segStart, segEnd, regionStart, regionEnd))
                 return pathSegment;
@@ -579,9 +579,9 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> i
             final long regionStartEnd = regionStartEnds[i];
             final int regionStart = Numbers.Composite.decodeInt(regionStartEnd, 0);
             final int regionEnd = Numbers.Composite.decodeInt(regionStartEnd, 1);
-            while (true) {
+            do {
               final PathSegment pathSegment = pathSegments.get(j);
-              final String path = ((PathSegmentImpl)pathSegment).getPathEncoded();
+              final String path = ((PathSegmentImpl)pathSegment).getPath();
               segEnd = segStart + path.length();
 
               if (inRegion) {
@@ -599,6 +599,7 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> i
 
               segStart = segEnd + 1; // add '/' char
             }
+            while (true);
           }
         }
 
@@ -753,10 +754,10 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> i
     final UriInfo uriInfo = getUriInfo();
 
     // Match request URI with matrix params stripped out
-    final StringBuilder requestUriBuilder = new StringBuilder(uriInfo.getBaseUri().getRawPath());
+    final StringBuilder requestUriBuilder = new StringBuilder(uriInfo.getBaseUri().getPath());
     final int baseUriLen = requestUriBuilder.length();
 
-    final String path = uriInfo.getPath(false);
+    final String path = uriInfo.getPath(true);
     normalizeUri(requestUriBuilder, path, path.length(), false, 0, 0);
 
     final String requestUriMatched = requestUriBuilder.toString();

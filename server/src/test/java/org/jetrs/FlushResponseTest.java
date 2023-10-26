@@ -37,7 +37,7 @@ import org.libj.lang.Strings;
 
 public class FlushResponseTest {
   private static final TestAppServer server = new TestAppServer(null, null);
-  private static final String serviceUrl = "http://localhost:" + server.getContainerPort() + TestAppServer.applicationPath;
+  private static final String serviceUrl = "http://localhost:" + server.getContainerPort();
   private static final Client client = ClientBuilder.newClient().register(GZipCodecInterceptor.class);
 
   public static String s(final Object obj) {

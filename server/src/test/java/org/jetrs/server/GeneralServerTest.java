@@ -401,7 +401,7 @@ public class GeneralServerTest {
 
     final String data = assertResponse(200, getResponse, String.class);
     // FIXME: Is the client supposed to automatically return a String due to "text/plain" MediaType?!
-    assertEquals("[" + TestAppServer.applicationPath + "/root2/2]\norg.jetrs.server.app.service.RootService2\n{}", data);
+    assertEquals("[/root2/2]\norg.jetrs.server.app.service.RootService2\n{}", data);
 
     final Response headResponse = request.head();
     assertGetHead(getResponse, headResponse);
@@ -414,7 +414,7 @@ public class GeneralServerTest {
 
     final String data = assertResponse(200, getResponse, String.class);
     // FIXME: Is the client supposed to automatically return a String due to "text/plain" MediaType?!
-    assertEquals("[" + TestAppServer.applicationPath + "/root2/2/123, " + TestAppServer.applicationPath + "/root2/2/123]\norg.jetrs.server.app.service.RootService2, org.jetrs.server.app.service.RootService2\n{id=[123]}", data);
+    assertEquals("[/root2/2/123, /root2/2/123]\norg.jetrs.server.app.service.RootService2, org.jetrs.server.app.service.RootService2\n{id=[123]}", data);
 
     final Response headResponse = request.head();
     assertGetHead(getResponse, headResponse);
@@ -427,7 +427,7 @@ public class GeneralServerTest {
 
     final String data = assertResponse(200, getResponse, String.class);
     // FIXME: Is the client supposed to automatically return a String due to "text/plain" MediaType?!
-    assertEquals("[" + TestAppServer.applicationPath + "/root2/2/123/456, " + TestAppServer.applicationPath + "/root2/2/123/456, " + TestAppServer.applicationPath + "/root2/2/123/456]\norg.jetrs.server.app.service.RootService2, org.jetrs.server.app.service.RootService2, org.jetrs.server.app.service.RootService2\n{id2=[456], id1=[123]}", data);
+    assertEquals("[/root2/2/123/456, /root2/2/123/456, /root2/2/123/456]\norg.jetrs.server.app.service.RootService2, org.jetrs.server.app.service.RootService2, org.jetrs.server.app.service.RootService2\n{id2=[456], id1=[123]}", data);
 
     final Response headResponse = request.head();
     assertGetHead(getResponse, headResponse);

@@ -81,7 +81,7 @@ public class ResponseTimeoutFilterTest {
     new TestFilter(timeout),
     new DelayService()
   }, new Class[0]);
-  private static final String serviceUrl = "http://localhost:" + server.getContainerPort() + TestAppServer.applicationPath;
+  private static final String serviceUrl = "http://localhost:" + server.getContainerPort();
   private static final Client client;
 
   private static final ArrayList<String> timedOut = new ArrayList<>();

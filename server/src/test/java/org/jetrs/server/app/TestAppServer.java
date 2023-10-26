@@ -46,11 +46,10 @@ import org.openjax.esc.UncaughtServletExceptionHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@ApplicationPath(TestAppServer.applicationPath)
+@ApplicationPath("/")
 public class TestAppServer extends Application implements AutoCloseable {
   private static final Logger logger = LoggerFactory.getLogger(TestAppServer.class);
 
-  public static final String applicationPath = "/test";
   public static final String mimeType = "application/vnd.jetrs.v1+json";
 
   public static void main(final String[] args) throws InterruptedException {
@@ -122,7 +121,7 @@ public class TestAppServer extends Application implements AutoCloseable {
   }
 
   public String getServiceUrl() {
-    return "http://localhost:" + getContainerPort() + applicationPath;
+    return "http://localhost:" + getContainerPort();
   }
 
   @Override
