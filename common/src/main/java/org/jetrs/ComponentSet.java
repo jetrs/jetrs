@@ -77,25 +77,27 @@ abstract class ComponentSet<T extends Component<?>> extends SortedSetArrayList<T
   }
 
   final boolean containsComponent(final Class<?> clazz) {
-    for (final T component : this)
-      if (clazz.equals(component.clazz))
+    for (int i = 0, i$ = size(); i < i$; ++i) // [RA]
+      if (clazz.equals(get(i).clazz))
         return true;
 
     return false;
   }
 
   final boolean containsComponent(final Object instance) {
-    for (final T component : this)
-      if (instance.equals(component.singleton))
+    for (int i = 0, i$ = size(); i < i$; ++i) // [RA]
+      if (instance.equals(get(i).singleton))
         return true;
 
     return false;
   }
 
   final Map<Class<?>,Integer> getContracts(final Class<?> componentClass) {
-    for (final T component : this)
+    for (int i = 0, i$ = size(); i < i$; ++i) { // [RA]
+      final Component<?> component = get(i);
       if (componentClass.equals(component.clazz))
         return component.contracts;
+    }
 
     return Collections.EMPTY_MAP;
   }

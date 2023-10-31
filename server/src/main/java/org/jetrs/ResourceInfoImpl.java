@@ -53,7 +53,7 @@ import org.libj.util.ArrayUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImpl> {
+final class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImpl> {
   private static final Logger logger = LoggerFactory.getLogger(ResourceInfoImpl.class);
 
   private static boolean logMissingHeaderWarning(final HttpHeader<?> httpHeader, final Class<?> type) {

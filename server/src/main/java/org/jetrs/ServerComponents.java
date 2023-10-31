@@ -283,7 +283,8 @@ final class ServerComponents extends Components {
             afterRegister = new ArrayList<>();
 
           afterRegister.add(() -> {
-            for (final ResourceInfo resourceInfo : resourceInfos) {
+            for (int i = 0, i$ = resourceInfos.size(); i < i$; ++i) { // [RA]
+              final ResourceInfo resourceInfo = resourceInfos.get(i);
               if (resourceInfo.getResourceClass() == returnType) {
                 register(null, method, baseUri, classPath, methodPath, resourceInfos, clazz, singleton);
                 break;

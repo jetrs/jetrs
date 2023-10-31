@@ -141,8 +141,7 @@ public final class MediaTypes {
    * @param acceptCharsets Value of "Accept-Charsets" header, or {@code null} if no such header was provided.
    * @return An array of {@link MediaType}s by evaluating the provided {@link ServerMediaType}s, {@link MediaType}s and
    *         "Accept-Charset" header values for compatibility.
-   * @throws NullPointerException If {@code serverTypes}, any member of {@code serverTypes}, {@code clientTypes}, or any member of
-   *           {@code clientTypes} is null.
+   * @throws NullPointerException If {@code serverTypes}, any member of {@code serverTypes} or {@code clientTypes} is null.
    */
   static MediaType[] getCompatible(final ServerMediaType[] serverTypes, final MediaType[] clientTypes, final List<String> acceptCharsets) {
     final MediaType[] mediaTypes = getCompatible(serverTypes, clientTypes, acceptCharsets, 0, 0, 0);
@@ -180,8 +179,7 @@ public final class MediaTypes {
    * @param acceptCharsets Value of "Accept-Charsets" header, or {@code null} if no such header was provided.
    * @return An array of {@link MediaType}s by evaluating the provided {@link ServerMediaType}s, {@link MediaType}s and
    *         "Accept-Charset" header values for compatibility.
-   * @throws NullPointerException If {@code serverTypes}, any member of {@code serverTypes}, {@code clientTypes}, or any member of
-   *           {@code clientTypes} is null.
+   * @throws NullPointerException If {@code serverTypes}, any member of {@code serverTypes} or {@code clientTypes} is null.
    */
   static MediaType[] getCompatible(final ServerMediaType[] serverTypes, final List<MediaType> clientTypes, final List<String> acceptCharsets) {
     final MediaType[] mediaTypes = getCompatible(serverTypes, clientTypes, acceptCharsets, 0, 0, 0);
@@ -507,6 +505,7 @@ public final class MediaTypes {
    *
    * @param strings The collection of strings.
    * @return An array of {@link MediaType} objects.
+   * @throws NullPointerException If {@code strings} is null.
    */
   static QualifiedMediaType[] parse(final Collection<String> strings) {
     return parse(QualifiedMediaType.class, strings);
@@ -519,11 +518,9 @@ public final class MediaTypes {
    * @param cls The {@link Class} of the {@link MediaType} to be returned.
    * @param strings The collection of strings.
    * @return An array of {@link MediaType} objects.
+   * @throws NullPointerException If {@code strings} is null.
    */
   static <T extends QualifiedMediaType> T[] parse(final Class<T> cls, final Collection<String> strings) {
-    if (strings == null)
-      return null;
-
     if (strings.size() == 0)
       return empty(cls);
 
@@ -540,6 +537,7 @@ public final class MediaTypes {
    *
    * @param enumeration The enumeration of strings.
    * @return An array of {@link MediaType} objects.
+   * @throws NullPointerException If {@code enumeration} is null.
    */
   static MediaType[] parse(final Enumeration<String> enumeration) {
     return parse(QualifiedMediaType.class, enumeration);
@@ -552,11 +550,9 @@ public final class MediaTypes {
    * @param cls The {@link Class} of the {@link MediaType} to be returned.
    * @param enumeration The enumeration of strings.
    * @return An array of {@link MediaType} objects.
+   * @throws NullPointerException If {@code enumeration} is null.
    */
   static <T extends QualifiedMediaType> T[] parse(final Class<T> cls, final Enumeration<String> enumeration) {
-    if (enumeration == null)
-      return null;
-
     if (!enumeration.hasMoreElements())
       return empty(cls);
 
@@ -573,6 +569,7 @@ public final class MediaTypes {
    *
    * @param strings The the strings array.
    * @return An array of {@link MediaType} objects.
+   * @throws NullPointerException If {@code strings} is null.
    */
   static MediaType[] parse(final String ... strings) {
     return parse(QualifiedMediaType.class, strings);
@@ -585,11 +582,9 @@ public final class MediaTypes {
    * @param cls The {@link Class} of the {@link MediaType} to be returned.
    * @param strings The the strings array.
    * @return An array of {@link MediaType} objects.
+   * @throws NullPointerException If {@code strings} is null.
    */
   static <T extends QualifiedMediaType> T[] parse(final Class<T> cls, final String ... strings) {
-    if (strings == null)
-      return null;
-
     if (strings.length == 0)
       return empty(cls);
 
@@ -602,19 +597,8 @@ public final class MediaTypes {
   }
 
   private static boolean isValidChar(final char ch) {
-    if ('0' <= ch && ch <= '9')
-      return true;
-
-    if ('a' <= ch && ch <= 'z')
-      return true;
-
-    if ('A' <= ch && ch <= 'Z')
-      return true;
-
-    if (ch == '*' || ch == '/' || ch == '_' || ch == '+' || ch == '-' || ch == '.' || ch == ' ' || ch == ';' || ch == '=' || ch == '"')
-      return true;
-
-    return false;
+    return '0' <= ch && ch <= '9' || 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '*' || ch == '/'
+        || ch == '_' || ch == '+' || ch == '-' || ch == '.' || ch == ' ' || ch == ';' || ch == '=' || ch == '"';
   }
 
   /**
@@ -623,6 +607,7 @@ public final class MediaTypes {
    *
    * @param string The the string.
    * @return The corresponding {@link MediaType} object, or {@code null} if the specified string is null.
+   * @throws NullPointerException If {@code string} is null.
    */
   static QualifiedMediaType parse(final String string) {
     return parse(QualifiedMediaType.class, string);
@@ -636,6 +621,7 @@ public final class MediaTypes {
    * @param cls The {@link Class} of the {@link MediaType} to be returned.
    * @param string The the string.
    * @return The corresponding {@link MediaType} object, or {@code null} if the specified string is null.
+   * @throws NullPointerException If {@code string} is null.
    */
   // FIXME: Reimplement with char-by-char algorithm
   // FIXME: What are the legal name and sub-name spec? Need to properly throw IllegalArgumentException!
@@ -729,8 +715,9 @@ public final class MediaTypes {
   static String toString(final MediaType mediaType) {
     final StringBuilder builder = new StringBuilder();
     builder.append(mediaType.getType()).append('/').append(mediaType.getSubtype());
-    if (mediaType.getParameters().size() > 0) {
-      for (final Map.Entry<String,String> entry : mediaType.getParameters().entrySet()) { // [S]
+    final Map<String,String> parameters = mediaType.getParameters();
+    if (parameters.size() > 0) {
+      for (final Map.Entry<String,String> entry : parameters.entrySet()) { // [S]
         final String value = entry.getValue();
         boolean quoted = false;
         for (int i = 0, i$ = value.length(); i < i$; ++i) { // [N]

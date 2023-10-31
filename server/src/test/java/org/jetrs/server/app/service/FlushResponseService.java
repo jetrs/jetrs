@@ -42,7 +42,7 @@ public class FlushResponseService {
   @GET
   @Path("{mul:\\d+}")
   @Produces(MediaType.TEXT_PLAIN)
-  public Response get(final @PathParam("mul") int mul, final @QueryParam("d") String data, final @QueryParam("q") Boolean chunked, final @QueryParam("e") boolean exception) {
+  public Response get(@PathParam("mul") final int mul, @QueryParam("d") final String data, @QueryParam("q") final Boolean chunked, @QueryParam("e") final boolean exception) {
     final byte[] bytes = expand(data.getBytes(), mul);
     final Response.ResponseBuilder response = Response.ok(new StreamingOutput() {
       @Override

@@ -19,26 +19,47 @@ package org.jetrs;
 import static org.junit.Assert.*;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
 import javax.ws.rs.core.MediaType;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 public class MediaTypesTest {
   private static void testParse(final Consumer<MediaType[]> c, final String ... headers) {
     c.accept(MediaTypes.parse(headers));
-    c.accept(MediaTypes.parse(headers == null ? null : Arrays.asList(headers)));
-    c.accept(MediaTypes.parse(headers == null ? null : Collections.enumeration(Arrays.asList(headers))));
+    c.accept(MediaTypes.parse(Arrays.asList(headers)));
+    c.accept(MediaTypes.parse(Collections.enumeration(Arrays.asList(headers))));
   }
 
   @Test
   public void testError() {
-    testParse(Assert::assertNull, (String[])null);
+    try {
+      MediaTypes.parse((String[])null);
+      fail("Expected NullPointerException");
+    }
+    catch (final NullPointerException e) {
+    }
+
+    try {
+      MediaTypes.parse((Collection<String>)null);
+      fail("Expected NullPointerException");
+    }
+    catch (final NullPointerException e) {
+    }
+
+    try {
+      MediaTypes.parse((Enumeration<String>)null);
+      fail("Expected NullPointerException");
+    }
+    catch (final NullPointerException e) {
+    }
+
     testParse(m -> assertArrayEquals(new MediaType[0], m), (String)null);
     testParse(m -> assertArrayEquals(new MediaType[0], m), "");
     testParse(m -> assertEquals(3, m.length), "application/json; q=\"oops\" ; charset=\"utf8\";  ", "application/xml; q= ; charset=\"utf8\";  ", "application/json; q=\"oops\" ; charset=\"utf8\";  ");
