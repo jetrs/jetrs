@@ -22,6 +22,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 
+import org.openjax.json.JsonUtil;
+
 @Singleton
 public class ThrowableMapper<T extends Throwable> implements ExceptionMapper<T> {
   private final boolean verbose;
@@ -48,8 +50,10 @@ public class ThrowableMapper<T extends Throwable> implements ExceptionMapper<T> 
     if (verbose) {
       final String message = exception.getMessage();
       if (message != null) {
+        builder.append(",\"message\":\"");
         final String prefix = "HTTP " + status + " ";
-        builder.append(",\"message\":\"").append(message.startsWith(prefix) ? message.substring(prefix.length()) : message).append('"');
+        JsonUtil.escape(builder, message.startsWith(prefix) ? message.substring(prefix.length()) : message);
+        builder.append('"');
       }
     }
 
