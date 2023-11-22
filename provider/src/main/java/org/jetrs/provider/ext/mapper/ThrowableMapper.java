@@ -57,11 +57,10 @@ public class ThrowableMapper<T extends Throwable> implements ExceptionMapper<T> 
       }
     }
 
-    builder.append('}');
-
-    return Response.fromResponse(response)
+    return Response
+      .fromResponse(response)
+      .entity(builder.append('}').toString())
       .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
-      .entity(builder.toString())
       .build();
   }
 }
