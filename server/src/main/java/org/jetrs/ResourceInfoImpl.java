@@ -28,6 +28,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.security.DenyAll;
 import javax.annotation.security.PermitAll;
@@ -94,8 +95,8 @@ final class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImp
   private boolean producesCalled;
   private Consumes consumes;
   private Produces produces;
-  private boolean consumesMediaTypesCalled;
-  private boolean producesMediaTypesCalled;
+  private final AtomicBoolean consumesMediaTypesMutex = new AtomicBoolean();
+  private final AtomicBoolean producesMediaTypesMutex = new AtomicBoolean();
   private ServerMediaType[] consumesMediaTypes;
   private ServerMediaType[] producesMediaTypes;
   private DefaultValueImpl[] defaultValues;
@@ -166,27 +167,51 @@ final class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImp
   }
 
   ServerMediaType[] getConsumesMediaTypes() {
-    if (consumesMediaTypesCalled)
+    if (consumesMediaTypesMutex.get())
       return consumesMediaTypes;
 
-    consumesMediaTypesCalled = true;
-    final Consumes annotation = getConsumes();
-    if (annotation != null && !hasEntityParameter())
-      throw new IllegalAnnotationException(annotation, getResourceClass().getName() + "." + getMethodName() + "(" + ArrayUtil.toString(getMethodParameterTypes(), ',', Class::getName) + ") does not specify entity parameters, and thus cannot declare @Consumes annotation");
+    synchronized (consumesMediaTypesMutex) {
+      if (consumesMediaTypesMutex.get())
+        return consumesMediaTypes;
 
-    return consumesMediaTypes = annotation != null ? ServerMediaType.valueOf(annotation.value()) : MediaTypes.WILDCARD_SERVER_TYPE;
+      final Consumes annotation = getConsumes();
+      if (annotation == null) {
+        consumesMediaTypes = MediaTypes.WILDCARD_SERVER_TYPE;
+      }
+      else {
+        if (!hasEntityParameter())
+          throw new IllegalAnnotationException(annotation, getResourceClass().getName() + "." + getMethodName() + "(" + ArrayUtil.toString(getMethodParameterTypes(), ',', Class::getName) + ") does not specify entity parameters, and thus cannot declare @Consumes annotation");
+
+        consumesMediaTypes = ServerMediaType.valueOf(annotation.value());
+      }
+
+      consumesMediaTypesMutex.set(true);
+      return consumesMediaTypes;
+    }
   }
 
   ServerMediaType[] getProducesMediaTypes() {
-    if (producesMediaTypesCalled)
+    if (producesMediaTypesMutex.get())
       return producesMediaTypes;
 
-    producesMediaTypesCalled = true;
-    final Produces annotation = getProduces();
-    if (annotation != null && Void.TYPE.equals(getMethodReturnType()))
-      throw new IllegalAnnotationException(annotation, getResourceClass().getName() + "." + getMethodName() + "(" + ArrayUtil.toString(getMethodParameterTypes(), ',', Class::getName) + ") is void return type, and thus cannot declare @Produces annotation");
+    synchronized (producesMediaTypesMutex) {
+      if (producesMediaTypesMutex.get())
+        return producesMediaTypes;
 
-    return producesMediaTypes = annotation != null ? ServerMediaType.valueOf(annotation.value()) : MediaTypes.WILDCARD_SERVER_TYPE;
+      final Produces annotation = getProduces();
+      if (annotation == null) {
+        producesMediaTypes = MediaTypes.WILDCARD_SERVER_TYPE;
+      }
+      else {
+        if (Void.TYPE.equals(getMethodReturnType()))
+          throw new IllegalAnnotationException(annotation, getResourceClass().getName() + "." + getMethodName() + "(" + ArrayUtil.toString(getMethodParameterTypes(), ',', Class::getName) + ") is void return type, and thus cannot declare @Produces annotation");
+
+        producesMediaTypes = ServerMediaType.valueOf(annotation.value());
+      }
+
+      producesMediaTypesMutex.set(true);
+      return producesMediaTypes;
+    }
   }
 
   void initDefaultValues(final ComponentSet<Component<ParamConverterProvider>> paramConverterComponents) throws IOException {
