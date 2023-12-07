@@ -28,7 +28,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.security.DenyAll;
 import javax.annotation.security.PermitAll;
@@ -95,8 +94,8 @@ final class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImp
   private boolean producesCalled;
   private Consumes consumes;
   private Produces produces;
-  private final AtomicBoolean consumesMediaTypesMutex = new AtomicBoolean();
-  private final AtomicBoolean producesMediaTypesMutex = new AtomicBoolean();
+  private boolean consumesMediaTypesCalled;
+  private boolean producesMediaTypesCalled;
   private ServerMediaType[] consumesMediaTypes;
   private ServerMediaType[] producesMediaTypes;
   private DefaultValueImpl[] defaultValues;
@@ -167,51 +166,41 @@ final class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImp
   }
 
   ServerMediaType[] getConsumesMediaTypes() {
-    if (consumesMediaTypesMutex.get())
+    if (consumesMediaTypesCalled)
       return consumesMediaTypes;
 
-    synchronized (consumesMediaTypesMutex) {
-      if (consumesMediaTypesMutex.get())
-        return consumesMediaTypes;
-
-      final Consumes annotation = getConsumes();
-      if (annotation == null) {
-        consumesMediaTypes = MediaTypes.WILDCARD_SERVER_TYPE;
-      }
-      else {
-        if (!hasEntityParameter())
-          throw new IllegalAnnotationException(annotation, getResourceClass().getName() + "." + getMethodName() + "(" + ArrayUtil.toString(getMethodParameterTypes(), ',', Class::getName) + ") does not specify entity parameters, and thus cannot declare @Consumes annotation");
-
-        consumesMediaTypes = ServerMediaType.valueOf(annotation.value());
-      }
-
-      consumesMediaTypesMutex.set(true);
-      return consumesMediaTypes;
+    final Consumes annotation = getConsumes();
+    if (annotation == null) {
+      consumesMediaTypes = MediaTypes.WILDCARD_SERVER_TYPE;
     }
+    else {
+      if (!hasEntityParameter())
+        throw new IllegalAnnotationException(annotation, getResourceClass().getName() + "." + getMethodName() + "(" + ArrayUtil.toString(getMethodParameterTypes(), ',', Class::getName) + ") does not specify entity parameters, and thus cannot declare @Consumes annotation");
+
+      consumesMediaTypes = ServerMediaType.valueOf(annotation.value());
+    }
+
+    consumesMediaTypesCalled = true;
+    return consumesMediaTypes;
   }
 
   ServerMediaType[] getProducesMediaTypes() {
-    if (producesMediaTypesMutex.get())
+    if (producesMediaTypesCalled)
       return producesMediaTypes;
 
-    synchronized (producesMediaTypesMutex) {
-      if (producesMediaTypesMutex.get())
-        return producesMediaTypes;
-
-      final Produces annotation = getProduces();
-      if (annotation == null) {
-        producesMediaTypes = MediaTypes.WILDCARD_SERVER_TYPE;
-      }
-      else {
-        if (Void.TYPE.equals(getMethodReturnType()))
-          throw new IllegalAnnotationException(annotation, getResourceClass().getName() + "." + getMethodName() + "(" + ArrayUtil.toString(getMethodParameterTypes(), ',', Class::getName) + ") is void return type, and thus cannot declare @Produces annotation");
-
-        producesMediaTypes = ServerMediaType.valueOf(annotation.value());
-      }
-
-      producesMediaTypesMutex.set(true);
-      return producesMediaTypes;
+    final Produces annotation = getProduces();
+    if (annotation == null) {
+      producesMediaTypes = MediaTypes.WILDCARD_SERVER_TYPE;
     }
+    else {
+      if (Void.TYPE.equals(getMethodReturnType()))
+        throw new IllegalAnnotationException(annotation, getResourceClass().getName() + "." + getMethodName() + "(" + ArrayUtil.toString(getMethodParameterTypes(), ',', Class::getName) + ") is void return type, and thus cannot declare @Produces annotation");
+
+      producesMediaTypes = ServerMediaType.valueOf(annotation.value());
+    }
+
+    producesMediaTypesCalled = true;
+    return producesMediaTypes;
   }
 
   void initDefaultValues(final ComponentSet<Component<ParamConverterProvider>> paramConverterComponents) throws IOException {
