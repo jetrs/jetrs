@@ -23,8 +23,6 @@ import javax.ws.rs.core.PathSegment;
 import org.libj.net.URLs;
 
 final class PathSegmentImpl implements PathSegment {
-  private static final MultivaluedArrayHashMap<String,String> emptyMap = new MultivaluedArrayHashMap<>(0); // FIXME: Make this unmodifiable
-
   private final String pathEncoded;
   private final String path;
   private final MultivaluedArrayHashMap<String,String> matrixParameters;
@@ -71,7 +69,7 @@ final class PathSegmentImpl implements PathSegment {
       if (s < 0) {
         this.path = path;
         this.pathEncoded = pathEncoded;
-        this.matrixParameters = emptyMap;
+        this.matrixParameters = EntityUtil.EMPTY_MAP;
       }
       else {
         this.path = path.substring(0, s);
@@ -85,7 +83,7 @@ final class PathSegmentImpl implements PathSegment {
       if (s < 0) {
         this.path = path;
         this.pathEncoded = pathEncoded;
-        this.matrixParameters = emptyMap;
+        this.matrixParameters = EntityUtil.EMPTY_MAP;
       }
       else {
         this.path = this.pathEncoded = path.substring(0, s);

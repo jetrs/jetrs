@@ -751,6 +751,10 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> i
   }
 
   private ResourceMatches filterAndMatch(final String requestMethod, final boolean isOverride) {
+    final int noResourceInfos = resourceInfos.size();
+    if (noResourceInfos == 0)
+      return null;
+
     final UriInfo uriInfo = getUriInfo();
 
     // Match request URI with matrix params stripped out
@@ -766,7 +770,8 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> i
     boolean maybeNotSupported = false;
     boolean maybeNotAcceptable = false;
     ResourceMatches resourceMatches = null;
-    for (int i = 0, i$ = resourceInfos.size(); i < i$; ++i) { // [RA]
+    int i = 0;
+    do { // [RA]
       final ResourceInfoImpl resourceInfo = resourceInfos.get(i);
       final UriTemplate uriTemplate = resourceInfo.getUriTemplate();
       final Matcher matcher = uriTemplate.matcher(requestUriMatched);
@@ -818,6 +823,7 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> i
 
       resourceMatches.add(new ResourceMatch(resourceInfo, matcher.group(), compatibleMediaTypes, pathParamNames, regionStartEnds, pathParameters)); // We only care about the highest quality match of the Accept header
     }
+    while (++i < noResourceInfos);
 
     if (resourceMatches != null) {
       resourceMatches.sort(null);
@@ -842,7 +848,7 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> i
       final List<String> requestHeaders = getHttpHeaders().get(ACCESS_CONTROL_REQUEST_HEADERS);
       final int i$;
       if (requestHeaders != null && (i$ = requestHeaders.size()) > 0)
-        for (int i = 0; i < i$; ++i) // [RA]
+        for (i = 0; i < i$; ++i) // [RA]
           response.header(ACCESS_CONTROL_ALLOW_HEADERS, requestHeaders.get(i));
 
       final String origin = httpServletRequest.getHeader(ORIGIN);

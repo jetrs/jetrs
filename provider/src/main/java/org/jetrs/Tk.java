@@ -79,7 +79,7 @@ public final class Tk implements Comparable<Tk> {
   }
 
   public String getDescription() {
-    return this.description;
+    return description;
   }
 
   @Override

@@ -71,8 +71,8 @@ class ServerMediaType extends QualifiedMediaType {
   /**
    * Creates a new instance of {@link ServerMediaType} with the supplied type and subtype.
    *
-   * @param type The primary type, {@code null} is equivalent to {@link #MEDIA_TYPE_WILDCARD}
-   * @param subtype The subtype, {@code null} is equivalent to {@link #MEDIA_TYPE_WILDCARD}
+   * @param type The primary type, {@code null} is equivalent to {@link #MEDIA_TYPE_WILDCARD}.
+   * @param subtype The subtype, {@code null} is equivalent to {@link #MEDIA_TYPE_WILDCARD}.
    */
   ServerMediaType(final String type, final String subtype) {
     super(type, subtype);
@@ -81,8 +81,8 @@ class ServerMediaType extends QualifiedMediaType {
   /**
    * Creates a new instance of {@link ServerMediaType} with the supplied type, subtype and {@value #CHARSET_PARAMETER} parameter.
    *
-   * @param type The primary type, {@code null} is equivalent to {@link #MEDIA_TYPE_WILDCARD}
-   * @param subtype The subtype, {@code null} is equivalent to {@link #MEDIA_TYPE_WILDCARD}
+   * @param type The primary type, {@code null} is equivalent to {@link #MEDIA_TYPE_WILDCARD}.
+   * @param subtype The subtype, {@code null} is equivalent to {@link #MEDIA_TYPE_WILDCARD}.
    * @param charset The {@value #CHARSET_PARAMETER} parameter value. If {@code null} or empty the {@value #CHARSET_PARAMETER}
    *          parameter will not be set.
    */

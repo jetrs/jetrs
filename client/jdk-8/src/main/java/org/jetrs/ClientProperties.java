@@ -151,29 +151,13 @@ public final class ClientProperties {
   /**
    * The URI of a HTTP proxy to be used by the client.
    * <p>
+   * Format: {@code <http|socks>://[username:password@]<host>[:port]}
+   * <p>
    * Default: {@code null}.
    * <p>
    * Configuration property: <tt>{@value}</tt>
    */
   public static final String PROXY_URI = "jetrs.client.proxy.uri";
-
-  /**
-   * The username to be used for the HTTP proxy specified with the {@link #PROXY_URI} property.
-   * <p>
-   * Default: {@code null}.
-   * <p>
-   * Configuration property: <tt>{@value}</tt>
-   */
-  public static final String PROXY_USERNAME = "jetrs.client.proxy.username";
-
-  /**
-   * The password to be used for the HTTP proxy specified with the {@link #PROXY_URI} property.
-   * <p>
-   * Default: {@code null}.
-   * <p>
-   * Configuration property: <tt>{@value}</tt>
-   */
-  public static final String PROXY_PASSWORD = "jetrs.client.proxy.password";
 
   private ClientProperties() {
   }

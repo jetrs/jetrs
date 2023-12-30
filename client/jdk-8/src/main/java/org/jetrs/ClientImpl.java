@@ -17,6 +17,7 @@
 package org.jetrs;
 
 import java.net.URI;
+import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -28,6 +29,9 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.UriBuilder;
+
+import org.libj.lang.Numbers;
+import org.libj.lang.Systems;
 
 class ClientImpl implements Client, ConfigurableImpl<Client> {
   private final ConfigurationImpl configuration;
@@ -57,6 +61,39 @@ class ClientImpl implements Client, ConfigurableImpl<Client> {
   void assertNotClosed() {
     if (closed)
       throw new IllegalStateException("Client is closed");
+  }
+
+  private ClientConfig clientConfig;
+
+  String getProperty(final String key) {
+    final Object value = getConfiguration().getProperties().get(key);
+    return value != null ? value.toString() : System.getProperty(key);
+  }
+
+  boolean hasProperty(final String key) {
+    final Object value = getConfiguration().getProperties().get(key);
+    return value != null ? !value.equals("false") : Systems.hasProperty(key);
+  }
+
+  ClientConfig getClientConfig() throws NoSuchAlgorithmException {
+    final String proxyUri = getProperty(ClientProperties.PROXY_URI);
+    final int maxConnectionsPerDestination = Numbers.parseInt(getProperty(ClientProperties.MAX_CONNECTIONS_PER_DESTINATION), ClientProperties.MAX_CONNECTIONS_PER_DESTINATION_DEFAULT);
+    if (clientConfig == null)
+      return clientConfig = new ClientConfig(sslContext, maxConnectionsPerDestination, proxyUri);
+
+    if (proxyUri == null) {
+      if (clientConfig.maxConnectionsPerDestination == maxConnectionsPerDestination && clientConfig.proxyConfig == null)
+        return clientConfig;
+
+      clientConfig.release();
+      return clientConfig = new ClientConfig(sslContext, maxConnectionsPerDestination, proxyUri);
+    }
+
+    final ProxyConfig proxyConfig;
+    if (clientConfig.maxConnectionsPerDestination == maxConnectionsPerDestination && (proxyConfig = this.clientConfig.proxyConfig) != null && proxyUri.equals(proxyConfig.toString()))
+      return clientConfig;
+
+    return clientConfig = new ClientConfig(sslContext, maxConnectionsPerDestination, proxyUri);
   }
 
   @Override

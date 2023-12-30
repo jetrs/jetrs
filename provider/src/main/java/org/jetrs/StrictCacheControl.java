@@ -214,14 +214,14 @@ class StrictCacheControl extends CacheControl {
       @Override
       boolean parse(final CacheControl cacheControl, final String directive) {
         final int index = directive.indexOf('=');
-        if (index == -1)
+        if (index == -1) {
           cacheControl.getCacheExtension().put(directive, null);
+        }
         else {
           final String key = directive.substring(0, index).trim();
           key.chars().forEach(c -> {
             if (c != '-' && !Character.isLetterOrDigit(c))
               throw new IllegalArgumentException(key);
-
           });
           cacheControl.getCacheExtension().put(key, directive.substring(index + 1).trim());
         }

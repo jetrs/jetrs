@@ -491,7 +491,7 @@ public final class MediaTypes {
     return mediaTypes;
   }
 
-  static final ServerMediaType[] EMPTY_SERVER_TYPE = {};
+  private static final ServerMediaType[] EMPTY_SERVER_TYPE = {};
   private static final QualifiedMediaType[] EMPTY_QUALIFIED_TYPE = {};
   static final MediaType[] EMPTY_MEDIA_TYPE = {};
 
@@ -672,8 +672,9 @@ public final class MediaTypes {
       if (hasEq) {
         final String key = string.substring(start + 1, eq).trim();
         final String value = string.substring(eq + 1, end).trim();
-        if (value.length() > 0)
-          parameters.put(key, value.charAt(0) == '"' && value.charAt(value.length() - 1) == '"' ? value.substring(1, value.length() - 1) : value);
+        final int length = value.length();
+        if (length > 0)
+          parameters.put(key, value.charAt(0) == '"' && value.charAt(length - 1) == '"' ? value.substring(1, length - 1) : value);
       }
     }
     while ((start = end) < len - 1);

@@ -25,9 +25,9 @@ import java.util.Objects;
 import org.libj.lang.Numbers;
 
 class QualifiedCharset extends Charset implements Equatable, Qualified {
-  // FIXME: This is repeated in MessageBodyProvider!
-  private static final QualifiedCharset defaultCharset = new QualifiedCharset(StandardCharsets.UTF_8);
-  private static final QualifiedCharset wildcardCharset = new QualifiedCharset(defaultCharset, "*", null);
+  static final Charset defaultCharset = StandardCharsets.UTF_8;
+  private static final QualifiedCharset defaultQualifiedCharset = new QualifiedCharset(defaultCharset);
+  private static final QualifiedCharset wildcardQualifiedCharset = new QualifiedCharset(defaultQualifiedCharset, "*", null);
 
   static QualifiedCharset valueOf(final String value) {
     final int c = value.indexOf(';');
@@ -68,7 +68,7 @@ class QualifiedCharset extends Charset implements Equatable, Qualified {
   }
 
   QualifiedCharset(final String charsetName, final Float quality) {
-    this("*".equals(charsetName) ? (quality != null ? new QualifiedCharset(defaultCharset, "*", quality) : wildcardCharset) : Charset.isSupported(charsetName) ? Charset.forName(charsetName) : defaultCharset, charsetName, quality);
+    this("*".equals(charsetName) ? (quality != null ? new QualifiedCharset(defaultQualifiedCharset, "*", quality) : wildcardQualifiedCharset) : Charset.isSupported(charsetName) ? Charset.forName(charsetName) : defaultQualifiedCharset, charsetName, quality);
   }
 
   QualifiedCharset(final Charset charset) {

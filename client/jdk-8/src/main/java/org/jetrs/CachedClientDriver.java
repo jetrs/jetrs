@@ -17,53 +17,52 @@
 package org.jetrs;
 
 import java.net.URI;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.function.Consumer;
 
-import javax.net.ssl.SSLContext;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Cookie;
 
-public abstract class CachedClientDriver<C> extends ClientDriver {
-  private final ConcurrentHashMap<SSLContext,C> sslContextToClient = new ConcurrentHashMap<SSLContext,C>() {
+public abstract class CachedClientDriver<C> extends ClientDriver implements Consumer<ClientConfig> {
+  private final ConcurrentHashMap<ClientConfig,C> clientConfigToClient = new ConcurrentHashMap<ClientConfig,C>() {
     @Override
     public C get(final Object key) {
-      SSLContext context = (SSLContext)key;
-      if (context == null) {
-        try {
-          context = SSLContext.getDefault();
-        }
-        catch (final NoSuchAlgorithmException e) {
-          throw new RuntimeException(e);
-        }
-      }
-
-      C httpClient = super.get(context);
-      if (httpClient != null)
-        return httpClient;
+      C client = super.get(key);
+      if (client != null)
+        return client;
 
       synchronized (this) {
-        httpClient = super.get(context);
-        if (httpClient != null)
-          return httpClient;
+        client = super.get(key);
+        if (client != null)
+          return client;
 
-        super.put(context, httpClient = newClient(context));
-        return httpClient;
+        final ClientConfig clientConfig = (ClientConfig)key;
+        super.put(clientConfig, client = newClient(clientConfig));
+        return client;
       }
     }
   };
 
-  abstract C newClient(SSLContext sslContext);
+  CachedClientDriver() {
+    ClientConfig.notifyOnRelease(this);
+  }
+
+  @Override
+  public void accept(final ClientConfig clientConfig) {
+    clientConfigToClient.remove(clientConfig);
+  }
+
+  abstract C newClient(ClientConfig clientConfig);
 
   @Override
   final Invocation build(final ClientImpl client, final ClientRuntimeContext runtimeContext, final URI uri, final String method, final HttpHeadersImpl requestHeaders, final ArrayList<Cookie> cookies, final CacheControl cacheControl, final Entity<?> entity, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final HashMap<String,Object> properties, final long connectTimeout, final long readTimeout) throws Exception {
-    return build(sslContextToClient.get(client.getSslContext()), client, runtimeContext, uri, method, requestHeaders, cookies, cacheControl, entity, executorService, scheduledExecutorService, properties, connectTimeout, readTimeout);
+    return build(clientConfigToClient.get(client.getClientConfig()), client, runtimeContext, uri, method, requestHeaders, cookies, cacheControl, entity, executorService, scheduledExecutorService, properties, connectTimeout, readTimeout);
   }
 
   abstract Invocation build(C httpClient, ClientImpl client, ClientRuntimeContext runtimeContext, URI uri, String method, HttpHeadersImpl requestHeaders, ArrayList<Cookie> cookies, CacheControl cacheControl, Entity<?> entity, ExecutorService executorService, ScheduledExecutorService scheduledExecutorService, HashMap<String,Object> properties, long connectTimeout, long readTimeout) throws Exception;

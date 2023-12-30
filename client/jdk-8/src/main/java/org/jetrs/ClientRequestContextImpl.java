@@ -75,7 +75,7 @@ abstract class ClientRequestContextImpl extends RequestContext<ClientRuntimeCont
 
   final ClientImpl client;
   private final ComponentSet<MessageBodyComponent<WriterInterceptor>> writerInterceptorComponents;
-  final URI uri;
+  private URI uri;
   final String method;
   final HttpHeadersImpl requestHeaders;
   final ArrayList<Cookie> cookies;
@@ -113,6 +113,8 @@ abstract class ClientRequestContextImpl extends RequestContext<ClientRuntimeCont
     this.connectTimeout = connectTimeout;
     this.readTimeout = readTimeout;
   }
+
+  abstract void closeResponse(Exception e);
 
   protected final MessageBodyWriter<?> getMessageBodyWriter() throws ProcessingException {
     MediaType mediaType = getMediaType();
@@ -153,13 +155,12 @@ abstract class ClientRequestContextImpl extends RequestContext<ClientRuntimeCont
 
   @Override
   public URI getUri() {
-    throw new UnsupportedOperationException();
+    return uri;
   }
 
   @Override
   public void setUri(final URI uri) {
-    // TODO: Implement this.
-    throw new UnsupportedOperationException();
+    this.uri = uri;
   }
 
   @Override
@@ -628,14 +629,14 @@ abstract class ClientRequestContextImpl extends RequestContext<ClientRuntimeCont
     @Override
     public CompletionStageRxInvoker rx() {
       // TODO: Implement this.
-      return null;
+      throw new UnsupportedOperationException();
     }
 
     @Override
     @SuppressWarnings("rawtypes")
     public <T extends RxInvoker> T rx(final Class<T> clazz) {
       // TODO: Implement this.
-      return null;
+      throw new UnsupportedOperationException();
     }
 
     @Override

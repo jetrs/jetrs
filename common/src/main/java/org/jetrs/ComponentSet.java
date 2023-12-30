@@ -53,7 +53,7 @@ abstract class ComponentSet<T extends Component<?>> extends SortedSetArrayList<T
       if (clazz.equals(component.clazz)) {
         if (component.isDefaultProvider) {
           if (isDefaultProvider) {
-            if (logger.isDebugEnabled()) { logger.debug("Skipped " + clazz.getName() + ", because a default provider component of class " + component.clazz.getName() + " is already present in this configuration"); } // FIXME: "this configuration"?
+            if (logger.isDebugEnabled()) { logger.debug("Skipped " + clazz.getName() + ", because a default provider component of class " + component.clazz.getName() + " is already present in this configuration"); }
             return true;
           }
 
@@ -63,10 +63,10 @@ abstract class ComponentSet<T extends Component<?>> extends SortedSetArrayList<T
         }
 
         if (isDefaultProvider) {
-          if (logger.isDebugEnabled()) { logger.debug("Skipped " + clazz.getName() + ", because a component of class " + component.clazz.getName() + " is already present in this configuration"); } // FIXME: "this configuration"?
+          if (logger.isDebugEnabled()) { logger.debug("Skipped " + clazz.getName() + ", because a component of class " + component.clazz.getName() + " is already present in this configuration"); }
         }
         else {
-          if (logger.isWarnEnabled()) { logger.warn("Skipped " + clazz.getName() + ", because a component of class " + component.clazz.getName() + " is already present in this configuration"); } // FIXME: "this configuration"?
+          if (logger.isWarnEnabled()) { logger.warn("Skipped " + clazz.getName() + ", because a component of class " + component.clazz.getName() + " is already present in this configuration"); }
         }
 
         return true;

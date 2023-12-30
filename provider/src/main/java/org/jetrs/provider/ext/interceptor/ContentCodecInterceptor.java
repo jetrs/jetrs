@@ -59,6 +59,7 @@ public abstract class ContentCodecInterceptor implements ReaderInterceptor, Writ
    * Creates a new {@link ContentCodecInterceptor} with the supported content encodings.
    *
    * @param supportedEncodings Values of {@code Content-Encoding} header supported by this encoding provider.
+   * @throws IllegalArgumentException If {@code supportedEncodings} is null or empty.
    */
   protected ContentCodecInterceptor(final String ... supportedEncodings) {
     assertNotEmpty(supportedEncodings);
@@ -144,7 +145,7 @@ public abstract class ContentCodecInterceptor implements ReaderInterceptor, Writ
           final MultivaluedMap<String,Object> headers = context.getHeaders();
           headers.putSingle(HttpHeaders.CONTENT_ENCODING, acceptEncoding);
           headers.remove(HttpHeaders.CONTENT_LENGTH);
-          List<Object> vary = headers.get(HttpHeaders.VARY);
+          final List<Object> vary = headers.get(HttpHeaders.VARY);
           if (vary == null)
             headers.putSingle(HttpHeaders.VARY, HttpHeaders.CONTENT_ENCODING);
           else if (!vary.contains(HttpHeaders.CONTENT_ENCODING))

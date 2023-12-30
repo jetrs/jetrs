@@ -54,7 +54,7 @@ public final class EntityUtil {
   private static final int _maxFormKeys = Integer.getInteger(MAX_FORM_KEYS_KEY, DEFAULT_MAX_FORM_KEYS);
   private static final int _maxFormContentSize = Integer.getInteger(MAX_FORM_CONTENT_SIZE_KEY, DEFAULT_MAX_FORM_CONTENT_SIZE);
 
-  static final MultivaluedArrayMap<String,String> EMPTY_MAP = new MultivaluedArrayHashMap<>(0); // FIXME: Make this unmodifiable
+  static final UnmodifiableMultivaluedArrayHashMap<String,String> EMPTY_MAP = new UnmodifiableMultivaluedArrayHashMap<>();
 
   public static Map<String,String[]> toStringArrayMap(final Map<String,List<String>> multiMap) {
     final Map<String,String[]> map = new LinkedHashMap<String,String[]>(multiMap.size() * 3 / 2) {

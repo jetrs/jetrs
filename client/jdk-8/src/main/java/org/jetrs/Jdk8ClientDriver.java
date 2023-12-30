@@ -26,6 +26,7 @@ import java.net.CookieStore;
 import java.net.HttpCookie;
 import java.net.HttpURLConnection;
 import java.net.URI;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -50,7 +51,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.StatusType;
 import javax.ws.rs.ext.MessageBodyWriter;
 
-import org.libj.lang.Systems;
+import org.libj.lang.Booleans;
+import org.libj.lang.Numbers;
 import org.libj.net.URLConnections;
 import org.libj.util.CollectionUtil;
 import org.libj.util.Dates;
@@ -75,6 +77,7 @@ public class Jdk8ClientDriver extends ClientDriver {
   Invocation build(final ClientImpl client, final ClientRuntimeContext runtimeContext, final URI uri, final String method, final HttpHeadersImpl requestHeaders, final ArrayList<Cookie> cookies, final CacheControl cacheControl, final Entity<?> entity, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final HashMap<String,Object> properties, final long connectTimeout, final long readTimeout) throws Exception {
     return new ClientRequestContextImpl(client, runtimeContext, uri, method, requestHeaders, cookies, cacheControl, entity, executorService, scheduledExecutorService, properties, connectTimeout, readTimeout) {
       private final SSLContext sslContext;
+      private InputStream entityStream;
 
       {
         SSLContext sslContext = client.getSslContext();
@@ -154,18 +157,31 @@ public class Jdk8ClientDriver extends ClientDriver {
 
       @Override
       public Response invoke() {
+        final URI uri = getUri();
         try {
           $span(Span.TOTAL, Span.INIT);
 
+          final ProxyConfig proxyConfig = client.getClientConfig().proxyConfig;
+          if (proxyConfig != null)
+            proxyConfig.acquire();
+
           final HttpURLConnection connection;
-          if (Systems.getProperty(ClientProperties.FOLLOW_REDIRECTS, ClientProperties.FOLLOW_REDIRECTS_DEFAULT)) {
-            final int maxRedirects = Systems.getProperty(ClientProperties.MAX_REDIRECTS, ClientProperties.MAX_REDIRECTS_DEFAULT);
-            connection = (HttpURLConnection)URLConnections.checkFollowRedirect(uri.toURL().openConnection(), maxRedirects, this::beforeConnect);
+          final URLConnection urlConnection = proxyConfig != null ? uri.toURL().openConnection(proxyConfig.getProxy()) : uri.toURL().openConnection();
+
+          try {
+            if (Booleans.parseBoolean(client.getProperty(ClientProperties.FOLLOW_REDIRECTS), ClientProperties.FOLLOW_REDIRECTS_DEFAULT)) {
+              final int maxRedirects = Numbers.parseInt(client.getProperty(ClientProperties.MAX_REDIRECTS), ClientProperties.MAX_REDIRECTS_DEFAULT);
+              connection = (HttpURLConnection)URLConnections.checkFollowRedirect(urlConnection, maxRedirects, this::beforeConnect);
+            }
+            else {
+              connection = (HttpURLConnection)urlConnection;
+              connection.setInstanceFollowRedirects(false);
+              beforeConnect(connection);
+            }
           }
-          else {
-            connection = (HttpURLConnection)uri.toURL().openConnection();
-            connection.setInstanceFollowRedirects(false);
-            beforeConnect(connection);
+          finally {
+            if (proxyConfig != null)
+              proxyConfig.release();
           }
 
           final int statusCode = connection.getResponseCode();
@@ -191,7 +207,7 @@ public class Jdk8ClientDriver extends ClientDriver {
           }
 
           final Map<String,NewCookie> cookies;
-          if (Systems.hasProperty(ClientProperties.DISABLE_COOKIES)) {
+          if (client.hasProperty(ClientProperties.DISABLE_COOKIES)) {
             cookies = null;
           }
           else {
@@ -219,7 +235,7 @@ public class Jdk8ClientDriver extends ClientDriver {
           }
 
           $span(Span.RESPONSE_READ);
-          final InputStream entityStream = EntityUtil.makeConsumableNonEmptyOrNull(statusCode < 400 ? connection.getInputStream() : connection.getErrorStream(), true);
+          entityStream = EntityUtil.makeConsumableNonEmptyOrNull(statusCode < 400 ? connection.getInputStream() : connection.getErrorStream(), true);
           if (entityStream != null)
             $span(Span.ENTITY_READ);
 
@@ -234,16 +250,7 @@ public class Jdk8ClientDriver extends ClientDriver {
                 pe = e;
               }
 
-              if (entityStream != null) {
-                $span(Span.ENTITY_READ, Span.TOTAL);
-                try {
-                  entityStream.close();
-                }
-                catch (final IOException e) {
-                  if (pe != null)
-                    pe.addSuppressed(e);
-                }
-              }
+              closeResponse(pe);
 
               connection.disconnect();
               if (pe != null)
@@ -252,13 +259,29 @@ public class Jdk8ClientDriver extends ClientDriver {
           };
         }
         catch (final Exception e) {
-          e.printStackTrace();
+          closeResponse(e);
+
           if (e instanceof ProcessingException)
             throw (ProcessingException)e;
 
           throw new ProcessingException(uri.toString(), e);
         }
       }
+
+      @Override
+      void closeResponse(final Exception e) {
+        if (entityStream != null) {
+          $span(Span.ENTITY_READ, Span.TOTAL);
+          try {
+            entityStream.close();
+          }
+          catch (final IOException e1) {
+            if (e != null)
+              e.addSuppressed(e1);
+          }
+
+          entityStream = null;
+        }
+      }
     };
-  }
-}
+}}

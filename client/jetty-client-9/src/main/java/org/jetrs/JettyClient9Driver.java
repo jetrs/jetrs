@@ -34,7 +34,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import javax.net.ssl.SSLContext;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
@@ -52,21 +51,23 @@ import org.eclipse.jetty.client.util.OutputStreamContentProvider;
 import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
-import org.libj.lang.Systems;
+import org.libj.lang.Booleans;
 import org.libj.util.CollectionUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
+  private static final Logger logger = LoggerFactory.getLogger(JettyClient9Driver.class);
   private static final ThreadLocal<Long> connectTimeoutLocal = new ThreadLocal<>();
-  private static final int maxConnectionsPerDestination = Systems.getProperty(ClientProperties.MAX_CONNECTIONS_PER_DESTINATION, ClientProperties.MAX_CONNECTIONS_PER_DESTINATION_DEFAULT);
 
   @Override
-  HttpClient newClient(final SSLContext sslContext) {
+  HttpClient newClient(final ClientConfig clientConfig) {
     // HTTP2Client h2Client = new HTTP2Client();
     // h2Client.setSelectors(1);
     // HttpClientTransportOverHTTP2 transport = new HttpClientTransportOverHTTP2(h2Client);
 
     final SslContextFactory sslContextFactory = new SslContextFactory.Client();
-    sslContextFactory.setSslContext(sslContext);
+    sslContextFactory.setSslContext(clientConfig.sslContext);
     final HttpClient httpClient = new HttpClient(/* transport, */ sslContextFactory) {
       @Override
       public long getConnectTimeout() {
@@ -74,6 +75,11 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
         return connectTimeout != null ? connectTimeout : super.getConnectTimeout();
       }
     };
+
+    final ProxyConfig proxyConfig = clientConfig.proxyConfig;
+    if (proxyConfig != null) {
+      if (logger.isWarnEnabled()) { logger.warn("Proxy not supported by JettyClient9Driver"); }
+    }
 
     Runtime.getRuntime().addShutdownHook(new Thread() {
       @Override
@@ -83,18 +89,19 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
         }
         catch (final Exception e) {
           e.printStackTrace();
+          System.err.flush();
         }
       }
     });
 
     httpClient.setStopTimeout(0); // NOTE: Deprecated in v10, so set to 0 to disable in v9.
-    httpClient.setMaxConnectionsPerDestination(maxConnectionsPerDestination);
+    httpClient.setMaxConnectionsPerDestination(clientConfig.maxConnectionsPerDestination);
     httpClient.setCookieStore(Jdk8ClientDriver.cookieStore);
     try {
       httpClient.start();
     }
     catch (final Exception e) {
-      throw new ExceptionInInitializerError(e);
+      throw new ExceptionInInitializerError(e); // FIXME: Different exception please.
     }
 
     // Remove Jetty's response handlers, to allow the JAX-RS runtime to handle the raw content.
@@ -109,6 +116,8 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
       connectTimeoutLocal.set(connectTimeout);
 
     return new ClientRequestContextImpl(client, runtimeContext, uri, method, requestHeaders, cookies, cacheControl, entity, executorService, scheduledExecutorService, properties, connectTimeout, readTimeout) {
+      private InputStream entityStream = null;
+
       private void setHeaders(final Request request) {
         // Remove headers that are set by default (unsolicited).
         final HttpFields headers = request.getHeaders();
@@ -128,6 +137,7 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
       @Override
       @SuppressWarnings("rawtypes")
       public Response invoke() {
+        final URI uri = getUri();
         try {
           final long ts = System.currentTimeMillis();
           $span(Span.TOTAL, Span.INIT);
@@ -135,7 +145,7 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
           final Request request = httpClient.newRequest(uri)
             .method(method)
             .timeout(connectTimeout + readTimeout, TimeUnit.MILLISECONDS)
-            .followRedirects(Systems.getProperty(ClientProperties.FOLLOW_REDIRECTS, ClientProperties.FOLLOW_REDIRECTS_DEFAULT));
+            .followRedirects(Booleans.parseBoolean(client.getProperty(ClientProperties.FOLLOW_REDIRECTS), ClientProperties.FOLLOW_REDIRECTS_DEFAULT));
 
           if (cookies != null)
             request.header(HttpHeaders.COOKIE, StrictCookie.toHeader(cookies));
@@ -192,7 +202,7 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
           }
 
           final HashMap<String,NewCookie> cookies;
-          if (Systems.hasProperty(ClientProperties.DISABLE_COOKIES)) {
+          if (client.hasProperty(ClientProperties.DISABLE_COOKIES)) {
             cookies = null;
           }
           else {
@@ -220,7 +230,7 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
           }
 
           $span(Span.RESPONSE_READ);
-          final InputStream entityStream = EntityUtil.makeConsumableNonEmptyOrNull(listener.getInputStream(), true);
+          entityStream = EntityUtil.makeConsumableNonEmptyOrNull(listener.getInputStream(), true);
           if (entityStream != null)
             $span(Span.ENTITY_READ);
 
@@ -235,16 +245,7 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
                 pe = e;
               }
 
-              if (entityStream != null) {
-                $span(Span.ENTITY_READ, Span.TOTAL);
-                try {
-                  entityStream.close();
-                }
-                catch (final IOException e) {
-                  if (pe != null)
-                    pe.addSuppressed(e);
-                }
-              }
+              closeResponse(pe);
 
               if (pe != null)
                 throw pe;
@@ -252,10 +253,28 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
           };
         }
         catch (final Exception e) {
+          closeResponse(e);
+
           if (e instanceof ProcessingException)
             throw (ProcessingException)e;
 
           throw new ProcessingException(uri.toString(), e);
+        }
+      }
+
+      @Override
+      void closeResponse(final Exception e) {
+        if (entityStream != null) {
+          $span(Span.ENTITY_READ, Span.TOTAL);
+          try {
+            entityStream.close();
+          }
+          catch (final IOException e1) {
+            if (e != null)
+              e.addSuppressed(e1);
+          }
+
+          entityStream = null;
         }
       }
     };

@@ -85,7 +85,6 @@ final class HeaderUtil {
     if (builder == null || builder.length() == 0)
       return Numbers.Composite.encode(1f, (short)-1, (short)-1);
 
-    // FIXME: Can we avoid Float.parseFloat?
     final float quality = Float.parseFloat(builder.toString());
     return Numbers.Composite.encode(quality, (short)start, (short)i);
   }
