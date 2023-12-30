@@ -50,8 +50,8 @@ public class Jdk8ClientProxyTest {
   private static final String success = "success";
   private static final Client client = ClientBuilder.newBuilder().build();
 
-//  @ClassRule
-//  public static final SockServerRule sockServerRule = new SockServerRule(proxyPortNoAuth);
+  @ClassRule
+  public static final SockServerRule sockServerRule = new SockServerRule(proxyPortNoAuth);
 
   @ClassRule
   public static final WireMockRule server = new WireMockRule(0);
