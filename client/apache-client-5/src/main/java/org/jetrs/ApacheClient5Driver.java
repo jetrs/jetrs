@@ -56,7 +56,6 @@ import org.apache.hc.client5.http.cookie.BasicCookieStore;
 import org.apache.hc.client5.http.cookie.Cookie;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
-import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
 import org.apache.hc.client5.http.io.ManagedHttpClientConnection;
@@ -141,7 +140,6 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
   CloseableHttpClient newClient(final ClientConfig clientConfig) {
     final SSLConnectionSocketFactoryBuilder sslConnectionSocketFactoryBuilder = SSLConnectionSocketFactoryBuilder.create();
 
-    final HttpClientBuilder clientBuilder = HttpClients.custom();
     final ProxyConfig proxyConfig = clientConfig.proxyConfig;
 
     final PlainConnectionSocketFactory socketFactory;
@@ -168,15 +166,15 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
     }
 
     final PoolingHttpClientConnectionManager connectionManager = buildConnectionManager(socketFactory, sslSocketFactory, null, null, null, null, null, null, null, null, 0, 0);
-    // final PoolingHttpClientConnectionManager connectionManager =
-    // PoolingHttpClientConnectionManagerBuilder.create().setSSLSocketFactory(sslSocketFactory).build();
+    // final PoolingHttpClientConnectionManager connectionManager = PoolingHttpClientConnectionManagerBuilder.create().setSSLSocketFactory(sslSocketFactory).build();
     connectionManager.setDefaultMaxPerRoute(clientConfig.maxConnectionsPerDestination);
     connectionManager.setMaxTotal(Integer.MAX_VALUE); // NOTE: Not supporting this option, because it is not supported by all drivers.
 
-    return clientBuilder
+    return HttpClients.custom()
       .setDefaultCookieStore(cookieStore)
       .setConnectionManager(connectionManager)
       .setConnectionManagerShared(false)
+      .disableAutomaticRetries()
       .evictExpiredConnections()
       .build();
   }
