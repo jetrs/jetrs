@@ -76,13 +76,16 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
     return '\0';
   }
 
-  static void parseMultiHeaderNoSort(final List<String> values, final String headerValue, final char ... delimiters) {
+  static void parseMultiHeaderNoSort(final List<String> values, final String headerValue, final char[] delimiters) {
     char ch = '\0';
     char checkDel = '\0', foundDel = '\0';
     for (int i = 0, start = -1, end = -1, i$ = headerValue.length(); i <= i$; ++i) { // [N]
       if (i == i$ || (checkDel = checkDel(ch = headerValue.charAt(i), delimiters, foundDel)) != '\0') {
         if (foundDel == '\0')
           foundDel = checkDel;
+
+        if (end == -1)
+          return;
 
         values.add(headerValue.substring(start + 1, end + 1));
         end = -1;

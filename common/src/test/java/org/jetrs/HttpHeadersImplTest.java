@@ -1133,10 +1133,10 @@ public class HttpHeadersImplTest extends RuntimeDelegateTest {
 
   @Test
   public void testParseMultiHeaderNoSort() {
-    final String value = "text/html,text/html,application/xhtml+xml,text/html,application/xhtml+xml,application/xml;q=0.9,text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9";
+    final String value = "text/html,text/html,application/xhtml+xml,text/html,application/xhtml+xml,application/xml;q=0.9,text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9,";
     final String[] expected = Strings.split(value, ',');
     final ArrayList<String> values = new ArrayList<>(expected.length);
-    HttpHeadersImpl.parseMultiHeaderNoSort(values, value, ',');
+    HttpHeadersImpl.parseMultiHeaderNoSort(values, value, HttpHeader.comma);
     final String[] actual = values.toArray(new String[values.size()]);
     assertArrayEquals(expected, actual);
   }
