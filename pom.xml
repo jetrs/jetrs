@@ -35,6 +35,9 @@
     Servlet Container. This project was inspired with the goal to create a better, simpler, easier
     to use, reliable, and debuggable JAX-RS implementation using the CohesionFirst approach.
   </description>
+  <properties>
+    <version.jetty>9.4.53.v20231009</version.jetty>
+  </properties>
   <organization>
     <name>JetRS</name>
     <url>https://www.jetrs.org/</url>

@@ -29,9 +29,6 @@
   <description>
     JetRS client implementation utilizing Jetty Client 9 as the underlying driver.
   </description>
-  <properties>
-    <version.jetty>9.4.52.v20230823</version.jetty>
-  </properties>
   <build>
     <plugins>
       <plugin>
