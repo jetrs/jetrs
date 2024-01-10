@@ -34,8 +34,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
 import org.jetrs.MessageBodyProvider;
-import org.libj.util.function.BiObjBiLongConsumer;
-import org.libj.util.function.Throwing;
 
 /**
  * JAX-RS 2.1 Section 4.2.4
@@ -43,7 +41,7 @@ import org.libj.util.function.Throwing;
 @Consumes(MediaType.WILDCARD)
 @Produces(MediaType.WILDCARD)
 public class FileProvider extends MessageBodyProvider<File> {
-  static long writeTo(final Object range, final File file, final OutputStream out, final BiObjBiLongConsumer<? super RandomAccessFile,? super OutputStream> consumer) throws IOException {
+  long writeTo(final String range, final File file, final OutputStream out) throws IOException {
     final String rangeString;
     final int start;
     if (range == null || (rangeString = String.valueOf(range).trim()).length() == 0 || (start = rangeString.indexOf("bytes=")) == -1) {
@@ -56,11 +54,11 @@ public class FileProvider extends MessageBodyProvider<File> {
     }
 
     try (final RandomAccessFile raf = new RandomAccessFile(file, "r")) {
-      return parseRange(rangeString, start + 6, raf, out, consumer);
+      return parseRange(rangeString, start + 6, raf, out);
     }
   }
 
-  private static long parseRange(final String range, int i, final RandomAccessFile raf, final OutputStream out, final BiObjBiLongConsumer<? super RandomAccessFile,? super OutputStream> consumer) {
+  private long parseRange(final String range, int i, final RandomAccessFile raf, final OutputStream out) throws IOException {
     final StringBuilder builder = new StringBuilder();
     long from = Long.MIN_VALUE;
     long to = Long.MAX_VALUE;
@@ -76,7 +74,7 @@ public class FileProvider extends MessageBodyProvider<File> {
         }
 
         if (from <= to && (from != Long.MIN_VALUE || to != Long.MAX_VALUE)) {
-          consumer.accept(raf, out, from, to);
+          write(raf, out, from, to);
           total += to - from;
         }
 
@@ -105,28 +103,20 @@ public class FileProvider extends MessageBodyProvider<File> {
     return total;
   }
 
-  private static final BiObjBiLongConsumer<RandomAccessFile,OutputStream> consumer = new BiObjBiLongConsumer<RandomAccessFile,OutputStream>() {
-    @Override
-    public void accept(final RandomAccessFile raf, final OutputStream out, final long from, final long to) {
-      try {
-        final long len;
-        if (from < 0) {
-          raf.seek(raf.length() + from);
-          len = -from;
-        }
-        else {
-          raf.seek(from);
-          len = to == Long.MAX_VALUE ? raf.length() - from : to;
-        }
-
-        for (int i = 0; i < len; ++i) // [N]
-          out.write(raf.read());
-      }
-      catch (final IOException e) {
-        Throwing.rethrow(e);
-      }
+  protected void write(final RandomAccessFile raf, final OutputStream out, final long from, final long to) throws IOException {
+    final long len;
+    if (from < 0) {
+      raf.seek(raf.length() + from);
+      len = -from;
     }
-  };
+    else {
+      raf.seek(from);
+      len = to == Long.MAX_VALUE ? raf.length() - from : to;
+    }
+
+    for (int i = 0; i < len; ++i) // [N]
+      out.write(raf.read());
+  }
 
   @Context
   private HttpHeaders requestHeaders;
@@ -156,7 +146,7 @@ public class FileProvider extends MessageBodyProvider<File> {
   @Override
   public void writeTo(final File t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,Object> httpHeaders, final OutputStream entityStream) throws IOException {
     final String range = requestHeaders.getRequestHeaders().getFirst("Range");
-    final long contentLength = writeTo(range, t, entityStream, consumer);
-    httpHeaders.putSingle(HttpHeaders.CONTENT_LENGTH, contentLength);
+    writeTo(range, t, entityStream);
+    entityStream.flush();
   }
 }

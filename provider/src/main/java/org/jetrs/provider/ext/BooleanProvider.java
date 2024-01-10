@@ -64,5 +64,6 @@ public class BooleanProvider extends MessageBodyProvider<Boolean> {
     final byte[] bytes = MessageBodyProvider.toBytes(t, mediaType);
     httpHeaders.putSingle(HttpHeaders.CONTENT_LENGTH, bytes.length);
     entityStream.write(bytes);
+    entityStream.flush();
   }
 }

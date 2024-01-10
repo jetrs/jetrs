@@ -66,5 +66,6 @@ public class NumberProvider extends MessageBodyProvider<Number> {
     final byte[] bytes = MessageBodyProvider.toBytes(t, mediaType);
     httpHeaders.putSingle(HttpHeaders.CONTENT_LENGTH, bytes.length);
     entityStream.write(bytes);
+    entityStream.flush();
   }
 }

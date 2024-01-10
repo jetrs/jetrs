@@ -131,5 +131,6 @@ public class DataSourceProvider extends MessageBodyProvider<DataSource> {
   @Override
   public void writeTo(final DataSource dataSource, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,Object> httpHeaders, final OutputStream entityStream) throws IOException {
     Streams.pipe(dataSource.getInputStream(), entityStream);
+    entityStream.flush();
   }
 }

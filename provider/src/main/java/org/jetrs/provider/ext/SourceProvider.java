@@ -16,6 +16,7 @@
 
 package org.jetrs.provider.ext;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
@@ -23,6 +24,7 @@ import java.lang.reflect.Type;
 
 import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
@@ -64,12 +66,13 @@ public class SourceProvider extends MessageBodyProvider<Source> {
   }
 
   @Override
-  public void writeTo(final Source source, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,Object> httpHeaders, final OutputStream entityStream) {
+  public void writeTo(final Source source, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,Object> httpHeaders, final OutputStream entityStream) throws IOException {
     try {
       transformerFactory.newTransformer().transform(source, new StreamResult(entityStream));
+      entityStream.flush();
     }
     catch (final TransformerException e) {
-      throw new IllegalStateException(e);
+      throw new ProcessingException(e);
     }
   }
 }

@@ -80,6 +80,7 @@ public class StringProvider extends MessageBodyProvider<String> {
       final byte[] bytes = t.getBytes(MessageBodyProvider.getCharset(mediaType));
       httpHeaders.putSingle(HttpHeaders.CONTENT_LENGTH, bytes.length);
       entityStream.write(bytes);
+      entityStream.flush();
     }
   }
 }

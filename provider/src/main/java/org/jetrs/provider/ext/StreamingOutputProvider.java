@@ -48,5 +48,6 @@ public class StreamingOutputProvider implements MessageBodyWriter<StreamingOutpu
   @Override
   public void writeTo(final StreamingOutput t, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType, final MultivaluedMap<String,Object> httpHeaders, final OutputStream entityStream) throws IOException, WebApplicationException {
     t.write(entityStream);
+    entityStream.flush();
   }
 }

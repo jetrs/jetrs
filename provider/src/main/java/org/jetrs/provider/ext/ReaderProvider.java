@@ -73,6 +73,7 @@ public class ReaderProvider extends MessageBodyProvider<Reader> {
     try (final InputStream in = new ReaderInputStream(t, charset)) {
       while ((ch = in.read()) != -1) {
         entityStream.write(ch);
+        entityStream.flush();
       }
     }
   }

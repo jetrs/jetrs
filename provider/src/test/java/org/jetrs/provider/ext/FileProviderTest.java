@@ -25,20 +25,15 @@ import java.io.RandomAccessFile;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Test;
-import org.libj.util.function.BiObjBiLongConsumer;
 
 public class FileProviderTest {
   private static final File thisClassResource = new File(FileProviderTest.class.getProtectionDomain().getCodeSource().getLocation().getFile() + "/" + FileProviderTest.class.getName().replace('.', '/').concat(".class"));
 
-  private static void testRange(final long[][] expected, final Object range) throws IOException {
+  private static void testRange(final long[][] expected, final String range) throws IOException {
     final AtomicInteger index = new AtomicInteger();
-    FileProvider.writeTo(range, thisClassResource, new OutputStream() {
+    final FileProvider fileProvider = new FileProvider() {
       @Override
-      public void write(final int b) {
-      }
-    }, new BiObjBiLongConsumer<RandomAccessFile,OutputStream>() {
-      @Override
-      public void accept(final RandomAccessFile raf, final OutputStream out, final long from, final long to) {
+      protected void write(RandomAccessFile raf, OutputStream out, long from, long to) throws IOException {
         final long[] exp = expected[index.getAndIncrement()];
         assertEquals(exp[0], from);
         System.err.print(from);
@@ -48,6 +43,12 @@ public class FileProviderTest {
         }
 
         System.err.println();
+      }
+    };
+
+    fileProvider.writeTo(range, thisClassResource, new OutputStream() {
+      @Override
+      public void write(final int b) {
       }
     });
 
