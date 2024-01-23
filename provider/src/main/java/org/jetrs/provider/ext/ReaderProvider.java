@@ -71,10 +71,10 @@ public class ReaderProvider extends MessageBodyProvider<Reader> {
     final Charset charset = MessageBodyProvider.getCharset(mediaType);
     entityStream.write(String.valueOf(ch).getBytes(charset));
     try (final InputStream in = new ReaderInputStream(t, charset)) {
-      while ((ch = in.read()) != -1) {
+      while ((ch = in.read()) != -1)
         entityStream.write(ch);
-        entityStream.flush();
-      }
+
+      entityStream.flush();
     }
   }
 }
