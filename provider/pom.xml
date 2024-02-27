@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.jetrs</groupId>
     <artifactId>jetrs</artifactId>
-    <version>2.2.0-SNAPSHOT</version>
+    <version>2.2.0</version>
   </parent>
   <artifactId>provider</artifactId>
   <name>JetRS Provider</name>
@@ -45,17 +45,17 @@
     <dependency>
       <groupId>org.openjax</groupId>
       <artifactId>json</artifactId>
-      <version>1.0.0-SNAPSHOT</version>
+      <version>1.0.0</version>
     </dependency>
     <dependency>
       <groupId>org.libj</groupId>
       <artifactId>net</artifactId>
-      <version>0.5.4-SNAPSHOT</version>
+      <version>0.5.4</version>
     </dependency>
     <dependency>
       <groupId>org.openjax.security</groupId>
       <artifactId>cert</artifactId>
-      <version>0.3.5-SNAPSHOT</version>
+      <version>0.3.5</version>
     </dependency>
     <!-- FIXME: This is direct coupling to Jetty. Should the requisite utils simply be copied? -->
     <dependency>
