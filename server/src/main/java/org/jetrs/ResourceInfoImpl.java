@@ -153,16 +153,18 @@ final class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImp
     if (consumesCalled)
       return consumes;
 
+    consumes = getMethodClassAnnotation(Consumes.class);
     consumesCalled = true;
-    return consumes = getMethodClassAnnotation(Consumes.class);
+    return consumes;
   }
 
   Produces getProduces() {
     if (producesCalled)
       return produces;
 
+    produces = getMethodClassAnnotation(Produces.class);
     producesCalled = true;
-    return produces = getMethodClassAnnotation(Produces.class);
+    return produces;
   }
 
   ServerMediaType[] getConsumesMediaTypes() {

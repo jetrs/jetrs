@@ -151,8 +151,8 @@ final class AnnotationUtil {
           hasJaxRsAnnotations = true;
       }
 
-      // [JAX-RS 3.6] If a subclass or implementation method has any JAX-RS annotations then all of the annotations on the superclass or
-      // interface method are ignored.
+      // [JAX-RS 3.6] If a subclass or implementation method has any JAX-RS annotations then
+      // [JAX-RS 3.6] all of the annotations on the superclass or interface method are ignored.
       if (hasJaxRsAnnotations)
         return null;
     }
