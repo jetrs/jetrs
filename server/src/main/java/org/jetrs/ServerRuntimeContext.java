@@ -18,11 +18,15 @@ package org.jetrs;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Enumeration;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Request;
+
+import org.libj.lang.Enumerations;
 
 final class ServerRuntimeContext extends RuntimeContext {
   private final ServletConfig servletConfig;
@@ -59,6 +63,33 @@ final class ServerRuntimeContext extends RuntimeContext {
     return resourceInfos;
   }
 
+  private static final PropertiesAdapter<HttpServletRequest> propertiesAdapter = new PropertiesAdapter<HttpServletRequest>() {
+    @Override
+    Object getProperty(final HttpServletRequest properties, final String name) {
+      return properties.getAttribute(name);
+    }
+
+    @Override
+    Enumeration<String> getPropertyNames(final HttpServletRequest properties) {
+      return properties.getAttributeNames();
+    }
+
+    @Override
+    void setProperty(final HttpServletRequest properties, final String name, final Object value) {
+      properties.setAttribute(name, value);
+    }
+
+    @Override
+    void removeProperty(final HttpServletRequest properties, final String name) {
+      properties.removeAttribute(name);
+    }
+
+    @Override
+    int size(final HttpServletRequest properties) {
+      return Enumerations.getSize(properties.getAttributeNames());
+    }
+  };
+
   private final ThreadLocal<ContainerRequestContextImpl> threadLocalRequestContext = new ThreadLocal<>();
 
   @Override
@@ -67,7 +98,7 @@ final class ServerRuntimeContext extends RuntimeContext {
   }
 
   ContainerRequestContextImpl newRequestContext(final Request request) {
-    final ContainerRequestContextImpl requestContext = new ContainerRequestContextImpl(this, request) {
+    final ContainerRequestContextImpl requestContext = new ContainerRequestContextImpl(propertiesAdapter, this, request) {
       @Override
       public void close() throws IOException {
         threadLocalRequestContext.remove();

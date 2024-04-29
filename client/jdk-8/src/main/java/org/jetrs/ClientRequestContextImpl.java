@@ -70,7 +70,7 @@ import org.libj.util.function.ThrowingSupplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-abstract class ClientRequestContextImpl extends RequestContext<ClientRuntimeContext> implements ClientRequestContext, Invocation, WriterInterceptorContext {
+abstract class ClientRequestContextImpl extends RequestContext<ClientRuntimeContext,HashMap<String,Object>> implements ClientRequestContext, Invocation, WriterInterceptorContext {
   private static final Logger logger = LoggerFactory.getLogger(ClientRequestContextImpl.class);
 
   final ClientImpl client;
@@ -87,7 +87,7 @@ abstract class ClientRequestContextImpl extends RequestContext<ClientRuntimeCont
   final long readTimeout;
 
   ClientRequestContextImpl(final ClientImpl client, final ClientRuntimeContext runtimeContext, final URI uri, final String method, final HttpHeadersImpl requestHeaders, final ArrayList<Cookie> cookies, final CacheControl cacheControl, final Entity<?> entity, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final HashMap<String,Object> properties, final long connectTimeout, final long readTimeout) {
-    super(runtimeContext, new RequestImpl(method));
+    super(PropertiesAdapter.MAP_ADAPTER, runtimeContext, new RequestImpl(method));
     this.client = client;
     this.writerInterceptorComponents = getWriterInterceptorComponents();
     this.uri = uri;
@@ -126,6 +126,11 @@ abstract class ClientRequestContextImpl extends RequestContext<ClientRuntimeCont
       throw new ProcessingException("Could not find MessageBodyWriter for {type=" + getEntityClass().getName() + ", genericType=" + (getGenericType() == null ? "null" : getGenericType().getTypeName()) + ", annotations=" + Arrays.toString(getAnnotations()) + ", mediaType=" + mediaType + "}");
 
     return messageBodyWriter;
+  }
+
+  @Override
+  HashMap<String,Object> getProperties() {
+    return properties;
   }
 
   @Override

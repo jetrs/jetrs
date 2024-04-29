@@ -79,7 +79,7 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
     return str.length() == 0 || (value = str.charAt(0)) < Character.MIN_VALUE || value > Character.MAX_VALUE ? defaultValue : Character.valueOf((char)value);
   }
 
-  private static <T> ParamConverter<T> lookupParamConverter(final ComponentSet<Component<ParamConverterProvider>> paramConverterComponents, final RequestContext<?> requestContext, final Class<T> rawType, final Type genericType, final Annotation[] annotations) throws IOException {
+  private static <T> ParamConverter<T> lookupParamConverter(final ComponentSet<Component<ParamConverterProvider>> paramConverterComponents, final RequestContext<?,?> requestContext, final Class<T> rawType, final Type genericType, final Annotation[] annotations) throws IOException {
     for (int i = 0, i$ = paramConverterComponents.size(); i < i$; ++i) { // [RA]
       final Component<ParamConverterProvider> factory = paramConverterComponents.get(i);
       // FIXME: Is there a way to detect whether the ParamConverterProvider can convert the parameter without instantiating the
@@ -94,7 +94,7 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
 
   // http://download.oracle.com/otn-pub/jcp/jaxrs-2_0_rev_A-mrel-eval-spec/jsr339-jaxrs-2.0-final-spec.pdf Section 3.2
   @SuppressWarnings({"null", "rawtypes", "unchecked"})
-  static Object convertParameter(final Class<?> rawType, Type genericType, final Annotation[] annotations, final ParamPlurality paramPlurality, String firstValue, final List<String> values, final boolean onlyIfEager, final ComponentSet<Component<ParamConverterProvider>> paramConverterComponents, final RequestContext<?> requestContext) throws IOException {
+  static Object convertParameter(final Class<?> rawType, Type genericType, final Annotation[] annotations, final ParamPlurality paramPlurality, String firstValue, final List<String> values, final boolean onlyIfEager, final ComponentSet<Component<ParamConverterProvider>> paramConverterComponents, final RequestContext<?,?> requestContext) throws IOException {
     final int size;
     if (values == null)
       size = firstValue != null ? 1 : 0;

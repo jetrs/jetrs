@@ -197,7 +197,7 @@ abstract class Component<T> {
     }
   }
 
-  final T getSingletonOrFromRequestContext(final RequestContext<?> requestContext) throws IOException {
+  final T getSingletonOrFromRequestContext(final RequestContext<?,?> requestContext) throws IOException {
     if (singleton != null || requestContext == null)
       return singleton;
 

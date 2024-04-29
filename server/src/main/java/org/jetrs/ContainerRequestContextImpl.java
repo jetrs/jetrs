@@ -90,7 +90,7 @@ import org.libj.util.CollectionUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> implements ContainerRequestContext, ReaderInterceptorContext {
+class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext,HttpServletRequest> implements ContainerRequestContext, ReaderInterceptorContext {
   private static final Logger logger = LoggerFactory.getLogger(ContainerRequestContextImpl.class);
 
   enum Stage {
@@ -149,8 +149,8 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> i
 
   private HttpHeadersImpl headers;
 
-  ContainerRequestContextImpl(final ServerRuntimeContext runtimeContext, final Request request) {
-    super(runtimeContext, request);
+  ContainerRequestContextImpl(final PropertiesAdapter<HttpServletRequest> propertiesAdapter, final ServerRuntimeContext runtimeContext, final Request request) {
+    super(propertiesAdapter, runtimeContext, request);
     this.components = runtimeContext.getComponents();
     this.readerInterceptorComponents = getReaderInterceptorComponents();
   }
@@ -159,7 +159,7 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> i
     this.resourceInfos = runtimeContext.getResourceInfos();
     this.httpServletRequest = httpServletRequest;
     this.httpServletResponse = httpServletResponse;
-    this.containerResponseContext = new ContainerResponseContextImpl(httpServletRequest, httpServletResponse, this);
+    this.containerResponseContext = new ContainerResponseContextImpl(propertiesAdapter, httpServletRequest, httpServletResponse, this);
     this.uriInfo = new UriInfoImpl(httpServletRequest, this);
     this.headers = new HttpHeadersImpl(httpServletRequest);
   }
@@ -172,6 +172,11 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext> i
 
   void setStage(final Stage stage) {
     this.stage = stage;
+  }
+
+  @Override
+  HttpServletRequest getProperties() {
+    return httpServletRequest;
   }
 
   @Override

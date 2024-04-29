@@ -40,7 +40,7 @@ final class MessageBodyWriterComponent extends MessageBodyComponent<MessageBodyW
   }
 
   @Override
-  public MediaType[] getCompatibleMediaType(final RequestContext<?> requestContext, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) throws IOException {
+  public MediaType[] getCompatibleMediaType(final RequestContext<?,?> requestContext, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) throws IOException {
     final MediaType[] mediaTypes = super.getCompatibleMediaType(requestContext, type, genericType, annotations, mediaType);
     if (mediaTypes.length == 0)
       return mediaTypes;

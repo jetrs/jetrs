@@ -19,18 +19,25 @@ package org.jetrs;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.util.HashMap;
 
 import javax.ws.rs.ext.ReaderInterceptorContext;
 
-abstract class ReaderInterceptorContextImpl extends InterceptorContextImpl implements ReaderInterceptorContext {
+abstract class ReaderInterceptorContextImpl extends InterceptorContextImpl<HashMap<String,Object>> implements ReaderInterceptorContext {
   private final HttpHeadersImpl headers;
 
   ReaderInterceptorContextImpl(final Class<?> type, final Type genericType, final Annotation[] annotations, final HttpHeadersImpl headers, final InputStream inputStream) {
+    super(PropertiesAdapter.MAP_ADAPTER);
     this.headers = headers;
     setType(type);
     setGenericType(genericType);
     setAnnotations(annotations);
     setInputStream(inputStream);
+  }
+
+  @Override
+  HashMap<String,Object> getProperties() {
+    return null;
   }
 
   @Override

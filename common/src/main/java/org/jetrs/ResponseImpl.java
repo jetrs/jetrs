@@ -47,7 +47,7 @@ import org.jetrs.EntityUtil.ConsumableByteArrayInputStream;
 import org.libj.io.Streams;
 
 class ResponseImpl extends Response {
-  private final RequestContext<?> requestContext;
+  private final RequestContext<?,?> requestContext;
   private final Providers providers;
   private final int statusCode;
   private final Response.StatusType statusInfo;
@@ -59,7 +59,7 @@ class ResponseImpl extends Response {
   final Annotation[] annotations; // FIXME: annotations are not used, but they need to be used by the MessageBodyWriter; there's no API to get them out of this class
   private boolean closed;
 
-  ResponseImpl(final RequestContext<?> requestContext, final int statusCode, final Response.StatusType statusInfo, final HttpHeadersImpl headers, final Map<String,NewCookie> cookies, final Object entity, final Annotation[] annotations) {
+  ResponseImpl(final RequestContext<?,?> requestContext, final int statusCode, final Response.StatusType statusInfo, final HttpHeadersImpl headers, final Map<String,NewCookie> cookies, final Object entity, final Annotation[] annotations) {
     this.requestContext = requestContext;
     this.providers = requestContext.providers;
     this.statusCode = statusCode;

@@ -45,7 +45,7 @@ abstract class MessageBodyComponent<T> extends TypeComponent<T> {
    * @throws NullPointerException If {@code mediaType} is null.
    * @throws IOException If an I/O error has occurred.
    */
-  MediaType[] getCompatibleMediaType(final RequestContext<?> requestContext, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) throws IOException {
+  MediaType[] getCompatibleMediaType(final RequestContext<?,?> requestContext, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) throws IOException {
     return MediaTypes.getCompatible(allowedTypes, mediaType, null);
   }
 }

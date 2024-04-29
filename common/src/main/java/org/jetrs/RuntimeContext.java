@@ -31,7 +31,7 @@ abstract class RuntimeContext {
     return components;
   }
 
-  abstract RequestContext<?> localRequestContext();
+  abstract RequestContext<?,?> localRequestContext();
 
   Configuration getConfiguration() {
     return configuration;

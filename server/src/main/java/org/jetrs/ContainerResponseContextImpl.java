@@ -53,7 +53,7 @@ import org.libj.util.CollectionUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class ContainerResponseContextImpl extends InterceptorContextImpl implements ContainerResponseContext, WriterInterceptorContext {
+class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletRequest> implements ContainerResponseContext, WriterInterceptorContext {
   private static final Logger logger = LoggerFactory.getLogger(ContainerResponseContextImpl.class);
   static final int chunkSize = assertPositive(Systems.getProperty(ServerProperties.CHUNKED_ENCODING_SIZE_SERVER, CommonProperties.CHUNKED_ENCODING_SIZE, CommonProperties.CHUNKED_ENCODING_SIZE_DEFAULT));
   static final int bufferSize = Systems.getProperty(ServerProperties.CONTENT_LENGTH_BUFFER_SERVER, CommonProperties.CONTENT_LENGTH_BUFFER, CommonProperties.CONTENT_LENGTH_BUFFER_DEFAULT);
@@ -83,12 +83,18 @@ class ContainerResponseContextImpl extends InterceptorContextImpl implements Con
   private ContainerRequestContextImpl requestContext;
   private ComponentSet<MessageBodyComponent<WriterInterceptor>> writerInterceptorComponents;
 
-  ContainerResponseContextImpl(final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse, final ContainerRequestContextImpl requestContext) {
+  ContainerResponseContextImpl(final PropertiesAdapter<HttpServletRequest> propertiesAdapter, final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse, final ContainerRequestContextImpl requestContext) {
+    super(propertiesAdapter);
     this.httpServletRequest = httpServletRequest;
     this.headers = new HttpHeadersImpl(httpServletResponse);
     this.status = Responses.from(httpServletResponse.getStatus());
     this.requestContext = requestContext;
     this.writerInterceptorComponents = requestContext.getWriterInterceptorComponents();
+  }
+
+  @Override
+  HttpServletRequest getProperties() {
+    return httpServletRequest;
   }
 
   @Override

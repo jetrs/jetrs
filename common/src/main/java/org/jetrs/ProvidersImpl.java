@@ -32,9 +32,9 @@ import javax.ws.rs.ext.Providers;
 import org.libj.util.CollectionUtil;
 
 final class ProvidersImpl implements Providers {
-  private final RequestContext<?> requestContext;
+  private final RequestContext<?,?> requestContext;
 
-  ProvidersImpl(final RequestContext<?> requestContext) {
+  ProvidersImpl(final RequestContext<?,?> requestContext) {
     this.requestContext = requestContext;
   }
 

@@ -21,21 +21,31 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
+import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.Locale;
 
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.InterceptorContext;
 
-abstract class InterceptorContextImpl implements Closeable, InterceptorContext {
+import org.libj.lang.EnumerationIterator;
+import org.libj.lang.Enumerations;
+import org.libj.util.CollectionUtil;
+
+abstract class InterceptorContextImpl<P> implements Closeable, InterceptorContext {
+  final PropertiesAdapter<P> propertiesAdapter;
+  private Collection<String> propertyNames;
   private Annotation[] annotations;
   private Class<?> type;
   private Type genericType;
-  private HashMap<String,Object> properties;
 
+  InterceptorContextImpl(final PropertiesAdapter<P> propertiesAdapter) {
+    this.propertiesAdapter = propertiesAdapter;
+  }
+
+  abstract P getProperties();
   abstract HttpHeadersImpl getHttpHeaders();
 
   public final String getHeaderString(final String name) {
@@ -52,26 +62,88 @@ abstract class InterceptorContextImpl implements Closeable, InterceptorContext {
 
   @Override
   public final Object getProperty(final String name) {
-    return properties == null ? null : properties.get(name);
+    return propertiesAdapter.getProperty(getProperties(), name);
   }
 
   @Override
   public final Collection<String> getPropertyNames() {
-    return properties == null ? Collections.EMPTY_LIST : properties.keySet();
+    return propertyNames == null ? propertyNames = new Collection<String>() {
+      @Override
+      public boolean add(final String e) {
+        throw new UnsupportedOperationException();
+      }
+
+      @Override
+      public boolean addAll(final Collection<? extends String> c) {
+        throw new UnsupportedOperationException();
+      }
+
+      @Override
+      public void clear() {
+        throw new UnsupportedOperationException();
+      }
+
+      @Override
+      public boolean contains(final Object o) {
+        return o instanceof String && getProperty((String)o) != null;
+      }
+
+      @Override
+      public boolean containsAll(final Collection<?> c) {
+        return CollectionUtil.containsAll(this, c);
+      }
+
+      @Override
+      public Iterator<String> iterator() {
+        return new EnumerationIterator<>(propertiesAdapter.getPropertyNames(getProperties()));
+      }
+
+      @Override
+      public boolean isEmpty() {
+        return size() == 0;
+      }
+
+      @Override
+      public boolean remove(final Object o) {
+        throw new UnsupportedOperationException();
+      }
+
+      @Override
+      public boolean removeAll(final Collection<?> c) {
+        throw new UnsupportedOperationException();
+      }
+
+      @Override
+      public boolean retainAll(final Collection<?> c) {
+        throw new UnsupportedOperationException();
+      }
+
+      @Override
+      public int size() {
+        return propertiesAdapter.size(getProperties());
+      }
+
+      @Override
+      public Object[] toArray() {
+        return Enumerations.toArray(propertiesAdapter.getPropertyNames(getProperties()), String.class);
+      }
+
+      @Override
+      @SuppressWarnings("unchecked")
+      public <T>T[] toArray(final T[] a) {
+        return Enumerations.<T>toArray((Enumeration<T>)propertiesAdapter.getPropertyNames(getProperties()), a);
+      }
+    } : propertyNames;
   }
 
   @Override
   public void setProperty(final String name, final Object object) {
-    if (properties == null)
-      properties = new HashMap<>();
-
-    properties.put(name, object);
+    propertiesAdapter.setProperty(getProperties(), name, object);
   }
 
   @Override
   public void removeProperty(final String name) {
-    if (properties != null)
-      properties.remove(name);
+    propertiesAdapter.removeProperty(getProperties(), name);
   }
 
   @Override
@@ -119,6 +191,5 @@ abstract class InterceptorContextImpl implements Closeable, InterceptorContext {
     annotations = null;
     type = null;
     genericType = null;
-    properties = null;
   }
 }
