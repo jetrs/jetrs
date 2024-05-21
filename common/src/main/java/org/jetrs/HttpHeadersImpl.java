@@ -377,9 +377,9 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
       throw new IllegalStateException("Found multiple header values for " + headerName + " that does not specify a delimiter", e);
     }
 
+    int i = 0;
     final StringBuilder builder = new StringBuilder();
     if (CollectionUtil.isRandomAccess(values)) {
-      int i = 0;
       do { // [RA]
         if (i > 0)
           builder.append(delimiter);
@@ -389,10 +389,9 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
       while (++i < i$);
     }
     else {
-      int i = -1;
       final Iterator<String> it = values.iterator();
-      do { // [RA]
-        if (++i > 0)
+      do { // [I]
+        if (++i > 1)
           builder.append(delimiter);
 
         builder.append(it.next());
