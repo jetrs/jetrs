@@ -87,7 +87,7 @@ public abstract class ResponseTimeoutFilter implements ContainerRequestFilter, C
                 final Object expireTime = requestContext.getProperty(EXPIRE_TIME);
                 if (expireTime == null) {
                   requestContexts.poll();
-                  if (logger.isErrorEnabled()) { logger.error("ResponseTimeoutFilter: Unable to check expire time: " + ObjectUtil.simpleIdentityString(requestContext) + ".getProperty(" + EXPIRE_TIME + ") = null: " + requestContext.getUriInfo().getPath()); }
+                  if (logger.isDebugEnabled()) { logger.debug("ResponseTimeoutFilter: Unable to check expire time: " + ObjectUtil.simpleIdentityString(requestContext) + ".getProperty(" + EXPIRE_TIME + ") = null: " + requestContext.getUriInfo().getPath()); }
                 }
                 else {
                   final long diff = (Long)expireTime - System.currentTimeMillis();

@@ -66,12 +66,12 @@ final class ServerRuntimeContext extends RuntimeContext {
   private static final PropertiesAdapter<HttpServletRequest> propertiesAdapter = new PropertiesAdapter<HttpServletRequest>() {
     @Override
     Object getProperty(final HttpServletRequest properties, final String name) {
-      return properties.getAttribute(name);
+      return properties == null ? null : properties.getAttribute(name);
     }
 
     @Override
     Enumeration<String> getPropertyNames(final HttpServletRequest properties) {
-      return properties.getAttributeNames();
+      return properties == null ? null : properties.getAttributeNames();
     }
 
     @Override

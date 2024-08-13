@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.Iterator;
@@ -32,6 +33,7 @@ import javax.ws.rs.ext.InterceptorContext;
 
 import org.libj.lang.EnumerationIterator;
 import org.libj.lang.Enumerations;
+import org.libj.util.ArrayUtil;
 import org.libj.util.CollectionUtil;
 
 abstract class InterceptorContextImpl<P> implements Closeable, InterceptorContext {
@@ -95,7 +97,8 @@ abstract class InterceptorContextImpl<P> implements Closeable, InterceptorContex
 
       @Override
       public Iterator<String> iterator() {
-        return new EnumerationIterator<>(propertiesAdapter.getPropertyNames(getProperties()));
+        final Enumeration<String> enumeration = propertiesAdapter.getPropertyNames(getProperties());
+        return enumeration == null ? Collections.emptyIterator() : new EnumerationIterator<>(enumeration);
       }
 
       @Override
@@ -125,13 +128,15 @@ abstract class InterceptorContextImpl<P> implements Closeable, InterceptorContex
 
       @Override
       public Object[] toArray() {
-        return Enumerations.toArray(propertiesAdapter.getPropertyNames(getProperties()), String.class);
+        final Enumeration<String> enumeration = propertiesAdapter.getPropertyNames(getProperties());
+        return enumeration == null ? ArrayUtil.EMPTY_ARRAY : Enumerations.toArray(enumeration, String.class);
       }
 
       @Override
       @SuppressWarnings("unchecked")
       public <T>T[] toArray(final T[] a) {
-        return Enumerations.<T>toArray((Enumeration<T>)propertiesAdapter.getPropertyNames(getProperties()), a);
+        final Enumeration<T> enumeration = (Enumeration<T>)propertiesAdapter.getPropertyNames(getProperties());
+        return enumeration == null ? a : Enumerations.<T>toArray(enumeration, a);
       }
     } : propertyNames;
   }
