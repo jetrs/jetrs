@@ -393,10 +393,10 @@ abstract class ClientRequestContextImpl extends RequestContext<ClientRuntimeCont
         throw new TimeoutException(timeout + "ms");
 
       result = resultRef.get();
+      lock.unlock();
+
       if (result == null)
         throw new IllegalStateException();
-
-      lock.unlock();
     }
 
     if (result instanceof Throwable)

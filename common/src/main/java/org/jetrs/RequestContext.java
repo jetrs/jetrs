@@ -120,13 +120,7 @@ abstract class RequestContext<R extends RuntimeContext,P> extends InterceptorCon
     return getHttpHeaders().getCookies();
   }
 
-  private boolean readerInterceptorCalled = false;
-
   final ComponentSet<MessageBodyComponent<ReaderInterceptor>> getReaderInterceptorComponents() {
-    if (readerInterceptorCalled)
-      throw new IllegalStateException();
-
-    readerInterceptorCalled = true;
     return components.getReaderInterceptorComponents();
   }
 

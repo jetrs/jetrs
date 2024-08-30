@@ -93,13 +93,16 @@ class ResponseImpl extends Response {
 
   @Override
   public Object getEntity() {
+    if (!hasEntity)
+      return null;
+
     if (entityObject != null)
       return entityObject;
 
     if (closed && wasEntityConsumed())
       throw new IllegalStateException("Response has been closed");
 
-    return readEntity(InputStream.class);
+    return readEntity(InputStream.class, null, null);
   }
 
   /**
@@ -109,7 +112,7 @@ class ResponseImpl extends Response {
    */
   @Override
   public <T> T readEntity(final Class<T> entityType) throws IllegalStateException, ResponseProcessingException {
-    return readEntity(entityType, null, null);
+    return hasEntity ? readEntity(entityType, null, null) : null;
   }
 
   /**
@@ -120,7 +123,7 @@ class ResponseImpl extends Response {
   @Override
   @SuppressWarnings("unchecked")
   public <T> T readEntity(final GenericType<T> entityType) throws IllegalStateException, ResponseProcessingException {
-    return (T)readEntity(entityType.getRawType(), entityType.getType(), null);
+    return hasEntity ? (T)readEntity(entityType.getRawType(), entityType.getType(), null) : null;
   }
 
   /**
@@ -130,7 +133,7 @@ class ResponseImpl extends Response {
    */
   @Override
   public <T> T readEntity(final Class<T> entityType, final Annotation[] annotations) throws IllegalStateException, ResponseProcessingException {
-    return readEntity(entityType, null, annotations);
+    return hasEntity ? readEntity(entityType, null, annotations) : null;
   }
 
   /**
@@ -141,16 +144,13 @@ class ResponseImpl extends Response {
   @Override
   @SuppressWarnings("unchecked")
   public <T> T readEntity(final GenericType<T> entityType, final Annotation[] annotations) throws IllegalStateException, ResponseProcessingException {
-    return (T)readEntity(entityType.getRawType(), entityType.getType(), annotations);
+    return hasEntity ? (T)readEntity(entityType.getRawType(), entityType.getType(), annotations) : null;
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
   private <T> T readEntity(final Class<T> rawType, final Type genericType, final Annotation[] annotations) throws IllegalStateException, ResponseProcessingException {
     if (providers == null)
       throw new ProcessingException("No providers were registered for required MessageBodyReader for type: " + rawType.getName());
-
-    if (!hasEntity)
-      return null;
 
     if (entityStream == null)
       throw new IllegalStateException("Entity is not backed by an InputStream");
@@ -193,6 +193,7 @@ class ResponseImpl extends Response {
         if (!EntityUtil.validateNotNull(entity, readerInterceptorContext.getAnnotations()))
           throw new BadRequestException("Entity is null");
 
+        entityObject = entity;
         return entity;
       }
     }

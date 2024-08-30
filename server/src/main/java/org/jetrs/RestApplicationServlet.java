@@ -228,9 +228,9 @@ abstract class RestApplicationServlet extends RestHttpServlet {
             throw e;
           }
 
-          if (logger.isInfoEnabled()) {
+          if (logger.isDebugEnabled()) {
             final String message = e.getMessage();
-            logger.info(message != null ? message : "", e);
+            logger.debug(message != null ? message : "", e);
           }
         }
         else if (requestContext.getStage() == Stage.RESPONSE_FILTER) {
