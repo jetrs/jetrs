@@ -19,7 +19,6 @@ package org.jetrs;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Consumer;
@@ -30,7 +29,7 @@ import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Cookie;
 
 public abstract class CachedClientDriver<C> extends ClientDriver implements Consumer<ClientConfig> {
-  private final ConcurrentHashMap<ClientConfig,C> clientConfigToClient = new ConcurrentHashMap<ClientConfig,C>() {
+  private final HashMap<ClientConfig,C> clientConfigToClient = new HashMap<ClientConfig,C>() {
     @Override
     public C get(final Object key) {
       C client = super.get(key);

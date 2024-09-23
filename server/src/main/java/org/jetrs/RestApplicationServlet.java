@@ -129,7 +129,7 @@ abstract class RestApplicationServlet extends RestHttpServlet {
             final Map<String,String[]> parameterMap = getFormParameterMap();
             final Map<String,String[]> queryParameterMap = getQueryParameterMap();
             if (queryParameterMap.size() > 0) {
-              for (final Map.Entry<String,String[]> entry : parameterMap.entrySet()) {
+              for (final Map.Entry<String,String[]> entry : parameterMap.entrySet()) { // [S]
                 final String[] value = queryParameterMap.get(entry.getKey());
                 if (value != null)
                   entry.setValue(ArrayUtil.concat(entry.getValue(), value));

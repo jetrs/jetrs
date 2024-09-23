@@ -61,7 +61,7 @@ class ResponseImpl extends Response {
 
   ResponseImpl(final RequestContext<?,?> requestContext, final int statusCode, final Response.StatusType statusInfo, final HttpHeadersImpl headers, final Map<String,NewCookie> cookies, final Object entity, final Annotation[] annotations) {
     this.requestContext = requestContext;
-    this.providers = requestContext.providers;
+    this.providers = requestContext == null ? null : requestContext.providers;
     this.statusCode = statusCode;
     this.statusInfo = statusInfo;
     this.headers = headers;
@@ -158,7 +158,7 @@ class ResponseImpl extends Response {
     final MediaType mediaType = headers.getMediaType();
     final MessageBodyReader<T> messageBodyReader = providers.getMessageBodyReader(rawType, genericType, annotations, mediaType);
     if (messageBodyReader == null)
-      throw new ProcessingException("Could not find MessageBodyReader for {type=" + rawType.getName() + ", genericType=" + genericType.getTypeName() + ", annotations=" + Arrays.toString(annotations) + ", mediaType=" + mediaType + "}");
+      throw new ProcessingException("Could not find MessageBodyReader for {type=" + rawType.getName() + ", genericType=" + (genericType == null ? "null" : genericType.getTypeName()) + ", annotations=" + Arrays.toString(annotations) + ", mediaType=" + mediaType + "}");
 
     final boolean wasBuffered = wasBuffered();
     if (wasBuffered)

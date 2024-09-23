@@ -116,6 +116,9 @@ public class TestAppServer extends Application implements AutoCloseable {
     }
     catch (final Exception e) {
       close();
+      if (e instanceof RuntimeException)
+        throw (RuntimeException)e;
+
       throw new RuntimeException(e);
     }
   }

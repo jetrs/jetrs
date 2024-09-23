@@ -454,14 +454,15 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
       outputStream = firstOutputStream;
       if (outputStream instanceof RelegateOutputStream) {
         final RelegateOutputStream relegateOutputStream = (RelegateOutputStream)outputStream;
-        final OutputStream target = relegateOutputStream.getTarget();
-        if (target instanceof EntityOutputStream) {
-          final EntityOutputStream entityOutputStream = (EntityOutputStream)target;
-          if (entityOutputStream.getTarget() != null) {
+        final OutputStream relegateOutputStreamTarget = relegateOutputStream.getTarget();
+        if (relegateOutputStreamTarget instanceof EntityOutputStream) {
+          final EntityOutputStream entityOutputStream = (EntityOutputStream)relegateOutputStreamTarget;
+          final OutputStream entityOutputStreamTarget = entityOutputStream.getTarget();
+          if (entityOutputStreamTarget != null) {
             // Means this is being called a 2nd time
             httpServletResponse.reset();
-            if (entityOutputStream.getTarget() instanceof BufferedSocketOutputStream)
-              ((BufferedSocketOutputStream)entityOutputStream.getTarget()).reset();
+            if (entityOutputStreamTarget instanceof BufferedSocketOutputStream)
+              ((BufferedSocketOutputStream)entityOutputStreamTarget).reset();
             else
               entityOutputStream.setTarget(httpServletResponse.getOutputStream());
           }

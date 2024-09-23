@@ -755,6 +755,7 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext,Ht
     return null; // new int[depth];
   }
 
+  @SuppressWarnings("resource")
   private ResourceMatches filterAndMatch(final String requestMethod, final boolean isOverride) {
     final int noResourceInfos = resourceInfos.size();
     if (noResourceInfos == 0)
@@ -1020,7 +1021,7 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext,Ht
   }
 
   @Override
-  public void setEntityStream(InputStream input) {
+  public void setEntityStream(final InputStream input) {
     if (input == null) {
       entityStream = null;
       hasEntity = false;
