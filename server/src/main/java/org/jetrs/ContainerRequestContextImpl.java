@@ -363,11 +363,8 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext,Ht
     if (!(element instanceof Parameter))
       return null;
 
-    MediaType contentType = getMediaType();
-    if (contentType == null)
-      contentType = MediaType.APPLICATION_OCTET_STREAM_TYPE;
-
-    final MessageBodyReader<?> messageBodyReader = providers.getMessageBodyReader(rawType, genericType, annotations, contentType); // [JAX-RS 4.2.1]
+    final MediaType contentType = getContentType();
+    final MessageBodyReader<?> messageBodyReader = providers.getMessageBodyReader(rawType, genericType, annotations, contentType);
     if (messageBodyReader == null)
       throw new WebApplicationException("Could not find MessageBodyReader for {type=" + rawType.getName() + ", genericType=" + genericType.getTypeName() + ", annotations=" + Arrays.toString(annotations) + ", mediaType=" + contentType + "}");
 
@@ -380,7 +377,7 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext,Ht
       return (T)readBody(messageBodyReader);
     }
     catch (final NoContentException e) {
-      throw new BadRequestException(e); // [JAX-RS 4.2.4]
+      throw new BadRequestException(e); // [JAX-RS 2.1 4.2.4]
     }
   }
 
@@ -401,7 +398,7 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext,Ht
     if (headerValue != null && componentTypeMatches(componentType, headerValue))
       return headerObjectValue;
 
-    throw new BadRequestException("Invalid header value: " + headerName + ": " + headerStringValues.get(0)); // [JAX-RS 3.2]
+    throw new BadRequestException("Invalid header value: " + headerName + ": " + headerStringValues.get(0)); // [JAX-RS 2.1 3.2]
   }
 
   @SuppressWarnings("unchecked")
@@ -489,7 +486,7 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext,Ht
       if (converted != null)
         return converted;
 
-      throw new BadRequestException("Invalid header value: " + headerName + ": " + headerStringValues.get(0)); // [JAX-RS 3.2]
+      throw new BadRequestException("Invalid header value: " + headerName + ": " + headerStringValues.get(0)); // [JAX-RS 2.1 3.2]
     }
 
     if (annotationType == FormParam.class) {
@@ -713,13 +710,15 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext,Ht
     if (resourceMatches == null)
       return false;
 
-    if (logger.isWarnEnabled() && resourceMatches.size() > 1 && resourceMatches.get(0).compareTo(resourceMatches.get(1)) == 0) {
-      final StringBuilder builder = new StringBuilder("Multiple resources match ambiguously for request to \"" + httpServletRequest.getRequestURI() + "\": {");
-      for (int i = 0, i$ = resourceMatches.size(); i < i$; ++i) // [RA]
-        builder.append('"').append(resourceMatches.get(i)).append("\", ");
-
-      builder.setCharAt(builder.length() - 1, '}');
-      logger.warn(builder.toString());
+    final int size;
+    final ResourceMatch resourceMatch = resourceMatches.get(0);
+    ResourceMatch resourceMatch1;
+    if (logger.isWarnEnabled() && (size = resourceMatches.size()) > 1 && resourceMatch.compareTo(resourceMatch1 = resourceMatches.get(1)) == 0) {
+      final StringBuilder b = new StringBuilder("Multiple resources match ambiguously for request to: ");
+      getHttpHeaders().toCurlString(b, httpServletRequest.getMethod(), httpServletRequest.getRequestURI(), null);
+      b.append(": [").append(resourceMatch).append(", ").append(resourceMatch1);
+      for (int i = 1; ++i < size && resourceMatch.compareTo(resourceMatch1 = resourceMatches.get(i)) == 0; b.append(", ").append(resourceMatch1)); // [RA]
+      logger.warn(b.append(']').toString());
     }
 
     // FIXME: Note that this code always picks the 1st ResourceMatch.
@@ -753,6 +752,11 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext,Ht
     }
 
     return null; // new int[depth];
+  }
+
+  private MediaType getContentType() {
+    final MediaType contentType = getMediaType();
+    return contentType != null ? contentType : MediaType.APPLICATION_OCTET_STREAM_TYPE; // [JAX-RS 2.1 4.2.1]
   }
 
   @SuppressWarnings("resource")
@@ -801,8 +805,7 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext,Ht
       }
 
       maybeNotSupported = true;
-      final MediaType contentType = getMediaType();
-      if (!resourceInfo.isCompatibleContentType(contentType != null ? contentType : MediaType.APPLICATION_OCTET_STREAM_TYPE)) // [JAX-RS 4.2.1]
+      if (!resourceInfo.isCompatibleContentType(getContentType()))
         continue;
 
       maybeNotAcceptable = true;
@@ -885,7 +888,7 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext,Ht
       containerResponseContext.setAnnotations(resourceInfo.getMethodAnnotations());
       containerResponseContext.setStatusInfo(Response.Status.OK);
     }
-    else { // [JAX-RS 3.3.3]
+    else { // [JAX-RS 2.1 3.3.3]
       containerResponseContext.setStatusInfo(Response.Status.NO_CONTENT);
     }
   }

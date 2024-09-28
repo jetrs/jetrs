@@ -23,6 +23,7 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.Cookie;
+import javax.ws.rs.core.Response;
 
 import org.jetrs.server.app.TestAppServer;
 import org.junit.After;
@@ -38,6 +39,7 @@ abstract class SingleServiceTest {
 
   void startServer(final Class<?> ... classes) {
     server = new TestAppServer(new Object[] {}, classes);
+    System.err.println(Thread.currentThread().getStackTrace()[2].toString());
   }
 
   @After
@@ -54,7 +56,13 @@ abstract class SingleServiceTest {
     for (final Cookie cookie : cookies) // [A]
       builder.cookie(cookie);
 
-    assertEquals(entity, builder.method(method, Entity.text(entity)).readEntity(String.class));
+    System.err.println(builder);
+    Response method2 = builder.method(method, Entity.text(entity));
+    final String content = method2.readEntity(String.class);
+    if (!entity.equals(content))
+      System.err.println(content);
+
+    assertEquals(entity, content);
   }
 
   void assertCookies(final String path, final String method, final String entity, final Cookie ... cookies) {

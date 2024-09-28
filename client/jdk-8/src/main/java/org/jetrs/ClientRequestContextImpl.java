@@ -772,42 +772,12 @@ abstract class ClientRequestContextImpl extends RequestContext<ClientRuntimeCont
 
     @Override
     public String toString() {
-      final StringBuilder str = new StringBuilder();
-      appendHeaders(str, getHeaders());
-      str.append(uri);
-      return str.toString();
-    }
-  }
-
-  private static void appendHeader(final StringBuilder str, final String key, final String value) {
-    str.append("-H '").append(key).append(": ").append(value.replace("'", "\\'")).append("' ");
-  }
-
-  private static void appendHeaders(final StringBuilder str, final HttpHeadersMap<String,Object> headers) {
-    if (headers.size() > 0) {
-      int size;
-      String name;
-      List<String> values;
-      for (final Map.Entry<String,List<String>> entry : headers.entrySet()) { // [S]
-        values = entry.getValue();
-        if (values != null && (size = values.size()) > 0) {
-          name = entry.getKey();
-          for (int i = 0; i < size; ++i) // [RA]
-            appendHeader(str, name, values.get(i));
-        }
-      }
+      return getHeaders().toCurlString(new StringBuilder(), null, uri, null).toString();
     }
   }
 
   @Override
   public String toString() {
-    final StringBuilder str = new StringBuilder();
-    str.append("-X").append(method).append(' ');
-    appendHeaders(str, requestHeaders);
-    if (entity != null)
-      str.append(" -d '").append(entity.toString().replace("'", "\\'")).append("' ");
-
-    str.append(uri);
-    return str.toString();
+    return requestHeaders.toCurlString(new StringBuilder(), method, uri, entity).toString();
   }
 }

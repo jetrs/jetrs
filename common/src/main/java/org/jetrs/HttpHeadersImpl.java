@@ -402,6 +402,38 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
     return builder.toString();
   }
 
+  private static void appendHeader(final StringBuilder str, final String key, final String value) {
+    str.append("-H '").append(key).append(": ").append(value.replace("'", "\\'")).append("' ");
+  }
+
+  private void appendHeaders(final StringBuilder str) {
+    if (size() > 0) {
+      int size;
+      String name;
+      List<String> values;
+      for (final Map.Entry<String,List<String>> entry : entrySet()) { // [S]
+        values = entry.getValue();
+        if (values != null && (size = values.size()) > 0) {
+          name = entry.getKey();
+          for (int i = 0; i < size; ++i) // [RA]
+            appendHeader(str, name, values.get(i));
+        }
+      }
+    }
+  }
+
+  StringBuilder toCurlString(final StringBuilder b, final String method, final Object uri, final Object entity) {
+    b.append("curl ");
+    if (method != null)
+      b.append("-X ").append(method).append(' ');
+
+    appendHeaders(b);
+    if (entity != null)
+      b.append(" -d '").append(entity.toString().replace("'", "\\'")).append("' ");
+
+    return b.append(uri);
+  }
+
   @Override
   public HttpHeadersImpl clone() {
     return (HttpHeadersImpl)super.clone();

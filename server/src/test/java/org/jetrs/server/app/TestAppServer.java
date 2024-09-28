@@ -41,8 +41,8 @@ import org.jetrs.server.app.service.FileUploadService;
 import org.jetrs.server.app.service.FlushResponseService;
 import org.jetrs.server.app.service.RootService1;
 import org.jetrs.server.app.service.RootService2;
+import org.libj.lang.Threads;
 import org.openjax.esc.EmbeddedJetty9;
-import org.openjax.esc.UncaughtServletExceptionHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -96,12 +96,9 @@ public class TestAppServer extends Application implements AutoCloseable {
 
     try {
       this.container = new EmbeddedJetty9.Builder()
-        .withUncaughtServletExceptionHandler(new UncaughtServletExceptionHandler() {
-          @Override
-          public void uncaughtServletException(final ServletRequest request, final ServletResponse response, final Exception e) {
-            final HttpServletRequest httpServletRequest = (HttpServletRequest)request;
-            if (logger.isErrorEnabled()) { logger.error(httpServletRequest.getMethod() + " " + httpServletRequest.getPathInfo(), e); }
-          }
+        .withUncaughtServletExceptionHandler((final ServletRequest request, final ServletResponse response, final Exception e) -> {
+          final HttpServletRequest httpServletRequest = (HttpServletRequest)request;
+          if (logger.isErrorEnabled()) { logger.error(httpServletRequest.getMethod() + " " + httpServletRequest.getPathInfo(), e); }
         })
         .withServletInstances(RuntimeDelegate.getInstance().createEndpoint(this, HttpServlet.class))
         .withFilterClasses()
@@ -109,10 +106,6 @@ public class TestAppServer extends Application implements AutoCloseable {
 
       this.container.start();
       System.err.println("[START] " + getServiceUrl());
-    }
-    catch (final RuntimeException t) {
-      close();
-      throw t;
     }
     catch (final Exception e) {
       close();

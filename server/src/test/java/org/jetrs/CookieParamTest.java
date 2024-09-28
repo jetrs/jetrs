@@ -35,9 +35,17 @@ import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.HttpHeaders;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
+@RunWith(Parameterized.class)
 public class CookieParamTest extends SingleServiceTest {
   private static final String entity = "content";
+
+  @Parameterized.Parameters
+  public static Object[][] data() {
+    return new Object[10][0];
+  }
 
   @Path("/")
   public static class ResourceString {
@@ -74,6 +82,7 @@ public class CookieParamTest extends SingleServiceTest {
   @Path("/")
   public static class ResourceStringEmpty {
     @GET
+    @Produces("application/string")
     public String get(@CookieParam("arg1") final String arg1) {
       assertEquals("", arg1);
       return entity;
@@ -115,7 +124,7 @@ public class CookieParamTest extends SingleServiceTest {
   @Test
   public void testStringEmpty() {
     startServer(ResourceStringEmpty.class);
-    assertCookies("/", HttpMethod.GET, entity, new Cookie("arg1", ""));
+    assertCookies("/", HttpMethod.GET, entity, "application/string", new Cookie("arg1", ""));
   }
 
   @Test
@@ -365,6 +374,7 @@ public class CookieParamTest extends SingleServiceTest {
   @Path("/")
   public static class ResourceStringDefaultOverride {
     @GET
+    @Produces("application/string")
     public String get(@CookieParam("arg1") @DefaultValue("a") final String arg1, @CookieParam("arg2") @DefaultValue("b") final String arg2, @CookieParam("arg3") @DefaultValue("c") final String arg3) {
       assertEquals("d", arg1);
       assertEquals("e", arg2);
@@ -404,7 +414,7 @@ public class CookieParamTest extends SingleServiceTest {
   @Test
   public void testStringDefaultOverride() {
     startServer(ResourceStringDefaultOverride.class);
-    assertCookies("/", HttpMethod.GET, entity, new Cookie("arg1", "d"), new Cookie("arg2", "e"), new Cookie("arg3", "f"));
+    assertCookies("/", HttpMethod.GET, entity, "application/string", new Cookie("arg1", "d"), new Cookie("arg2", "e"), new Cookie("arg3", "f"));
   }
 
   @Test

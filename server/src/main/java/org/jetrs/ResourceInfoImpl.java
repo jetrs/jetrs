@@ -125,6 +125,10 @@ final class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImp
     this.uriTemplate = new UriTemplate(baseUri, classPath, methodPath);
   }
 
+  private String getResourceSignature() {
+    return getResourceClass().getName() + "." + getMethodName() + "(" + ArrayUtil.toString(getMethodParameterTypes(), ',', Class::getName) + ")";
+  }
+
   /**
    * Tests whether the method of the specified resourceInfo contains an entity parameter.
    *
@@ -177,7 +181,7 @@ final class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImp
     }
     else {
       if (!hasEntityParameter())
-        throw new IllegalAnnotationException(annotation, getResourceClass().getName() + "." + getMethodName() + "(" + ArrayUtil.toString(getMethodParameterTypes(), ',', Class::getName) + ") does not specify entity parameters, and thus cannot declare @Consumes annotation");
+        throw new IllegalAnnotationException(annotation, getResourceSignature() + " does not specify entity parameters, and thus cannot declare @Consumes annotation");
 
       consumesMediaTypes = ServerMediaType.valueOf(annotation.value());
     }
@@ -196,7 +200,7 @@ final class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImp
     }
     else {
       if (Void.TYPE.equals(getMethodReturnType()))
-        throw new IllegalAnnotationException(annotation, getResourceClass().getName() + "." + getMethodName() + "(" + ArrayUtil.toString(getMethodParameterTypes(), ',', Class::getName) + ") is void return type, and thus cannot declare @Produces annotation");
+        throw new IllegalAnnotationException(annotation, getResourceSignature() + " is void return type, and thus cannot declare @Produces annotation");
 
       producesMediaTypes = ServerMediaType.valueOf(annotation.value());
     }
@@ -418,6 +422,22 @@ final class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImp
 
   @Override
   public String toString() {
-    return (httpMethod != null ? httpMethod.value() : "*") + " " + uriTemplate;
+    final StringBuilder b = new StringBuilder();
+    b.append("{\n  \"method\": \"").append(httpMethod != null ? httpMethod.value() : "*");
+    b.append("\",\n  \"uri\": \"").append(uriTemplate);
+    b.append("\",\n  \"consumes\": ");
+    if (consumes != null)
+      b.append('"').append(consumes).append('"');
+    else
+      b.append("null");
+
+    b.append(",\n  \"produces\": ");
+    if (produces != null)
+      b.append('"').append(produces).append('"');
+    else
+      b.append("null");
+
+    b.append(",\n  \"resource\": \"").append(getResourceSignature()).append("\"\n}");
+    return b.toString();
   }
 }

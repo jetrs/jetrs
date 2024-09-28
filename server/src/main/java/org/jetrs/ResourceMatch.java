@@ -148,6 +148,6 @@ class ResourceMatch implements Comparable<ResourceMatch> {
 
   @Override
   public String toString() {
-    return String.valueOf(resourceInfo);
+    return resourceInfo.toString();
   }
 }

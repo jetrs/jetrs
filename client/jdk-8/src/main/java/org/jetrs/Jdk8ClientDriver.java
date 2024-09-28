@@ -26,6 +26,7 @@ import java.net.CookieStore;
 import java.net.HttpCookie;
 import java.net.HttpURLConnection;
 import java.net.URI;
+import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Date;
@@ -88,8 +89,9 @@ public class Jdk8ClientDriver extends ClientDriver {
       }
 
       private void setHeaders(final HttpURLConnection connection) {
-        if (requestHeaders.size() == 0)
-          return;
+        // Set Accept header to "*/*", otherwise HttpURLConnection sets it to "text/html, image/gif, image/jpeg, *; q=.2, */*; q=.2"
+        if (!requestHeaders.containsKey(HttpHeaders.ACCEPT))
+          requestHeaders.add(HttpHeaders.ACCEPT, "*/*");
 
         int size;
         String name;
@@ -157,7 +159,6 @@ public class Jdk8ClientDriver extends ClientDriver {
 
       @Override
       public Response invoke() {
-        final URI uri = getUri();
         try {
           $span(Span.TOTAL, Span.INIT);
 
@@ -165,9 +166,10 @@ public class Jdk8ClientDriver extends ClientDriver {
           if (proxyConfig != null)
             proxyConfig.acquire();
 
-          final HttpURLConnection connection;
-          final URLConnection urlConnection = proxyConfig != null ? uri.toURL().openConnection(proxyConfig.getProxy()) : uri.toURL().openConnection();
+          final URL url = getUri().toURL();
+          final URLConnection urlConnection = proxyConfig != null ? url.openConnection(proxyConfig.getProxy()) : url.openConnection();
 
+          final HttpURLConnection connection;
           try {
             if (Booleans.parseBoolean(client.getProperty(ClientProperties.FOLLOW_REDIRECTS), ClientProperties.FOLLOW_REDIRECTS_DEFAULT)) {
               final int maxRedirects = Numbers.parseInt(client.getProperty(ClientProperties.MAX_REDIRECTS), ClientProperties.MAX_REDIRECTS_DEFAULT);
@@ -284,4 +286,5 @@ public class Jdk8ClientDriver extends ClientDriver {
         }
       }
     };
-}}
+  }
+}

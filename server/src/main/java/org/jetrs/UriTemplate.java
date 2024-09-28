@@ -152,7 +152,7 @@ class UriTemplate implements Comparable<UriTemplate> {
   UriTemplate(final String baseUri, final Path classPath, final Path methodPath) {
     final int length = baseUri.length();
     if (length > 0 && (baseUri.charAt(0) != '/' || baseUri.charAt(length - 1) == '/'))
-      throw new IllegalArgumentException("baseUri (" + baseUri + ") be either \"\", or a multi-character string starting with '/' and not ending with '/'");
+      throw new IllegalArgumentException("baseUri (" + baseUri + ") must be either \"\", or a multi-character string starting with '/' and not ending with '/'");
 
     if (classPath == null && methodPath == null)
       throw new IllegalArgumentException("classPath == null && methodPath == null");

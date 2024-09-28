@@ -36,7 +36,7 @@
     to use, reliable, and debuggable JAX-RS implementation using the CohesionFirst approach.
   </description>
   <properties>
-    <version.jetty>9.4.53.v20231009</version.jetty>
+    <version.jetty>9.4.56.v20240826</version.jetty>
   </properties>
   <organization>
     <name>JetRS</name>
@@ -145,17 +145,17 @@
       <dependency>
         <groupId>org.junit.jupiter</groupId>
         <artifactId>junit-jupiter</artifactId>
-        <version>5.10.1</version>
+        <version>5.11.1</version>
       </dependency>
       <dependency>
         <groupId>org.junit.jupiter</groupId>
         <artifactId>junit-jupiter-migrationsupport</artifactId>
-        <version>5.10.1</version>
+        <version>5.11.1</version>
       </dependency>
       <dependency>
         <groupId>org.junit.vintage</groupId>
         <artifactId>junit-vintage-engine</artifactId>
-        <version>5.10.1</version>
+        <version>5.11.1</version>
       </dependency>
       <dependency>
         <groupId>org.mockito</groupId>

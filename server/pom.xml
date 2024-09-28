@@ -27,7 +27,7 @@
   <artifactId>server</artifactId>
   <name>JetRS Server</name>
   <properties>
-    <version.jetty>9.4.53.v20231009</version.jetty>
+    <version.jetty>9.4.56.v20240826</version.jetty>
   </properties>
   <description>
     A fast and lightweight implementation of Java's JAX-RS 2.1 server specification built to run in a servlet container.

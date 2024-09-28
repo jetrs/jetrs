@@ -136,7 +136,7 @@ final class EndpointFactory implements BiFunction<Application,Class<?>,HttpServl
       final int index = serial.getAndIncrement();
       final String className = packageName + "/Endpoint" + index + "Servlet";
       final ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-      classWriter.visit(V1_7,                  // Java 1.7
+      classWriter.visit(V1_8,                  // Java 1.7
         ACC_PUBLIC,                            // public class
         className,                             // package and name
         null,                                  // signature (null means not generic)

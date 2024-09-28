@@ -377,15 +377,10 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
   }
 
   private void flushHeaders(final HttpServletResponse httpServletResponse, final MediaType[] compatibleMediaTypes, final MessageBodyWriter<?> messageBodyWriter, final boolean isException) throws IOException {
-    // [JAX-RS 3.5 and 3.8 9]
+    // [JAX-RS 2.1 3.5 and 3.8 9]
     if (hasEntity() && getMediaType() == null) {
-      MediaType contentType;
-      if (isException)
-        contentType = getMediaType(messageBodyWriter);
-      else
-        contentType = compatibleMediaTypes[0]; // Here we expect at least one MediaType
-
-      if (contentType == null || contentType.isWildcardType()) {
+      MediaType contentType = isException ? getMediaType(messageBodyWriter) : compatibleMediaTypes[0]; // Here we expect at least one MediaType
+      if (contentType == null || contentType.isWildcardSubtype() && (contentType.isWildcardType() || "application".equals(contentType.getType()))) { // [JAX-RS 2.1 3.8 9]
         if (logger.isWarnEnabled()) { logger.warn("Content-Type not specified -- setting to " + MediaType.APPLICATION_OCTET_STREAM); }
         contentType = MediaType.APPLICATION_OCTET_STREAM_TYPE;
       }
