@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Comparator;
 
-import javax.servlet.ServletException;
 import javax.ws.rs.core.MediaType;
 
 import org.libj.net.URLs;
@@ -108,7 +107,7 @@ class ResourceMatch implements Comparable<ResourceMatch> {
     return pathParameters;
   }
 
-  Object service(final ContainerRequestContextImpl requestContext) throws IOException, ServletException {
+  Object service(final ContainerRequestContextImpl requestContext) throws Throwable {
     return resourceInfo.service(this, requestContext);
   }
 

@@ -32,7 +32,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.NotFoundException;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -204,40 +203,41 @@ abstract class RestApplicationServlet extends RestHttpServlet {
         requestContext.setStage(Stage.RESPONSE_WRITE);
         requestContext.writeResponse(null);
       }
-      catch (final EOFException e) {
-        if (logger.isDebugEnabled()) { logger.debug(e.getMessage(), e); }
-      }
-      catch (final Throwable e) {
-        if (!(e instanceof AbortFilterChainException)) {
+      catch (final Throwable t) {
+        if (!(t instanceof AbortFilterChainException)) {
           // FIXME: Review [JAX-RS 2.1 3.3.4 2,3]
           // (4b) Error
           final Response response;
           try {
-            response = requestContext.setErrorResponse(e);
+            response = requestContext.setErrorResponse(t);
           }
-          catch (final RuntimeException e1) {
-            e1.addSuppressed(e);
-            if (!(e1 instanceof WebApplicationException))
-              requestContext.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e1);
-
-            throw e1;
+          catch (final Exception e) {
+            t.addSuppressed(e);
+            requestContext.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, t);
+            throw new ServletException(t);
           }
 
           if (response == null) {
-            requestContext.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e);
-            throw e;
+            if (t instanceof EOFException) {
+              // Special case of [JAX-RS 2.1 3.3.4 3]: Instead of rethrowing EOFException to the container, ignore it.
+              if (logger.isDebugEnabled()) { logger.debug(t.getMessage(), t); }
+              return;
+            }
+
+            requestContext.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, t);
+            throw new ServletException(t);
           }
 
           if (logger.isDebugEnabled()) {
-            final String message = e.getMessage();
-            logger.debug(message != null ? message : "", e);
+            final String message = t.getMessage();
+            logger.debug(message != null ? message : "", t);
           }
         }
         else if (requestContext.getStage() == Stage.RESPONSE_FILTER) {
           throw new IllegalStateException("ContainerRequestContext.abortWith(Response) cannot be called from response filter chain");
         }
         else {
-          requestContext.setAbortResponse((AbortFilterChainException)e);
+          requestContext.setAbortResponse((AbortFilterChainException)t);
         }
 
         try {
@@ -245,29 +245,23 @@ abstract class RestApplicationServlet extends RestHttpServlet {
           requestContext.setStage(Stage.RESPONSE_FILTER);
           requestContext.filterContainerResponse();
         }
-        catch (final IOException | RuntimeException e1) {
-          e.addSuppressed(e1);
+        catch (final Exception e) {
+          t.addSuppressed(e);
+          requestContext.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, t);
+          throw new ServletException(t);
         }
 
         try {
           // (6b) Flush Response
           requestContext.setStage(Stage.RESPONSE_WRITE);
-          requestContext.writeResponse(e);
+          requestContext.writeResponse(t);
         }
-        catch (final IOException | RuntimeException e1) {
-          e.addSuppressed(e1);
-          if (!(e1 instanceof WebApplicationException))
-            requestContext.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e1);
-
-          throw e;
+        catch (final Exception e) {
+          t.addSuppressed(e);
+          requestContext.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, t);
+          throw new ServletException(t);
         }
       }
-    }
-    catch (final Throwable t) {
-      if (t.getCause() instanceof ServletException)
-        throw (ServletException)t.getCause();
-
-      throw t;
     }
   }
 }

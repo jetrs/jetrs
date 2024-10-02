@@ -41,7 +41,6 @@ import java.util.regex.Matcher;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.BadRequestException;
@@ -877,7 +876,7 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext,Ht
     throw new NotAllowedException(Response.status(Response.Status.METHOD_NOT_ALLOWED).allow(maybeNotAllowed).build());
   }
 
-  void service() throws IOException, ServletException {
+  void service() throws Throwable {
     final Object result = resourceMatch.service(this);
 
     if (result instanceof Response) {
@@ -897,15 +896,21 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext,Ht
     setResponse(e.getResponse(), null);
   }
 
-  // [JAX-RS 2.1 3.3.4 1]
+  // [JAX-RS 2.1 3.3.4]
   @SuppressWarnings({"rawtypes", "unchecked"})
   Response setErrorResponse(final Throwable t) {
+    Response response;
+
+    // [1]
+    if (t instanceof WebApplicationException && (response = ((WebApplicationException)t).getResponse()).hasEntity())
+      return setResponse(response, null);
+
     Class cls = t.getClass();
     final Providers providers = this.providers;
     do {
       final ExceptionMapper exceptionMapper = providers.getExceptionMapper(cls);
       if (exceptionMapper != null) {
-        final Response response = exceptionMapper.toResponse(t);
+        response = exceptionMapper.toResponse(t);
         if (response != null)
           return setResponse(response, null);
       }

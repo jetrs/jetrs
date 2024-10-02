@@ -31,6 +31,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.RandomAccess;
 
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.ext.ParamConverter;
 import javax.ws.rs.ext.ParamConverter.Lazy;
@@ -95,737 +96,742 @@ class DefaultParamConverterProvider implements ParamConverterProvider {
   // http://download.oracle.com/otn-pub/jcp/jaxrs-2_0_rev_A-mrel-eval-spec/jsr339-jaxrs-2.0-final-spec.pdf Section 3.2
   @SuppressWarnings({"null", "rawtypes", "unchecked"})
   static Object convertParameter(final Class<?> rawType, Type genericType, final Annotation[] annotations, final ParamPlurality paramPlurality, String firstValue, final List<String> values, final boolean onlyIfEager, final ComponentSet<Component<ParamConverterProvider>> paramConverterComponents, final RequestContext<?,?> requestContext) throws IOException {
-    final int size;
-    if (values == null)
-      size = firstValue != null ? 1 : 0;
-    else if ((size = values.size()) > 0 && firstValue == null)
-      firstValue = values.get(0);
+    try {
+      final int size;
+      if (values == null)
+        size = firstValue != null ? 1 : 0;
+      else if ((size = values.size()) > 0 && firstValue == null)
+        firstValue = values.get(0);
 
-    if (size == 0)
-      return paramPlurality.getNullValue(rawType);
+      if (size == 0)
+        return paramPlurality.getNullValue(rawType);
 
-    Class<?> componentType;
-    if (paramPlurality == ParamPlurality.COLLECTION) {
-      componentType = getGenericClassArgument(genericType);
-      genericType = null;
-    }
-    else if (paramPlurality == ParamPlurality.ARRAY) {
-      componentType = rawType.getComponentType();
-      genericType = null;
-    }
-    else {
-      componentType = rawType;
-    }
-
-    ParamConverter<?> paramConverter = lookupParamConverter(paramConverterComponents, requestContext, componentType, genericType, annotations);
-    if (onlyIfEager && paramConverter != null && AnnotationUtil.isAnnotationPresent(paramConverter.getClass(), Lazy.class))
-      return null;
-
-    if (paramPlurality == ParamPlurality.ARRAY) {
-      if (componentType.isPrimitive()) {
-        if (size == 0)
-          return ParamPlurality.ARRAY.getNullValue(rawType);
-
-        if (componentType == int.class) {
-          final int[] a = new int[size];
-
-          if (size == 1) {
-            a[0] = paramConverter != null ? (Integer)paramConverter.fromString(firstValue) : Numbers.parseInt(firstValue, 0);
-          }
-          else if (paramConverter != null) {
-            int i = 0;
-            if (values instanceof RandomAccess) {
-              do // [RA]
-                a[i] = (Integer)paramConverter.fromString(values.get(i));
-              while (++i < size);
-            }
-            else {
-              final Iterator<String> it = values.iterator();
-              do // [I]
-                a[i++] = (Integer)paramConverter.fromString(it.next());
-              while (it.hasNext());
-            }
-          }
-          else {
-            int i = 0;
-            if (values instanceof RandomAccess) {
-              do // [RA]
-                a[i] = Numbers.parseInt(values.get(i), 0);
-              while (++i < size);
-            }
-            else {
-              final Iterator<String> iterator = values.iterator();
-              do // [I]
-                a[i++] = Numbers.parseInt(iterator.next(), 0);
-              while (iterator.hasNext());
-            }
-          }
-
-          return a;
-        }
-
-        if (componentType == long.class) {
-          final long[] a = new long[size];
-
-          if (size == 1) {
-            a[0] = paramConverter != null ? (Long)paramConverter.fromString(firstValue) : Numbers.parseLong(firstValue, 0L);
-          }
-          else if (paramConverter != null) {
-            int i = 0;
-            if (values instanceof RandomAccess) {
-              do // [RA]
-                a[i] = (Long)paramConverter.fromString(values.get(i));
-              while (++i < size);
-            }
-            else {
-              final Iterator<String> it = values.iterator();
-              do // [I]
-                a[i++] = (Long)paramConverter.fromString(it.next());
-              while (it.hasNext());
-            }
-          }
-          else {
-            int i = 0;
-            if (values instanceof RandomAccess) {
-              do // [RA]
-                a[i] = Numbers.parseLong(values.get(i), 0L);
-              while (++i < size);
-            }
-            else {
-              final Iterator<String> iterator = values.iterator();
-              do // [I]
-                a[i++] = Numbers.parseLong(iterator.next(), 0L);
-              while (iterator.hasNext());
-            }
-          }
-
-          return a;
-        }
-
-        if (componentType == double.class) {
-          final double[] a = new double[size];
-
-          if (size == 1) {
-            a[0] = paramConverter != null ? (Double)paramConverter.fromString(firstValue) : Numbers.parseDouble(firstValue, 0d);
-          }
-          else if (paramConverter != null) {
-            int i = 0;
-            if (values instanceof RandomAccess) {
-              do // [RA]
-                a[i] = (Double)paramConverter.fromString(values.get(i));
-              while (++i < size);
-            }
-            else {
-              final Iterator<String> it = values.iterator();
-              do // [I]
-                a[i++] = (Double)paramConverter.fromString(it.next());
-              while (it.hasNext());
-            }
-          }
-          else {
-            int i = 0;
-            if (values instanceof RandomAccess) {
-              do // [RA]
-                a[i] = Numbers.parseDouble(values.get(i), 0d);
-              while (++i < size);
-            }
-            else {
-              final Iterator<String> iterator = values.iterator();
-              do // [I]
-                a[i++] = Numbers.parseDouble(iterator.next(), 0d);
-              while (iterator.hasNext());
-            }
-          }
-
-          return a;
-        }
-
-        if (componentType == float.class) {
-          final float[] a = new float[size];
-
-          if (size == 1) {
-            a[0] = paramConverter != null ? (Float)paramConverter.fromString(firstValue) : Numbers.parseFloat(firstValue, 0f);
-          }
-          else if (paramConverter != null) {
-            int i = 0;
-            if (values instanceof RandomAccess) {
-              do // [RA]
-                a[i] = (Float)paramConverter.fromString(values.get(i));
-              while (++i < size);
-            }
-            else {
-              final Iterator<String> it = values.iterator();
-              do // [I]
-                a[i++] = (Float)paramConverter.fromString(it.next());
-              while (it.hasNext());
-            }
-          }
-          else {
-            int i = 0;
-            if (values instanceof RandomAccess) {
-              do // [RA]
-                a[i] = Numbers.parseFloat(values.get(i), 0f);
-              while (++i < size);
-            }
-            else {
-              final Iterator<String> iterator = values.iterator();
-              do // [I]
-                a[i++] = Numbers.parseFloat(iterator.next(), 0f);
-              while (iterator.hasNext());
-            }
-          }
-
-          return a;
-        }
-
-        if (componentType == boolean.class) {
-          final boolean[] a = new boolean[size];
-
-          if (size == 1) {
-            a[0] = firstValue == null || paramConverter != null && (Boolean)paramConverter.fromString(firstValue) || Boolean.parseBoolean(firstValue);
-          }
-          else if (paramConverter != null) {
-            int i = 0;
-            if (values instanceof RandomAccess) {
-              do // [RA]
-                a[i] = (Boolean)paramConverter.fromString(values.get(i));
-              while (++i < size);
-            }
-            else {
-              final Iterator<String> it = values.iterator();
-              do // [I]
-                a[i++] = (Boolean)paramConverter.fromString(it.next());
-              while (it.hasNext());
-            }
-          }
-          else {
-            int i = 0;
-            if (values instanceof RandomAccess) {
-              do // [RA]
-                a[i] = Boolean.parseBoolean(values.get(i));
-              while (++i < size);
-            }
-            else {
-              final Iterator<String> iterator = values.iterator();
-              do // [I]
-                a[i++] = Boolean.parseBoolean(iterator.next());
-              while (iterator.hasNext());
-            }
-          }
-
-          return a;
-        }
-
-        if (componentType == byte.class) {
-          final byte[] a = new byte[size];
-
-          if (size == 1) {
-            a[0] = paramConverter != null ? (Byte)paramConverter.fromString(firstValue) : Numbers.parseByte(firstValue, (byte)0);
-          }
-          else if (paramConverter != null) {
-            int i = 0;
-            if (values instanceof RandomAccess) {
-              do // [RA]
-                a[i] = (Byte)paramConverter.fromString(values.get(i));
-              while (++i < size);
-            }
-            else {
-              final Iterator<String> it = values.iterator();
-              do // [I]
-                a[i++] = (Byte)paramConverter.fromString(it.next());
-              while (it.hasNext());
-            }
-          }
-          else {
-            int i = 0;
-            if (values instanceof RandomAccess) {
-              do // [RA]
-                a[i] = Numbers.parseByte(values.get(i), (byte)0);
-              while (++i < size);
-            }
-            else {
-              final Iterator<String> iterator = values.iterator();
-              do // [I]
-                a[i++] = Numbers.parseByte(iterator.next(), (byte)0);
-              while (iterator.hasNext());
-            }
-          }
-
-          return a;
-        }
-
-        if (componentType == char.class) {
-          final char[] a = new char[size];
-
-          if (size == 1) {
-            a[0] = paramConverter != null ? (Character)paramConverter.fromString(firstValue) : parseChar(firstValue);
-          }
-          else if (paramConverter != null) {
-            int i = 0;
-            if (values instanceof RandomAccess) {
-              do // [RA]
-                a[i] = (Character)paramConverter.fromString(values.get(i));
-              while (++i < size);
-            }
-            else {
-              final Iterator<String> it = values.iterator();
-              do // [I]
-                a[i++] = (Character)paramConverter.fromString(it.next());
-              while (it.hasNext());
-            }
-          }
-          else {
-            int i = 0;
-            if (values instanceof RandomAccess) {
-              do // [RA]
-                a[i] = parseChar(values.get(i));
-              while (++i < size);
-            }
-            else {
-              final Iterator<String> iterator = values.iterator();
-              do // [I]
-                a[i++] = parseChar(iterator.next());
-              while (iterator.hasNext());
-            }
-          }
-
-          return a;
-        }
-
-        if (componentType == short.class) {
-          final short[] a = new short[size];
-
-          if (size == 1) {
-            a[0] = paramConverter != null ? (Short)paramConverter.fromString(firstValue) : Numbers.parseShort(firstValue, (short)0);
-          }
-          else if (paramConverter != null) {
-            int i = 0;
-            if (values instanceof RandomAccess) {
-              do // [RA]
-                a[i] = (Short)paramConverter.fromString(values.get(i));
-              while (++i < size);
-            }
-            else {
-              final Iterator<String> it = values.iterator();
-              do // [I]
-                a[i++] = (Short)paramConverter.fromString(it.next());
-              while (it.hasNext());
-            }
-          }
-          else {
-            int i = 0;
-            if (values instanceof RandomAccess) {
-              do // [RA]
-                a[i] = Numbers.parseShort(values.get(i), (short)0);
-              while (++i < size);
-            }
-            else {
-              final Iterator<String> it = values.iterator();
-              do // [I]
-                a[i++] = Numbers.parseShort(it.next(), (short)0);
-              while (it.hasNext());
-            }
-          }
-
-          return a;
-        }
+      Class<?> componentType;
+      if (paramPlurality == ParamPlurality.COLLECTION) {
+        componentType = getGenericClassArgument(genericType);
+        genericType = null;
       }
-    }
+      else if (paramPlurality == ParamPlurality.ARRAY) {
+        componentType = rawType.getComponentType();
+        genericType = null;
+      }
+      else {
+        componentType = rawType;
+      }
 
-    if (paramConverter == null && componentType.isPrimitive()) {
-      componentType = Classes.box(componentType);
-      paramConverter = lookupParamConverter(paramConverterComponents, requestContext, componentType, genericType, annotations);
+      ParamConverter<?> paramConverter = lookupParamConverter(paramConverterComponents, requestContext, componentType, genericType, annotations);
       if (onlyIfEager && paramConverter != null && AnnotationUtil.isAnnotationPresent(paramConverter.getClass(), Lazy.class))
         return null;
-    }
 
-    if (paramConverter != null) {
-      if (paramPlurality == ParamPlurality.SINGLE)
-        return paramConverter.fromString(firstValue);
+      if (paramPlurality == ParamPlurality.ARRAY) {
+        if (componentType.isPrimitive()) {
+          if (size == 0)
+            return ParamPlurality.ARRAY.getNullValue(rawType);
 
-      if (size == 1)
-        return paramPlurality.newSingleton(rawType, paramConverter.fromString(firstValue));
+          if (componentType == int.class) {
+            final int[] a = new int[size];
 
-      if (paramPlurality == ParamPlurality.COLLECTION) {
-        final Collection c = ParamPlurality.COLLECTION.newContainer(rawType, size);
+            if (size == 1) {
+              a[0] = paramConverter != null ? (Integer)paramConverter.fromString(firstValue) : Numbers.parseInt(firstValue, 0);
+            }
+            else if (paramConverter != null) {
+              int i = 0;
+              if (values instanceof RandomAccess) {
+                do // [RA]
+                  a[i] = (Integer)paramConverter.fromString(values.get(i));
+                while (++i < size);
+              }
+              else {
+                final Iterator<String> it = values.iterator();
+                do // [I]
+                  a[i++] = (Integer)paramConverter.fromString(it.next());
+                while (it.hasNext());
+              }
+            }
+            else {
+              int i = 0;
+              if (values instanceof RandomAccess) {
+                do // [RA]
+                  a[i] = Numbers.parseInt(values.get(i), 0);
+                while (++i < size);
+              }
+              else {
+                final Iterator<String> iterator = values.iterator();
+                do // [I]
+                  a[i++] = Numbers.parseInt(iterator.next(), 0);
+                while (iterator.hasNext());
+              }
+            }
+
+            return a;
+          }
+
+          if (componentType == long.class) {
+            final long[] a = new long[size];
+
+            if (size == 1) {
+              a[0] = paramConverter != null ? (Long)paramConverter.fromString(firstValue) : Numbers.parseLong(firstValue, 0L);
+            }
+            else if (paramConverter != null) {
+              int i = 0;
+              if (values instanceof RandomAccess) {
+                do // [RA]
+                  a[i] = (Long)paramConverter.fromString(values.get(i));
+                while (++i < size);
+              }
+              else {
+                final Iterator<String> it = values.iterator();
+                do // [I]
+                  a[i++] = (Long)paramConverter.fromString(it.next());
+                while (it.hasNext());
+              }
+            }
+            else {
+              int i = 0;
+              if (values instanceof RandomAccess) {
+                do // [RA]
+                  a[i] = Numbers.parseLong(values.get(i), 0L);
+                while (++i < size);
+              }
+              else {
+                final Iterator<String> iterator = values.iterator();
+                do // [I]
+                  a[i++] = Numbers.parseLong(iterator.next(), 0L);
+                while (iterator.hasNext());
+              }
+            }
+
+            return a;
+          }
+
+          if (componentType == double.class) {
+            final double[] a = new double[size];
+
+            if (size == 1) {
+              a[0] = paramConverter != null ? (Double)paramConverter.fromString(firstValue) : Numbers.parseDouble(firstValue, 0d);
+            }
+            else if (paramConverter != null) {
+              int i = 0;
+              if (values instanceof RandomAccess) {
+                do // [RA]
+                  a[i] = (Double)paramConverter.fromString(values.get(i));
+                while (++i < size);
+              }
+              else {
+                final Iterator<String> it = values.iterator();
+                do // [I]
+                  a[i++] = (Double)paramConverter.fromString(it.next());
+                while (it.hasNext());
+              }
+            }
+            else {
+              int i = 0;
+              if (values instanceof RandomAccess) {
+                do // [RA]
+                  a[i] = Numbers.parseDouble(values.get(i), 0d);
+                while (++i < size);
+              }
+              else {
+                final Iterator<String> iterator = values.iterator();
+                do // [I]
+                  a[i++] = Numbers.parseDouble(iterator.next(), 0d);
+                while (iterator.hasNext());
+              }
+            }
+
+            return a;
+          }
+
+          if (componentType == float.class) {
+            final float[] a = new float[size];
+
+            if (size == 1) {
+              a[0] = paramConverter != null ? (Float)paramConverter.fromString(firstValue) : Numbers.parseFloat(firstValue, 0f);
+            }
+            else if (paramConverter != null) {
+              int i = 0;
+              if (values instanceof RandomAccess) {
+                do // [RA]
+                  a[i] = (Float)paramConverter.fromString(values.get(i));
+                while (++i < size);
+              }
+              else {
+                final Iterator<String> it = values.iterator();
+                do // [I]
+                  a[i++] = (Float)paramConverter.fromString(it.next());
+                while (it.hasNext());
+              }
+            }
+            else {
+              int i = 0;
+              if (values instanceof RandomAccess) {
+                do // [RA]
+                  a[i] = Numbers.parseFloat(values.get(i), 0f);
+                while (++i < size);
+              }
+              else {
+                final Iterator<String> iterator = values.iterator();
+                do // [I]
+                  a[i++] = Numbers.parseFloat(iterator.next(), 0f);
+                while (iterator.hasNext());
+              }
+            }
+
+            return a;
+          }
+
+          if (componentType == boolean.class) {
+            final boolean[] a = new boolean[size];
+
+            if (size == 1) {
+              a[0] = firstValue == null || paramConverter != null && (Boolean)paramConverter.fromString(firstValue) || Boolean.parseBoolean(firstValue);
+            }
+            else if (paramConverter != null) {
+              int i = 0;
+              if (values instanceof RandomAccess) {
+                do // [RA]
+                  a[i] = (Boolean)paramConverter.fromString(values.get(i));
+                while (++i < size);
+              }
+              else {
+                final Iterator<String> it = values.iterator();
+                do // [I]
+                  a[i++] = (Boolean)paramConverter.fromString(it.next());
+                while (it.hasNext());
+              }
+            }
+            else {
+              int i = 0;
+              if (values instanceof RandomAccess) {
+                do // [RA]
+                  a[i] = Boolean.parseBoolean(values.get(i));
+                while (++i < size);
+              }
+              else {
+                final Iterator<String> iterator = values.iterator();
+                do // [I]
+                  a[i++] = Boolean.parseBoolean(iterator.next());
+                while (iterator.hasNext());
+              }
+            }
+
+            return a;
+          }
+
+          if (componentType == byte.class) {
+            final byte[] a = new byte[size];
+
+            if (size == 1) {
+              a[0] = paramConverter != null ? (Byte)paramConverter.fromString(firstValue) : Numbers.parseByte(firstValue, (byte)0);
+            }
+            else if (paramConverter != null) {
+              int i = 0;
+              if (values instanceof RandomAccess) {
+                do // [RA]
+                  a[i] = (Byte)paramConverter.fromString(values.get(i));
+                while (++i < size);
+              }
+              else {
+                final Iterator<String> it = values.iterator();
+                do // [I]
+                  a[i++] = (Byte)paramConverter.fromString(it.next());
+                while (it.hasNext());
+              }
+            }
+            else {
+              int i = 0;
+              if (values instanceof RandomAccess) {
+                do // [RA]
+                  a[i] = Numbers.parseByte(values.get(i), (byte)0);
+                while (++i < size);
+              }
+              else {
+                final Iterator<String> iterator = values.iterator();
+                do // [I]
+                  a[i++] = Numbers.parseByte(iterator.next(), (byte)0);
+                while (iterator.hasNext());
+              }
+            }
+
+            return a;
+          }
+
+          if (componentType == char.class) {
+            final char[] a = new char[size];
+
+            if (size == 1) {
+              a[0] = paramConverter != null ? (Character)paramConverter.fromString(firstValue) : parseChar(firstValue);
+            }
+            else if (paramConverter != null) {
+              int i = 0;
+              if (values instanceof RandomAccess) {
+                do // [RA]
+                  a[i] = (Character)paramConverter.fromString(values.get(i));
+                while (++i < size);
+              }
+              else {
+                final Iterator<String> it = values.iterator();
+                do // [I]
+                  a[i++] = (Character)paramConverter.fromString(it.next());
+                while (it.hasNext());
+              }
+            }
+            else {
+              int i = 0;
+              if (values instanceof RandomAccess) {
+                do // [RA]
+                  a[i] = parseChar(values.get(i));
+                while (++i < size);
+              }
+              else {
+                final Iterator<String> iterator = values.iterator();
+                do // [I]
+                  a[i++] = parseChar(iterator.next());
+                while (iterator.hasNext());
+              }
+            }
+
+            return a;
+          }
+
+          if (componentType == short.class) {
+            final short[] a = new short[size];
+
+            if (size == 1) {
+              a[0] = paramConverter != null ? (Short)paramConverter.fromString(firstValue) : Numbers.parseShort(firstValue, (short)0);
+            }
+            else if (paramConverter != null) {
+              int i = 0;
+              if (values instanceof RandomAccess) {
+                do // [RA]
+                  a[i] = (Short)paramConverter.fromString(values.get(i));
+                while (++i < size);
+              }
+              else {
+                final Iterator<String> it = values.iterator();
+                do // [I]
+                  a[i++] = (Short)paramConverter.fromString(it.next());
+                while (it.hasNext());
+              }
+            }
+            else {
+              int i = 0;
+              if (values instanceof RandomAccess) {
+                do // [RA]
+                  a[i] = Numbers.parseShort(values.get(i), (short)0);
+                while (++i < size);
+              }
+              else {
+                final Iterator<String> it = values.iterator();
+                do // [I]
+                  a[i++] = Numbers.parseShort(it.next(), (short)0);
+                while (it.hasNext());
+              }
+            }
+
+            return a;
+          }
+        }
+      }
+
+      if (paramConverter == null && componentType.isPrimitive()) {
+        componentType = Classes.box(componentType);
+        paramConverter = lookupParamConverter(paramConverterComponents, requestContext, componentType, genericType, annotations);
+        if (onlyIfEager && paramConverter != null && AnnotationUtil.isAnnotationPresent(paramConverter.getClass(), Lazy.class))
+          return null;
+      }
+
+      if (paramConverter != null) {
+        if (paramPlurality == ParamPlurality.SINGLE)
+          return paramConverter.fromString(firstValue);
+
+        if (size == 1)
+          return paramPlurality.newSingleton(rawType, paramConverter.fromString(firstValue));
+
+        if (paramPlurality == ParamPlurality.COLLECTION) {
+          final Collection c = ParamPlurality.COLLECTION.newContainer(rawType, size);
+          if (values instanceof RandomAccess) {
+            int i = 0;
+            do // [RA]
+              c.add(paramConverter.fromString(values.get(i)));
+            while (++i < size);
+          }
+          else {
+            final Iterator<String> it = values.iterator();
+            do // [I]
+              c.add(paramConverter.fromString(it.next()));
+            while (it.hasNext());
+          }
+
+          return c;
+        }
+
+        final Object[] a = ParamPlurality.ARRAY.newContainer(rawType, size);
+        int i = 0;
         if (values instanceof RandomAccess) {
-          int i = 0;
           do // [RA]
-            c.add(paramConverter.fromString(values.get(i)));
+            a[i] = paramConverter.fromString(values.get(i));
           while (++i < size);
         }
         else {
           final Iterator<String> it = values.iterator();
           do // [I]
-            c.add(paramConverter.fromString(it.next()));
+            a[i++] = paramConverter.fromString(it.next());
           while (it.hasNext());
         }
 
-        return c;
+        return a;
       }
 
-      final Object[] a = ParamPlurality.ARRAY.newContainer(rawType, size);
-      int i = 0;
-      if (values instanceof RandomAccess) {
-        do // [RA]
-          a[i] = paramConverter.fromString(values.get(i));
-        while (++i < size);
-      }
-      else {
-        final Iterator<String> it = values.iterator();
-        do // [I]
-          a[i++] = paramConverter.fromString(it.next());
-        while (it.hasNext());
-      }
+      if (componentType == Integer.class) {
+        final Integer defaultValue = rawType.isPrimitive() ? 0 : null;
+        if (paramPlurality == ParamPlurality.SINGLE)
+          return Numbers.parseInteger(firstValue, defaultValue);
 
-      return a;
-    }
+        if (size == 1)
+          return paramPlurality.newSingleton(rawType, Numbers.parseInteger(firstValue, defaultValue));
 
-    if (componentType == Integer.class) {
-      final Integer defaultValue = rawType.isPrimitive() ? 0 : null;
-      if (paramPlurality == ParamPlurality.SINGLE)
-        return Numbers.parseInteger(firstValue, defaultValue);
+        if (paramPlurality == ParamPlurality.COLLECTION) {
+          final Collection c = ParamPlurality.COLLECTION.newContainer(rawType, size);
+          if (values instanceof RandomAccess) {
+            int i = 0;
+            do // [RA]
+              c.add(Numbers.parseInteger(values.get(i), defaultValue));
+            while (++i < size);
+          }
+          else {
+            final Iterator<String> it = values.iterator();
+            do // [I]
+              c.add(Numbers.parseInteger(it.next(), defaultValue));
+            while (it.hasNext());
+          }
 
-      if (size == 1)
-        return paramPlurality.newSingleton(rawType, Numbers.parseInteger(firstValue, defaultValue));
+          return c;
+        }
 
-      if (paramPlurality == ParamPlurality.COLLECTION) {
-        final Collection c = ParamPlurality.COLLECTION.newContainer(rawType, size);
+        final Object[] a = ParamPlurality.ARRAY.newContainer(rawType, size);
+        int i = 0;
         if (values instanceof RandomAccess) {
-          int i = 0;
           do // [RA]
-            c.add(Numbers.parseInteger(values.get(i), defaultValue));
+            a[i] = Numbers.parseInteger(values.get(i), defaultValue);
           while (++i < size);
         }
         else {
           final Iterator<String> it = values.iterator();
           do // [I]
-            c.add(Numbers.parseInteger(it.next(), defaultValue));
+            a[i++] = Numbers.parseInteger(it.next(), defaultValue);
           while (it.hasNext());
         }
 
-        return c;
+        return a;
       }
 
-      final Object[] a = ParamPlurality.ARRAY.newContainer(rawType, size);
-      int i = 0;
-      if (values instanceof RandomAccess) {
-        do // [RA]
-          a[i] = Numbers.parseInteger(values.get(i), defaultValue);
-        while (++i < size);
-      }
-      else {
-        final Iterator<String> it = values.iterator();
-        do // [I]
-          a[i++] = Numbers.parseInteger(it.next(), defaultValue);
-        while (it.hasNext());
-      }
+      if (componentType == Long.class) {
+        final Long defaultValue = rawType.isPrimitive() ? 0L : null;
+        if (paramPlurality == ParamPlurality.SINGLE)
+          return Numbers.parseLong(firstValue);
 
-      return a;
-    }
+        if (size == 1)
+          return paramPlurality.newSingleton(rawType, Numbers.parseLong(firstValue, defaultValue));
 
-    if (componentType == Long.class) {
-      final Long defaultValue = rawType.isPrimitive() ? 0L : null;
-      if (paramPlurality == ParamPlurality.SINGLE)
-        return Numbers.parseLong(firstValue);
+        if (paramPlurality == ParamPlurality.COLLECTION) {
+          final Collection c = ParamPlurality.COLLECTION.newContainer(rawType, size);
+          if (values instanceof RandomAccess) {
+            int i = 0;
+            do // [RA]
+              c.add(Numbers.parseLong(values.get(i), defaultValue));
+            while (++i < size);
+          }
+          else {
+            final Iterator<String> it = values.iterator();
+            do // [I]
+              c.add(Numbers.parseLong(it.next(), defaultValue));
+            while (it.hasNext());
+          }
 
-      if (size == 1)
-        return paramPlurality.newSingleton(rawType, Numbers.parseLong(firstValue, defaultValue));
+          return c;
+        }
 
-      if (paramPlurality == ParamPlurality.COLLECTION) {
-        final Collection c = ParamPlurality.COLLECTION.newContainer(rawType, size);
+        final Object[] a = ParamPlurality.ARRAY.newContainer(rawType, size);
+        int i = 0;
         if (values instanceof RandomAccess) {
-          int i = 0;
           do // [RA]
-            c.add(Numbers.parseLong(values.get(i), defaultValue));
+            a[i] = Numbers.parseLong(values.get(i), defaultValue);
           while (++i < size);
         }
         else {
           final Iterator<String> it = values.iterator();
           do // [I]
-            c.add(Numbers.parseLong(it.next(), defaultValue));
+            a[i++] = Numbers.parseLong(it.next(), defaultValue);
           while (it.hasNext());
         }
 
-        return c;
+        return a;
       }
 
-      final Object[] a = ParamPlurality.ARRAY.newContainer(rawType, size);
-      int i = 0;
-      if (values instanceof RandomAccess) {
-        do // [RA]
-          a[i] = Numbers.parseLong(values.get(i), defaultValue);
-        while (++i < size);
-      }
-      else {
-        final Iterator<String> it = values.iterator();
-        do // [I]
-          a[i++] = Numbers.parseLong(it.next(), defaultValue);
-        while (it.hasNext());
-      }
+      if (componentType == Double.class) {
+        final Double defaultValue = rawType.isPrimitive() ? 0d : null;
+        if (paramPlurality == ParamPlurality.SINGLE)
+          return Numbers.parseDouble(firstValue, defaultValue);
 
-      return a;
-    }
+        if (size == 1)
+          return paramPlurality.newSingleton(rawType, Numbers.parseDouble(firstValue, defaultValue));
 
-    if (componentType == Double.class) {
-      final Double defaultValue = rawType.isPrimitive() ? 0d : null;
-      if (paramPlurality == ParamPlurality.SINGLE)
-        return Numbers.parseDouble(firstValue, defaultValue);
+        if (paramPlurality == ParamPlurality.COLLECTION) {
+          final Collection c = ParamPlurality.COLLECTION.newContainer(rawType, size);
+          if (values instanceof RandomAccess) {
+            int i = 0;
+            do // [RA]
+              c.add(Numbers.parseDouble(values.get(i), defaultValue));
+            while (++i < size);
+          }
+          else {
+            final Iterator<String> it = values.iterator();
+            do // [I]
+              c.add(Numbers.parseDouble(it.next(), defaultValue));
+            while (it.hasNext());
+          }
 
-      if (size == 1)
-        return paramPlurality.newSingleton(rawType, Numbers.parseDouble(firstValue, defaultValue));
+          return c;
+        }
 
-      if (paramPlurality == ParamPlurality.COLLECTION) {
-        final Collection c = ParamPlurality.COLLECTION.newContainer(rawType, size);
+        final Object[] a = ParamPlurality.ARRAY.newContainer(rawType, size);
+        int i = 0;
         if (values instanceof RandomAccess) {
-          int i = 0;
           do // [RA]
-            c.add(Numbers.parseDouble(values.get(i), defaultValue));
+            a[i] = Numbers.parseDouble(values.get(i), defaultValue);
           while (++i < size);
         }
         else {
           final Iterator<String> it = values.iterator();
           do // [I]
-            c.add(Numbers.parseDouble(it.next(), defaultValue));
+            a[i++] = Numbers.parseDouble(it.next(), defaultValue);
           while (it.hasNext());
         }
 
-        return c;
+        return a;
       }
 
-      final Object[] a = ParamPlurality.ARRAY.newContainer(rawType, size);
-      int i = 0;
-      if (values instanceof RandomAccess) {
-        do // [RA]
-          a[i] = Numbers.parseDouble(values.get(i), defaultValue);
-        while (++i < size);
-      }
-      else {
-        final Iterator<String> it = values.iterator();
-        do // [I]
-          a[i++] = Numbers.parseDouble(it.next(), defaultValue);
-        while (it.hasNext());
-      }
+      if (componentType == Float.class) {
+        final Float defaultValue = rawType.isPrimitive() ? 0f : null;
+        if (paramPlurality == ParamPlurality.SINGLE)
+          return Numbers.parseFloat(firstValue, defaultValue);
 
-      return a;
-    }
+        if (size == 1)
+          return paramPlurality.newSingleton(rawType, Numbers.parseFloat(firstValue, defaultValue));
 
-    if (componentType == Float.class) {
-      final Float defaultValue = rawType.isPrimitive() ? 0f : null;
-      if (paramPlurality == ParamPlurality.SINGLE)
-        return Numbers.parseFloat(firstValue, defaultValue);
+        if (paramPlurality == ParamPlurality.COLLECTION) {
+          final Collection c = ParamPlurality.COLLECTION.newContainer(rawType, size);
+          if (values instanceof RandomAccess) {
+            int i = 0;
+            do // [RA]
+              c.add(Numbers.parseFloat(values.get(i), defaultValue));
+            while (++i < size);
+          }
+          else {
+            final Iterator<String> it = values.iterator();
+            do // [I]
+              c.add(Numbers.parseFloat(it.next(), defaultValue));
+            while (it.hasNext());
+          }
 
-      if (size == 1)
-        return paramPlurality.newSingleton(rawType, Numbers.parseFloat(firstValue, defaultValue));
+          return c;
+        }
 
-      if (paramPlurality == ParamPlurality.COLLECTION) {
-        final Collection c = ParamPlurality.COLLECTION.newContainer(rawType, size);
+        final Object[] a = ParamPlurality.ARRAY.newContainer(rawType, size);
+        int i = 0;
         if (values instanceof RandomAccess) {
-          int i = 0;
           do // [RA]
-            c.add(Numbers.parseFloat(values.get(i), defaultValue));
+            a[i] = Numbers.parseFloat(values.get(i), defaultValue);
           while (++i < size);
         }
         else {
           final Iterator<String> it = values.iterator();
           do // [I]
-            c.add(Numbers.parseFloat(it.next(), defaultValue));
+            a[i++] = Numbers.parseFloat(it.next(), defaultValue);
           while (it.hasNext());
         }
 
-        return c;
+        return a;
       }
 
-      final Object[] a = ParamPlurality.ARRAY.newContainer(rawType, size);
-      int i = 0;
-      if (values instanceof RandomAccess) {
-        do // [RA]
-          a[i] = Numbers.parseFloat(values.get(i), defaultValue);
-        while (++i < size);
-      }
-      else {
-        final Iterator<String> it = values.iterator();
-        do // [I]
-          a[i++] = Numbers.parseFloat(it.next(), defaultValue);
-        while (it.hasNext());
-      }
+      if (componentType == Boolean.class) {
+        final Boolean defaultValue = rawType.isPrimitive() ? Boolean.FALSE : null;
+        if (paramPlurality == ParamPlurality.SINGLE)
+          return parseBoolean(firstValue, defaultValue);
 
-      return a;
-    }
+        if (size == 1)
+          return paramPlurality.newSingleton(rawType, parseBoolean(firstValue, defaultValue));
 
-    if (componentType == Boolean.class) {
-      final Boolean defaultValue = rawType.isPrimitive() ? Boolean.FALSE : null;
-      if (paramPlurality == ParamPlurality.SINGLE)
-        return parseBoolean(firstValue, defaultValue);
+        if (paramPlurality == ParamPlurality.COLLECTION) {
+          final Collection c = ParamPlurality.COLLECTION.newContainer(rawType, size);
+          if (values instanceof RandomAccess) {
+            int i = 0;
+            do // [RA]
+              c.add(parseBoolean(values.get(i), defaultValue));
+            while (++i < size);
+          }
+          else {
+            final Iterator<String> it = values.iterator();
+            do // [I]
+              c.add(parseBoolean(it.next(), defaultValue));
+            while (it.hasNext());
+          }
 
-      if (size == 1)
-        return paramPlurality.newSingleton(rawType, parseBoolean(firstValue, defaultValue));
+          return c;
+        }
 
-      if (paramPlurality == ParamPlurality.COLLECTION) {
-        final Collection c = ParamPlurality.COLLECTION.newContainer(rawType, size);
+        final Object[] a = ParamPlurality.ARRAY.newContainer(rawType, size);
+        int i = 0;
         if (values instanceof RandomAccess) {
-          int i = 0;
           do // [RA]
-            c.add(parseBoolean(values.get(i), defaultValue));
+            a[i] = parseBoolean(values.get(i), defaultValue);
           while (++i < size);
         }
         else {
           final Iterator<String> it = values.iterator();
           do // [I]
-            c.add(parseBoolean(it.next(), defaultValue));
+            a[i++] = parseBoolean(it.next(), defaultValue);
           while (it.hasNext());
         }
 
-        return c;
+        return a;
       }
 
-      final Object[] a = ParamPlurality.ARRAY.newContainer(rawType, size);
-      int i = 0;
-      if (values instanceof RandomAccess) {
-        do // [RA]
-          a[i] = parseBoolean(values.get(i), defaultValue);
-        while (++i < size);
-      }
-      else {
-        final Iterator<String> it = values.iterator();
-        do // [I]
-          a[i++] = parseBoolean(it.next(), defaultValue);
-        while (it.hasNext());
-      }
+      if (componentType == Byte.class) {
+        final Byte defaultValue = rawType.isPrimitive() ? (byte)0 : null;
+        if (paramPlurality == ParamPlurality.SINGLE)
+          return Numbers.parseByte(firstValue, defaultValue);
 
-      return a;
-    }
+        if (size == 1)
+          return paramPlurality.newSingleton(rawType, Numbers.parseByte(firstValue, defaultValue));
 
-    if (componentType == Byte.class) {
-      final Byte defaultValue = rawType.isPrimitive() ? (byte)0 : null;
-      if (paramPlurality == ParamPlurality.SINGLE)
-        return Numbers.parseByte(firstValue, defaultValue);
+        if (paramPlurality == ParamPlurality.COLLECTION) {
+          final Collection c = ParamPlurality.COLLECTION.newContainer(rawType, size);
+          if (values instanceof RandomAccess) {
+            int i = 0;
+            do // [RA]
+              c.add(Numbers.parseByte(values.get(i), defaultValue));
+            while (++i < size);
+          }
+          else {
+            final Iterator<String> it = values.iterator();
+            do // [I]
+              c.add(Numbers.parseByte(it.next(), defaultValue));
+            while (it.hasNext());
+          }
 
-      if (size == 1)
-        return paramPlurality.newSingleton(rawType, Numbers.parseByte(firstValue, defaultValue));
+          return c;
+        }
 
-      if (paramPlurality == ParamPlurality.COLLECTION) {
-        final Collection c = ParamPlurality.COLLECTION.newContainer(rawType, size);
+        final Object[] a = ParamPlurality.ARRAY.newContainer(rawType, size);
+        int i = 0;
         if (values instanceof RandomAccess) {
-          int i = 0;
           do // [RA]
-            c.add(Numbers.parseByte(values.get(i), defaultValue));
+            a[i] = Numbers.parseByte(values.get(i), defaultValue);
           while (++i < size);
         }
         else {
           final Iterator<String> it = values.iterator();
           do // [I]
-            c.add(Numbers.parseByte(it.next(), defaultValue));
+            a[i++] = Numbers.parseByte(it.next(), defaultValue);
           while (it.hasNext());
         }
 
-        return c;
+        return a;
       }
 
-      final Object[] a = ParamPlurality.ARRAY.newContainer(rawType, size);
-      int i = 0;
-      if (values instanceof RandomAccess) {
-        do // [RA]
-          a[i] = Numbers.parseByte(values.get(i), defaultValue);
-        while (++i < size);
-      }
-      else {
-        final Iterator<String> it = values.iterator();
-        do // [I]
-          a[i++] = Numbers.parseByte(it.next(), defaultValue);
-        while (it.hasNext());
-      }
+      if (componentType == Character.class) {
+        final Character defaultValue = rawType.isPrimitive() ? '\u0000' : null;
+        if (paramPlurality == ParamPlurality.SINGLE)
+          return parseCharacter(firstValue, defaultValue);
 
-      return a;
-    }
+        if (size == 1)
+          return paramPlurality.newSingleton(rawType, parseCharacter(firstValue, defaultValue));
 
-    if (componentType == Character.class) {
-      final Character defaultValue = rawType.isPrimitive() ? '\u0000' : null;
-      if (paramPlurality == ParamPlurality.SINGLE)
-        return parseCharacter(firstValue, defaultValue);
+        if (paramPlurality == ParamPlurality.COLLECTION) {
+          final Collection c = ParamPlurality.COLLECTION.newContainer(rawType, size);
+          if (values instanceof RandomAccess) {
+            int i = 0;
+            do // [RA]
+              c.add(parseCharacter(values.get(i), defaultValue));
+            while (++i < size);
+          }
+          else {
+            final Iterator<String> it = values.iterator();
+            do // [I]
+              c.add(parseCharacter(it.next(), defaultValue));
+            while (it.hasNext());
+          }
 
-      if (size == 1)
-        return paramPlurality.newSingleton(rawType, parseCharacter(firstValue, defaultValue));
+          return c;
+        }
 
-      if (paramPlurality == ParamPlurality.COLLECTION) {
-        final Collection c = ParamPlurality.COLLECTION.newContainer(rawType, size);
+        final Object[] a = ParamPlurality.ARRAY.newContainer(rawType, size);
+        int i = 0;
         if (values instanceof RandomAccess) {
-          int i = 0;
           do // [RA]
-            c.add(parseCharacter(values.get(i), defaultValue));
+            a[i] = parseCharacter(values.get(i), defaultValue);
           while (++i < size);
         }
         else {
           final Iterator<String> it = values.iterator();
           do // [I]
-            c.add(parseCharacter(it.next(), defaultValue));
+            a[i++] = parseCharacter(it.next(), defaultValue);
           while (it.hasNext());
         }
 
-        return c;
+        return a;
       }
 
-      final Object[] a = ParamPlurality.ARRAY.newContainer(rawType, size);
-      int i = 0;
-      if (values instanceof RandomAccess) {
-        do // [RA]
-          a[i] = parseCharacter(values.get(i), defaultValue);
-        while (++i < size);
-      }
-      else {
-        final Iterator<String> it = values.iterator();
-        do // [I]
-          a[i++] = parseCharacter(it.next(), defaultValue);
-        while (it.hasNext());
-      }
+      if (componentType == Short.class) {
+        final Short defaultValue = rawType.isPrimitive() ? (short)0 : null;
+        if (paramPlurality == ParamPlurality.SINGLE)
+          return Numbers.parseShort(firstValue, defaultValue);
 
-      return a;
-    }
+        if (size == 1)
+          return paramPlurality.newSingleton(rawType, Numbers.parseShort(firstValue, defaultValue));
 
-    if (componentType == Short.class) {
-      final Short defaultValue = rawType.isPrimitive() ? (short)0 : null;
-      if (paramPlurality == ParamPlurality.SINGLE)
-        return Numbers.parseShort(firstValue, defaultValue);
+        if (paramPlurality == ParamPlurality.COLLECTION) {
+          final Collection c = ParamPlurality.COLLECTION.newContainer(rawType, size);
+          if (values instanceof RandomAccess) {
+            int i = 0;
+            do // [RA]
+              c.add(Numbers.parseShort(values.get(i), defaultValue));
+            while (++i < size);
+          }
+          else {
+            final Iterator<String> it = values.iterator();
+            do // [I]
+              c.add(Numbers.parseShort(it.next(), defaultValue));
+            while (it.hasNext());
+          }
 
-      if (size == 1)
-        return paramPlurality.newSingleton(rawType, Numbers.parseShort(firstValue, defaultValue));
+          return c;
+        }
 
-      if (paramPlurality == ParamPlurality.COLLECTION) {
-        final Collection c = ParamPlurality.COLLECTION.newContainer(rawType, size);
+        final Object[] a = ParamPlurality.ARRAY.newContainer(rawType, size);
+        int i = 0;
         if (values instanceof RandomAccess) {
-          int i = 0;
           do // [RA]
-            c.add(Numbers.parseShort(values.get(i), defaultValue));
+            a[i] = Numbers.parseShort(values.get(i), defaultValue);
           while (++i < size);
         }
         else {
           final Iterator<String> it = values.iterator();
           do // [I]
-            c.add(Numbers.parseShort(it.next(), defaultValue));
+            a[i++] = Numbers.parseShort(it.next(), defaultValue);
           while (it.hasNext());
         }
 
-        return c;
+        return a;
       }
 
-      final Object[] a = ParamPlurality.ARRAY.newContainer(rawType, size);
-      int i = 0;
-      if (values instanceof RandomAccess) {
-        do // [RA]
-          a[i] = Numbers.parseShort(values.get(i), defaultValue);
-        while (++i < size);
-      }
-      else {
-        final Iterator<String> it = values.iterator();
-        do // [I]
-          a[i++] = Numbers.parseShort(it.next(), defaultValue);
-        while (it.hasNext());
-      }
-
-      return a;
+      return null;
     }
-
-    return null;
+    catch (final IllegalArgumentException e) {
+      throw new BadRequestException(e);
+    }
   }
 
   private abstract class TypedParamConverter<T> implements ParamConverter<T> {

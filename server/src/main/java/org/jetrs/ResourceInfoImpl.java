@@ -32,8 +32,6 @@ import java.util.Objects;
 import javax.annotation.security.DenyAll;
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
-import javax.servlet.ServletException;
-import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.ForbiddenException;
@@ -344,31 +342,15 @@ final class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImp
     throw new ForbiddenException();
   }
 
-  Object service(final ResourceMatch resourceMatch, final ContainerRequestContextImpl requestContext) throws IOException, ServletException {
+  Object service(final ResourceMatch resourceMatch, final ContainerRequestContextImpl requestContext) throws Throwable {
     if (securityAnnotation != null)
       checkAuthorized(securityAnnotation, requestContext);
 
     try {
       return requestContext.invokeMethod(resourceMatch.getResourceInstance(requestContext));
     }
-    catch (final IllegalAccessException | InstantiationException e) {
-      throw new ServletException(e);
-    }
     catch (final InvocationTargetException e) {
-      final Throwable cause = e.getCause();
-      if (cause instanceof RuntimeException)
-        throw (RuntimeException)cause;
-
-      if (cause instanceof IOException)
-        throw (IOException)cause;
-
-      if (cause instanceof ServletException)
-        throw (ServletException)cause;
-
-      throw new ServletException(cause);
-    }
-    catch (final IllegalArgumentException e) {
-      throw new BadRequestException(e);
+      throw e.getCause();
     }
   }
 
