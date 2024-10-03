@@ -68,7 +68,7 @@ class ResourceMatch implements Comparable<ResourceMatch> {
     this.instance = resourceInfo.getSingleton();
 
     this.uriEncoded = assertNotNull(uriEncoded);
-    this.compatibleMediaTypes = assertNotEmpty(compatibleMediaTypes);
+    this.compatibleMediaTypes = compatibleMediaTypes; // Can be null or non-empty
 
     this.pathSegmentParamNames = assertNotNull(pathSegmentParamNames);
     this.regionStartEnds = assertNotNull(regionStartEnds);
@@ -95,6 +95,13 @@ class ResourceMatch implements Comparable<ResourceMatch> {
     return uriDecoded == null ? uriDecoded = URLs.decodePath(uriEncoded) : uriDecoded;
   }
 
+  /**
+   * Returns the {@link MediaType}s that represent the intersect of the set of {@link MediaType}s producible by the resource, and the
+   * set of {@link MediaType}s acceptable by the request.
+   *
+   * @return The {@link MediaType}s that represent the intersect of the set of {@link MediaType}s producible by the resource, and the
+   *         set of {@link MediaType}s acceptable by the request.
+   */
   MediaType[] getCompatibleMediaTypes() {
     return compatibleMediaTypes;
   }

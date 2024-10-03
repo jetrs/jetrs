@@ -32,6 +32,6 @@ final class ReaderInterceptorComponent extends MessageBodyComponent<ReaderInterc
   }
 
   ReaderInterceptorComponent(final Class<ReaderInterceptor> clazz, final ReaderInterceptor instance, final boolean isDefaultProvider, final Map<Class<?>,Integer> contracts, final int priority) {
-    super(clazz, instance, isDefaultProvider, contracts, priority, ReaderInterceptor.class);
+    super(clazz, instance, isDefaultProvider, contracts, priority, ReaderInterceptor.class, null);
   }
 }

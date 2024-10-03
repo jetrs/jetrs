@@ -21,6 +21,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Map;
 
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.MessageBodyWriter;
 
@@ -35,8 +36,13 @@ final class MessageBodyWriterComponent extends MessageBodyComponent<MessageBodyW
     return components;
   }
 
+  static ServerMediaType[] getServerMediaTypes(final Class<?> clazz) {
+    final Produces produces = AnnotationUtil.getAnnotation(clazz, Produces.class);
+    return produces != null ? ServerMediaType.valueOf(produces.value()) : MediaTypes.WILDCARD_SERVER_TYPE;
+  }
+
   MessageBodyWriterComponent(final Class<MessageBodyWriter<?>> clazz, final MessageBodyWriter<?> instance, final boolean isDefaultProvider, final Map<Class<?>,Integer> contracts, final int priority) {
-    super(clazz, instance, isDefaultProvider, contracts, priority, MessageBodyWriter.class);
+    super(clazz, instance, isDefaultProvider, contracts, priority, MessageBodyWriter.class, getServerMediaTypes(clazz));
   }
 
   @Override

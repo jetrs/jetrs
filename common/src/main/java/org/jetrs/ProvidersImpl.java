@@ -42,10 +42,10 @@ final class ProvidersImpl implements Providers {
     try {
       for (int i = 0, i$ = factories.size(); i < i$; ++i) { // [RA]
         final MessageBodyComponent<?> factory = factories.get(i);
-        final MediaType[] compatibleMediaType = factory.getCompatibleMediaType(requestContext, type, genericType, annotations, mediaType);
-        if (compatibleMediaType.length > 0) {
+        final MediaType[] compatibleMediaTypes = factory.getCompatibleMediaType(requestContext, type, genericType, annotations, mediaType);
+        if (compatibleMediaTypes.length > 0) {
           final Object provider = factory.getSingletonOrFromRequestContext(requestContext);
-          return asHolder ? new MessageBodyProviderHolder<>(provider, compatibleMediaType) : provider;
+          return asHolder ? new MessageBodyProviderHolder<>(provider, compatibleMediaTypes[0]) : provider;
         }
       }
 
@@ -69,7 +69,7 @@ final class ProvidersImpl implements Providers {
   }
 
   @SuppressWarnings("unchecked")
-  <T> MessageBodyProviderHolder<T> getMessageBodyReader(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType[] mediaTypes) {
+  <T> MessageBodyProviderHolder<T> getMessageBodyReaderHolder(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType[] mediaTypes) {
     for (final MediaType mediaType : mediaTypes) { // [A]
       final Object provider = getProvider(type, genericType, annotations, mediaType, requestContext.getMessageBodyReaderComponents(), true);
       if (provider != null)
@@ -80,7 +80,7 @@ final class ProvidersImpl implements Providers {
   }
 
   @SuppressWarnings("unchecked")
-  <T> MessageBodyProviderHolder<T> getMessageBodyWriter(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType[] mediaTypes) {
+  <T> MessageBodyProviderHolder<T> getMessageBodyWriterHolder(final Class<T> type, final Type genericType, final Annotation[] annotations, final MediaType[] mediaTypes) {
     for (final MediaType mediaType : mediaTypes) { // [A]
       final Object provider = getProvider(type, genericType, annotations, mediaType, requestContext.getMessageBodyWriterComponents(), true);
       if (provider != null)
@@ -91,7 +91,7 @@ final class ProvidersImpl implements Providers {
   }
 
   @SuppressWarnings("unchecked")
-  <T> MessageBodyProviderHolder<T> getMessageBodyWriter(final Class<T> type, final Type genericType, final Annotation[] annotations, final List<MediaType> mediaTypes) {
+  <T> MessageBodyProviderHolder<T> getMessageBodyWriterHolder(final Class<T> type, final Type genericType, final Annotation[] annotations, final List<MediaType> mediaTypes) {
     assert(CollectionUtil.isRandomAccess(mediaTypes));
     for (int i = 0, i$ = mediaTypes.size(); i < i$; ++i) { // [RA]
       final MediaType mediaType = mediaTypes.get(i);

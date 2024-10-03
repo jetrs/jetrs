@@ -21,6 +21,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Map;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.MessageBodyReader;
 
@@ -35,8 +36,13 @@ final class MessageBodyReaderComponent extends MessageBodyComponent<MessageBodyR
     return components;
   }
 
+  static ServerMediaType[] getServerMediaTypes(final Class<?> clazz) {
+    final Consumes consumes = AnnotationUtil.getAnnotation(clazz, Consumes.class);
+    return consumes != null ? ServerMediaType.valueOf(consumes.value()) : MediaTypes.WILDCARD_SERVER_TYPE;
+  }
+
   MessageBodyReaderComponent(final Class<MessageBodyReader<?>> clazz, final MessageBodyReader<?> instance, final boolean isDefaultProvider, final Map<Class<?>,Integer> contracts, final int priority) {
-    super(clazz, instance, isDefaultProvider, contracts, priority, MessageBodyReader.class);
+    super(clazz, instance, isDefaultProvider, contracts, priority, MessageBodyReader.class, getServerMediaTypes(clazz));
     if (getType() == null)
       throw new IllegalStateException("type is null");
   }

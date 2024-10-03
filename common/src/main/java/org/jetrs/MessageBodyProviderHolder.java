@@ -20,18 +20,18 @@ import javax.ws.rs.core.MediaType;
 
 class MessageBodyProviderHolder<P> {
   private final P provider;
-  private final MediaType[] mediaTypes;
+  private final MediaType mediaType;
 
-  MessageBodyProviderHolder(final P provider, final MediaType[] mediaTypes) {
+  MessageBodyProviderHolder(final P provider, final MediaType mediaType) {
     this.provider = provider;
-    this.mediaTypes = mediaTypes;
+    this.mediaType = mediaType;
   }
 
   P getProvider() {
     return provider;
   }
 
-  MediaType[] getMediaTypes() {
-    return mediaTypes;
+  MediaType getMediaType() {
+    return mediaType;
   }
 }

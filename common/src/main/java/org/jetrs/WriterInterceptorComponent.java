@@ -32,6 +32,6 @@ final class WriterInterceptorComponent extends MessageBodyComponent<WriterInterc
   }
 
   WriterInterceptorComponent(final Class<WriterInterceptor> clazz, final WriterInterceptor instance, final boolean isDefaultProvider, final Map<Class<?>,Integer> contracts, final int priority) {
-    super(clazz, instance, isDefaultProvider, contracts, priority, WriterInterceptor.class);
+    super(clazz, instance, isDefaultProvider, contracts, priority, WriterInterceptor.class, null);
   }
 }

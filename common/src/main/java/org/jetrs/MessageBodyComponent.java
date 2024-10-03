@@ -21,16 +21,14 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Map;
 
-import javax.ws.rs.Consumes;
 import javax.ws.rs.core.MediaType;
 
 abstract class MessageBodyComponent<T> extends TypeComponent<T> {
-  private final ServerMediaType[] allowedTypes;
+  private final ServerMediaType[] serverMediaTypes;
 
-  MessageBodyComponent(final Class<T> clazz, final T singleton, final boolean isDefaultProvider, final Map<Class<?>,Integer> contracts, final int priority, final Class<?> interfaceType) {
+  MessageBodyComponent(final Class<T> clazz, final T singleton, final boolean isDefaultProvider, final Map<Class<?>,Integer> contracts, final int priority, final Class<?> interfaceType, final ServerMediaType[] serverMediaTypes) {
     super(clazz, singleton, isDefaultProvider, contracts, priority, getGenericInterfaceFirstTypeArgument(clazz, interfaceType, Object.class));
-    final Consumes consumes = AnnotationUtil.getAnnotation(clazz, Consumes.class);
-    this.allowedTypes = consumes != null ? ServerMediaType.valueOf(consumes.value()) : MediaTypes.WILDCARD_SERVER_TYPE;
+    this.serverMediaTypes = serverMediaTypes;
   }
 
   /**
@@ -46,6 +44,6 @@ abstract class MessageBodyComponent<T> extends TypeComponent<T> {
    * @throws IOException If an I/O error has occurred.
    */
   MediaType[] getCompatibleMediaType(final RequestContext<?,?> requestContext, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) throws IOException {
-    return MediaTypes.getCompatible(allowedTypes, mediaType, null);
+    return MediaTypes.getCompatible(serverMediaTypes, mediaType, null);
   }
 }

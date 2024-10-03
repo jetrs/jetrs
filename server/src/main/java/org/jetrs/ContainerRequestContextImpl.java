@@ -807,10 +807,12 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext,Ht
       if (!resourceInfo.isCompatibleContentType(getContentType()))
         continue;
 
-      maybeNotAcceptable = true;
       final MediaType[] compatibleMediaTypes = resourceInfo.getCompatibleAccept(getAcceptableMediaTypes(), getHttpHeaders().get(ACCEPT_CHARSET));
-      if (compatibleMediaTypes.length == 0)
-        continue;
+      if (compatibleMediaTypes != null) {
+        maybeNotAcceptable = true;
+        if (compatibleMediaTypes.length == 0)
+          continue;
+      }
 
       if (resourceMatches == null)
         resourceMatches = new ResourceMatches();
@@ -975,7 +977,7 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext,Ht
       if (logger.isInfoEnabled()) { logger.info("Unable to overwrite committed response [" + httpServletResponse.getStatus() + "] -> [" + containerResponseContext.getStatus() + "]: ", t); }
     }
     else {
-      containerResponseContext.writeResponse(httpServletResponse, t != null);
+      containerResponseContext.writeResponse(httpServletResponse, t);
     }
   }
 

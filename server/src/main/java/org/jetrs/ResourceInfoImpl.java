@@ -193,10 +193,7 @@ final class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImp
       return producesMediaTypes;
 
     final Produces annotation = getProduces();
-    if (annotation == null) {
-      producesMediaTypes = MediaTypes.WILDCARD_SERVER_TYPE;
-    }
-    else {
+    if (annotation != null) {
       if (Void.TYPE.equals(getMethodReturnType()))
         throw new IllegalAnnotationException(annotation, getResourceSignature() + " is void return type, and thus cannot declare @Produces annotation");
 
@@ -293,7 +290,8 @@ final class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImp
   }
 
   MediaType[] getCompatibleAccept(final List<MediaType> acceptMediaTypes, final List<String> acceptCharsets) {
-    return MediaTypes.getCompatible(getProducesMediaTypes(), acceptMediaTypes, acceptCharsets);
+    final ServerMediaType[] producesMediaTypes = getProducesMediaTypes();
+    return producesMediaTypes == null ? null : MediaTypes.getCompatible(producesMediaTypes, acceptMediaTypes, acceptCharsets);
   }
 
   @SuppressWarnings("unchecked")
