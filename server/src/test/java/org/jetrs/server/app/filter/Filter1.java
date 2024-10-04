@@ -29,6 +29,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.Provider;
 
+import org.jetrs.UriInfoImplTest;
 import org.jetrs.server.app.service.RootService2;
 
 @Provider
@@ -55,6 +56,8 @@ public class Filter1 implements ContainerRequestFilter {
 
   @Override
   public void filter(final ContainerRequestContext requestContext) throws IOException {
+    UriInfoImplTest.testUriInfo(requestContext, requestContext.getUriInfo());
+
     final String baseUri = uriInfo.getBaseUri().getRawPath();
     assertTrue(baseUri.startsWith("/") && baseUri.endsWith("/"));
 

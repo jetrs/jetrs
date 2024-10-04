@@ -24,10 +24,21 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.core.UriInfo;
 
 import org.libj.lang.Strings;
 
 public class UriInfoImplTest {
+  public static void testUriInfo(final ContainerRequestContext requestContext, final UriInfo uriInfo) {
+    final URI baseUri = uriInfo.getBaseUri();
+    final String path = uriInfo.getPath(false);
+    final UriInfoImpl copy = new UriInfoImpl((ContainerRequestContextImpl)requestContext, baseUri, URI.create(path));
+    assertEquals(uriInfo.getPath().toString(), copy.getPath().toString());
+    assertEquals(uriInfo.getBaseUri().toString(), copy.getBaseUri().toString());
+    assertEquals(uriInfo.toString(), copy.toString());
+  }
+
   // FIXME: Implement a test around this
   private static void testQueryParameters(final HttpServletRequest request) {
     final MultivaluedArrayHashMap<String,String> queryParametersDecoded = new MultivaluedArrayHashMap<>();
@@ -63,7 +74,7 @@ public class UriInfoImplTest {
       }
     }
 
-    final UriInfoImpl uriInfo = new UriInfoImpl(request, null);
+    final UriInfoImpl uriInfo = new UriInfoImpl(null, request);
     assertEquals(queryParametersDecoded, uriInfo.getQueryParameters(true));
     assertEquals(queryParametersEncoded, uriInfo.getQueryParameters(false));
   }

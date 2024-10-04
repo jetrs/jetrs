@@ -159,7 +159,7 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext,Ht
     this.httpServletRequest = httpServletRequest;
     this.httpServletResponse = httpServletResponse;
     this.containerResponseContext = new ContainerResponseContextImpl(propertiesAdapter, httpServletRequest, httpServletResponse, this);
-    this.uriInfo = new UriInfoImpl(httpServletRequest, this);
+    this.uriInfo = new UriInfoImpl(this, httpServletRequest);
     this.headers = new HttpHeadersImpl(httpServletRequest);
   }
 
@@ -972,25 +972,26 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext,Ht
     return response;
   }
 
-  void writeResponse(final Throwable t) throws IOException {
+  void writeResponse(final Throwable exception) throws IOException {
     if (httpServletResponse.isCommitted()) {
-      if (logger.isInfoEnabled()) { logger.info("Unable to overwrite committed response [" + httpServletResponse.getStatus() + "] -> [" + containerResponseContext.getStatus() + "]: ", t); }
+      if (logger.isInfoEnabled()) { logger.info("Unable to overwrite committed response [" + httpServletResponse.getStatus() + "] -> [" + containerResponseContext.getStatus() + "]: ", exception); }
     }
     else {
-      containerResponseContext.writeResponse(httpServletResponse, t);
+      containerResponseContext.writeResponse(httpServletResponse, exception);
     }
   }
 
   @Override
   public void setRequestUri(final URI requestUri) {
-    // TODO: Implement this.
-    throw new UnsupportedOperationException();
+    setRequestUri(uriInfo.getBaseUri(), requestUri);
   }
 
   @Override
   public void setRequestUri(final URI baseUri, final URI requestUri) {
-    // TODO: Implement this.
-    throw new UnsupportedOperationException();
+    if (getStage().ordinal() > Stage.REQUEST_FILTER_PRE_MATCH.ordinal())
+      throw new IllegalStateException();
+
+    this.uriInfo = new UriInfoImpl(this, baseUri, requestUri);
   }
 
   @Override

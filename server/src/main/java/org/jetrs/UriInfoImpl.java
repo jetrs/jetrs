@@ -44,20 +44,38 @@ class UriInfoImpl implements UriInfo {
     return uri.toString();
   }
 
-  private final HttpServletRequest httpServletRequest;
+  private static URI formatBaseUri(final URI uri) {
+    if (!uri.isAbsolute())
+      throw new IllegalArgumentException("uri (" + uri + ") must be absolute");
+
+    final String str = uri.toString();
+    return str.charAt(str.length() - 1) != '/' ? URI.create(str + "/") : uri;
+  }
+
+  private static String formatPath(final URI uri) {
+    if (uri.isAbsolute())
+      throw new IllegalArgumentException("uri (" + uri + ") must not be absolute");
+
+    final String str = uri.getRawPath();
+    return (str.charAt(0) == '/' ? str.substring(1) : str);
+  }
+
+  final ContainerRequestContextImpl requestContext;
 
   private final String absoluteUri;
-  private final String contextPath;
+  final String queryString;
   private final int pathIndex;
   private final int queryIndex;
 
-  private ContainerRequestContextImpl requestContext;
+  // Must not have leading '/'
+  private String pathDecoded;
+  private String pathEncoded;
 
-  UriInfoImpl(final HttpServletRequest httpServletRequest, final ContainerRequestContextImpl requestContext) {
-    this.httpServletRequest = httpServletRequest;
+  UriInfoImpl(final ContainerRequestContextImpl requestContext, final String contextPath, final String servletPath, final String absoluteUri, final String queryString) {
     this.requestContext = requestContext;
-    this.absoluteUri = getAbsoluteUri(httpServletRequest);
-    this.contextPath = httpServletRequest.getContextPath() + httpServletRequest.getServletPath();
+
+    this.absoluteUri = absoluteUri;
+    this.queryString = queryString;
 
     int pathIndex = absoluteUri.indexOf('/');
     if (pathIndex < 3)
@@ -73,16 +91,21 @@ class UriInfoImpl implements UriInfo {
     if (pathIndex < 0)
       throw new IllegalStateException();
 
-    this.pathIndex = pathIndex += contextPath.length() + 1;
+    this.pathIndex = pathIndex += contextPath.length() + servletPath.length() + 1;
     this.queryIndex = absoluteUri.indexOf('?', pathIndex);
 
     if (absoluteUri.length() < pathIndex)
       pathEncoded = pathDecoded = "";
   }
 
-  // Must not have leading '/'
-  private String pathDecoded;
-  private String pathEncoded;
+  UriInfoImpl(final ContainerRequestContextImpl requestContext, final HttpServletRequest httpServletRequest) {
+    this(requestContext, httpServletRequest.getContextPath(), httpServletRequest.getServletPath(), getAbsoluteUri(httpServletRequest), httpServletRequest.getQueryString());
+  }
+
+  UriInfoImpl(final ContainerRequestContextImpl requestContext, URI baseUri, final URI requestUri) {
+    this(requestContext, "", "", (baseUri = formatBaseUri(baseUri)) + formatPath(requestUri), requestUri.getRawQuery());
+    this.baseUri = baseUri;
+  }
 
   @Override
   public String getPath() {
@@ -98,8 +121,9 @@ class UriInfoImpl implements UriInfo {
       if (pathEncoded != null)
         return pathDecoded = URLs.decodePath(pathEncoded);
     }
-    else if (pathEncoded != null)
+    else if (pathEncoded != null) {
       return pathEncoded;
+    }
 
     pathEncoded = queryIndex < 0 ? absoluteUri.substring(pathIndex) : absoluteUri.substring(pathIndex, queryIndex);
     return decode ? pathDecoded = URLs.decodePath(pathEncoded) : pathEncoded;
@@ -239,7 +263,7 @@ class UriInfoImpl implements UriInfo {
   @Override
   public MultivaluedArrayMap<String,String> getQueryParameters(final boolean decode) {
     if (queryParametersEncoded == null)
-      queryParametersEncoded = EntityUtil.readQueryString(httpServletRequest.getQueryString(), null);
+      queryParametersEncoded = EntityUtil.readQueryString(queryString, null);
 
     if (!decode)
       return queryParametersEncoded;
@@ -280,13 +304,15 @@ class UriInfoImpl implements UriInfo {
 
   @Override
   public List<String> getMatchedURIs(final boolean decode) {
-    return requestContext.getResourceMatches() != null ? requestContext.getResourceMatches().getMatchedURIs(decode) : Collections.EMPTY_LIST;
+    final ResourceMatches resourceMatches = requestContext.getResourceMatches();
+    return resourceMatches != null ? resourceMatches.getMatchedURIs(decode) : Collections.EMPTY_LIST;
   }
 
   @Override
   public List<Object> getMatchedResources() {
     // FIXME: Not tested
-    return requestContext.getResourceMatches() != null ? requestContext.getResourceMatches().getMatchedResources(requestContext) : Collections.EMPTY_LIST;
+    final ResourceMatches resourceMatches = requestContext.getResourceMatches();
+    return resourceMatches != null ? resourceMatches.getMatchedResources(requestContext) : Collections.EMPTY_LIST;
   }
 
   @Override
