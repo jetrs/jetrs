@@ -256,8 +256,18 @@ final class ResponseBuilderImpl extends Response.ResponseBuilder implements Clon
 
   @Override
   public Response.ResponseBuilder variant(final Variant variant) {
-    // TODO: Implement this.
-    throw new UnsupportedOperationException();
+    if (variant != null) {
+      type(variant.getMediaType());
+      language(variant.getLanguage());
+      encoding(variant.getEncoding());
+    }
+    else {
+      type((MediaType)null);
+      language((Locale)null);
+      encoding(null);
+    }
+
+    return this;
   }
 
   @Override
