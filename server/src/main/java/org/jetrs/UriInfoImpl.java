@@ -257,7 +257,7 @@ class UriInfoImpl implements UriInfo {
 
   @Override
   public MultivaluedArrayMap<String,String> getQueryParameters() {
-    return getQueryParameters(true); // FIXME: Make this unmodifiable
+    return getQueryParameters(true);
   }
 
   @Override
@@ -274,7 +274,7 @@ class UriInfoImpl implements UriInfo {
         return queryParametersDecoded = EntityUtil.EMPTY_MAP;
 
       // FIXME: What's the deal with Charset vs URL encoding?
-      queryParametersDecoded = new MultivaluedArrayHashMap<>(size);
+      final UnmodifiableMultivaluedArrayHashMap<String,String> queryParametersDecoded = new UnmodifiableMultivaluedArrayHashMap<>(size);
       for (final Map.Entry<String,List<String>> entry : queryParametersEncoded.entrySet()) { // [S]
         final List<String> values = entry.getValue();
         String key = entry.getKey();
@@ -292,6 +292,9 @@ class UriInfoImpl implements UriInfo {
           while (++i < i$);
         }
       }
+
+      queryParametersDecoded.setUnmodifiable();
+      this.queryParametersDecoded = queryParametersDecoded;
     }
 
     return queryParametersDecoded;

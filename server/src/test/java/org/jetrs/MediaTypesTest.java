@@ -60,13 +60,13 @@ public class MediaTypesTest {
     catch (final NullPointerException e) {
     }
 
-    testParse(m -> assertArrayEquals(new MediaType[0], m), (String)null);
-    testParse(m -> assertArrayEquals(new MediaType[0], m), "");
-    testParse(m -> assertEquals(3, m.length), "application/json; q=\"oops\" ; charset=\"utf8\";  ", "application/xml; q= ; charset=\"utf8\";  ", "application/json; q=\"oops\" ; charset=\"utf8\";  ");
-    testParse(m -> assertEquals(3, m.length), "application/json; q=\"oops\" ; charset;  ", "application/xml; q= ; charset=\"utf8\";  ", "application/json; q=\"oops\" ; charset=\"utf8\";  ");
-    testParse(m -> assertEquals(3, m.length), "application/json; q=\"oops\" ; charset;  ", "application/xml; q= ; charset=\"utf8\";  ", "application/json; ;;;");
-    testParse(m -> assertEquals(3, m.length), "application/json; q=\"oops\" ; charset;  , application/xml; q= ; charset=\"utf8\";  ", "application/json; ;;;");
-    testParse(m -> assertEquals(3, m.length), "application/json; q=\"oops\" ; charset;  , application/xml; q= ; charset=\"utf8\";  ,application/json; ;;;");
+    testParse((final MediaType[] m) -> assertArrayEquals(new MediaType[0], m), (String)null);
+    testParse((final MediaType[] m) -> assertArrayEquals(new MediaType[0], m), "");
+    testParse((final MediaType[] m) -> assertEquals(3, m.length), "application/json; q=\"oops\" ; charset=\"utf8\";  ", "application/xml; q= ; charset=\"utf8\";  ", "application/json; q=\"oops\" ; charset=\"utf8\";  ");
+    testParse((final MediaType[] m) -> assertEquals(3, m.length), "application/json; q=\"oops\" ; charset;  ", "application/xml; q= ; charset=\"utf8\";  ", "application/json; q=\"oops\" ; charset=\"utf8\";  ");
+    testParse((final MediaType[] m) -> assertEquals(3, m.length), "application/json; q=\"oops\" ; charset;  ", "application/xml; q= ; charset=\"utf8\";  ", "application/json; ;;;");
+    testParse((final MediaType[] m) -> assertEquals(3, m.length), "application/json; q=\"oops\" ; charset;  , application/xml; q= ; charset=\"utf8\";  ", "application/json; ;;;");
+    testParse((final MediaType[] m) -> assertEquals(3, m.length), "application/json; q=\"oops\" ; charset;  , application/xml; q= ; charset=\"utf8\";  ,application/json; ;;;");
   }
 
   @Test

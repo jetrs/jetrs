@@ -319,11 +319,12 @@ final class ResourceInfoImpl implements ResourceInfo, Comparable<ResourceInfoImp
       final String[] roles = rolesAllowed.value();
       b.append("realm=\"").append(roles[0]).append('"');
       final String challenge = b.toString();
-      if (roles.length == 1)
+      final int len = roles.length;
+      if (len == 1)
         throw new NotAuthorizedException(challenge);
 
-      final Object[] challenges = new Object[roles.length - 1];
-      for (int i = 1, i$ = roles.length; i < i$; ++i) { // [A]
+      final Object[] challenges = new Object[len - 1];
+      for (int i = 1; i < len; ++i) { // [A]
         b.setLength(0);
         b.append("realm=\"").append(roles[i]).append('"');
         challenges[i - 1] = b.toString();

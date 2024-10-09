@@ -36,6 +36,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.NewCookie;
 
 import org.libj.lang.Numbers;
 import org.libj.util.CollectionUtil;
@@ -279,9 +280,9 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
   // RFC 6265 RFC 2965 RFC 2109
   // * Cookies with longer paths are listed before cookies with shorter paths.
   // * ... only read the first cookie which is set.
-  private static void add(final LinkedHashMap<String,Cookie> map, final Cookie cookie) {
+  private static <T extends Cookie> void add(final LinkedHashMap<String,T> map, final T cookie) {
     final String name = cookie.getName();
-    final Cookie cookie0 = map.get(name);
+    final T cookie0 = map.get(name);
     final String path, path0;
     if (cookie0 == null || (path = cookie.getPath()) != null && ((path0 = cookie0.getPath()) == null || path0.length() < path.length()))
       map.put(name, cookie);
@@ -305,6 +306,29 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
       final Iterator<?> it = cookies.iterator();
       do // [I]
         add(map, (Cookie)it.next());
+      while (it.hasNext());
+    }
+
+    return map;
+  }
+
+  Map<String,NewCookie> getNewCookies() {
+    final MirrorQualityList<?,String> cookies = getMirrorMap().get(HttpHeaders.SET_COOKIE);
+    final int size;
+    if (cookies == null || (size = cookies.size()) == 0)
+      return Collections.emptyMap();
+
+    final LinkedHashMap<String,NewCookie> map = new LinkedHashMap<>();
+    if (cookies.isRandomAccess()) {
+      int i = 0;
+      do // [RA]
+        add(map, (NewCookie)cookies.get(i));
+      while (++i < size);
+    }
+    else {
+      final Iterator<?> it = cookies.iterator();
+      do // [I]
+        add(map, (NewCookie)it.next());
       while (it.hasNext());
     }
 

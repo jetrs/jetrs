@@ -42,6 +42,7 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.Link.Builder;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.MessageBodyWriter;
@@ -116,12 +117,12 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
   }
 
   @Override
-  HttpHeadersImpl getHttpHeaders() {
+  final HttpHeadersImpl getHttpHeaders() {
     return headers;
   }
 
   @Override
-  public HttpHeadersImpl getStringHeaders() {
+  public final MultivaluedMap<String,String> getStringHeaders() {
     return headers;
   }
 
@@ -152,54 +153,52 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
 
   @Override
   public MultivaluedArrayMap<String,Object> getHeaders() {
-    return getStringHeaders().getMirrorMap();
+    return headers.getMirrorMap();
   }
 
   @Override
   public Set<String> getAllowedMethods() {
-    return getStringHeaders().getAllowedMethods();
+    return headers.getAllowedMethods();
   }
 
   @Override
   public Map<String,NewCookie> getCookies() {
-    // TODO: Implement this.
-    throw new UnsupportedOperationException();
+    return headers.getNewCookies();
   }
 
   @Override
   public EntityTag getEntityTag() {
-    // TODO: Implement this.
-    throw new UnsupportedOperationException();
+    return (EntityTag)getHeaders().getFirst(HttpHeaders.ETAG);
   }
 
   @Override
   public Date getLastModified() {
-    return getStringHeaders().getLastModified();
+    return headers.getLastModified();
   }
 
   @Override
   public URI getLocation() {
-    return getStringHeaders().getLocation();
+    return headers.getLocation();
   }
 
   @Override
   public Set<Link> getLinks() {
-    return Links.getLinks(getStringHeaders());
+    return Links.getLinks(headers);
   }
 
   @Override
   public boolean hasLink(final String relation) {
-    return Links.hasLink(getStringHeaders(), relation);
+    return Links.hasLink(headers, relation);
   }
 
   @Override
   public Link getLink(final String relation) {
-    return Links.getLink(getStringHeaders(), relation);
+    return Links.getLink(headers, relation);
   }
 
   @Override
   public Builder getLinkBuilder(final String relation) {
-    return Links.getLinkBuilder(getStringHeaders(), relation);
+    return Links.getLinkBuilder(headers, relation);
   }
 
   private Object entity;
@@ -246,7 +245,7 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
   public void setEntity(final Object entity, final Annotation[] annotations, final MediaType mediaType) {
     setEntity(entity);
     setAnnotations(annotations);
-    getStringHeaders().setMediaType(mediaType);
+    headers.setMediaType(mediaType);
   }
 
   @Override
@@ -280,7 +279,7 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
 
   @Override
   public int getLength() {
-    return getStringHeaders().getLength();
+    return headers.getLength();
   }
 
   @SuppressWarnings("rawtypes")
@@ -388,9 +387,8 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
       setMediaType(contentType);
     }
 
-    final MultivaluedArrayMap<String,String> containerResponseHeaders = getStringHeaders();
-    if (containerResponseHeaders.size() > 0) {
-      for (final Map.Entry<String,List<String>> entry : containerResponseHeaders.entrySet()) { // [S]
+    if (headers.size() > 0) {
+      for (final Map.Entry<String,List<String>> entry : headers.entrySet()) { // [S]
         final List<String> values = entry.getValue();
         final int size = values.size();
         if (size == 0)
@@ -422,14 +420,13 @@ class ContainerResponseContextImpl extends InterceptorContextImpl<HttpServletReq
   @SuppressWarnings("rawtypes")
   void writeResponse(final HttpServletResponse httpServletResponse, final Throwable exception) throws IOException {
     final Object entity = getEntity();
+    final ResourceMatch resourceMatch = requestContext.getResourceMatch();
     if (entity == null) {
-      final ResourceMatch resourceMatch = requestContext.getResourceMatch();
       final MediaType[] compatibleMediaTypes;
       flushHeaders(httpServletResponse, resourceMatch == null || (compatibleMediaTypes = resourceMatch.getCompatibleMediaTypes()) == null ? MediaType.WILDCARD_TYPE : compatibleMediaTypes[0], null, exception);
       return;
     }
 
-    final ResourceMatch resourceMatch = requestContext.getResourceMatch();
     final ProvidersImpl providers = requestContext.providers;
     final MessageBodyProviderHolder<?> messageBodyProviderHolder;
     if (exception != null) {

@@ -36,7 +36,7 @@ class ResourceMatches extends ArrayList<ResourceMatch> {
   }
 
   List<Object> getMatchedResources(final ContainerRequestContextImpl requestContext) {
-    return matchedResources == null ? matchedResources = new TransList<>(this, (i, s) -> {
+    return matchedResources == null ? matchedResources = new TransList<>(this, (final Integer i, final ResourceMatch s) -> {
       try {
         return s.getResourceInstance(requestContext);
       }
@@ -55,8 +55,8 @@ class ResourceMatches extends ArrayList<ResourceMatch> {
 
   List<String> getMatchedURIs(final boolean decode) {
     if (decode)
-      return matchedURIsDecoded == null ? matchedURIsDecoded = new TransList<>(this, (i, s) -> s.getUriDecoded(), null) : matchedURIsDecoded;
+      return matchedURIsDecoded == null ? matchedURIsDecoded = new TransList<>(this, (final Integer i, final ResourceMatch s) -> s.getUriDecoded(), null) : matchedURIsDecoded;
 
-    return matchedURIsEncoded == null ? matchedURIsEncoded = new TransList<>(this, (i, s) -> s.getUriEncoded(), null) : matchedURIsEncoded;
+    return matchedURIsEncoded == null ? matchedURIsEncoded = new TransList<>(this, (final Integer i, final ResourceMatch s) -> s.getUriEncoded(), null) : matchedURIsEncoded;
   }
 }

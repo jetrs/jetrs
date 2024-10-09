@@ -125,7 +125,7 @@ public abstract class ClientCertificateFilter implements ContainerRequestFilter 
     final X509Certificate[] clientCertChain = getCertificateChain(requestContext, clientCertChainHeaderPrefix, 0, 1);
     clientCertChain[0] = clientCert;
 
-    if (logger.isDebugEnabled()) { logger.debug("getCertificateChain(): " + Arrays.stream(clientCertChain).map(c -> c.getSubjectDN().toString()).collect(Collectors.joining(",", "{", "}"))); }
+    if (logger.isDebugEnabled()) { logger.debug("getCertificateChain(): " + Arrays.stream(clientCertChain).map((final X509Certificate c) -> c.getSubjectDN().toString()).collect(Collectors.joining(",", "{", "}"))); }
     return clientCertChain;
   }
 

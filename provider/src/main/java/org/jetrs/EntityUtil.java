@@ -54,7 +54,7 @@ public final class EntityUtil {
   private static final int _maxFormKeys = Integer.getInteger(MAX_FORM_KEYS_KEY, DEFAULT_MAX_FORM_KEYS);
   private static final int _maxFormContentSize = Integer.getInteger(MAX_FORM_CONTENT_SIZE_KEY, DEFAULT_MAX_FORM_CONTENT_SIZE);
 
-  static final UnmodifiableMultivaluedArrayHashMap<String,String> EMPTY_MAP = new UnmodifiableMultivaluedArrayHashMap<>();
+  static final UnmodifiableMultivaluedArrayHashMap<String,String> EMPTY_MAP = new UnmodifiableMultivaluedArrayHashMap<>(0);
 
   public static Map<String,String[]> toStringArrayMap(final Map<String,List<String>> multiMap) {
     final Map<String,String[]> map = new LinkedHashMap<String,String[]>(multiMap.size() * 3 / 2) {
@@ -109,10 +109,10 @@ public final class EntityUtil {
     return true;
   }
 
-  static MultivaluedArrayHashMap<String,String> readFormParamsEncoded(final InputStream in, final Charset encoding) throws IOException {
+  static UnmodifiableMultivaluedArrayHashMap<String,String> readFormParamsEncoded(final InputStream in, final Charset encoding) throws IOException {
     final StringBuilder b = new StringBuilder();
     String name = null;
-    final MultivaluedArrayHashMap<String,String> map = new MultivaluedArrayHashMap<>();
+    final UnmodifiableMultivaluedArrayHashMap<String,String> map = new UnmodifiableMultivaluedArrayHashMap<>();
     final Reader r = new InputStreamReader(in, encoding);
     try {
       for (int ch; (ch = r.read()) != -1;) { // [ST]
@@ -130,6 +130,7 @@ public final class EntityUtil {
       }
 
       map.add(name, b.toString());
+      map.setUnmodifiable();
       return map;
     }
     catch (final IllegalArgumentException e) {
@@ -144,8 +145,9 @@ public final class EntityUtil {
     if (!decode)
       return readFormParamsEncoded(in, encoding);
 
-    final MultivaluedLinkedHashMap<String> params = new MultivaluedLinkedHashMap<>();
+    final UnmodifiableMultivaluedLinkedHashMap<String> params = new UnmodifiableMultivaluedLinkedHashMap<>();
     UrlEncoded.decodeTo(in, params, encoding, _maxFormContentSize, _maxFormKeys);
+    params.setUnmodifiable();
     return params;
   }
 
@@ -154,18 +156,20 @@ public final class EntityUtil {
       return EMPTY_MAP;
 
     if (encoding == null) {
-      final MultivaluedArrayHashMap<String,String> parameters = new MultivaluedArrayHashMap<>();
-      URIs.parseParameters(parameters, queryString);
-      return parameters;
+      final UnmodifiableMultivaluedArrayHashMap<String,String> params = new UnmodifiableMultivaluedArrayHashMap<>();
+      URIs.parseParameters(params, queryString);
+      params.setUnmodifiable();
+      return params;
     }
 
-    final MultivaluedLinkedHashMap<String> parameters = new MultivaluedLinkedHashMap<>();
+    final UnmodifiableMultivaluedLinkedHashMap<String> params = new UnmodifiableMultivaluedLinkedHashMap<>();
     if (StandardCharsets.UTF_8.equals(encoding))
-      UrlEncoded.decodeUtf8To(queryString, parameters);
+      UrlEncoded.decodeUtf8To(queryString, params);
     else
-      UrlEncoded.decodeTo(queryString, parameters, encoding);
+      UrlEncoded.decodeTo(queryString, params, encoding);
 
-    return parameters;
+    params.setUnmodifiable();
+    return params;
   }
 
   public static void writeFormParams(final MultivaluedMap<String,String> t, final MediaType mediaType, final OutputStream entityStream) throws IOException {

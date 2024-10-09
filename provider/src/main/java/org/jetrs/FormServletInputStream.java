@@ -31,8 +31,8 @@ import org.libj.net.FilterServletInputStream;
 class FormServletInputStream extends FilterServletInputStream {
   private final String characterEncoding;
   private Charset charset;
-  private MultivaluedArrayHashMap<String,String> formParameterEncodedMap;
-  private MultivaluedArrayHashMap<String,String> formParameterDecodedMap;
+  private UnmodifiableMultivaluedArrayHashMap<String,String> formParameterEncodedMap;
+  private UnmodifiableMultivaluedArrayHashMap<String,String> formParameterDecodedMap;
 
   FormServletInputStream(final ServletInputStream in, final String characterEncoding) {
     super(in);
@@ -44,7 +44,7 @@ class FormServletInputStream extends FilterServletInputStream {
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
-  MultivaluedArrayHashMap<String,String> getFormParameterMap(final boolean decoded) throws IOException {
+  UnmodifiableMultivaluedArrayHashMap<String,String> getFormParameterMap(final boolean decoded) throws IOException {
     if (formParameterEncodedMap == null)
       formParameterEncodedMap = EntityUtil.readFormParamsEncoded(in, getCharacterEncoding());
 
@@ -53,10 +53,10 @@ class FormServletInputStream extends FilterServletInputStream {
 
     if (formParameterDecodedMap == null) {
       if (formParameterEncodedMap.size() == 0) {
-        formParameterDecodedMap = new MultivaluedArrayHashMap();
+        formParameterDecodedMap = new UnmodifiableMultivaluedArrayHashMap();
       }
       else {
-        formParameterDecodedMap = new MultivaluedArrayHashMap(formParameterEncodedMap);
+        formParameterDecodedMap = new UnmodifiableMultivaluedArrayHashMap(formParameterEncodedMap);
         final Charset charset = getCharacterEncoding();
         for (final Map.Entry<String,List<String>> entry : formParameterDecodedMap.entrySet()) { // [S]
           final ArrayList<String> values = (ArrayList<String>)entry.getValue();
@@ -66,6 +66,8 @@ class FormServletInputStream extends FilterServletInputStream {
           }
         }
       }
+
+      formParameterDecodedMap.setUnmodifiable();
     }
 
     return formParameterDecodedMap;

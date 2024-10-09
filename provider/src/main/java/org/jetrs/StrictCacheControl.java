@@ -219,7 +219,7 @@ class StrictCacheControl extends CacheControl {
         }
         else {
           final String key = directive.substring(0, index).trim();
-          key.chars().forEach(c -> {
+          key.chars().forEach((final int c) -> {
             if (c != '-' && !Character.isLetterOrDigit(c))
               throw new IllegalArgumentException(key);
           });

@@ -29,27 +29,26 @@ import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Cookie;
 
 public abstract class CachedClientDriver<C> extends ClientDriver implements Consumer<ClientConfig> {
-  private final HashMap<ClientConfig,C> clientConfigToClient = new HashMap<ClientConfig,C>() {
-    @Override
-    public C get(final Object key) {
-      C client = super.get(key);
-      if (client != null)
-        return client;
-
-      synchronized (this) {
-        client = super.get(key);
-        if (client != null)
-          return client;
-
-        final ClientConfig clientConfig = (ClientConfig)key;
-        super.put(clientConfig, client = newClient(clientConfig));
-        return client;
-      }
-    }
-  };
+  private final HashMap<ClientConfig,C> clientConfigToClient = new HashMap<>();
 
   CachedClientDriver() {
     ClientConfig.notifyOnRelease(this);
+  }
+
+  private C getClient(final Object key) throws Exception {
+    C client = clientConfigToClient.get(key);
+    if (client != null)
+      return client;
+
+    synchronized (this) {
+      client = clientConfigToClient.get(key);
+      if (client != null)
+        return client;
+
+      final ClientConfig clientConfig = (ClientConfig)key;
+      clientConfigToClient.put(clientConfig, client = newClient(clientConfig));
+      return client;
+    }
   }
 
   @Override
@@ -57,11 +56,11 @@ public abstract class CachedClientDriver<C> extends ClientDriver implements Cons
     clientConfigToClient.remove(clientConfig);
   }
 
-  abstract C newClient(ClientConfig clientConfig);
+  abstract C newClient(ClientConfig clientConfig) throws Exception;
 
   @Override
   final Invocation build(final ClientImpl client, final ClientRuntimeContext runtimeContext, final URI uri, final String method, final HttpHeadersImpl requestHeaders, final ArrayList<Cookie> cookies, final CacheControl cacheControl, final Entity<?> entity, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final HashMap<String,Object> properties, final long connectTimeout, final long readTimeout) throws Exception {
-    return build(clientConfigToClient.get(client.getClientConfig()), client, runtimeContext, uri, method, requestHeaders, cookies, cacheControl, entity, executorService, scheduledExecutorService, properties, connectTimeout, readTimeout);
+    return build(getClient(client.getClientConfig()), client, runtimeContext, uri, method, requestHeaders, cookies, cacheControl, entity, executorService, scheduledExecutorService, properties, connectTimeout, readTimeout);
   }
 
   abstract Invocation build(C httpClient, ClientImpl client, ClientRuntimeContext runtimeContext, URI uri, String method, HttpHeadersImpl requestHeaders, ArrayList<Cookie> cookies, CacheControl cacheControl, Entity<?> entity, ExecutorService executorService, ScheduledExecutorService scheduledExecutorService, HashMap<String,Object> properties, long connectTimeout, long readTimeout) throws Exception;

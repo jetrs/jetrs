@@ -61,7 +61,7 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
   private static final ThreadLocal<Long> connectTimeoutLocal = new ThreadLocal<>();
 
   @Override
-  HttpClient newClient(final ClientConfig clientConfig) {
+  HttpClient newClient(final ClientConfig clientConfig) throws Exception {
     // HTTP2Client h2Client = new HTTP2Client();
     // h2Client.setSelectors(1);
     // HttpClientTransportOverHTTP2 transport = new HttpClientTransportOverHTTP2(h2Client);
@@ -97,12 +97,7 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
     httpClient.setStopTimeout(0); // NOTE: Deprecated in v10, so set to 0 to disable in v9.
     httpClient.setMaxConnectionsPerDestination(clientConfig.maxConnectionsPerDestination);
     httpClient.setCookieStore(Jdk8ClientDriver.cookieStore);
-    try {
-      httpClient.start();
-    }
-    catch (final Exception e) {
-      throw new ExceptionInInitializerError(e); // FIXME: Different exception please.
-    }
+    httpClient.start();
 
     // Remove Jetty's response handlers, to allow the JAX-RS runtime to handle the raw content.
     httpClient.getContentDecoderFactories().clear();

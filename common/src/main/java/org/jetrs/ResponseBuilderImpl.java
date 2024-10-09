@@ -36,7 +36,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Variant;
 import javax.ws.rs.ext.RuntimeDelegate;
 
@@ -71,6 +70,13 @@ final class ResponseBuilderImpl extends Response.ResponseBuilder implements Clon
       this.cookies = (HashMap<String,NewCookie>)copy.cookies.clone();
   }
 
+  private void reset() {
+    status(Response.Status.OK);
+    entity = null;
+    annotations = null;
+    cookies = null;
+  }
+
   @Override
   public Response build() {
     int statusCode = this.statusCode;
@@ -78,8 +84,9 @@ final class ResponseBuilderImpl extends Response.ResponseBuilder implements Clon
       statusCode = entity != null ? Response.Status.OK.getStatusCode() : Response.Status.NO_CONTENT.getStatusCode();
 
     final Response.StatusType statusInfo = Responses.from(statusCode, reasonPhrase);
-    return new ResponseImpl(requestContext, statusCode, statusInfo, headers, cookies, entity, annotations);
-    // FIXME: Need to reset the builder to a "blank state", as is documented in the javadocs of this method
+    final ResponseImpl response = new ResponseImpl(requestContext, statusCode, statusInfo, headers, cookies, entity, annotations);
+    reset();
+    return response;
   }
 
   private static int checkStatus(final int status) {
@@ -96,7 +103,7 @@ final class ResponseBuilderImpl extends Response.ResponseBuilder implements Clon
   }
 
   @Override
-  public ResponseBuilder status(final int status, final String reasonPhrase) {
+  public Response.ResponseBuilder status(final int status, final String reasonPhrase) {
     this.statusCode = checkStatus(status);
     this.reasonPhrase = reasonPhrase;
     return this;
@@ -335,14 +342,22 @@ final class ResponseBuilderImpl extends Response.ResponseBuilder implements Clon
 
   @Override
   public Response.ResponseBuilder tag(final EntityTag tag) {
-    // TODO: Implement this.
-    throw new UnsupportedOperationException();
+    if (tag != null)
+      headers.getMirrorMap().putSingle(HttpHeaders.ETAG, tag);
+    else
+      headers.remove(HttpHeaders.ETAG);
+
+    return this;
   }
 
   @Override
   public Response.ResponseBuilder tag(final String tag) {
-    // TODO: Implement this.
-    throw new UnsupportedOperationException();
+    if (tag != null)
+      headers.putSingle(HttpHeaders.ETAG, tag);
+    else
+      headers.remove(HttpHeaders.ETAG);
+
+    return this;
   }
 
   @Override

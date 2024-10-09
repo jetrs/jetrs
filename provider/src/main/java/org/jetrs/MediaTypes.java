@@ -643,7 +643,7 @@ public final class MediaTypes {
     if (start > -1) {
       type = string.substring(0, start).trim();
       subtype = string.substring(start + 1, end > -1 ? end : len).trim();
-      if (subtype.chars().anyMatch(c -> c == '/'))
+      if (subtype.chars().anyMatch((final int c) -> c == '/'))
         throw new IllegalArgumentException(string);
 
       if (end == -1)

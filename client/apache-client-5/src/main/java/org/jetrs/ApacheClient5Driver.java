@@ -445,6 +445,7 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
             HttpHeadersImpl.parseHeaderValuesFromString(headerValues, value, delimiters);
           }
 
+          // FIXME: This code is confusing Cookie vs NewCookie, and needs to be redone.
           final Map<String,NewCookie> cookies;
           if (client.hasProperty(ClientProperties.DISABLE_COOKIES)) {
             cookies = null;

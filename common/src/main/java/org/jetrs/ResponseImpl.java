@@ -287,8 +287,7 @@ class ResponseImpl extends Response {
 
   @Override
   public EntityTag getEntityTag() {
-    // TODO:
-    throw new UnsupportedOperationException();
+    return (EntityTag)getHeaders().getFirst(HttpHeaders.ETAG);
   }
 
   @Override

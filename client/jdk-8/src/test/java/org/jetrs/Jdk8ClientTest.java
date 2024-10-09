@@ -233,7 +233,7 @@ public class Jdk8ClientTest {
 
   @Test
   public void testPostForm() throws InterruptedException, IOException {
-    final MultivaluedLinkedHashMap<String> form = new MultivaluedLinkedHashMap<>();
+    final UnmodifiableMultivaluedLinkedHashMap<String> form = new UnmodifiableMultivaluedLinkedHashMap<>();
     form.add("foo", "bar");
     form.add("one", "two");
     form.add("emptyValue", "");

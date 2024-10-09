@@ -278,9 +278,6 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext,Ht
     // FIXME: Support ResourceContext
     // if (ResourceContext.class.isAssignableFrom(clazz))
 
-    // FIXME: Support ResourceContext (JAX-RS 2.1 6.5.1)
-    // if (ResourceInfo.class.isAssignableFrom(clazz))
-
     if (Configuration.class.isAssignableFrom(clazz))
       return (T)runtimeContext.getConfiguration();
 
@@ -329,8 +326,9 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext,Ht
     final Class<?>[] parameterTypes = resourceInfo.getMethodParameterTypes();
     final Type[] genericParameterTypes = resourceInfo.getMethodGenericParameterTypes();
     final Annotation[][] parameterAnnotations = resourceInfo.getMethodParameterAnnotations();
-    final Object[] arguments = new Object[parameters.length];
-    for (int i = 0, i$ = parameters.length; i < i$; ++i) { // [A]
+    final int len = parameters.length;
+    final Object[] arguments = new Object[len];
+    for (int i = 0; i < len; ++i) { // [A]
       final Object arg = arguments[i] = findInjectableValueFromCache(parameters[i], i, parameterAnnotations[i], parameterTypes[i], genericParameterTypes[i]);
       if (arg instanceof Exception)
         throw new BadRequestException((Exception)arg);
@@ -541,7 +539,7 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext,Ht
 
         final String[] pathParamNames = resourceMatch.getPathParamNames();
         final long[] regionStartEnds = resourceMatch.getRegionStartEnds();
-        for (int p = 0, segStart = 0, segEnd; p < pathParamNames.length; ++p) { // [A]
+        for (int p = 0, p$ = pathParamNames.length, segStart = 0, segEnd; p < p$; ++p) { // [A]
           if (matches(pathParamNameToMatch, pathParamNames[p])) {
             final long regionStartEnd = regionStartEnds[p];
             final int regionStart = Numbers.Composite.decodeInt(regionStartEnd, 0);
@@ -574,7 +572,7 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext,Ht
         final long[] regionStartEnds = resourceMatch.getRegionStartEnds();
         final Collection<PathSegment> matchedSegments = paramPlurality == ParamPlurality.ARRAY ? new ArrayList<>() : (Collection<PathSegment>)paramPlurality.newContainer(rawType, Integer.MAX_VALUE); // FIXME: Size is unknown at this time.
         OUT:
-        for (int i = 0, j = 0; i < pathParamNames.length; ++i) { // [A]
+        for (int i = 0, i$ = pathParamNames.length, j = 0; i < i$; ++i) { // [A]
           if (matches(pathParamNameToMatch, pathParamNames[i])) {
             boolean inRegion = false;
             final long regionStartEnd = regionStartEnds[i];
@@ -818,10 +816,11 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext,Ht
         resourceMatches = new ResourceMatches();
 
       final String[] pathParamNames = uriTemplate.getPathParamNames();
-      final MultivaluedArrayMap<String,String> pathParameters = new MultivaluedArrayHashMap<>(pathParamNames.length);
-      final long[] regionStartEnds = new long[pathParamNames.length];
+      final int len = pathParamNames.length;
+      final MultivaluedArrayMap<String,String> pathParameters = new MultivaluedArrayHashMap<>(len);
+      final long[] regionStartEnds = new long[len];
 
-      for (int j = 0, j$ = pathParamNames.length; j < j$; ++j) { // [A]
+      for (int j = 0; j < len; ++j) { // [A]
         final String pathParamName = pathParamNames[j];
         final String pathParamValue = matcher.group(pathParamName);
         pathParameters.add(pathParamName.substring(0, pathParamName.lastIndexOf(UriTemplate.DEL, pathParamName.length() - 1)), pathParamValue);
@@ -925,17 +924,17 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext,Ht
     return null;
   }
 
-  void sendError(final int scInternalServerError, final Throwable t) throws IOException {
+  void sendError(final int scInternalServerError, final Throwable exception) throws IOException {
     if (httpServletResponse.isCommitted()) {
-      if (logger.isInfoEnabled()) { logger.info("Unable to overwrite committed response [" + httpServletResponse.getStatus() + "] -> [" + scInternalServerError + "]: ", t); }
+      if (logger.isInfoEnabled()) { logger.info("Unable to overwrite committed response [" + httpServletResponse.getStatus() + "] -> [" + scInternalServerError + "]: ", exception); }
     }
     else {
-      httpServletResponse.sendError(scInternalServerError, Throwables.toString(t));
+      httpServletResponse.sendError(scInternalServerError, Throwables.toString(exception));
     }
   }
 
   private Response setResponse(final Response response, final Annotation[] annotations) {
-    final MultivaluedArrayMap<String,String> containerResponseHeaders = containerResponseContext.getStringHeaders();
+    final MultivaluedArrayMap<String,String> containerResponseHeaders = containerResponseContext.getHttpHeaders();
     containerResponseHeaders.clear();
 
     final MultivaluedMap<String,String> responseHeaders = response.getStringHeaders();

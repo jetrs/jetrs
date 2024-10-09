@@ -205,7 +205,6 @@ abstract class RestApplicationServlet extends RestHttpServlet {
       }
       catch (final Throwable t) {
         if (!(t instanceof AbortFilterChainException)) {
-          // FIXME: Review [JAX-RS 2.1 3.3.4 2,3]
           // (4b) Error
           final Response response;
           try {
@@ -219,7 +218,8 @@ abstract class RestApplicationServlet extends RestHttpServlet {
 
           if (response == null) {
             if (t instanceof EOFException) {
-              // Special case of [JAX-RS 2.1 3.3.4 3]: Instead of rethrowing EOFException to the container, ignore it.
+              // Special case of [JAX-RS 2.1 3.3.4 3]: Instead of rethrowing EOFException to the container, ignore it,
+              // because it means the client hung up the connection.
               if (logger.isDebugEnabled()) { logger.debug(t.getMessage(), t); }
               return;
             }

@@ -98,7 +98,6 @@ class ClientImpl implements Client, ConfigurableImpl<Client> {
 
   @Override
   public void close() {
-    // FIXME: Are there any resources to release?
     closed = true;
   }
 

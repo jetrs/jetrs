@@ -529,7 +529,6 @@ public class CookieParamPrimitiveTest extends SingleServiceTest {
     @GET
     @Produces("application/char")
     public String get(@CookieParam("char") @DefaultValue("a") final Character v) {
-      System.err.println((int)v);
       assertEquals(CHAR_VALUE, v.charValue());
       return entity;
     }
