@@ -455,7 +455,7 @@ class HttpHeadersImpl extends HttpHeadersMap<String,Object> implements HttpHeade
     if (entity != null)
       b.append(" -d '").append(entity.toString().replace("'", "\\'")).append("' ");
 
-    return b.append(uri);
+    return b.append("'").append(uri).append("'");
   }
 
   @Override
