@@ -103,18 +103,18 @@ abstract class Invoker<R> {
   final URI uri;
   final ExecutorService executorService;
   final ScheduledExecutorService scheduledExecutorService;
-  final long connectTimeout;
-  final long readTimeout;
+  final long connectTimeoutMs;
+  final long readTimeoutMs;
 
-  Invoker(final ClientImpl client, final ClientRuntimeContext runtimeContext, final URI uri, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final long connectTimeout, final long readTimeout) {
+  Invoker(final ClientImpl client, final ClientRuntimeContext runtimeContext, final URI uri, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final long connectTimeoutMs, final long readTimeoutMs) {
     this.driver = loadService(ClientDriver.JETRS_CLIENT_DRIVER_PROPERTY, Jdk8ClientDriver::new);
     this.client = client;
     this.runtimeContext = runtimeContext;
     this.uri = uri;
     this.executorService = executorService != null ? executorService : getDefaultExecutorService();
     this.scheduledExecutorService = scheduledExecutorService != null ? scheduledExecutorService : getDefaultScheduledExecutorService();
-    this.connectTimeout = connectTimeout;
-    this.readTimeout = readTimeout;
+    this.connectTimeoutMs = connectTimeoutMs;
+    this.readTimeoutMs = readTimeoutMs;
   }
 
   public final R get() {
@@ -152,7 +152,7 @@ abstract class Invoker<R> {
   final Invocation build(final String method, final HttpHeadersImpl requestHeaders, final ArrayList<Cookie> cookies, final CacheControl cacheControl, final Entity<?> entity) {
     client.assertNotClosed();
     try {
-      return driver.build(client, runtimeContext, uri, method, requestHeaders != null ? requestHeaders.clone() : new HttpHeadersImpl(), cookies, cacheControl, entity, executorService, scheduledExecutorService, getProperties(), connectTimeout, readTimeout);
+      return driver.build(client, runtimeContext, uri, method, requestHeaders != null ? requestHeaders.clone() : new HttpHeadersImpl(), cookies, cacheControl, entity, executorService, scheduledExecutorService, getProperties(), connectTimeoutMs, readTimeoutMs);
     }
     catch (final Exception e) {
       throw new ProcessingException(e);

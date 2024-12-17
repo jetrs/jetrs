@@ -36,18 +36,18 @@ class WebTargetImpl implements ConfigurableImpl<WebTarget>, WebTarget {
   private final UriBuilder uriBuilder;
   private final ExecutorService executorService;
   private final ScheduledExecutorService scheduledExecutorService;
-  private final long connectTimeout;
-  private final long readTimeout;
+  private final long connectTimeoutMs;
+  private final long readTimeoutMs;
 
-  WebTargetImpl(final ClientImpl client, final ClientRuntimeContext runtimeContext, final Configuration configuration, final UriBuilder uriBuilder, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final long connectTimeout, final long readTimeout) {
+  WebTargetImpl(final ClientImpl client, final ClientRuntimeContext runtimeContext, final Configuration configuration, final UriBuilder uriBuilder, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final long connectTimeoutMs, final long readTimeoutMs) {
     this.client = client;
     this.runtimeContext = runtimeContext;
     this.configuration = configuration;
     this.uriBuilder = uriBuilder;
     this.executorService = executorService;
     this.scheduledExecutorService = scheduledExecutorService;
-    this.connectTimeout = connectTimeout;
-    this.readTimeout = readTimeout;
+    this.connectTimeoutMs = connectTimeoutMs;
+    this.readTimeoutMs = readTimeoutMs;
   }
 
   // FIXME: Need to return new instances for the builder methods, because: "Create a new WebTarget instance..."
@@ -124,18 +124,18 @@ class WebTargetImpl implements ConfigurableImpl<WebTarget>, WebTarget {
   @Override
   public Invocation.Builder request() {
     client.assertNotClosed();
-    return new ClientRequestContextImpl.BuilderImpl(client, runtimeContext, getUri(), executorService, scheduledExecutorService, connectTimeout, readTimeout);
+    return new ClientRequestContextImpl.BuilderImpl(client, runtimeContext, getUri(), executorService, scheduledExecutorService, connectTimeoutMs, readTimeoutMs);
   }
 
   @Override
   public Invocation.Builder request(final String ... acceptedResponseTypes) {
     client.assertNotClosed();
-    return new ClientRequestContextImpl.BuilderImpl(client, runtimeContext, getUri(), executorService, scheduledExecutorService, connectTimeout, readTimeout, acceptedResponseTypes);
+    return new ClientRequestContextImpl.BuilderImpl(client, runtimeContext, getUri(), executorService, scheduledExecutorService, connectTimeoutMs, readTimeoutMs, acceptedResponseTypes);
   }
 
   @Override
   public Invocation.Builder request(final MediaType ... acceptedResponseTypes) {
     client.assertNotClosed();
-    return new ClientRequestContextImpl.BuilderImpl(client, runtimeContext, getUri(), executorService, scheduledExecutorService, connectTimeout, readTimeout, acceptedResponseTypes);
+    return new ClientRequestContextImpl.BuilderImpl(client, runtimeContext, getUri(), executorService, scheduledExecutorService, connectTimeoutMs, readTimeoutMs, acceptedResponseTypes);
   }
 }

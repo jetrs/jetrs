@@ -39,17 +39,17 @@ class ClientImpl implements Client, ConfigurableImpl<Client> {
   private final HostnameVerifier verifier;
   private final ExecutorService executorService;
   private final ScheduledExecutorService scheduledExecutorService;
-  private final long connectTimeout;
-  private final long readTimeout;
+  private final long connectTimeoutMs;
+  private final long readTimeoutMs;
 
-  ClientImpl(final ConfigurationImpl configuration, final SSLContext sslContext, final HostnameVerifier verifier, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final long connectTimeout, final long readTimeout) {
+  ClientImpl(final ConfigurationImpl configuration, final SSLContext sslContext, final HostnameVerifier verifier, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final long connectTimeoutMs, final long readTimeoutMs) {
     this.configuration = configuration;
     this.sslContext = sslContext;
     this.verifier = verifier;
     this.executorService = executorService;
     this.scheduledExecutorService = scheduledExecutorService;
-    this.connectTimeout = connectTimeout;
-    this.readTimeout = readTimeout;
+    this.connectTimeoutMs = connectTimeoutMs;
+    this.readTimeoutMs = readTimeoutMs;
   }
 
   private ClientRuntimeContext newClientRuntimeContext() {
@@ -119,30 +119,30 @@ class ClientImpl implements Client, ConfigurableImpl<Client> {
   @Override
   public WebTarget target(final String uri) {
     assertNotClosed();
-    return new WebTargetImpl(this, newClientRuntimeContext(), configuration, UriBuilder.fromUri(uri), executorService, scheduledExecutorService, connectTimeout, readTimeout);
+    return new WebTargetImpl(this, newClientRuntimeContext(), configuration, UriBuilder.fromUri(uri), executorService, scheduledExecutorService, connectTimeoutMs, readTimeoutMs);
   }
 
   @Override
   public WebTarget target(final URI uri) {
     assertNotClosed();
-    return new WebTargetImpl(this, newClientRuntimeContext(), configuration, UriBuilder.fromUri(uri), executorService, scheduledExecutorService, connectTimeout, readTimeout);
+    return new WebTargetImpl(this, newClientRuntimeContext(), configuration, UriBuilder.fromUri(uri), executorService, scheduledExecutorService, connectTimeoutMs, readTimeoutMs);
   }
 
   @Override
   public WebTarget target(final UriBuilder uriBuilder) {
     assertNotClosed();
-    return new WebTargetImpl(this, newClientRuntimeContext(), configuration, uriBuilder, executorService, scheduledExecutorService, connectTimeout, readTimeout);
+    return new WebTargetImpl(this, newClientRuntimeContext(), configuration, uriBuilder, executorService, scheduledExecutorService, connectTimeoutMs, readTimeoutMs);
   }
 
   @Override
   public WebTarget target(final Link link) {
     assertNotClosed();
-    return new WebTargetImpl(this, newClientRuntimeContext(), configuration, UriBuilder.fromLink(link), executorService, scheduledExecutorService, connectTimeout, readTimeout);
+    return new WebTargetImpl(this, newClientRuntimeContext(), configuration, UriBuilder.fromLink(link), executorService, scheduledExecutorService, connectTimeoutMs, readTimeoutMs);
   }
 
   @Override
   public Invocation.Builder invocation(final Link link) {
     assertNotClosed();
-    return new ClientRequestContextImpl.BuilderImpl(this, newClientRuntimeContext(), link.getUri(), executorService, scheduledExecutorService, connectTimeout, readTimeout);
+    return new ClientRequestContextImpl.BuilderImpl(this, newClientRuntimeContext(), link.getUri(), executorService, scheduledExecutorService, connectTimeoutMs, readTimeoutMs);
   }
 }

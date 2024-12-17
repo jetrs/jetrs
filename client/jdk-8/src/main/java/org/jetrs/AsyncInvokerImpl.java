@@ -39,8 +39,8 @@ class AsyncInvokerImpl extends Invoker<Future<Response>> implements AsyncInvoker
   private final CacheControl cacheControl;
   private final HashMap<String,Object> properties;
 
-  AsyncInvokerImpl(final ClientImpl client, final ClientRuntimeContext runtimeContext, final URI uri, final HttpHeadersImpl requestHeaders, final ArrayList<Cookie> cookies, final CacheControl cacheControl, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final HashMap<String,Object> properties, final long connectTimeout, final long readTimeout) {
-    super(client, runtimeContext, uri, executorService, scheduledExecutorService, connectTimeout, readTimeout);
+  AsyncInvokerImpl(final ClientImpl client, final ClientRuntimeContext runtimeContext, final URI uri, final HttpHeadersImpl requestHeaders, final ArrayList<Cookie> cookies, final CacheControl cacheControl, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final HashMap<String,Object> properties, final long connectTimeoutMs, final long readTimeoutMs) {
+    super(client, runtimeContext, uri, executorService, scheduledExecutorService, connectTimeoutMs, readTimeoutMs);
     this.requestHeaders = requestHeaders;
     this.cookies = cookies;
     this.cacheControl = cacheControl;

@@ -184,8 +184,8 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
   @Override
   Invocation build(final CloseableHttpClient httpClient, final ClientImpl client, final ClientRuntimeContext runtimeContext, final URI uri, final String method, final HttpHeadersImpl requestHeaders, final ArrayList<javax.ws.rs.core.Cookie> cookies, final CacheControl cacheControl, final Entity<?> entity, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final HashMap<String,Object> properties, final long connectTimeout, final long readTimeout) throws Exception {
     return new ClientRequestContextImpl(client, runtimeContext, uri, method, requestHeaders, cookies, cacheControl, entity, executorService, scheduledExecutorService, properties, connectTimeout, readTimeout) {
-      private final Timeout connectTimeoutObj = connectTimeout > 0 ? Timeout.of(connectTimeout, TimeUnit.MILLISECONDS) : null;
-      private final Timeout readTimeoutObj = readTimeout > 0 ? Timeout.of(readTimeout, TimeUnit.MILLISECONDS) : null;
+      private final Timeout connectTimeoutObj = connectTimeoutMs > 0 ? Timeout.of(connectTimeoutMs, TimeUnit.MILLISECONDS) : null;
+      private final Timeout readTimeoutObj = readTimeoutMs > 0 ? Timeout.of(readTimeoutMs, TimeUnit.MILLISECONDS) : null;
 
       private CloseableHttpResponse response = null;
       private InputStream entityStream = null;
@@ -234,17 +234,17 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
         return result;
       }
 
-      void await(final Condition condition, final AtomicLong timeout) throws IOException {
+      void await(final Condition condition, final AtomicLong timeoutMs) throws IOException {
         final long ts = System.currentTimeMillis();
         try {
-          if (!condition.await(timeout.get(), TimeUnit.MILLISECONDS))
-            throw new IOException("Elapsed timeout of " + readTimeout + "ms");
+          if (!condition.await(timeoutMs.get(), TimeUnit.MILLISECONDS))
+            throw new IOException("Elapsed timeout of " + readTimeoutMs + "ms");
         }
         catch (final InterruptedException e) {
           throw new IOException(e);
         }
 
-        timeout.addAndGet(ts - System.currentTimeMillis());
+        timeoutMs.addAndGet(ts - System.currentTimeMillis());
       }
 
       @Override
@@ -296,7 +296,7 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
 
               final MessageBodyWriter messageBodyWriter = getMessageBodyWriter();
 
-              final AtomicLong timeout = new AtomicLong(readTimeout > 0 ? readTimeout : Long.MAX_VALUE);
+              final AtomicLong timeoutMs = new AtomicLong(readTimeoutMs > 0 ? readTimeoutMs : Long.MAX_VALUE);
               final ReentrantLock lock = new ReentrantLock();
               final Condition condition = lock.newCondition();
 
@@ -337,65 +337,64 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
                       target = out;
                       $span(Span.ENTITY_INIT, Span.ENTITY_WRITE);
                     }
-                    else if (tempOutputStream.get() != null) {
-                      request.setEntity(new AbstractHttpEntity((String)null, null) {
-                        @Override
-                        public boolean isRepeatable() {
-                          return false;
-                        }
 
-                        @Override
-                        public long getContentLength() {
-                          return -1;
-                        }
+                    request.setEntity(new AbstractHttpEntity((String)null, null) {
+                      @Override
+                      public boolean isRepeatable() {
+                        return false;
+                      }
 
-                        @Override
-                        public boolean isStreaming() {
-                          return false;
-                        }
+                      @Override
+                      public long getContentLength() {
+                        return -1;
+                      }
 
-                        @Override
-                        public InputStream getContent() {
-                          throw new UnsupportedOperationException();
-                        }
+                      @Override
+                      public boolean isStreaming() {
+                        return false;
+                      }
 
-                        @Override
-                        public void writeTo(final OutputStream outStream) throws IOException {
-                          lock.lock();
-                          target = outStream;
-                          condition.signal();
-                          try {
-                            await(condition, timeout);
-                          }
-                          finally {
-                            lock.unlock();
-                          }
-                        }
+                      @Override
+                      public InputStream getContent() {
+                        throw new UnsupportedOperationException();
+                      }
 
-                        @Override
-                        public void close() {
+                      @Override
+                      public void writeTo(final OutputStream outStream) throws IOException {
+                        lock.lock();
+                        target = outStream;
+                        condition.signal();
+                        try {
+                          await(condition, timeoutMs);
                         }
+                        finally {
+                          lock.unlock();
+                        }
+                      }
+
+                      @Override
+                      public void close() {
+                      }
+                    });
+
+                    lock.lock();
+                    try {
+                      executorService.execute(() -> {
+                        executeRequest(executed, resultRef, request);
+                        lock.lock();
+                        condition.signal();
+                        lock.unlock();
                       });
 
-                      lock.lock();
-                      try {
-                        executorService.execute(() -> {
-                          executeRequest(executed, resultRef, request);
-                          lock.lock();
-                          condition.signal();
-                          lock.unlock();
-                        });
-
-                        await(condition, timeout);
-                      }
-                      finally {
-                        lock.unlock();
-                      }
-
-                      getResult(resultRef);
-                      target.write(tempOutputStream.get().toByteArray());
-                      tempOutputStream.set(null);
+                      await(condition, timeoutMs);
                     }
+                    finally {
+                      lock.unlock();
+                    }
+
+                    getResult(resultRef);
+                    target.write(tempOutputStream.get().toByteArray());
+                    tempOutputStream.set(null);
 
                     return true;
                   }
@@ -415,7 +414,7 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
                 lock.lock();
                 try {
                   if (resultRef.get() == null) {
-                    await(condition, timeout);
+                    await(condition, timeoutMs);
                   }
                 }
                 finally {

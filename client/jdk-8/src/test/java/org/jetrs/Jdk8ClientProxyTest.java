@@ -87,6 +87,7 @@ public class Jdk8ClientProxyTest {
   @Test
   public void testConnectionRefused() {
     System.setProperty(ClientProperties.PROXY_URI, "socks://localhost:" + (proxyPortNoAuth - 1));
+
     try {
       test();
       fail("Expected ProcessingException");
@@ -101,6 +102,7 @@ public class Jdk8ClientProxyTest {
   @Test
   public void testSuccessNoAuth() throws InterruptedException {
     System.setProperty(ClientProperties.PROXY_URI, "socks://localhost:" + proxyPortNoAuth);
+
     final TestExecutorService executor = new TestExecutorService(Executors.newFixedThreadPool(noTests));
     for (int i = 0; i < noTests; ++i) // [N]
       executor.submit(Jdk8ClientProxyTest::test);
@@ -113,6 +115,7 @@ public class Jdk8ClientProxyTest {
   public void testSuccessAuth() {
     System.setProperty(ClientProperties.FOLLOW_REDIRECTS, "false");
     System.setProperty(ClientProperties.PROXY_URI, "socks://" + username + ":" + password + "@localhost:" + proxyPortAuth);
+
     test();
     assertTrue(authenticated);
   }

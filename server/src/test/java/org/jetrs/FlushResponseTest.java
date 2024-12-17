@@ -59,9 +59,9 @@ public class FlushResponseTest {
     if (gzip)
       request = request.header(HttpHeaders.ACCEPT_ENCODING, "gzip");
 
-    long time = System.currentTimeMillis();
+    long timeMs = System.currentTimeMillis();
     final Response getResponse = request.get();
-    time = System.currentTimeMillis() - time;
+    timeMs = System.currentTimeMillis() - timeMs;
 
     final byte[] actual = getResponse.readEntity(byte[].class);
     try {
@@ -100,7 +100,7 @@ public class FlushResponseTest {
 
     final Response headResponse = request.head();
     assertGetHead(!exception, false, getResponse, headResponse);
-    return time;
+    return timeMs;
   }
 
   private static long test(final Boolean chunked, final boolean gzip, final boolean expectContentLengthEqualOnError) throws Exception {
@@ -117,11 +117,11 @@ public class FlushResponseTest {
     test(Strings.getRandomAlphaNumeric(3), ContainerResponseContextImpl.bufferSize, chunked, gzip, exception, expectContentLengthEqualOnError);
     test(Strings.getRandomAlphaNumeric(3), ContainerResponseContextImpl.bufferSize + 1, chunked, gzip, exception, expectContentLengthEqualOnError);
 
-    long time = 0;
+    long timeMs = 0;
     for (int i = 0; i < 10; ++i) // [N]
-      time += test(Strings.getRandomAlphaNumeric(3), m, chunked, gzip, exception, expectContentLengthEqualOnError);
+      timeMs += test(Strings.getRandomAlphaNumeric(3), m, chunked, gzip, exception, expectContentLengthEqualOnError);
 
-    return time;
+    return timeMs;
   }
 
   @Test

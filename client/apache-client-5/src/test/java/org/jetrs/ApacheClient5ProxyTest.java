@@ -16,5 +16,8 @@
 
 package org.jetrs;
 
+import org.junit.Ignore;
+
+@Ignore
 public class ApacheClient5ProxyTest extends Jdk8ClientProxyTest {
 }

@@ -48,27 +48,27 @@ public abstract class ResponseTimeoutFilter implements ContainerRequestFilter, C
 
   private final ConcurrentLinkedQueue<ContainerRequestContext> requestContexts = new ConcurrentLinkedQueue<>();
 
-  protected final long timeout;
+  protected final long timeoutMs;
   private final Thread reaper;
 
   /**
-   * Creates a new {@link ResponseTimeoutFilter} with an expire {@code timeout} of 30s.
+   * Creates a new {@link ResponseTimeoutFilter} with an expire timeout of 30s.
    */
   public ResponseTimeoutFilter() {
     this(30000);
   }
 
   /**
-   * Creates a new {@link ResponseTimeoutFilter} with the provided expire {@code timeout}.
+   * Creates a new {@link ResponseTimeoutFilter} with the provided expire {@code timeoutMs}.
    *
-   * @param timeout The time in milliseconds after which the {@link #onTimeout(ContainerRequestContext,Thread,long)} method it so be
+   * @param timeoutMs The time in milliseconds after which the {@link #onTimeout(ContainerRequestContext,Thread,long)} method it so be
    *          called.
    * @throws IllegalArgumentException If {@code timeout} is negative.
    * @implNote A {@code timeout} of {@code 0} creates a noop {@link ResponseTimeoutFilter}.
    */
-  public ResponseTimeoutFilter(final long timeout) {
-    this.timeout = assertNotNegative(timeout);
-    if (timeout == 0) {
+  public ResponseTimeoutFilter(final long timeoutMs) {
+    this.timeoutMs = assertNotNegative(timeoutMs);
+    if (timeoutMs == 0) {
       this.reaper = null;
     }
     else {
@@ -103,7 +103,7 @@ public abstract class ResponseTimeoutFilter implements ContainerRequestFilter, C
                       if (logger.isErrorEnabled()) { logger.error("ResponseTimeoutFilter: Unable to enforce expire time: " + ObjectUtil.simpleIdentityString(requestContext) + ".getProperty(" + THREAD + ") = null: " + requestContext.getUriInfo().getPath()); }
                     }
                     else {
-                      onTimeout(requestContext, thread, timeout - diff);
+                      onTimeout(requestContext, thread, timeoutMs - diff);
                     }
                   }
                 }
@@ -126,9 +126,9 @@ public abstract class ResponseTimeoutFilter implements ContainerRequestFilter, C
   }
 
   /**
-   * Callback method that is called when the expire {@link #timeout} elapses for the specified {@link ContainerRequestContext}.
+   * Callback method that is called when the expire {@link #timeoutMs} elapses for the specified {@link ContainerRequestContext}.
    *
-   * @param requestContext The {@link ContainerRequestContext} for which the expire {@link #timeout} has elapsed.
+   * @param requestContext The {@link ContainerRequestContext} for which the expire {@link #timeoutMs} has elapsed.
    * @param thread The {@link Thread} serving the {@link ContainerRequestContext}.
    * @param elapsed The elapsed time of the specified {@link ContainerRequestContext}.
    */
@@ -136,11 +136,11 @@ public abstract class ResponseTimeoutFilter implements ContainerRequestFilter, C
 
   @Override
   public void filter(final ContainerRequestContext requestContext) {
-    if (timeout == 0 || requestContext.getUriInfo().getMatchedResources().size() == 0)
+    if (timeoutMs == 0 || requestContext.getUriInfo().getMatchedResources().size() == 0)
       return;
 
     final long timestamp = System.currentTimeMillis();
-    requestContext.setProperty(EXPIRE_TIME, timestamp + timeout);
+    requestContext.setProperty(EXPIRE_TIME, timestamp + timeoutMs);
     requestContext.setProperty(THREAD, Thread.currentThread());
 
     requestContexts.add(requestContext);
@@ -153,7 +153,7 @@ public abstract class ResponseTimeoutFilter implements ContainerRequestFilter, C
 
   @Override
   public void filter(final ContainerRequestContext requestContext, final ContainerResponseContext responseContext) {
-    if (timeout > 0 && requestContext.getUriInfo().getMatchedResources().size() > 0)
+    if (timeoutMs > 0 && requestContext.getUriInfo().getMatchedResources().size() > 0)
       requestContexts.remove(requestContext);
   }
 }

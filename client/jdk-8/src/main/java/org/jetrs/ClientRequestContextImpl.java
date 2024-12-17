@@ -83,10 +83,10 @@ abstract class ClientRequestContextImpl extends RequestContext<ClientRuntimeCont
   final ExecutorService executorService;
   final ScheduledExecutorService scheduledExecutorService;
   private final HashMap<String,Object> properties;
-  final long connectTimeout;
-  final long readTimeout;
+  final long connectTimeoutMs;
+  final long readTimeoutMs;
 
-  ClientRequestContextImpl(final ClientImpl client, final ClientRuntimeContext runtimeContext, final URI uri, final String method, final HttpHeadersImpl requestHeaders, final ArrayList<Cookie> cookies, final CacheControl cacheControl, final Entity<?> entity, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final HashMap<String,Object> properties, final long connectTimeout, final long readTimeout) {
+  ClientRequestContextImpl(final ClientImpl client, final ClientRuntimeContext runtimeContext, final URI uri, final String method, final HttpHeadersImpl requestHeaders, final ArrayList<Cookie> cookies, final CacheControl cacheControl, final Entity<?> entity, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final HashMap<String,Object> properties, final long connectTimeoutMs, final long readTimeoutMs) {
     super(PropertiesAdapter.MAP_ADAPTER, runtimeContext, new RequestImpl(method));
     this.client = client;
     this.writerInterceptorComponents = getWriterInterceptorComponents();
@@ -110,8 +110,8 @@ abstract class ClientRequestContextImpl extends RequestContext<ClientRuntimeCont
     this.executorService = executorService;
     this.scheduledExecutorService = scheduledExecutorService;
     this.properties = properties;
-    this.connectTimeout = connectTimeout;
-    this.readTimeout = readTimeout;
+    this.connectTimeoutMs = connectTimeoutMs;
+    this.readTimeoutMs = readTimeoutMs;
   }
 
   abstract void closeResponse(Exception e);
@@ -385,7 +385,7 @@ abstract class ClientRequestContextImpl extends RequestContext<ClientRuntimeCont
       lock.lock();
       result = resultRef.get();
 
-      long timeout = connectTimeout + readTimeout;
+      long timeout = connectTimeoutMs + readTimeoutMs;
       if (timeout == 0)
         timeout = Long.MAX_VALUE;
 
@@ -458,17 +458,17 @@ abstract class ClientRequestContextImpl extends RequestContext<ClientRuntimeCont
     private CacheControl cacheControl;
     private HashMap<String,Object> properties;
 
-    BuilderImpl(final ClientImpl client, final ClientRuntimeContext runtimeContext, final URI uri, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final long connectTimeout, final long readTimeout) {
-      super(client, runtimeContext, uri, executorService, scheduledExecutorService, connectTimeout, readTimeout);
+    BuilderImpl(final ClientImpl client, final ClientRuntimeContext runtimeContext, final URI uri, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final long connectTimeoutMs, final long readTimeoutMs) {
+      super(client, runtimeContext, uri, executorService, scheduledExecutorService, connectTimeoutMs, readTimeoutMs);
     }
 
-    BuilderImpl(final ClientImpl client, final ClientRuntimeContext runtimeContext, final URI uri, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final long connectTimeout, final long readTimeout, final String[] acceptedResponseTypes) {
-      this(client, runtimeContext, uri, executorService, scheduledExecutorService, connectTimeout, readTimeout);
+    BuilderImpl(final ClientImpl client, final ClientRuntimeContext runtimeContext, final URI uri, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final long connectTimeoutMs, final long readTimeoutMs, final String[] acceptedResponseTypes) {
+      this(client, runtimeContext, uri, executorService, scheduledExecutorService, connectTimeoutMs, readTimeoutMs);
       accept(acceptedResponseTypes);
     }
 
-    BuilderImpl(final ClientImpl client, final ClientRuntimeContext runtimeContext, final URI uri, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final long connectTimeout, final long readTimeout, final MediaType[] acceptedResponseTypes) {
-      this(client, runtimeContext, uri, executorService, scheduledExecutorService, connectTimeout, readTimeout);
+    BuilderImpl(final ClientImpl client, final ClientRuntimeContext runtimeContext, final URI uri, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final long connectTimeoutMs, final long readTimeoutMs, final MediaType[] acceptedResponseTypes) {
+      this(client, runtimeContext, uri, executorService, scheduledExecutorService, connectTimeoutMs, readTimeoutMs);
       accept(acceptedResponseTypes);
     }
 
@@ -767,7 +767,7 @@ abstract class ClientRequestContextImpl extends RequestContext<ClientRuntimeCont
     @Override
     public AsyncInvoker async() {
       client.assertNotClosed();
-      return new AsyncInvokerImpl(client, runtimeContext, uri, requestHeaders, cookies, cacheControl, executorService, scheduledExecutorService, properties, connectTimeout, readTimeout);
+      return new AsyncInvokerImpl(client, runtimeContext, uri, requestHeaders, cookies, cacheControl, executorService, scheduledExecutorService, properties, connectTimeoutMs, readTimeoutMs);
     }
 
     @Override

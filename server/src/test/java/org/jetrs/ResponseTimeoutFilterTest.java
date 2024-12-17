@@ -48,8 +48,8 @@ public class ResponseTimeoutFilterTest {
 
   @Singleton
   public static class TestFilter extends ResponseTimeoutFilter {
-    public TestFilter(final long timeout) {
-      super(timeout);
+    public TestFilter(final long timeoutMs) {
+      super(timeoutMs);
     }
 
     @Override
@@ -75,10 +75,10 @@ public class ResponseTimeoutFilterTest {
     }
   }
 
-  private static final long timeout = 200;
+  private static final long timeoutMs = 200;
   private static final int numTests = 10;
   private static final TestAppServer server = new TestAppServer(new Object[] {
-    new TestFilter(timeout),
+    new TestFilter(timeoutMs),
     new DelayService()
   }, new Class[0]);
   private static final String serviceUrl = "http://localhost:" + server.getContainerPort();
@@ -107,21 +107,21 @@ public class ResponseTimeoutFilterTest {
     assertEquals(success, test(0).get().readEntity(String.class));
     assertEquals(0, timedOut.size());
 
-    assertEquals(success, test(timeout / 2).get().readEntity(String.class));
+    assertEquals(success, test(timeoutMs / 2).get().readEntity(String.class));
     assertEquals(0, timedOut.size());
 
     for (int i = 0; i < numTests; ++i) { // [N]
-      assertEquals(failure, test(timeout + 10).get().readEntity(String.class));
+      assertEquals(failure, test(timeoutMs + 10).get().readEntity(String.class));
       assertEquals(timedOut.toString(), 1, timedOut.size());
       timedOut.clear();
     }
 
     final ArrayList<Future<Response>> responses = new ArrayList<>();
     for (int i = 0; i < numTests; ++i) { // [N]
-      responses.add(test(timeout / 5));
-      responses.add(test(timeout / 3));
-      responses.add(test(timeout / 2));
-      responses.add(test(timeout / 4));
+      responses.add(test(timeoutMs / 5));
+      responses.add(test(timeoutMs / 3));
+      responses.add(test(timeoutMs / 2));
+      responses.add(test(timeoutMs / 4));
     }
 
     for (int i = 0, i$ = responses.size(); i < i$; ++i) // [RA]

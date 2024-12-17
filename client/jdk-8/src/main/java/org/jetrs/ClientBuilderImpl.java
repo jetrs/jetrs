@@ -39,8 +39,8 @@ public class ClientBuilderImpl extends ClientBuilder implements ConfigurableImpl
   private HostnameVerifier verifier;
   private ExecutorService executorService;
   private ScheduledExecutorService scheduledExecutorService;
-  private long connectTimeout;
-  private long readTimeout;
+  private long connectTimeoutMs;
+  private long readTimeoutMs;
 
   private SSLContext newSSLContext() {
     try {
@@ -117,7 +117,7 @@ public class ClientBuilderImpl extends ClientBuilder implements ConfigurableImpl
     if (timeout < 0)
       throw new IllegalArgumentException("timeout (" + timeout + ") cannot be negative");
 
-    this.connectTimeout = TimeUnit.MILLISECONDS.convert(timeout, unit);
+    this.connectTimeoutMs = TimeUnit.MILLISECONDS.convert(timeout, unit);
     return this;
   }
 
@@ -126,12 +126,12 @@ public class ClientBuilderImpl extends ClientBuilder implements ConfigurableImpl
     if (timeout < 0)
       throw new IllegalArgumentException("timeout (" + timeout + ") cannot be negative");
 
-    this.readTimeout = TimeUnit.MILLISECONDS.convert(timeout, unit);
+    this.readTimeoutMs = TimeUnit.MILLISECONDS.convert(timeout, unit);
     return this;
   }
 
   @Override
   public Client build() {
-    return new ClientImpl(configuration == null ? new ConfigurationImpl() : configuration.clone(), sslContext == null ? sslContext = newSSLContext() : sslContext, verifier, executorService, scheduledExecutorService, connectTimeout, readTimeout);
+    return new ClientImpl(configuration == null ? new ConfigurationImpl() : configuration.clone(), sslContext == null ? sslContext = newSSLContext() : sslContext, verifier, executorService, scheduledExecutorService, connectTimeoutMs, readTimeoutMs);
   }
 }

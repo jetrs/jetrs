@@ -58,7 +58,7 @@ import org.slf4j.LoggerFactory;
 
 public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
   private static final Logger logger = LoggerFactory.getLogger(JettyClient9Driver.class);
-  private static final ThreadLocal<Long> connectTimeoutLocal = new ThreadLocal<>();
+  private static final ThreadLocal<Long> connectTimeoutMsLocal = new ThreadLocal<>();
 
   @Override
   HttpClient newClient(final ClientConfig clientConfig) throws Exception {
@@ -71,8 +71,8 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
     final HttpClient httpClient = new HttpClient(/* transport, */ sslContextFactory) {
       @Override
       public long getConnectTimeout() {
-        final Long connectTimeout = connectTimeoutLocal.get();
-        return connectTimeout != null ? connectTimeout : super.getConnectTimeout();
+        final Long connectTimeoutMs = connectTimeoutMsLocal.get();
+        return connectTimeoutMs != null ? connectTimeoutMs : super.getConnectTimeout();
       }
     };
 
@@ -106,11 +106,11 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
   }
 
   @Override
-  Invocation build(final HttpClient httpClient, final ClientImpl client, final ClientRuntimeContext runtimeContext, final URI uri, final String method, final HttpHeadersImpl requestHeaders, final ArrayList<Cookie> cookies, final CacheControl cacheControl, final Entity<?> entity, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final HashMap<String,Object> properties, final long connectTimeout, final long readTimeout) throws Exception {
-    if (connectTimeout > 0)
-      connectTimeoutLocal.set(connectTimeout);
+  Invocation build(final HttpClient httpClient, final ClientImpl client, final ClientRuntimeContext runtimeContext, final URI uri, final String method, final HttpHeadersImpl requestHeaders, final ArrayList<Cookie> cookies, final CacheControl cacheControl, final Entity<?> entity, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final HashMap<String,Object> properties, final long connectTimeoutMs, final long readTimeout) throws Exception {
+    if (connectTimeoutMs > 0)
+      connectTimeoutMsLocal.set(connectTimeoutMs);
 
-    return new ClientRequestContextImpl(client, runtimeContext, uri, method, requestHeaders, cookies, cacheControl, entity, executorService, scheduledExecutorService, properties, connectTimeout, readTimeout) {
+    return new ClientRequestContextImpl(client, runtimeContext, uri, method, requestHeaders, cookies, cacheControl, entity, executorService, scheduledExecutorService, properties, connectTimeoutMs, readTimeout) {
       private InputStream entityStream = null;
 
       private void setHeaders(final Request request) {
@@ -139,7 +139,7 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
 
           final Request request = httpClient.newRequest(uri)
             .method(method)
-            .timeout(connectTimeout + readTimeout, TimeUnit.MILLISECONDS)
+            .timeout(connectTimeoutMs + readTimeoutMs, TimeUnit.MILLISECONDS)
             .followRedirects(Booleans.parseBoolean(client.getProperty(ClientProperties.FOLLOW_REDIRECTS), ClientProperties.FOLLOW_REDIRECTS_DEFAULT));
 
           if (cookies != null)
@@ -176,7 +176,7 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
           }
 
           request.send(listener);
-          final org.eclipse.jetty.client.api.Response response = listener.get((readTimeout > 0 ? readTimeout : Long.MAX_VALUE) + ts - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
+          final org.eclipse.jetty.client.api.Response response = listener.get((readTimeoutMs > 0 ? readTimeoutMs : Long.MAX_VALUE) + ts - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
 
           // System.err.println(request.getHeaders().toString());
 

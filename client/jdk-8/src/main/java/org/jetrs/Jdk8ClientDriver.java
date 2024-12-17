@@ -75,8 +75,8 @@ public class Jdk8ClientDriver extends ClientDriver {
   }
 
   @Override
-  Invocation build(final ClientImpl client, final ClientRuntimeContext runtimeContext, final URI uri, final String method, final HttpHeadersImpl requestHeaders, final ArrayList<Cookie> cookies, final CacheControl cacheControl, final Entity<?> entity, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final HashMap<String,Object> properties, final long connectTimeout, final long readTimeout) throws Exception {
-    return new ClientRequestContextImpl(client, runtimeContext, uri, method, requestHeaders, cookies, cacheControl, entity, executorService, scheduledExecutorService, properties, connectTimeout, readTimeout) {
+  Invocation build(final ClientImpl client, final ClientRuntimeContext runtimeContext, final URI uri, final String method, final HttpHeadersImpl requestHeaders, final ArrayList<Cookie> cookies, final CacheControl cacheControl, final Entity<?> entity, final ExecutorService executorService, final ScheduledExecutorService scheduledExecutorService, final HashMap<String,Object> properties, final long connectTimeoutMs, final long readTimeoutMs) throws Exception {
+    return new ClientRequestContextImpl(client, runtimeContext, uri, method, requestHeaders, cookies, cacheControl, entity, executorService, scheduledExecutorService, properties, connectTimeoutMs, readTimeoutMs) {
       private final SSLContext sslContext;
       private InputStream entityStream;
 
@@ -107,18 +107,18 @@ public class Jdk8ClientDriver extends ClientDriver {
           ((HttpsURLConnection)connection).setSSLSocketFactory(sslContext.getSocketFactory());
 
         connection.setRequestMethod(method);
-        if (connectTimeout > 0) {
-          if ((int)connectTimeout <= 0)
-            throw new IllegalArgumentException("connectTimeout (" + connectTimeout + ") overflows (int)connectTimeout (" + (int)connectTimeout + ")");
+        if (connectTimeoutMs > 0) {
+          if ((int)connectTimeoutMs <= 0)
+            throw new IllegalArgumentException("connectTimeoutMs (" + connectTimeoutMs + ") overflows (int)connectTimeoutMs (" + (int)connectTimeoutMs + ")");
 
-          connection.setConnectTimeout((int)connectTimeout);
+          connection.setConnectTimeout((int)connectTimeoutMs);
         }
 
-        if (readTimeout > 0) {
-          if ((int)readTimeout <= 0)
-            throw new IllegalArgumentException("readTimeout (" + readTimeout + ") overflows (int)readTimeout (" + (int)readTimeout + ")");
+        if (readTimeoutMs > 0) {
+          if ((int)readTimeoutMs <= 0)
+            throw new IllegalArgumentException("readTimeoutMs (" + readTimeoutMs + ") overflows (int)readTimeoutMs (" + (int)readTimeoutMs + ")");
 
-          connection.setReadTimeout((int)readTimeout);
+          connection.setReadTimeout((int)readTimeoutMs);
         }
 
         if (cookies != null)
