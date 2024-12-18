@@ -343,13 +343,13 @@ public final class EntityUtil {
     return true;
   }
 
-  static InputStream makeConsumableNonEmptyOrNull(InputStream in, final boolean consumable) throws IOException {
+  static InputStream makeConsumableNonEmptyOrNull(InputStream in, final boolean consumable, final boolean allowEmpty) throws IOException {
     if (in == null) // Can happen for connection.getErrorStream() for an errored HEAD response
       return null;
 
     final boolean hasAvailable = in.available() > 0;
     if (consumable) {
-      if (hasAvailable) {
+      if (hasAvailable || allowEmpty) {
         return new ConsumableFilterInputStream(in);
       }
       else if (!in.markSupported()) {
@@ -369,7 +369,7 @@ public final class EntityUtil {
       in = new BufferedInputStream(in, 1);
     }
 
-    return hasData(in) ? in : null;
+    return allowEmpty || hasData(in) ? in : null;
   }
 
   private EntityUtil() {

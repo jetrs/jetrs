@@ -46,7 +46,6 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Cookie;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.StatusType;
@@ -237,7 +236,12 @@ public class Jdk8ClientDriver extends ClientDriver {
           }
 
           $span(Span.RESPONSE_READ);
-          entityStream = EntityUtil.makeConsumableNonEmptyOrNull(statusCode < 400 ? connection.getInputStream() : connection.getErrorStream(), true);
+
+          final String transferEncoding = responseHeaders.getFirst(HttpHeaders.TRANSFER_ENCODING);
+          final boolean isChunked = "chunked".equals(transferEncoding);
+          final boolean allowEmpty = connection.getContentLength() == 0 && !isChunked;
+          entityStream = EntityUtil.makeConsumableNonEmptyOrNull(statusCode < 400 ? connection.getInputStream() : connection.getErrorStream(), true, allowEmpty);
+
           if (entityStream != null)
             $span(Span.ENTITY_READ);
 

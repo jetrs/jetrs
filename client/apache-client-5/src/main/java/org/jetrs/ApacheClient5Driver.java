@@ -43,7 +43,6 @@ import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.StatusType;
-import javax.ws.rs.ext.MessageBodyWriter;
 
 import org.apache.hc.client5.http.DnsResolver;
 import org.apache.hc.client5.http.HttpRoute;
@@ -294,8 +293,6 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
             else {
               $span(Span.ENTITY_INIT);
 
-              final MessageBodyWriter messageBodyWriter = getMessageBodyWriter();
-
               final AtomicLong timeoutMs = new AtomicLong(readTimeoutMs > 0 ? readTimeoutMs : Long.MAX_VALUE);
               final ReentrantLock lock = new ReentrantLock();
               final Condition condition = lock.newCondition();
@@ -405,7 +402,7 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
                   }
                 });
 
-                messageBodyWriter.writeTo(getEntity(), getEntityClass(), getGenericType(), getAnnotations(), getMediaType(), requestHeaders.getMirrorMap(), relegateEntityStream);
+                writeContent(getMessageBodyWriter(), relegateEntityStream);
               }
 
               $span(Span.RESPONSE_WAIT);
@@ -474,8 +471,9 @@ public class ApacheClient5Driver extends CachedClientDriver<CloseableHttpClient>
 
           $span(Span.RESPONSE_READ);
 
-          final HttpEntity entity = response.getEntity();
-          entityStream = entity == null ? null : EntityUtil.makeConsumableNonEmptyOrNull(entity.getContent(), true);
+          final HttpEntity httpEntity = response.getEntity();
+          entityStream = httpEntity == null ? null : EntityUtil.makeConsumableNonEmptyOrNull(httpEntity.getContent(), true, httpEntity.getContentLength() == 0 && !httpEntity.isChunked());
+
           if (entityStream != null)
             $span(Span.ENTITY_READ);
 

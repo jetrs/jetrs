@@ -72,6 +72,7 @@ import javax.ws.rs.core.NoContentException;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.StatusType;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.ExceptionMapper;
@@ -964,9 +965,26 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext,Ht
     final Annotation[] responseAnnotations = ((ResponseImpl)response).annotations;
     final Annotation[] entityAnnotations = annotations == null ? responseAnnotations : responseAnnotations == null ? annotations : ArrayUtil.concat(responseAnnotations, annotations);
 
-    final Object entity = response.hasEntity() ? response.getEntity() : null;
-    containerResponseContext.setEntity(entity, entityAnnotations, response.getMediaType());
-    containerResponseContext.setStatusInfo(response.getStatusInfo());
+    final StatusType statusInfo = response.getStatusInfo();
+    // [JAX-RS 3.3.3]
+    // https://www.rfc-editor.org/rfc/rfc7231#section-6.3.1
+    final Object entity;
+    final MediaType mediaType;
+    if (response.hasEntity()) {
+      entity = response.getEntity();
+      mediaType = response.getMediaType();
+    }
+    else if (statusInfo.getStatusCode() == 200) {
+      entity = "";
+      mediaType = MediaType.TEXT_PLAIN_TYPE;
+    }
+    else {
+      entity = null;
+      mediaType = response.getMediaType();
+    }
+
+    containerResponseContext.setEntity(entity, entityAnnotations, mediaType);
+    containerResponseContext.setStatusInfo(statusInfo);
 
     return response;
   }
@@ -1032,19 +1050,8 @@ class ContainerRequestContextImpl extends RequestContext<ServerRuntimeContext,Ht
 
   @Override
   public void setEntityStream(final InputStream input) {
-    if (input == null) {
-      entityStream = null;
-      hasEntity = false;
-    }
-    else {
-      try {
-        entityStream = EntityUtil.makeConsumableNonEmptyOrNull(input, false);
-        hasEntity = entityStream != null;
-      }
-      catch (final IOException e) {
-        throw new InternalServerErrorException(e);
-      }
-    }
+    hasEntity = input != null;
+    entityStream = input;
   }
 
   private SecurityContext securityContext;

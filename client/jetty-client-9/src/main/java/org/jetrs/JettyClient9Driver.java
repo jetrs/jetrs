@@ -158,9 +158,7 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
           else {
             $span(Span.ENTITY_INIT);
 
-            final MessageBodyWriter messageBodyWriter = getMessageBodyWriter();
-
-            writeContentAsync(messageBodyWriter, () -> {
+            writeContentAsync(getMessageBodyWriter(), () -> {
               setHeaders(request);
               // final PipedInputStream in = new PipedInputStream();
               // out = new PipedOutputStream(in);
@@ -225,7 +223,13 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
           }
 
           $span(Span.RESPONSE_READ);
-          entityStream = EntityUtil.makeConsumableNonEmptyOrNull(listener.getInputStream(), true);
+
+          final String contentLength = responseHeaders.getFirst(HttpHeaders.CONTENT_LENGTH);
+          final String transferEncoding = responseHeaders.getFirst(HttpHeaders.TRANSFER_ENCODING);
+          final boolean isChunked = "chunked".equals(transferEncoding);
+          final boolean allowEmpty = contentLength != null && Long.parseLong(contentLength) == 0 && !isChunked;
+          entityStream = EntityUtil.makeConsumableNonEmptyOrNull(listener.getInputStream(), true, allowEmpty);
+
           if (entityStream != null)
             $span(Span.ENTITY_READ);
 

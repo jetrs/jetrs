@@ -34,6 +34,7 @@ import org.jetrs.provider.ext.interceptor.GZipCodecInterceptor;
 import org.jetrs.provider.ext.mapper.ThrowableMapper;
 import org.jetrs.provider.ext.mapper.WebApplicationExceptionMapper;
 import org.jetrs.server.app.filter.Filter1;
+import org.jetrs.server.app.filter.HealthCheckFilter;
 import org.jetrs.server.app.provider.MyCharacterProvider;
 import org.jetrs.server.app.service.BookService;
 import org.jetrs.server.app.service.CoreTypeService;
@@ -77,6 +78,7 @@ public class TestAppServer extends Application implements AutoCloseable {
       });
 
       // Specific
+      this.singletons.add(new HealthCheckFilter());
       this.singletons.add(new RootService1());
       this.singletons.add(new RootService2());
       this.singletons.add(new FileUploadService());

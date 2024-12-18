@@ -289,6 +289,30 @@ public class GeneralServerTest {
   }
 
   @Test
+  public void testEmpty200() throws Exception {
+    final Invocation.Builder request = request("/");
+    final Response getResponse = request.get();
+
+    final String data = assertResponse(200, getResponse, String.class);
+    assertEquals("", data);
+
+    final Object contentType = getResponse.getHeaders().getFirst(HttpHeaders.CONTENT_TYPE);
+    assertEquals(MediaType.TEXT_PLAIN_TYPE, contentType);
+  }
+
+  @Test
+  public void testNull204() throws Exception {
+    final Invocation.Builder request = request("/");
+    final Response getResponse = request.head();
+
+    final String data = assertResponse(204, getResponse, String.class);
+    assertNull(data);
+
+    final Object contentType = getResponse.getHeaders().getFirst(HttpHeaders.CONTENT_TYPE);
+    assertNull(contentType);
+  }
+
+  @Test
   public void testBookService01() throws Exception {
     final Invocation.Builder request = request("/books/aaab/xxx;x=x/a/lot;r=r/o}乨{f/stuff");
     final Response getResponse = request.get();
@@ -373,8 +397,8 @@ public class GeneralServerTest {
   }
 
   @Test
-  public void testMatchRoot404() throws Exception {
-    final Response response = client.target(serviceUrl)
+  public void test404() throws Exception {
+    final Response response = client.target(serviceUrl + "/404")
       .request()
       .get();
 

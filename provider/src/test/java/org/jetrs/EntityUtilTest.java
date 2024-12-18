@@ -54,24 +54,34 @@ public class EntityUtilTest {
   };
 
   @Test
-  public void testEmpty() throws IOException {
-    assertNull(EntityUtil.makeConsumableNonEmptyOrNull(empty, false));
-    assertNull(EntityUtil.makeConsumableNonEmptyOrNull(empty, true));
+  public void testDisallowEmpty() throws IOException {
+    assertNull(EntityUtil.makeConsumableNonEmptyOrNull(empty, false, false));
+    assertNull(EntityUtil.makeConsumableNonEmptyOrNull(empty, true, false));
+  }
+
+  @Test
+  public void testAllowEmpty() throws IOException {
+    final InputStream in1 = EntityUtil.makeConsumableNonEmptyOrNull(empty, false, true);
+    assertNotNull(in1);
+    assertEquals(-1, in1.read());
+    final InputStream in2 = EntityUtil.makeConsumableNonEmptyOrNull(empty, true, true);
+    assertNotNull(in2);
+    assertEquals(-1, in2.read());
   }
 
   @Test
   public void testAvailable() throws IOException {
-    assertSame(available, EntityUtil.makeConsumableNonEmptyOrNull(available, false));
+    assertSame(available, EntityUtil.makeConsumableNonEmptyOrNull(available, false, false));
   }
 
   @Test
   public void testUnbuffered() throws IOException {
-    InputStream in = EntityUtil.makeConsumableNonEmptyOrNull(unbuffered, false);
+    InputStream in = EntityUtil.makeConsumableNonEmptyOrNull(unbuffered, false, false);
     assertNotSame(unbuffered, in);
     assertFalse(in instanceof Consumable);
     assertTrue(in instanceof BufferedInputStream);
 
-    in = EntityUtil.makeConsumableNonEmptyOrNull(unbuffered, true);
+    in = EntityUtil.makeConsumableNonEmptyOrNull(unbuffered, true, false);
     assertNotSame(unbuffered, in);
     assertTrue(in instanceof Consumable);
     assertTrue(in instanceof BufferedInputStream);
@@ -79,11 +89,11 @@ public class EntityUtilTest {
 
   @Test
   public void testBuffered() throws IOException {
-    InputStream in = EntityUtil.makeConsumableNonEmptyOrNull(buffered, false);
+    InputStream in = EntityUtil.makeConsumableNonEmptyOrNull(buffered, false, false);
     assertSame(buffered, in);
     assertFalse(in instanceof Consumable);
 
-    in = EntityUtil.makeConsumableNonEmptyOrNull(buffered, true);
+    in = EntityUtil.makeConsumableNonEmptyOrNull(buffered, true, false);
     assertNotSame(buffered, in);
     assertTrue(in instanceof Consumable);
     assertTrue(in instanceof FilterInputStream);

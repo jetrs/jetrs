@@ -279,6 +279,14 @@ abstract class ClientRequestContextImpl extends RequestContext<ClientRuntimeCont
   }
 
   @SuppressWarnings("rawtypes")
+  void writeContent(final MessageBodyWriter messageBodyWriter, final OutputStream out) throws IOException {
+    this.messageBodyWriter = messageBodyWriter;
+    setOutputStream(out);
+    this.interceptorIndex = -1;
+    proceed();
+  }
+
+  @SuppressWarnings("rawtypes")
   void writeContentSync(final MessageBodyWriter messageBodyWriter, final ThrowingSupplier<OutputStream,IOException> onFirstWrite, final Runnable onClose) throws IOException {
     try (final RelegateOutputStream relegateEntityStream = new RelegateOutputStream() {
       @Override
@@ -309,10 +317,7 @@ abstract class ClientRequestContextImpl extends RequestContext<ClientRuntimeCont
         }
       });
 
-      this.messageBodyWriter = messageBodyWriter;
-      setOutputStream(relegateEntityStream);
-      this.interceptorIndex = -1;
-      proceed();
+      writeContent(messageBodyWriter, relegateEntityStream);
     }
   }
 
@@ -370,10 +375,7 @@ abstract class ClientRequestContextImpl extends RequestContext<ClientRuntimeCont
           }
         });
 
-        this.messageBodyWriter = messageBodyWriter;
-        setOutputStream(relegateEntityStream);
-        this.interceptorIndex = -1;
-        proceed();
+        writeContent(messageBodyWriter, relegateEntityStream);
       }
       catch (final Throwable t) {
         resultRef.set(t);
