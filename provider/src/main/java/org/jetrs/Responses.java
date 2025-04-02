@@ -25,7 +25,7 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.Response.Status.Family;
 import javax.ws.rs.core.Response.StatusType;
 
-import org.libj.lang.WrappedArrayList;
+import org.libj.lang.ToArrayList;
 
 /**
  * Utility functions for operations pertaining to {@link Response}.
@@ -33,7 +33,7 @@ import org.libj.lang.WrappedArrayList;
 final class Responses {
   private static final Status[] statuses = Status.values();
   private static final int[] statusCodes = new int[statuses.length];
-  private static final ConcurrentHashMap<WrappedArrayList<Object>,StatusType> codeReasonToStatus = new ConcurrentHashMap<>();
+  private static final ConcurrentHashMap<ToArrayList<Object>,StatusType> codeReasonToStatus = new ConcurrentHashMap<>();
 
   static {
     for (int i = 0, i$ = statuses.length; i < i$; ++i) // [A]
@@ -99,7 +99,7 @@ final class Responses {
   }
 
   private static StatusType fromMap(final int statusCode, final String reasonPhrase) {
-    final WrappedArrayList<Object> codeReason = new WrappedArrayList<>(statusCode, reasonPhrase);
+    final ToArrayList<Object> codeReason = new ToArrayList<>(statusCode, reasonPhrase);
     StatusType status = codeReasonToStatus.get(codeReason);
     if (status == null) {
       codeReasonToStatus.put(codeReason, status = new StatusType() {

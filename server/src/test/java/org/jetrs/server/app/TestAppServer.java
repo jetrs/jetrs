@@ -42,7 +42,6 @@ import org.jetrs.server.app.service.FileUploadService;
 import org.jetrs.server.app.service.FlushResponseService;
 import org.jetrs.server.app.service.RootService1;
 import org.jetrs.server.app.service.RootService2;
-import org.libj.lang.Threads;
 import org.openjax.esc.EmbeddedJetty9;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

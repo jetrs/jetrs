@@ -16,9 +16,9 @@
 
 package org.jetrs;
 
-import org.libj.lang.WrappedArrayList;
+import org.libj.lang.ToArrayList;
 
-class PathSegmentList extends WrappedArrayList<PathSegmentImpl> {
+class PathSegmentList extends ToArrayList<PathSegmentImpl> {
   private static PathSegmentImpl[] parseSegments(final String pathEncoded, final int i, final int depth, final boolean decode) {
     final String segment;
     final int j = pathEncoded.indexOf('/', i);

@@ -42,7 +42,6 @@ import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.StatusType;
-import javax.ws.rs.ext.MessageBodyWriter;
 
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.WWWAuthenticationProtocolHandler;
@@ -130,7 +129,6 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
       }
 
       @Override
-      @SuppressWarnings("rawtypes")
       public Response invoke() {
         final URI uri = getUri();
         try {
@@ -152,7 +150,7 @@ public class JettyClient9Driver extends CachedClientDriver<HttpClient> {
 
           $span(Span.INIT);
 
-          if (entity == null) {
+          if (entity == null || entity.getEntity() == null) {
             setHeaders(request);
           }
           else {

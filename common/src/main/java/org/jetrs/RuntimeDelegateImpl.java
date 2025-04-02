@@ -79,10 +79,7 @@ public class RuntimeDelegateImpl extends RuntimeDelegate {
 
   @Override
   public ResponseBuilder createResponseBuilder() {
-    if (runtimeContext == null)
-      throw new UnsupportedOperationException();
-
-    return new ResponseBuilderImpl(assertNotNull(runtimeContext.localRequestContext()));
+    return new ResponseBuilderImpl(runtimeContext == null ? null : assertNotNull(runtimeContext.localRequestContext()));
   }
 
   @Override

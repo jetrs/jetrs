@@ -110,7 +110,8 @@ final class UriEncoder {
       if ('a' <= i && i <= 'z' || 'A' <= i && i <= 'Z' || '0' <= i && i <= '9')
         continue;
 
-      switch ((char)i) {
+      final char ch = (char)i;
+      switch (ch) {
         case '-':
         case '.':
         case '_':
@@ -137,7 +138,7 @@ final class UriEncoder {
           continue;
       }
 
-      queryStringEncoding[i] = URLs.encode(String.valueOf((char)i));
+      queryStringEncoding[i] = URLs.encode(String.valueOf(ch));
     }
 
     PATH = new UriEncoder(pathEncoding);
