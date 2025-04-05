@@ -36,7 +36,7 @@
     to use, reliable, and debuggable JAX-RS implementation using the CohesionFirst approach.
   </description>
   <properties>
-    <version.jetty>9.4.56.v20240826</version.jetty>
+    <version.jetty>9.4.57.v20241219</version.jetty>
   </properties>
   <organization>
     <name>JetRS</name>
